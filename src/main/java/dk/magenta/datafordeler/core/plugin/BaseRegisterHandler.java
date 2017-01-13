@@ -1,5 +1,8 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import dk.magenta.datafordeler.core.event.BusinessEvent;
+import dk.magenta.datafordeler.core.event.DataEvent;
+
 import java.util.Date;
 
 /**
@@ -9,9 +12,9 @@ public abstract class BaseRegisterHandler {
 
     public abstract void sendReceipt();
 
-    protected abstract void processBusinessEvent();
+    protected abstract void processBusinessEvent(BusinessEvent event);
 
-    protected abstract void processDataEvent();
+    protected abstract void processDataEvent(DataEvent event);
 
     public void sync(Date fromdate) {
         // Fetch list of checksums
