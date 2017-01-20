@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 /**
  * Created by lars on 13-01-17.
