@@ -8,10 +8,10 @@ import java.util.UUID;
  */
 public abstract class BaseFetcher<T extends BaseEntity> {
 
-    public abstract String fetchEntityData();
+  public abstract String fetchEntityData();
 
-    public abstract String fetchEntitiesData();
+  public abstract String fetchEntitiesData();
 
-    public abstract Map<UUID, Map<Integer, String>> getChecksums();
+  public abstract Map<UUID, Map<Integer, String>> getChecksums();
 
 }

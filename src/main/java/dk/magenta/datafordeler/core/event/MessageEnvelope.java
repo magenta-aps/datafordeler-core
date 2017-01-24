@@ -8,15 +8,15 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
  */
 public class MessageEnvelope {
 
-    @JsonProperty(value="Filtreringsdata")
-    @JacksonXmlProperty(localName="Filtreringsdata")
-    public FilterData filterData;
+  @JsonProperty(value = "Filtreringsdata")
+  @JacksonXmlProperty(localName = "Filtreringsdata")
+  public FilterData filterData;
 
-    @JsonProperty(value="Leveranceinformation")
-    @JacksonXmlProperty(localName="Leveranceinformation")
-    public DeliveryInformation deliveryInformation;
+  @JsonProperty(value = "Leveranceinformation")
+  @JacksonXmlProperty(localName = "Leveranceinformation")
+  public DeliveryInformation deliveryInformation;
 
-    @JsonProperty(value="Modtagerhandling")
-    @JacksonXmlProperty(localName="Modtagerhandling")
-    public String recipientAction;
+  @JsonProperty(value = "Modtagerhandling")
+  @JacksonXmlProperty(localName = "Modtagerhandling")
+  public String recipientAction;
 }

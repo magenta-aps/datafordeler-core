@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.role.SystemRole;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,8 +9,8 @@ import java.util.List;
  */
 public abstract class BaseRolesDefinition {
 
-    public List<SystemRole> getRoles() {
-        return new ArrayList<SystemRole>();
-    }
+  public List<SystemRole> getRoles() {
+    return new ArrayList<SystemRole>();
+  }
 
 }

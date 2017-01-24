@@ -2,7 +2,6 @@ package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.event.BusinessEvent;
 import dk.magenta.datafordeler.core.event.DataEvent;
-
 import java.util.Date;
 
 /**
@@ -10,16 +9,16 @@ import java.util.Date;
  */
 public abstract class BaseRegisterHandler {
 
-    public abstract void sendReceipt();
+  public abstract void sendReceipt();
 
-    protected abstract void processBusinessEvent(BusinessEvent event);
+  protected abstract void processBusinessEvent(BusinessEvent event);
 
-    protected abstract void processDataEvent(DataEvent event);
+  protected abstract void processDataEvent(DataEvent event);
 
-    public void sync(Date fromdate) {
-        // Fetch list of checksums
-        // Find missing/mismatching versions
-        // Fetch these versions
-        // Update DB
-    }
+  public void sync(Date fromdate) {
+    // Fetch list of checksums
+    // Find missing/mismatching versions
+    // Fetch these versions
+    // Update DB
+  }
 }

@@ -8,8 +8,8 @@ import java.util.List;
  */
 public class BaseFieldsDefinition {
 
-    public List<ConfigurationFieldSpecification> getFields() {
-        return new ArrayList<ConfigurationFieldSpecification>();
-    }
+  public List<ConfigurationFieldSpecification> getFields() {
+    return new ArrayList<ConfigurationFieldSpecification>();
+  }
 
 }

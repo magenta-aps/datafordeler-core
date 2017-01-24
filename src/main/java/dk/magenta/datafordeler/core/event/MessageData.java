@@ -8,11 +8,11 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
  */
 public class MessageData {
 
-    @JsonProperty(value="Objektreference")
-    @JacksonXmlProperty(localName="Objektreference")
-    public ObjectReference objectReference;
+  @JsonProperty(value = "Objektreference")
+  @JacksonXmlProperty(localName = "Objektreference")
+  public ObjectReference objectReference;
 
-    @JsonProperty(value="Objektdata")
-    @JacksonXmlProperty(localName="Objektdata")
-    public String objectData;
+  @JsonProperty(value = "Objektdata")
+  @JacksonXmlProperty(localName = "Objektdata")
+  public String objectData;
 }

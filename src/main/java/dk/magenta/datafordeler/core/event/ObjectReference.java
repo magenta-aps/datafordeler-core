@@ -8,8 +8,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
  */
 public class ObjectReference {
 
-    @JsonProperty(value="objektreference")
-    @JacksonXmlProperty(localName="objektreference")
-    public String objectReference;
+  @JsonProperty(value = "objektreference")
+  @JacksonXmlProperty(localName = "objektreference")
+  public String objectReference;
 
 }
