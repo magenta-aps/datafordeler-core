@@ -98,6 +98,7 @@ public abstract class RegisterHandler {
     }
 
     public final void synchronize(Date fromdate) {
+        // TODO: Likely move this to the dk.magenta.datafordeler.engine.Engine class
         // Fetch list of checksums with listRegisterChecksums
         // Find missing/mismatching versions
         // Fetch these versions
