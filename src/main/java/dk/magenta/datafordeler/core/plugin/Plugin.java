@@ -38,14 +38,4 @@ public abstract class Plugin {
         this.registerHandler.processDataEvent(event);
     }
 
-
-    /**
-     * @return A URL to send the given receipt to
-     * Depending on the register, the URL could change between receipts (such as the objectID being part of it)
-     */
-    protected abstract URL getReceiptInterface(Receipt receipt);
-
-    public final void sendReceipts(List<Receipt> receipts) {
-        // Send receipts to the register interface at the address pointed to by getReceiptInterface()
-    }
 }
