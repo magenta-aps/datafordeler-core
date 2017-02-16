@@ -33,4 +33,23 @@ public class Receipt {
         this.errorMessage = e.getMessage();
     }
 
+    public String getObjectID() {
+        return objectID;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public Date getReceived() {
+        return received;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
 }
