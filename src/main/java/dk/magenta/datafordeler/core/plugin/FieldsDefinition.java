@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Created by lars on 11-01-17.
  */
-public class BaseFieldsDefinition {
+public class FieldsDefinition {
 
   public List<ConfigurationFieldSpecification> getFields() {
     return new ArrayList<ConfigurationFieldSpecification>();

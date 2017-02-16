@@ -6,7 +6,7 @@ import java.util.UUID;
 /**
  * Created by lars on 11-01-17.
  */
-public abstract class BaseFetcher<T extends BaseEntity> {
+public abstract class Fetcher<T extends Entity> {
 
   public abstract String fetchEntityData();
 

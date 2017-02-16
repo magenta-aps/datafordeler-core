@@ -7,7 +7,7 @@ import java.util.Date;
 /**
  * Created by lars on 11-01-17.
  */
-public abstract class BaseRegisterHandler {
+public abstract class RegisterHandler {
 
   public abstract void sendReceipt();
 
