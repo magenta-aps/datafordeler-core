@@ -25,11 +25,11 @@ public abstract class RegisterHandler {
      */
     protected abstract URL getReceiptInterface(Receipt receipt);
 
-    public final void sendReceipt(Receipt receipt) {
+    public void sendReceipt(Receipt receipt) {
         this.sendReceipts(Collections.singletonList(receipt));
     }
 
-    public final void sendReceipts(List<Receipt> receipts) {
+    public void sendReceipts(List<Receipt> receipts) {
         // Send receipts to the register interface at the address pointed to by getReceiptInterface()
     }
 
@@ -50,7 +50,7 @@ public abstract class RegisterHandler {
      */
     protected abstract ChecksumInputStream parseChecksumResponse(InputStream responseContent) throws DataFordelerException;
 
-    public final ChecksumInputStream listRegisterChecksums(Date fromDate) throws DataFordelerException {
+    public ChecksumInputStream listRegisterChecksums(Date fromDate) throws DataFordelerException {
         // Request checksums from the register pointed to by getChecksumInterface()
         // Put the response through parseChecksumResponse
         return null;
@@ -67,7 +67,7 @@ public abstract class RegisterHandler {
      */
     protected abstract URL getRegistrationsInterface(Checksum checksum);
 
-    public final List<Version> getRegistrations(Collection<Checksum> checksums) throws DataFordelerException {
+    public List<Version> getRegistrations(Collection<Checksum> checksums) throws DataFordelerException {
         // Request registrations from the register pointed to by getRegistrationsInterface()
         // TODO: Should this return a stream of instances?
         return null;
@@ -97,7 +97,7 @@ public abstract class RegisterHandler {
         this.synchronize(null);
     }
 
-    public final void synchronize(Date fromdate) {
+    public void synchronize(Date fromdate) {
         // TODO: Likely move this to the dk.magenta.datafordeler.engine.Engine class
         // Fetch list of checksums with listRegisterChecksums
         // Find missing/mismatching versions
