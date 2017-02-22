@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.model;
 import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -28,9 +29,12 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @Column(nullable = true, insertable = true, updatable = false)
     OffsetDateTime registrationTo;
 
-    public Registration() {}
+    public Registration() {
+        this.effects = new HashSet<V>();
+    }
 
     public Registration(E entity, OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
+        this();
         this.entity = entity;
         this.registrationFrom = registrationFrom;
         this.registrationTo = registrationTo;
@@ -57,6 +61,10 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
                 registrationFrom != null ? OffsetDateTime.parse(registrationFrom) : null,
                 registrationTo != null ? OffsetDateTime.parse(registrationTo) : null
         );
+    }
+
+    public Set<V> getEffects() {
+        return this.effects;
     }
 
     public static String getTableName(Class<? extends Registration> cls) {
