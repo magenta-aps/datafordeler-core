@@ -14,17 +14,16 @@ import java.util.UUID;
 @Component
 public class QueryManager {
 
-    public <I extends Identification> I getIdentification(Session session, UUID uuid, String domain, Class<I> iClass) {
-        Query<I> query = session.createQuery("select i from " + iClass.getName() + " i where i.id = :id and i.domain = :domain", iClass);
+    public <I extends Identification> I getIdentification(Session session, UUID uuid, Class<I> iClass) {
+        Query<I> query = session.createQuery("select i from " + iClass.getName() + " i where i.id = :id", iClass);
         query.setParameter("id", uuid);
-        query.setParameter("domain", domain);
         return query.getSingleResult();
     }
 
-    public <E extends Entity> E getEntity(Session session, UUID uuid, String domain, Class<E> iClass) {
-        Query<E> query = session.createQuery("select e from " + iClass.getName() + " e join e.identification i where i.id = :id and i.domain = :domain", iClass);
+    public <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
+        Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i where i.id = :id", eClass);
         query.setParameter("id", uuid);
-        query.setParameter("domain", domain);
         return query.getSingleResult();
     }
+
 }

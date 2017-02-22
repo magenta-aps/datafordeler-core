@@ -65,6 +65,7 @@ public class DatabaseTest {
         session.save(testEntity);
         TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
         session.save(testRegistration);
+        Assert.assertTrue(testEntity.getRegistrations().contains(testRegistration));
         transaction.commit();
         session.close();
     }

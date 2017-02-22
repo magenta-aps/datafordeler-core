@@ -44,6 +44,10 @@ public abstract class Entity<I extends Identification, E extends Entity, R exten
         return this.identification.getDomain();
     }
 
+    public Set<R> getRegistrations() {
+        return this.registrations;
+    }
+
     public static String getTableName(Class<? extends Entity> cls) {
         return cls.getAnnotation(Table.class).name();
     }
