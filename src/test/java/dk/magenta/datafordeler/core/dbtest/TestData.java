@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.dbtest;
 
 import dk.magenta.datafordeler.core.model.DataItem;
 
+import javax.persistence.Column;
 import javax.persistence.Table;
 
 /**
@@ -10,5 +11,24 @@ import javax.persistence.Table;
 @javax.persistence.Entity
 @Table(name="test_data")
 public class TestData extends DataItem<TestEntity, TestRegistration, TestEffect> {
+
+    @Column
+    private int postnr;
+
+    @Column
+    private String bynavn;
+
+    public TestData(int postnr, String bynavn) {
+        this.postnr = postnr;
+        this.bynavn = bynavn;
+    }
+
+    public int getPostnr() {
+        return postnr;
+    }
+
+    public String getBynavn() {
+        return bynavn;
+    }
 
 }

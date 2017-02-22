@@ -107,4 +107,21 @@ public class DatabaseTest {
         transaction.commit();
         session.close();
     }
+
+    @Test
+    public void testData() {
+        UUID uuid = UUID.randomUUID();
+        Session session = sessionManager.getSessionFactory().openSession();
+        Transaction transaction = session.beginTransaction();
+        TestEntity testEntity = new TestEntity(uuid, domain);
+        session.save(testEntity);
+        TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
+        session.save(testRegistration);
+        TestEffect testEffect = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        session.save(testEffect);
+        TestData testData = new TestData(8000, "Århus");
+        testData.addEffect(testEffect);
+        transaction.commit();
+        session.close();
+    }
 }
