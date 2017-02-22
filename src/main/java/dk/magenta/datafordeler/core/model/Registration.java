@@ -67,6 +67,15 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return this.effects;
     }
 
+    public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
+        for (V effect : this.effects) {
+            if (effect.getEffectFrom().equals(effectFrom) && effect.getEffectTo().equals(effectTo)) {
+                return effect;
+            }
+        }
+        return null;
+    }
+
     public static String getTableName(Class<? extends Registration> cls) {
         return cls.getAnnotation(Table.class).name();
     }

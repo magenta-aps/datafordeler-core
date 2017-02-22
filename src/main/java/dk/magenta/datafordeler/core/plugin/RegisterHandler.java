@@ -8,7 +8,6 @@ import dk.magenta.datafordeler.core.event.DataEvent;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 
 import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.net.URL;
 import java.util.*;
 
@@ -67,7 +66,7 @@ public abstract class RegisterHandler {
      */
     protected abstract URL getRegistrationsInterface(Checksum checksum);
 
-    public List<Version> getRegistrations(Collection<Checksum> checksums) throws DataFordelerException {
+    public List<DataVersion> getRegistrations(Collection<Checksum> checksums) throws DataFordelerException {
         // Request registrations from the register pointed to by getRegistrationsInterface()
         // TODO: Should this return a stream of instances?
         return null;

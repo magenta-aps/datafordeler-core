@@ -13,7 +13,7 @@ import java.util.Set;
 public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> {
 
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-    protected R registration;
+    private R registration;
 
     @ManyToMany(cascade = CascadeType.ALL)
     protected Set<D> dataItems;
@@ -24,10 +24,10 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     private Long id;
 
     @Column(nullable = false, insertable = true, updatable = false)
-    protected OffsetDateTime effectFrom;
+    private OffsetDateTime effectFrom;
 
     @Column(nullable = true, insertable = true, updatable = false)
-    protected OffsetDateTime effectTo;
+    private OffsetDateTime effectTo;
 
     public Effect() {}
 
@@ -63,6 +63,10 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
                 effectFrom != null ? OffsetDateTime.parse(effectFrom) : null,
                 effectTo != null ? OffsetDateTime.parse(effectTo) : null
         );
+    }
+
+    public R getRegistration() {
+        return this.registration;
     }
 
     public OffsetDateTime getEffectFrom() {

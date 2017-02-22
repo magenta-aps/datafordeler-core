@@ -46,7 +46,7 @@ public class DatabaseTest {
         Assert.assertNotNull(testEntity);
         Assert.assertEquals(uuid, testEntity.getUUID());
         Assert.assertEquals(domain, testEntity.getDomain());
-        Identification identification = queryManager.getIdentification(session, uuid, Identification.class);
+        Identification identification = queryManager.getIdentification(session, uuid);
         Assert.assertNotNull(identification);
         Assert.assertEquals(uuid, identification.getUuid());
         Assert.assertEquals(domain, identification.getDomain());

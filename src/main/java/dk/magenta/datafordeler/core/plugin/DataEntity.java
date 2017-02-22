@@ -5,8 +5,12 @@ import java.util.Collection;
 /**
  * Created by lars on 11-01-17.
  */
-public abstract class Entity<T extends Version> {
-
+public abstract class DataEntity<T extends DataVersion> {
+  protected String id;
   // public static BaseEntity<T> FromJSON(JSONObject data);
-  Collection<T> versions;
+  protected Collection<T> versions;
+
+  public String getId() {
+    return id;
+  }
 }

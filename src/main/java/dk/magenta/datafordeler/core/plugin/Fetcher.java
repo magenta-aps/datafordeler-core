@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import dk.magenta.datafordeler.core.model.Entity;
+
 import java.util.Map;
 import java.util.UUID;
 

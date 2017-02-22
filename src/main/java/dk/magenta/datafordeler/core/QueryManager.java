@@ -1,11 +1,14 @@
 package dk.magenta.datafordeler.core;
 
+import dk.magenta.datafordeler.core.model.Effect;
 import dk.magenta.datafordeler.core.model.Entity;
 import dk.magenta.datafordeler.core.model.Identification;
+import dk.magenta.datafordeler.core.model.Registration;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -14,8 +17,8 @@ import java.util.UUID;
 @Component
 public class QueryManager {
 
-    public <I extends Identification> I getIdentification(Session session, UUID uuid, Class<I> iClass) {
-        Query<I> query = session.createQuery("select i from " + iClass.getName() + " i where i.id = :id", iClass);
+    public Identification getIdentification(Session session, UUID uuid) {
+        Query<Identification> query = session.createQuery("select i from Identification i where i.id = :id", Identification.class);
         query.setParameter("id", uuid);
         return query.getSingleResult();
     }
@@ -25,5 +28,9 @@ public class QueryManager {
         query.setParameter("id", uuid);
         return query.getSingleResult();
     }
+
+//    public <V extends Effect> V getEffect(Session session, Registration registration, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
+//
+//    }
 
 }
