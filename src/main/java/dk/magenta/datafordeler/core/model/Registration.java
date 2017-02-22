@@ -3,10 +3,7 @@ package dk.magenta.datafordeler.core.model;
 import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
-import java.util.Date;
 import java.util.Set;
-
-
 
 /**
  * Created by lars on 20-02-17.
