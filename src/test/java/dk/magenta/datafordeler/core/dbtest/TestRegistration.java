@@ -11,7 +11,9 @@ import java.time.temporal.TemporalAccessor;
  */
 @javax.persistence.Entity
 @Table(name="test_registration")
-public class TestRegistration extends Registration<TestIdentification, TestEntity, TestRegistration, TestEffect> {
+public class TestRegistration extends Registration<TestEntity, TestRegistration, TestEffect> {
+
+    public TestRegistration() {}
 
     public TestRegistration(TestEntity entity, OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
         super(entity, registrationFrom, registrationTo);

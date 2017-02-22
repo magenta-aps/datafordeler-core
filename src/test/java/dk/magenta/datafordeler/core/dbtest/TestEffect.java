@@ -9,7 +9,7 @@ import javax.persistence.Table;
  */
 @javax.persistence.Entity
 @Table(name="test_effect")
-public class TestEffect extends Effect<TestIdentification, TestEntity, TestRegistration, TestEffect, TestData> {
+public class TestEffect extends Effect<TestEntity, TestRegistration, TestEffect, TestData> {
 
     public TestEffect(TestRegistration registration) {
         super(registration);

@@ -9,7 +9,7 @@ import java.util.Set;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
-public abstract class Registration<I extends Identification, E extends Entity, R extends Registration, V extends Effect> {
+public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> {
 
     @ManyToOne
     protected E entity;
@@ -28,10 +28,13 @@ public abstract class Registration<I extends Identification, E extends Entity, R
     @Column(nullable = true, insertable = true, updatable = false)
     OffsetDateTime registrationTo;
 
+    public Registration() {}
+
     public Registration(E entity, OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
         this.entity = entity;
         this.registrationFrom = registrationFrom;
         this.registrationTo = registrationTo;
+        this.entity.registrations.add(this);
     }
 
     public Registration(E entity, TemporalAccessor registrationFrom, TemporalAccessor registrationTo) {

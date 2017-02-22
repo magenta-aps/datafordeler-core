@@ -12,12 +12,12 @@ import java.util.UUID;
  */
 @javax.persistence.Entity
 @Table(name="test_entity")
-public class TestEntity extends Entity<TestIdentification, TestEntity, TestRegistration, TestEffect> {
+public class TestEntity extends Entity<TestEntity, TestRegistration, TestEffect> {
 
     public TestEntity() {}
 
     public TestEntity(UUID uuid, String domain) {
-        super(new TestIdentification(uuid, domain));
+        super(uuid, domain);
     }
 
     public static TestEntity get(Session session, long id) {

@@ -1,15 +1,14 @@
 package dk.magenta.datafordeler.core.model;
 
 import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.persistence.criteria.CriteriaBuilder;
 import java.util.UUID;
 
 /**
  * Created by lars on 20-02-17.
  */
-@MappedSuperclass
-public abstract class Identification {
+@javax.persistence.Entity
+@Table(name = "identifikation")
+public class Identification {
 
     @Id
     @Column(name = "id")
@@ -33,7 +32,7 @@ public abstract class Identification {
         return domain;
     }
 
-    public static String getTableName(Class<? extends Identification> cls) {
-        return cls.getAnnotation(Table.class).name();
+    public static String getTableName() {
+        return Identification.class.getAnnotation(Table.class).name();
     }
 }
