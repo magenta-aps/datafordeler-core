@@ -43,11 +43,11 @@ public class DatabaseTest {
         session = sessionManager.getSessionFactory().openSession();
         transaction = session.beginTransaction();
         // testEntity = TestEntity.get(session, uuid, domain);
-        testEntity = queryManager.getEntity(session, uuid, domain, TestEntity.class);
+        testEntity = queryManager.getEntity(session, uuid, TestEntity.class);
         Assert.assertNotNull(testEntity);
         Assert.assertEquals(uuid, testEntity.getUUID());
         Assert.assertEquals(domain, testEntity.getDomain());
-        Identification identification = queryManager.getIdentification(session, uuid, domain, TestIdentification.class);
+        Identification identification = queryManager.getIdentification(session, uuid, TestIdentification.class);
         Assert.assertNotNull(identification);
         Assert.assertEquals(uuid, identification.getUuid());
         Assert.assertEquals(domain, identification.getDomain());
