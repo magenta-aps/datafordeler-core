@@ -123,5 +123,22 @@ public class DatabaseTest {
         testData.addEffect(testEffect);
         transaction.commit();
         session.close();
+
+        session = sessionManager.getSessionFactory().openSession();
+        transaction = session.beginTransaction();
+        testEntity = queryManager.getEntity(session, uuid, TestEntity.class);
+        boolean found = false;
+        for (TestRegistration registration : testEntity.getRegistrations()) {
+            for (TestEffect effect : registration.getEffects()) {
+                for (TestData data : effect.getDataItems()) {
+                    if (data.getPostnr() == 8000 && data.getBynavn().equals("Århus")) {
+                        found = true;
+                    }
+                }
+            }
+        }
+        Assert.assertTrue(found);
+        transaction.commit();
+        session.close();
     }
 }

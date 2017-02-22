@@ -18,6 +18,8 @@ public class TestData extends DataItem<TestEntity, TestRegistration, TestEffect>
     @Column
     private String bynavn;
 
+    public TestData() {}
+
     public TestData(int postnr, String bynavn) {
         this.postnr = postnr;
         this.bynavn = bynavn;

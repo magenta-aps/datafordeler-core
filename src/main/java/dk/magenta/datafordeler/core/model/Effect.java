@@ -66,11 +66,15 @@ public abstract class Effect<E extends Entity, R extends Registration, V extends
     }
 
     public OffsetDateTime getEffectFrom() {
-        return effectFrom;
+        return this.effectFrom;
     }
 
     public OffsetDateTime getEffectTo() {
-        return effectTo;
+        return this.effectTo;
+    }
+
+    public Set<D> getDataItems() {
+        return this.dataItems;
     }
 
     public static String getTableName(Class<? extends Effect> cls) {

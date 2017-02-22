@@ -24,10 +24,12 @@ public abstract class DataItem<E extends Entity, R extends Registration, V exten
 
     public void addEffect(V effect) {
         this.effects.add(effect);
+        effect.dataItems.add(this);
     }
 
     public void removeEffect(V effect) {
         this.effects.remove(effect);
+        effect.dataItems.remove(this);
     }
 
     public static String getTableName(Class<? extends DataItem> cls) {
