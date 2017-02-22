@@ -12,7 +12,7 @@ import java.util.UUID;
  */
 @javax.persistence.Entity
 @Table(name="test_entity")
-public class TestEntity extends Entity<TestEntity, TestRegistration, TestEffect> {
+public class TestEntity extends Entity<TestEntity, TestRegistration> {
 
     public TestEntity() {}
 

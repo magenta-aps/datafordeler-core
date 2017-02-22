@@ -13,7 +13,7 @@ import java.util.UUID;
  */
 @MappedSuperclass
 @Embeddable
-public abstract class Entity<E extends Entity, R extends Registration, V extends Effect> {
+public abstract class Entity<E extends Entity, R extends Registration> {
 
     @OneToOne(cascade = CascadeType.ALL)
     protected Identification identification;

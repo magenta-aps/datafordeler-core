@@ -11,7 +11,7 @@ import java.time.temporal.TemporalAccessor;
  */
 @javax.persistence.Entity
 @Table(name="test_effect")
-public class TestEffect extends Effect<TestEntity, TestRegistration, TestEffect, TestData> {
+public class TestEffect extends Effect<TestRegistration, TestEffect, TestData> {
 
     public TestEffect() {}
 

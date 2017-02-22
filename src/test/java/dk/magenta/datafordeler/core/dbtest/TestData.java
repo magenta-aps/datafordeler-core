@@ -10,7 +10,7 @@ import javax.persistence.Table;
  */
 @javax.persistence.Entity
 @Table(name="test_data")
-public class TestData extends DataItem<TestEntity, TestRegistration, TestEffect> {
+public class TestData extends DataItem<TestEffect> {
 
     @Column
     private int postnr;

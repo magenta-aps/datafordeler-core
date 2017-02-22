@@ -10,7 +10,7 @@ import java.util.Set;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
-public abstract class Effect<E extends Entity, R extends Registration, V extends Effect, D extends DataItem> {
+public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> {
 
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     protected R registration;

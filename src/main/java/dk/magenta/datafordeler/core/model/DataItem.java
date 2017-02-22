@@ -8,7 +8,7 @@ import java.util.Set;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
-public abstract class DataItem<E extends Entity, R extends Registration, V extends Effect> {
+public abstract class DataItem<V extends Effect> {
 
     @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     protected Set<V> effects;
