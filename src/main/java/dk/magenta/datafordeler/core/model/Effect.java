@@ -31,4 +31,8 @@ public abstract class Effect<E extends Entity, R extends Registration, V extends
         this.registration = registration;
     }
 
+    public static String getTableName(Class<? extends Effect> cls) {
+        return cls.getAnnotation(Table.class).name();
+    }
+
 }

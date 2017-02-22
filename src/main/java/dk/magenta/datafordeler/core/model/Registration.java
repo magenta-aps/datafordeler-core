@@ -58,4 +58,8 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
                 registrationTo != null ? OffsetDateTime.parse(registrationTo) : null
         );
     }
+
+    public static String getTableName(Class<? extends Registration> cls) {
+        return cls.getAnnotation(Table.class).name();
+    }
 }

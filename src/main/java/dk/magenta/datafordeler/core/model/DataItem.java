@@ -17,4 +17,8 @@ public abstract class DataItem<E extends Entity, R extends Registration, V exten
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    public static String getTableName(Class<? extends DataItem> cls) {
+        return cls.getAnnotation(Table.class).name();
+    }
+
 }
