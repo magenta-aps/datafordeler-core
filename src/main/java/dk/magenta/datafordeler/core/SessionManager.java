@@ -4,6 +4,7 @@ import dk.magenta.datafordeler.core.model.Entity;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Table;
 import java.util.Set;
 
 /**
@@ -73,6 +75,11 @@ public class SessionManager {
     public void shutdown() {
         // Close caches and connection pools
         this.sessionFactory.close();
+    }
+
+    public String getTableName(Entity cls) {
+        Table table = Entity.class.getAnnotation(Table.class);
+        return table.name();
     }
 
 }

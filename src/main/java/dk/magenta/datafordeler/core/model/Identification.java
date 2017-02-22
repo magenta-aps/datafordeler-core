@@ -32,4 +32,8 @@ public abstract class Identification {
     public String getDomain() {
         return domain;
     }
+
+    public static String getTableName(Class<? extends Identification> cls) {
+        return cls.getAnnotation(Table.class).name();
+    }
 }

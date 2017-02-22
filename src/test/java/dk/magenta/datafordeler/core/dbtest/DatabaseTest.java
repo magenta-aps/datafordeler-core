@@ -1,7 +1,9 @@
 package dk.magenta.datafordeler.core.dbtest;
 
 import dk.magenta.datafordeler.core.AppConfig;
+import dk.magenta.datafordeler.core.QueryManager;
 import dk.magenta.datafordeler.core.SessionManager;
+import dk.magenta.datafordeler.core.model.Identification;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.Assert;
@@ -23,6 +25,9 @@ public class DatabaseTest {
     @Autowired
     SessionManager sessionManager;
 
+    @Autowired
+    QueryManager queryManager;
+
     private static final String domain = "test";
 
     @Test
@@ -37,9 +42,15 @@ public class DatabaseTest {
 
         session = sessionManager.getSessionFactory().openSession();
         transaction = session.beginTransaction();
-        testEntity = TestEntity.get(session, uuid, domain);
+        // testEntity = TestEntity.get(session, uuid, domain);
+        testEntity = queryManager.getEntity(session, uuid, domain, TestEntity.class);
         Assert.assertNotNull(testEntity);
         Assert.assertEquals(uuid, testEntity.getUUID());
+        Assert.assertEquals(domain, testEntity.getDomain());
+        Identification identification = queryManager.getIdentification(session, uuid, domain, TestIdentification.class);
+        Assert.assertNotNull(identification);
+        Assert.assertEquals(uuid, identification.getUuid());
+        Assert.assertEquals(domain, identification.getDomain());
         session.delete(testEntity);
         transaction.commit();
         session.close();
