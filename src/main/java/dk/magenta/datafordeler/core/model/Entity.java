@@ -51,6 +51,10 @@ public abstract class Entity<E extends Entity, R extends Registration> {
         return this.identification.getDomain();
     }
 
+    public Long getId() {
+        return this.id;
+    }
+
     public Set<R> getRegistrations() {
         return this.registrations;
     }
@@ -58,5 +62,9 @@ public abstract class Entity<E extends Entity, R extends Registration> {
     public static String getTableName(Class<? extends Entity> cls) {
         return cls.getAnnotation(Table.class).name();
     }
+
+
+
+
 
 }

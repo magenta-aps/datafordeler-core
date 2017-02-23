@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -85,8 +87,8 @@ public class DatabaseTest {
         TestEntity testEntity = new TestEntity(uuid, domain);
         session.save(testEntity);
         TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
-        session.save(testRegistration);
         TestEffect testEffect = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        session.save(testRegistration);
         session.save(testEffect);
         transaction.commit();
         session.close();
@@ -106,6 +108,20 @@ public class DatabaseTest {
         Assert.assertTrue(found);
         transaction.commit();
         session.close();
+
+        session = sessionManager.getSessionFactory().openSession();
+        testEntity = (TestEntity) session.merge(testEntity);
+        List<TestEffect> effects = queryManager.getEffects(session, testEntity, OffsetDateTime.parse("2017-02-22T13:59:30+01:00"), OffsetDateTime.parse("2017-12-31T23:59:59+01:00"), TestEffect.class);
+
+        found = false;
+        for (TestEffect effect : effects) {
+            if (effect.getEffectFrom().equals(testEffect.getEffectFrom()) && effect.getEffectTo().equals(testEffect.getEffectTo())) {
+                found = true;
+            }
+        }
+        Assert.assertTrue(found);
+
+        session.close();
     }
 
     @Test
@@ -116,8 +132,8 @@ public class DatabaseTest {
         TestEntity testEntity = new TestEntity(uuid, domain);
         session.save(testEntity);
         TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
-        session.save(testRegistration);
         TestEffect testEffect = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        session.save(testRegistration);
         session.save(testEffect);
         TestData testData = new TestData(8000, "Århus");
         testData.addEffect(testEffect);
@@ -138,6 +154,15 @@ public class DatabaseTest {
             }
         }
         Assert.assertTrue(found);
+
+        testData = (TestData) session.merge(testData);
+        List<TestData> results = queryManager.getDataItems(session, testEntity, testData, TestData.class);
+        Assert.assertTrue(results.contains(testData));
+        List<TestData> results1 = queryManager.getDataItems(session, testEntity, new TestData(8000, "Århus"), TestData.class);
+        Assert.assertTrue(results1.contains(testData));
+        List<TestData> results2 = queryManager.getDataItems(session, testEntity, new TestData(8200, "Århus N"), TestData.class);
+        Assert.assertFalse(results2.contains(testData));
+
         transaction.commit();
         session.close();
     }

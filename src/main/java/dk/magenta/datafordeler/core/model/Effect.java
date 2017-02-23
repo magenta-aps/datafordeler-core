@@ -13,7 +13,7 @@ import java.util.Set;
 public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> {
 
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-    private R registration;
+    protected R registration;
 
     @ManyToMany(cascade = CascadeType.ALL)
     protected Set<D> dataItems;
@@ -29,16 +29,14 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     @Column(nullable = true, insertable = true, updatable = false)
     private OffsetDateTime effectTo;
 
-    public Effect() {}
-
-    private Effect(R registration) {
-        this.registration = registration;
+    public Effect() {
         this.dataItems = new HashSet<D>();
-        this.registration.effects.add(this);
     }
 
     public Effect(R registration, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
-        this(registration);
+        this();
+        this.registration = registration;
+        registration.effects.add(this);
         this.effectFrom = effectFrom;
         this.effectTo = effectTo;
     }
@@ -52,7 +50,6 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     }
 
     /**
-     * @param registration
      * @param effectFrom A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * @param effectTo A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * If you want other date formats, consider using java.time.OffsetDateTime.parse() to generate an OffsetDateTime object and pass it

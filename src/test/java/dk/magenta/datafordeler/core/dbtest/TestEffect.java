@@ -13,16 +13,18 @@ import java.time.temporal.TemporalAccessor;
 @Table(name="test_effect")
 public class TestEffect extends Effect<TestRegistration, TestEffect, TestData> {
 
-    public TestEffect() {}
+    public TestEffect() {
+        super();
+    }
 
-    public TestEffect(TestRegistration registration, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
-        super(registration, effectFrom, effectTo);
+    public TestEffect(TestRegistration testRegistration, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
+        super(testRegistration, effectFrom, effectTo);
     }
-    public TestEffect(TestRegistration registration, TemporalAccessor effectFrom, TemporalAccessor effectTo) {
-        super(registration, effectFrom, effectTo);
+    public TestEffect(TestRegistration testRegistration, TemporalAccessor effectFrom, TemporalAccessor effectTo) {
+        super(testRegistration, effectFrom, effectTo);
     }
-    public TestEffect(TestRegistration registration, String effectFrom, String effectTo) {
-        super(registration, effectFrom, effectTo);
+    public TestEffect(TestRegistration testRegistration, String effectFrom, String effectTo) {
+        super(testRegistration, effectFrom, effectTo);
     }
 }
 
