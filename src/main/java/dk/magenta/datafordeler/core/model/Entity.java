@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.Session;
 import org.hibernate.query.*;
 
@@ -16,9 +18,11 @@ import java.util.UUID;
 public abstract class Entity<E extends Entity, R extends Registration> {
 
     @OneToOne(cascade = CascadeType.ALL)
+    @JsonIgnore
     protected Identification identification;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnore
     protected Set<R> registrations;
 
     @Id
@@ -39,10 +43,12 @@ public abstract class Entity<E extends Entity, R extends Registration> {
         this(new Identification(uuid, domain));
     }
 
+    @JsonProperty
     public Identification getIdentification() {
         return this.identification;
     }
 
+    @JsonProperty
     public UUID getUUID() {
         return this.identification.getUuid();
     }
@@ -63,8 +69,8 @@ public abstract class Entity<E extends Entity, R extends Registration> {
         return cls.getAnnotation(Table.class).name();
     }
 
-
-
-
+    public static Class getFoo() {
+        return Entity.class;
+    }
 
 }

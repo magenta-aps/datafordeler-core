@@ -15,6 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -162,6 +163,54 @@ public class DatabaseTest {
         Assert.assertTrue(results1.contains(testData));
         List<TestData> results2 = queryManager.getDataItems(session, testEntity, new TestData(8200, "Århus N"), TestData.class);
         Assert.assertFalse(results2.contains(testData));
+
+        transaction.commit();
+        session.close();
+    }
+
+    @Test
+    public void testDedup() {
+        UUID uuid = UUID.randomUUID();
+        Session session = sessionManager.getSessionFactory().openSession();
+        Transaction transaction = session.beginTransaction();
+
+        TestEntity testEntity = new TestEntity(uuid, domain);
+        TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
+        TestEffect testEffect1 = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        TestEffect testEffect2 = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        TestEffect testEffect3 = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        TestEffect testEffect4 = new TestEffect(testRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
+        TestEffect testEffect5 = new TestEffect(testRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
+
+        session.saveOrUpdate(testEntity);
+        session.saveOrUpdate(testRegistration);
+        session.saveOrUpdate(testEffect1);
+        session.saveOrUpdate(testEffect2);
+        session.saveOrUpdate(testEffect3);
+        session.saveOrUpdate(testEffect4);
+        session.saveOrUpdate(testEffect5);
+
+        transaction.commit();
+        session.close();
+
+        session = sessionManager.getSessionFactory().openSession();
+        transaction = session.beginTransaction();
+
+        testRegistration = (TestRegistration) session.merge(testRegistration);
+
+        queryManager.dedupEffects(session, testRegistration);
+        Set<TestEffect> testEffects = testRegistration.getEffects();
+
+        Assert.assertEquals(2, testEffects.size());
+        for (TestEffect e1 : testEffects) {
+            for (TestEffect e2 : testEffects) {
+                if (e1 != e2) {
+                    Assert.assertFalse(e1.equalData(e2));
+                }
+            }
+        }
+
+        session.saveOrUpdate(testRegistration);
 
         transaction.commit();
         session.close();

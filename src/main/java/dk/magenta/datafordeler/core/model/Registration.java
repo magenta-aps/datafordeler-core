@@ -1,5 +1,8 @@
 package dk.magenta.datafordeler.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
@@ -13,21 +16,26 @@ import java.util.Set;
 public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> {
 
     @ManyToOne
+    @JsonIgnore
     protected E entity;
 
     @OneToMany(cascade = CascadeType.ALL)
+    @JsonProperty
     protected Set<V> effects;
 
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonIgnore
     private Long id;
 
     @Column(nullable = false, insertable = true, updatable = false)
-    OffsetDateTime registrationFrom;
+    @JsonProperty
+    protected OffsetDateTime registrationFrom;
 
     @Column(nullable = true, insertable = true, updatable = false)
-    OffsetDateTime registrationTo;
+    @JsonProperty
+    protected OffsetDateTime registrationTo;
 
     public Registration() {
         this.effects = new HashSet<V>();
@@ -63,6 +71,18 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         );
     }
 
+    public E getEntity() {
+        return this.entity;
+    }
+
+    public OffsetDateTime getRegistrationFrom() {
+        return this.registrationFrom;
+    }
+
+    public OffsetDateTime getRegistrationTo() {
+        return this.registrationTo;
+    }
+
     public Set<V> getEffects() {
         return this.effects;
     }
@@ -74,6 +94,11 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
             }
         }
         return null;
+    }
+
+    public void removeEffect(V effect) {
+        // Be sure to also delete the effect yourself, since it still points to the Registration
+        this.effects.remove(effect);
     }
 
     public static String getTableName(Class<? extends Registration> cls) {

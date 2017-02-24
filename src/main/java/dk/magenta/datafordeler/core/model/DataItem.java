@@ -1,5 +1,8 @@
 package dk.magenta.datafordeler.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
@@ -13,11 +16,13 @@ import java.util.Set;
 public abstract class DataItem<V extends Effect, D extends DataItem> {
 
     @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @JsonIgnore
     protected Set<V> effects;
 
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonIgnore
     private Long id;
 
     public DataItem() {
@@ -42,6 +47,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> {
      * This member should not be saved to the database; rather, the plugin should populate it,
      * and the engine should then turn that data into a real Effect reference
      */
+    @JsonIgnore
     protected OffsetDateTime effectFrom;
 
     public OffsetDateTime getEffectFrom() {
@@ -56,6 +62,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> {
      * This member should not be saved to the database; rather, the plugin should populate it,
      * and the engine should then turn that data into a real Effect reference
      */
+    @JsonIgnore
     protected OffsetDateTime effectTo;
 
     public OffsetDateTime getEffectTo() {

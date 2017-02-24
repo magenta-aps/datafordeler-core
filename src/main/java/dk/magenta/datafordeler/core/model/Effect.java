@@ -1,5 +1,9 @@
 package dk.magenta.datafordeler.core.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
@@ -13,20 +17,27 @@ import java.util.Set;
 public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> {
 
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @JsonIgnore
     protected R registration;
 
     @ManyToMany(cascade = CascadeType.ALL)
+    @JsonProperty
     protected Set<D> dataItems;
 
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonIgnore
     private Long id;
 
     @Column(nullable = false, insertable = true, updatable = false)
+    @JsonProperty
+    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm a z")
     private OffsetDateTime effectFrom;
 
     @Column(nullable = true, insertable = true, updatable = false)
+    @JsonProperty
+    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm a z")
     private OffsetDateTime effectTo;
 
     public Effect() {
@@ -62,6 +73,10 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         );
     }
 
+    public String toString() {
+        return this.getClass().getName() + "("+this.effectFrom+"->"+this.effectTo+")";
+    }
+
     public R getRegistration() {
         return this.registration;
     }
@@ -76,6 +91,13 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public Set<D> getDataItems() {
         return this.dataItems;
+    }
+
+    public boolean equalData(V other) {
+        return (
+                (this.effectFrom == null ? other.getEffectFrom() == null : this.effectFrom.equals(other.getEffectFrom())) &&
+                (this.effectTo == null ? other.getEffectTo() == null : this.effectTo.equals(other.getEffectTo()))
+        );
     }
 
     public static String getTableName(Class<? extends Effect> cls) {

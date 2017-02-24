@@ -1,13 +1,25 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * Created by lars on 11-01-17.
  */
-public abstract class DataVersion<T extends DataEntity> {
-  protected T entity;
-  public abstract String getChecksum();
+public abstract class DataVersion {
 
-  public T getEntity() {
-    return entity;
-  }
+    protected DataEntity entity;
+
+    protected Collection<DataPiece> dataPieces;
+
+    public abstract String getChecksum();
+
+    public DataVersion() {
+        this.dataPieces = new ArrayList<DataPiece>();
+    }
+
+
+    public DataEntity getEntity() {
+        return entity;
+    }
 }

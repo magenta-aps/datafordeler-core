@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.model.Entity;
+import dk.magenta.datafordeler.core.model.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PreDestroy;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -32,26 +34,29 @@ public class SessionManager {
 
             // Create empty configuration object
             Configuration configuration = new Configuration();
-
             // Populate it from hibernate.cfg.xml
             configuration.configure();
 
-            configuration.addAnnotatedClass(dk.magenta.datafordeler.core.model.Identification.class);
-            configuration.addAnnotatedClass(dk.magenta.datafordeler.core.model.Entity.class);
-            configuration.addAnnotatedClass(dk.magenta.datafordeler.core.model.Registration.class);
-            configuration.addAnnotatedClass(dk.magenta.datafordeler.core.model.Effect.class);
-            configuration.addAnnotatedClass(dk.magenta.datafordeler.core.model.DataItem.class);
+            Set<Class> managedClasses = new HashSet<>();
+            managedClasses.add(dk.magenta.datafordeler.core.model.Identification.class);
+            managedClasses.add(dk.magenta.datafordeler.core.model.Entity.class);
+            managedClasses.add(dk.magenta.datafordeler.core.model.Registration.class);
+            managedClasses.add(dk.magenta.datafordeler.core.model.Effect.class);
+            managedClasses.add(dk.magenta.datafordeler.core.model.DataItem.class);
 
             ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
             componentProvider.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));
-            //componentProvider.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.MappedSuperclass.class));
 
             Set<BeanDefinition> components = componentProvider.findCandidateComponents("dk.magenta.datafordeler");
             for (BeanDefinition component : components) {
                 Class cls = Class.forName(component.getBeanClassName());
-                System.out.println("CLASS: "+cls.getName());
+                managedClasses.add(cls);
+            }
+            for (Class cls : managedClasses) {
+                System.out.println("LOAD CLASS "+cls.getCanonicalName());
                 configuration.addAnnotatedClass(cls);
             }
+            System.out.println("-----------------------------------------------");
 
             // Create our session factory
             this.sessionFactory = configuration.buildSessionFactory();
