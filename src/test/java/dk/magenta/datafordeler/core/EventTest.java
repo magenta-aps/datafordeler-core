@@ -1,8 +1,8 @@
 package dk.magenta.datafordeler.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.event.BusinessEvent;
-import dk.magenta.datafordeler.core.event.EventMessage;
+import dk.magenta.datafordeler.core.oldevent.BusinessEvent;
+import dk.magenta.datafordeler.core.oldevent.EventMessage;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

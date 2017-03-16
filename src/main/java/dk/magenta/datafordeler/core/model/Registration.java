@@ -37,6 +37,13 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @JsonProperty
     protected OffsetDateTime registrationTo;
 
+    @JsonProperty
+    protected int sequenceNumber;
+
+    // The checksum as reported by the register
+    @JsonProperty("checksum")
+    protected String registerChecksum;
+
     public Registration() {
         this.effects = new HashSet<V>();
     }

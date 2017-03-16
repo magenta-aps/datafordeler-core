@@ -1,19 +1,24 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.model.Entity;
+import dk.magenta.datafordeler.core.exception.HttpStatusException;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.util.Map;
 import java.util.UUID;
 
 /**
  * Created by lars on 11-01-17.
  */
-public abstract class Fetcher<T extends Entity> {
+public interface Fetcher {
 
-  public abstract String fetchEntityData();
+  // public abstract String fetchEntityData();
 
-  public abstract String fetchEntitiesData();
+  public abstract InputStream fetch(URI uri) throws IOException, HttpStatusException;
 
-  public abstract Map<UUID, Map<Integer, String>> getChecksums();
+  // public abstract String fetchEntitiesData();
+
+  // public abstract Map<UUID, Map<Integer, String>> getChecksums();
 
 }

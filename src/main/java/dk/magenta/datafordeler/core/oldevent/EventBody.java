@@ -1,4 +1,4 @@
-package dk.magenta.datafordeler.core.event;
+package dk.magenta.datafordeler.core.oldevent;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

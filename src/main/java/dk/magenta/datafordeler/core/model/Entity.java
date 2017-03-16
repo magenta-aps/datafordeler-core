@@ -17,6 +17,10 @@ import java.util.UUID;
 @Embeddable
 public abstract class Entity<E extends Entity, R extends Registration> {
 
+    public static String getSchema() {
+        return "Entity";
+    }
+
     @OneToOne(cascade = CascadeType.ALL)
     @JsonIgnore
     protected Identification identification;
