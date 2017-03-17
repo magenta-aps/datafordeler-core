@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * Created by lars on 20-02-17.
@@ -76,6 +77,29 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
                 registrationFrom != null ? OffsetDateTime.parse(registrationFrom) : null,
                 registrationTo != null ? OffsetDateTime.parse(registrationTo) : null
         );
+    }
+
+    public String toString() {
+        return this.toString(4);
+    }
+
+    public String toString(int indent) {
+        StringJoiner s = new StringJoiner("\n" + new String(new char[indent]).replace("\0", " "));
+        s.add("Registration["+this.hashCode()+"] {");
+        if (this.entity != null) {
+            s.add("entity: " + this.entity.getIdentification().getUuid());
+        } else {
+            s.add("entity: NULL");
+        }
+        s.add("checksum: "+this.registerChecksum);
+        s.add("from: "+this.registrationFrom);
+        s.add("to: "+this.registrationTo);
+        s.add("effects: [");
+        for (V effect : this.effects) {
+            s.add(effect.toString());
+        }
+        s.add("]\n}");
+        return s.toString();
     }
 
     public E getEntity() {
