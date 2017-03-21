@@ -9,6 +9,7 @@ import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * Created by lars on 20-02-17.
@@ -73,10 +74,6 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         );
     }
 
-    public String toString() {
-        return this.getClass().getName() + "("+this.effectFrom+"->"+this.effectTo+")";
-    }
-
     public R getRegistration() {
         return this.registration;
     }
@@ -102,6 +99,26 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public static String getTableName(Class<? extends Effect> cls) {
         return cls.getAnnotation(Table.class).name();
+    }
+
+    public String toString() {
+        return this.toString(0);
+    }
+
+    public String toString(int indent) {
+        String indentString = new String(new char[4 * (indent)]).replace("\0", " ");
+        String subIndentString = new String(new char[4 * (indent + 1)]).replace("\0", " ");
+        StringJoiner s = new StringJoiner("\n");
+        s.add(indentString + this.getClass().getSimpleName() + "["+this.hashCode()+"] {");
+        s.add(subIndentString + "from: "+this.effectFrom);
+        s.add(subIndentString + "to: "+this.effectTo);
+        s.add(subIndentString + "data: [");
+        for (D dataItem : this.getDataItems()) {
+            s.add(dataItem.toString(indent + 2));
+        }
+        s.add(subIndentString + "]");
+        s.add(indentString + "}");
+        return s.toString();
     }
 
 }

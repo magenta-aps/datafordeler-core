@@ -80,25 +80,28 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
     public String toString() {
-        return this.toString(4);
+        return this.toString(0);
     }
 
     public String toString(int indent) {
-        StringJoiner s = new StringJoiner("\n" + new String(new char[indent]).replace("\0", " "));
-        s.add("Registration["+this.hashCode()+"] {");
+        String indentString = new String(new char[4 * (indent)]).replace("\0", " ");
+        String subIndentString = new String(new char[4 * (indent + 1)]).replace("\0", " ");
+        StringJoiner s = new StringJoiner("\n");
+        s.add(indentString + "Registration["+this.hashCode()+"] {");
         if (this.entity != null) {
-            s.add("entity: " + this.entity.getIdentification().getUuid());
+            s.add(subIndentString + "entity: " + this.entity.getIdentification().getUuid());
         } else {
-            s.add("entity: NULL");
+            s.add(subIndentString + "entity: NULL");
         }
-        s.add("checksum: "+this.registerChecksum);
-        s.add("from: "+this.registrationFrom);
-        s.add("to: "+this.registrationTo);
-        s.add("effects: [");
+        s.add(subIndentString + "checksum: "+this.registerChecksum);
+        s.add(subIndentString + "from: "+this.registrationFrom);
+        s.add(subIndentString + "to: "+this.registrationTo);
+        s.add(subIndentString + "effects: [");
         for (V effect : this.effects) {
-            s.add(effect.toString());
+            s.add(effect.toString(indent + 2));
         }
-        s.add("]\n}");
+        s.add(subIndentString + "]");
+        s.add(indentString+"}");
         return s.toString();
     }
 

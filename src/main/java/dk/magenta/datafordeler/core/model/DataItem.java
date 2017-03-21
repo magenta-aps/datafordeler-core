@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * Created by lars on 20-02-17.
@@ -76,4 +77,23 @@ public abstract class DataItem<V extends Effect, D extends DataItem> {
     public abstract boolean equalData(D other);
 
     public abstract Map<String, Object> asMap();
+
+    public String toString() {
+        return this.toString(0);
+    }
+
+    public String toString(int indent) {
+        String indentString = new String(new char[4 * (indent)]).replace("\0", " ");
+        String subIndentString = new String(new char[4 * (indent + 1)]).replace("\0", " ");
+        StringJoiner s = new StringJoiner("\n");
+        s.add(indentString + this.getClass().getSimpleName() + "["+this.hashCode()+"] {");
+
+        Map<String, Object> map = this.asMap();
+        for (String key : map.keySet()) {
+            s.add(subIndentString + key + ": " + map.get(key));
+        }
+
+        s.add(indentString + "}");
+        return s.toString();
+    }
 }
