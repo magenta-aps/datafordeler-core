@@ -3,7 +3,8 @@ package dk.magenta.datafordeler.core.exception;
 import org.apache.http.StatusLine;
 
 /**
- * Created by lars on 14-03-17.
+ * An exception that basically tells that we got an HTTP status that we didn't expect
+ *
  */
 public class HttpStatusException extends DataFordelerException {
 

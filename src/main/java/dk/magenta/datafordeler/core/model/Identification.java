@@ -28,10 +28,17 @@ public class Identification {
         return uuid;
     }
 
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
     public String getDomain() {
         return domain;
     }
 
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
     public static String getTableName() {
         return Identification.class.getAnnotation(Table.class).name();
     }

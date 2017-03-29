@@ -36,6 +36,7 @@ public abstract class Entity<E extends Entity, R extends Registration> {
 
     public Entity() {
         this.registrations = new HashSet<R>();
+        this.identification = new Identification();
     }
 
     public Entity(Identification identification) {
@@ -47,18 +48,28 @@ public abstract class Entity<E extends Entity, R extends Registration> {
         this(new Identification(uuid, domain));
     }
 
-    @JsonProperty
+    @JsonIgnore
     public Identification getIdentification() {
         return this.identification;
     }
 
-    @JsonProperty
+    @JsonProperty("uuid")
     public UUID getUUID() {
         return this.identification.getUuid();
     }
 
+    @JsonProperty("uuid")
+    public void setUUID(UUID uuid) {
+        this.identification.setUuid(uuid);
+    }
+
     public String getDomain() {
         return this.identification.getDomain();
+    }
+
+    @JsonProperty
+    public void setDomain(String domain) {
+        this.identification.setDomain(domain);
     }
 
     public Long getId() {
@@ -71,10 +82,6 @@ public abstract class Entity<E extends Entity, R extends Registration> {
 
     public static String getTableName(Class<? extends Entity> cls) {
         return cls.getAnnotation(Table.class).name();
-    }
-
-    public static Class getFoo() {
-        return Entity.class;
     }
 
 }

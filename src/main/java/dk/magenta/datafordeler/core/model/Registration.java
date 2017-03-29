@@ -17,7 +17,7 @@ import java.util.StringJoiner;
 public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> {
 
     @ManyToOne
-    @JsonIgnore
+    @JsonProperty
     protected E entity;
 
     @OneToMany(cascade = CascadeType.ALL)
@@ -138,4 +138,5 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     public static String getTableName(Class<? extends Registration> cls) {
         return cls.getAnnotation(Table.class).name();
     }
+
 }
