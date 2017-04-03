@@ -16,35 +16,6 @@ import java.util.StringJoiner;
 @MappedSuperclass
 public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> {
 
-    @ManyToOne
-    @JsonProperty
-    protected E entity;
-
-    @OneToMany(cascade = CascadeType.ALL)
-    @JsonProperty
-    protected Set<V> effects;
-
-    @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @JsonIgnore
-    private Long id;
-
-    @Column(nullable = false, insertable = true, updatable = false)
-    @JsonProperty
-    protected OffsetDateTime registrationFrom;
-
-    @Column(nullable = true, insertable = true, updatable = false)
-    @JsonProperty
-    protected OffsetDateTime registrationTo;
-
-    @JsonProperty
-    protected int sequenceNumber;
-
-    // The checksum as reported by the register
-    @JsonProperty("checksum")
-    protected String registerChecksum;
-
     public Registration() {
         this.effects = new HashSet<V>();
     }
@@ -79,6 +50,55 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         );
     }
 
+    @ManyToOne
+    @JsonProperty
+    protected E entity;
+
+    public E getEntity() {
+        return this.entity;
+    }
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JsonProperty
+    protected Set<V> effects;
+
+    public Set<V> getEffects() {
+        return this.effects;
+    }
+
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonIgnore
+    private Long id;
+
+    @Column(nullable = false, insertable = true, updatable = false)
+    @JsonProperty
+    protected OffsetDateTime registrationFrom;
+
+    public OffsetDateTime getRegistrationFrom() {
+        return this.registrationFrom;
+    }
+
+    @Column(nullable = true, insertable = true, updatable = false)
+    @JsonProperty
+    protected OffsetDateTime registrationTo;
+
+    public OffsetDateTime getRegistrationTo() {
+        return this.registrationTo;
+    }
+
+    @JsonProperty
+    protected int sequenceNumber;
+
+    // The checksum as reported by the register
+    @JsonProperty("checksum")
+    protected String registerChecksum;
+
+    public String getRegisterChecksum() {
+        return this.registerChecksum;
+    }
+
     public String toString() {
         return this.toString(0);
     }
@@ -105,21 +125,9 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return s.toString();
     }
 
-    public E getEntity() {
-        return this.entity;
-    }
 
-    public OffsetDateTime getRegistrationFrom() {
-        return this.registrationFrom;
-    }
 
-    public OffsetDateTime getRegistrationTo() {
-        return this.registrationTo;
-    }
 
-    public Set<V> getEffects() {
-        return this.effects;
-    }
 
     public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         for (V effect : this.effects) {

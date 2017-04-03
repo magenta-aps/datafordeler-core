@@ -10,4 +10,5 @@ import java.net.URI;
  */
 public interface Reference {
     public String getChecksum();
+    public URI getURI();
 }

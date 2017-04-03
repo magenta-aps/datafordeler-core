@@ -15,10 +15,12 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
@@ -27,11 +29,11 @@ import java.util.*;
 */
 public abstract class RegisterManager {
 
-    @Autowired
-    ObjectMapper objectMapper;
-
     public abstract URI getBaseEndpoint();
 
+    protected ObjectMapper getObjectMapper() {
+        return new ObjectMapper();
+    }
 
     /**
      * @return A URL to send the given receipt to
@@ -40,14 +42,15 @@ public abstract class RegisterManager {
     protected abstract URI getReceiptEndpoint(Receipt receipt);
 
     public int sendReceipt(Receipt receipt) throws IOException {
+        ObjectMapper objectMapper = this.getObjectMapper();
         // Send receipts to the register interface at the address pointed to by getReceiptEndpoint()
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
+        System.out.println("Sending receipt to " + receiptEndpoint);
         HttpPost post = new HttpPost(receiptEndpoint);
         post.setEntity(new StringEntity(objectMapper.writeValueAsString(receipt)));
-
-        // TODO: Do this in a thread
+        // TODO: Do this in a thread?
         CloseableHttpResponse response = httpclient.execute(post);
         return response.getStatusLine().getStatusCode();
     }
@@ -145,6 +148,28 @@ public abstract class RegisterManager {
         // Fetch these versions
         // Update DB
         // Send receipts
+    }
+
+
+    /**
+     * Utility method to be used by subclasses
+     * @param base
+     * @param path
+     * @return Expanded URI, with scheme, host and port from the base, a custom path, and no query or fragment
+     * @throws URISyntaxException
+     */
+    public static URI expandBaseURI(URI base, String path) throws URISyntaxException {
+        return expandBaseURI(base, path, null, null);
+    }
+    /**
+     * Utility method to be used by subclasses
+     * @param base
+     * @param path
+     * @return Expanded URI, with scheme, host and port from the base, and a custom path query and fragment
+     * @throws URISyntaxException
+     */
+    public static URI expandBaseURI(URI base, String path, String query, String fragment) throws URISyntaxException {
+        return new URI(base.getScheme(), base.getUserInfo(), base.getHost(), base.getPort(), path, query, fragment);
     }
 
 }

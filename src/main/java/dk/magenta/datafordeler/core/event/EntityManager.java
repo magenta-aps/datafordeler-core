@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 
 /**
  * Created by lars on 13-03-17.
@@ -21,11 +22,12 @@ import java.net.URISyntaxException;
  * So we split the needed methods on RegisterManager out into these EntityManagers
  */
 public abstract class EntityManager {
-    protected RegisterManager registerManager;
     protected Class<? extends Entity> managedEntityClass;
     protected Class<? extends Reference> managedRegistrationReferenceClass;
     protected Class<? extends Registration> managedRegistrationClass;
     protected Fetcher registrationFetcher;
+
+    public abstract RegisterManager getRegisterManager();
 
     public Class<? extends Entity> getManagedEntityClass() {
         return this.managedEntityClass;
@@ -38,6 +40,8 @@ public abstract class EntityManager {
     public Class<? extends Registration> getManagedRegistrationClass() {
         return this.managedRegistrationClass;
     }
+
+    public abstract Collection<String> getHandledURISubstrings();
 
     /**
      * Parse incoming data into a Reference (data coming from within a request envelope)
@@ -54,6 +58,13 @@ public abstract class EntityManager {
      * @throws IOException
      */
     public abstract Reference parseReference(String referenceData, String charsetName) throws IOException;
+
+    /**
+     * Parse incoming data into a Reference (data coming from within a request envelope)
+     * @param uri
+     * @return
+     */
+    public abstract Reference parseReference(URI uri);
 
     /**
      * Parse incoming data into a Registration (data coming from within a request envelope)
@@ -92,8 +103,9 @@ public abstract class EntityManager {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
         }
         InputStream registrationData = null;
+        URI uri = this.getRegistrationInterface(reference);
         try {
-            registrationData = this.registrationFetcher.fetch(this.getRegistrationInterface(reference));
+            registrationData = this.registrationFetcher.fetch(uri);
         } catch (HttpStatusException e) {
             throw new FailedReferenceException(reference, e);
         }
@@ -110,7 +122,7 @@ public abstract class EntityManager {
      * @throws URISyntaxException
      */
     protected static URI expandBaseURI(URI base, String path) throws URISyntaxException {
-        return expandBaseURI(base, path, null, null);
+        return RegisterManager.expandBaseURI(base, path);
     }
     /**
      * Utility method to be used by subclasses
@@ -120,6 +132,6 @@ public abstract class EntityManager {
      * @throws URISyntaxException
      */
     protected static URI expandBaseURI(URI base, String path, String query, String fragment) throws URISyntaxException {
-        return new URI(base.getScheme(), base.getUserInfo(), base.getHost(), base.getPort(), path, query, fragment);
+        return RegisterManager.expandBaseURI(base, path, query, fragment);
     }
 }

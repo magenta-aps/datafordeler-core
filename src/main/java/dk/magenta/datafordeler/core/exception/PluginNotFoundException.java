@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.exception;
 
+import java.net.URI;
+
 /**
  * Created by lars on 07-03-17.
  */
@@ -10,13 +12,24 @@ public class PluginNotFoundException extends DataFordelerException {
     }
 
     private String schema;
+    private URI uri;
 
     public PluginNotFoundException(String schema) {
         this.schema = schema;
     }
 
+    public PluginNotFoundException(URI uri) {
+        this.uri = uri;
+    }
+
     @Override
     public String getMessage() {
-        return "Plugin that handles schema "+this.schema+" was not found";
+        if (this.schema != null) {
+            return "Plugin that handles schema " + this.schema + " was not found";
+        } else if (this.uri != null) {
+            return "Plugin that handles URI " + this.uri.toString() + " was not found";
+        } else {
+            return "Plugin lookup on null";
+        }
     }
 }

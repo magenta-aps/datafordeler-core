@@ -2,7 +2,7 @@ package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 /**
  * Created by lars on 16-02-17.
@@ -16,17 +16,19 @@ public class Receipt {
 
     private String objectID;
     private Status status;
-    private Date received;
+    private OffsetDateTime received;
     private String errorCode;
     private String errorMessage;
 
-    public Receipt(String objectID, Date received) {
+    public Receipt() {}
+
+    public Receipt(String objectID, OffsetDateTime received) {
         this.objectID = objectID;
         this.status = Status.ok;
         this.received = received;
     }
 
-    public Receipt(String objectID, Date received, DataFordelerException e) {
+    public Receipt(String objectID, OffsetDateTime received, DataFordelerException e) {
         this(objectID, received);
         this.status = Status.failed;
         this.errorCode = e.getCode();
@@ -41,7 +43,7 @@ public class Receipt {
         return status;
     }
 
-    public Date getReceived() {
+    public OffsetDateTime getReceived() {
         return received;
     }
 
