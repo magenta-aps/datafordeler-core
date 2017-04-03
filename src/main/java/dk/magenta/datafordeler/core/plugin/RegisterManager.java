@@ -4,24 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Checksum;
 import dk.magenta.datafordeler.core.ChecksumInputStream;
 import dk.magenta.datafordeler.core.Receipt;
-import dk.magenta.datafordeler.core.oldevent.BusinessEvent;
-import dk.magenta.datafordeler.core.oldevent.DataEvent;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
-import dk.magenta.datafordeler.core.event.Reference;
-import dk.magenta.datafordeler.core.model.Registration;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -29,11 +24,11 @@ import java.util.*;
 */
 public abstract class RegisterManager {
 
-    public abstract URI getBaseEndpoint();
-
-    protected ObjectMapper getObjectMapper() {
-        return new ObjectMapper();
-    }
+    /**
+     * Plugins must return an autowired ObjectMapper instance from this method
+     * @return
+     */
+    protected abstract ObjectMapper getObjectMapper();
 
     /**
      * @return A URL to send the given receipt to
@@ -41,11 +36,15 @@ public abstract class RegisterManager {
      */
     protected abstract URI getReceiptEndpoint(Receipt receipt);
 
+    /**
+     * Sends a receipt to the register. Plugins are free to overload this with their own implementation
+     * @param receipt
+     * @return
+     * @throws IOException
+     */
     public int sendReceipt(Receipt receipt) throws IOException {
         ObjectMapper objectMapper = this.getObjectMapper();
-        // Send receipts to the register interface at the address pointed to by getReceiptEndpoint()
         CloseableHttpClient httpclient = HttpClients.createDefault();
-
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
         String payload = objectMapper.writeValueAsString(receipt);
         System.out.println("Sending receipt to " + receiptEndpoint);
@@ -57,7 +56,11 @@ public abstract class RegisterManager {
         return response.getStatusLine().getStatusCode();
     }
 
-
+    /**
+     * Sends multiple receipts, calling sendReceipt for each Receipt in the input
+     * @param receipts
+     * @return
+     */
     public Map<Receipt, Integer> sendReceipts(List<Receipt> receipts) {
         // TODO: Pack receipts to the same URI together in one request
         HashMap<Receipt, Integer> responses = new HashMap<>();
@@ -90,60 +93,23 @@ public abstract class RegisterManager {
      */
     protected abstract ChecksumInputStream parseChecksumResponse(InputStream responseContent) throws DataFordelerException;
 
-    public ChecksumInputStream listRegisterChecksums(Date fromDate) throws DataFordelerException {
+    public ChecksumInputStream listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException {
         // Request checksums from the register pointed to by getChecksumInterface()
         // Put the response through parseChecksumResponse
         return null;
     }
 
-
-
-
-
-
-    /**
-     * @return a URL to call for fetching registrations
-     * Depending on the register, the URL could change between registrations (such as the checksum being part of it)
-     */
-    /*protected abstract URL getRegistrationsInterface(Reference reference);
-
-    public List<Registration> getRegistrations(Collection<Reference> references) throws DataFordelerException {
-        // Request registrations from the register pointed to by getRegistrationsInterface()
-        // TODO: Should this return a stream of instances?
-        return null;
-    }
-
-    public Registration getRegistration(Reference reference) throws DataFordelerException {
-        // Request registrations from the register pointed to by getRegistrationsInterface()
-        // TODO: Should this return a stream of instances?
-        return null;
-    }*/
-
-
-
-
-
-
-    public List<Checksum> listLocalChecksums(Date fromDate) throws DataFordelerException {
+    public List<Checksum> listLocalChecksums(OffsetDateTime fromDate) throws DataFordelerException {
         // Look in the local database for checksums
         // TODO: Should we return a Map instead, for quicker lookup?
         return null;
     }
 
-
-
-
-
-/*
-    protected abstract void processBusinessEvent(BusinessEvent event);
-
-    protected abstract void processDataEvent(DataEvent event);
-*/
     public final void synchronize() {
         this.synchronize(null);
     }
 
-    public void synchronize(Date fromdate) {
+    public void synchronize(OffsetDateTime fromdate) {
         // TODO: Likely move this to the dk.magenta.datafordeler.engine.Engine class
         // Fetch list of checksums with listRegisterChecksums
         // Find missing/mismatching versions
