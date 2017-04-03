@@ -47,9 +47,11 @@ public abstract class RegisterManager {
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
+        String payload = objectMapper.writeValueAsString(receipt);
         System.out.println("Sending receipt to " + receiptEndpoint);
+        System.out.println(payload);
         HttpPost post = new HttpPost(receiptEndpoint);
-        post.setEntity(new StringEntity(objectMapper.writeValueAsString(receipt)));
+        post.setEntity(new StringEntity(payload));
         // TODO: Do this in a thread?
         CloseableHttpResponse response = httpclient.execute(post);
         return response.getStatusLine().getStatusCode();

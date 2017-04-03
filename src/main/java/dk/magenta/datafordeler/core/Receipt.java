@@ -14,11 +14,11 @@ public class Receipt {
         failed
     }
 
-    private String objectID;
-    private Status status;
-    private OffsetDateTime received;
-    private String errorCode;
-    private String errorMessage;
+    protected String objectID;
+    protected Status status;
+    protected OffsetDateTime received;
+    protected String errorCode;
+    protected String errorMessage;
 
     public Receipt() {}
 
