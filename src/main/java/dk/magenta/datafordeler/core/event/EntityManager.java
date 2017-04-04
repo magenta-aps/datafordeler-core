@@ -4,6 +4,7 @@ import dk.magenta.datafordeler.core.exception.FailedReferenceException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.exception.WrongSubclassException;
 import dk.magenta.datafordeler.core.model.Entity;
+import dk.magenta.datafordeler.core.model.RegistrationReference;
 import dk.magenta.datafordeler.core.model.Registration;
 import dk.magenta.datafordeler.core.plugin.Fetcher;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
@@ -23,7 +24,7 @@ import java.util.Collection;
  */
 public abstract class EntityManager {
     protected Class<? extends Entity> managedEntityClass;
-    protected Class<? extends Reference> managedRegistrationReferenceClass;
+    protected Class<? extends RegistrationReference> managedRegistrationReferenceClass;
     protected Class<? extends Registration> managedRegistrationClass;
     protected Fetcher registrationFetcher;
 
@@ -33,7 +34,7 @@ public abstract class EntityManager {
         return this.managedEntityClass;
     }
 
-    public Class<? extends Reference> getManagedRegistrationReferenceClass() {
+    public Class<? extends RegistrationReference> getManagedRegistrationReferenceClass() {
         return this.managedRegistrationReferenceClass;
     }
 
@@ -49,7 +50,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public abstract Reference parseReference(InputStream referenceData) throws IOException;
+    public abstract RegistrationReference parseReference(InputStream referenceData) throws IOException;
 
     /**
      * Parse incoming data into a Reference (data coming from within a request envelope)
@@ -57,14 +58,14 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public abstract Reference parseReference(String referenceData, String charsetName) throws IOException;
+    public abstract RegistrationReference parseReference(String referenceData, String charsetName) throws IOException;
 
     /**
      * Parse incoming data into a Reference (data coming from within a request envelope)
      * @param uri
      * @return
      */
-    public abstract Reference parseReference(URI uri);
+    public abstract RegistrationReference parseReference(URI uri);
 
     /**
      * Parse incoming data into a Registration (data coming from within a request envelope)
@@ -88,7 +89,7 @@ public abstract class EntityManager {
      * @return
      * @throws WrongSubclassException
      */
-    public abstract URI getRegistrationInterface(Reference reference) throws WrongSubclassException;
+    public abstract URI getRegistrationInterface(RegistrationReference reference) throws WrongSubclassException;
 
     /**
      * Obtain a Registration by Reference
@@ -98,7 +99,7 @@ public abstract class EntityManager {
      * @throws IOException
      * @throws FailedReferenceException
      */
-    public Registration fetchRegistration(Reference reference) throws WrongSubclassException, IOException, FailedReferenceException {
+    public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException {
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
         }

@@ -1,5 +1,6 @@
-package dk.magenta.datafordeler.core.event;
+package dk.magenta.datafordeler.core.model;
 
+import java.io.Serializable;
 import java.net.URI;
 
 /**
@@ -8,7 +9,7 @@ import java.net.URI;
  * A reference is a serializable object passed though the register channel,
  * able to look up a Registration
  */
-public interface Reference {
+public interface RegistrationReference extends Serializable {
     public String getChecksum();
     public URI getURI();
 }

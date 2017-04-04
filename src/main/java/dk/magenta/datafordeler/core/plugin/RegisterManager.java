@@ -2,20 +2,25 @@ package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Checksum;
-import dk.magenta.datafordeler.core.ChecksumInputStream;
+import dk.magenta.datafordeler.core.ItemInputStream;
 import dk.magenta.datafordeler.core.Receipt;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
+import dk.magenta.datafordeler.core.model.EntityReference;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -29,6 +34,13 @@ public abstract class RegisterManager {
      * @return
      */
     protected abstract ObjectMapper getObjectMapper();
+
+
+
+    public abstract URI getBaseEndpoint();
+
+
+    // RECEIPTS
 
     /**
      * @return A URL to send the given receipt to
@@ -79,31 +91,58 @@ public abstract class RegisterManager {
 
 
 
-
+    // LISTCHECKSUMS
 
     /**
      * @return a URL to call for fetching the checksum map
      */
-    protected abstract URL getChecksumInterface();
+    protected abstract URI getListChecksumInterface(OffsetDateTime fromDate);
 
     /**
      * Parse the response contents into Checksum instances
      * @param responseContent
      * @return Stream of Checksum instances for further processing
      */
-    protected abstract ChecksumInputStream parseChecksumResponse(InputStream responseContent) throws DataFordelerException;
+    protected abstract ItemInputStream<? extends EntityReference> parseChecksumResponse(InputStream responseContent) throws DataFordelerException;
 
-    public ChecksumInputStream listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException {
-        // Request checksums from the register pointed to by getChecksumInterface()
-        // Put the response through parseChecksumResponse
-        return null;
+    /**
+     * Fetches checksum data (for synchronization) from the register. Plugins are free to implement their own version
+     * @param fromDate
+     * @return
+     * @throws DataFordelerException
+     */
+    public ItemInputStream<? extends EntityReference> listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException, IOException {
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        HttpGet get = new HttpGet(this.getListChecksumInterface(fromDate));
+        System.out.println(this.getListChecksumInterface(fromDate));
+        // TODO: Do this in a thread?
+        CloseableHttpResponse response = httpclient.execute(get);
+        InputStream responseBody = response.getEntity().getContent();
+        return this.parseChecksumResponse(responseBody);
     }
+
+
+
+
+
 
     public List<Checksum> listLocalChecksums(OffsetDateTime fromDate) throws DataFordelerException {
         // Look in the local database for checksums
         // TODO: Should we return a Map instead, for quicker lookup?
         return null;
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
     public final void synchronize() {
         this.synchronize(null);

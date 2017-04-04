@@ -1,8 +1,5 @@
 package dk.magenta.datafordeler.core.exception;
 
-import dk.magenta.datafordeler.core.event.Reference;
-import org.apache.http.StatusLine;
-
 /**
  * Created by lars on 14-03-17.
  */
