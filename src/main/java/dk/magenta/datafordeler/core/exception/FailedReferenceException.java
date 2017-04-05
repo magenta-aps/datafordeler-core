@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.exception;
 
-import dk.magenta.datafordeler.core.event.Reference;
+import dk.magenta.datafordeler.core.model.RegistrationReference;
 import org.apache.http.StatusLine;
 
 /**
@@ -8,14 +8,14 @@ import org.apache.http.StatusLine;
  */
 public class FailedReferenceException extends HttpStatusException {
 
-    private Reference reference;
+    private RegistrationReference reference;
 
-    public FailedReferenceException(Reference reference, StatusLine statusLine) {
+    public FailedReferenceException(RegistrationReference reference, StatusLine statusLine) {
         super(statusLine);
         this.reference = reference;
     }
 
-    public FailedReferenceException(Reference reference, HttpStatusException cause) {
+    public FailedReferenceException(RegistrationReference reference, HttpStatusException cause) {
         this(reference, cause.getStatusLine());
         this.initCause(cause);
     }
