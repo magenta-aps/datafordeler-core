@@ -114,7 +114,6 @@ public abstract class RegisterManager {
     public ItemInputStream<? extends EntityReference> listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException, IOException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet get = new HttpGet(this.getListChecksumInterface(fromDate));
-        System.out.println(this.getListChecksumInterface(fromDate));
         // TODO: Do this in a thread?
         CloseableHttpResponse response = httpclient.execute(get);
         InputStream responseBody = response.getEntity().getContent();
