@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.plugin;
 
 
+import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,14 +20,23 @@ import java.net.URI;
 public class HttpFetcher implements Fetcher {
 
     @Override
-    public InputStream fetch(URI uri) throws IOException, HttpStatusException {
+    public InputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet get = new HttpGet(uri);
-        CloseableHttpResponse response = httpclient.execute(get);
+        CloseableHttpResponse response = null;
+        try {
+            response = httpclient.execute(get);
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
         StatusLine statusLine = response.getStatusLine();
         if (statusLine.getStatusCode() != 200) {
-            throw new HttpStatusException(statusLine);
+            throw new HttpStatusException(statusLine, uri);
         }
-        return response.getEntity().getContent();
+        try {
+            return response.getEntity().getContent();
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
     }
 }
