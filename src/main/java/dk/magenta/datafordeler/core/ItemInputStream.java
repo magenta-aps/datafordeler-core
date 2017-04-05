@@ -27,6 +27,7 @@ public class ItemInputStream<T> extends ObjectInputStream {
             // Ignore it and get the next one instead
             return this.next();
         } catch (EOFException e) {
+            // Apparently we always get this at the end of the stream
             return null;
         }
     }
