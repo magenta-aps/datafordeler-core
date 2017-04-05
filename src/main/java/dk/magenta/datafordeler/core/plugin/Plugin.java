@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.event.EntityManager;
-import dk.magenta.datafordeler.core.model.Registration;
 
 import java.net.URI;
 import java.util.*;
@@ -12,8 +11,6 @@ import java.util.*;
 public abstract class Plugin {
 
     protected long version = 1L;
-
-    protected RegisterManager registerManager;
 
     protected List<EntityManager> entityManagers;
 
@@ -47,10 +44,6 @@ public abstract class Plugin {
         this.registerHandler.processDataEvent(event);
     }
 */
-
-    public RegisterManager getRegisterManager() {
-        return this.registerManager;
-    }
 
     public EntityManager getEntityManager(String schema) {
         return this.entityManagerBySchema.get(schema);
