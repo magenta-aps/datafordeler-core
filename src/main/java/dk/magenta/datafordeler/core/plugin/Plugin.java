@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import dk.magenta.datafordeler.core.configuration.Configuration;
+import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 import dk.magenta.datafordeler.core.event.EntityManager;
 
 import java.net.URI;
@@ -20,7 +22,7 @@ public abstract class Plugin {
 
     protected RolesDefinition roleDefinition;
 
-    protected FieldsDefinition fieldsDefinition;
+    protected Configuration configuration;
 
     protected HashSet<String> handledSchemas;
 
@@ -58,6 +60,8 @@ public abstract class Plugin {
         }
         return null;
     }
+
+    public abstract ConfigurationManager getConfigurationManager();
 
 
     public boolean handlesSchema(String schema) {
