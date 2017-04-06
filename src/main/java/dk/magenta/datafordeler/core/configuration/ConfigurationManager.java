@@ -1,6 +1,8 @@
 package dk.magenta.datafordeler.core.configuration;
 
+import dk.magenta.datafordeler.core.SessionManager;
 import org.hibernate.Session;
+import org.springframework.stereotype.Component;
 
 import javax.persistence.NoResultException;
 
@@ -9,29 +11,25 @@ import javax.persistence.NoResultException;
  */
 public abstract class ConfigurationManager<C extends Configuration> {
 
-    public void init(Session session) {
-        this.createDefaultIfMissing(session);
+    private C configuration;
+
+    public void init() {
+        Session session = this.getSessionManager().getSessionFactory().openSession();
+        try {
+            Class<C> configurationClass = this.getConfigurationClass();
+            this.configuration = session.createQuery("select c from "+configurationClass.getSimpleName()+" c", configurationClass).getSingleResult();
+        } catch (NoResultException e) {
+            C defaultConfiguration = this.initConfiguration();
+            session.save(defaultConfiguration);
+            this.configuration = defaultConfiguration;
+        }
+        session.close();
     }
 
     protected abstract Class<C> getConfigurationClass();
 
-    public C getConfiguration(Session session) {
-        try {
-            Class<C> configurationClass = this.getConfigurationClass();
-            return session.createQuery("select c from "+configurationClass.getSimpleName()+" c", configurationClass).getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
-
     protected abstract C initConfiguration();
 
-    protected C createDefaultIfMissing(Session session) {
-        if (this.getConfiguration(session) == null) {
-            C defaultConfiguration = this.initConfiguration();
-            session.save(defaultConfiguration);
-            return defaultConfiguration;
-        }
-        return null;
-    }
+    protected abstract SessionManager getSessionManager();
+
 }
