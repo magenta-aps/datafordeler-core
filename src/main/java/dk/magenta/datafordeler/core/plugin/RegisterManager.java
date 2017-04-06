@@ -127,7 +127,7 @@ public abstract class RegisterManager {
                         .setJobData(jobData)
                         .build();
 
-                scheduler.scheduleJob(job, pullTrigger);
+                scheduler.scheduleJob(job, Collections.singleton(pullTrigger), true);
                 scheduler.start();
             } else {
                 // Remove old schedule
