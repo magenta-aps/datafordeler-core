@@ -1,5 +1,8 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import dk.magenta.datafordeler.core.configuration.Configuration;
+import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
+
 import java.net.URI;
 import java.util.*;
 
@@ -12,7 +15,7 @@ public abstract class Plugin {
 
     protected RolesDefinition roleDefinition;
 
-    protected FieldsDefinition fieldsDefinition;
+    protected Configuration configuration;
 
     protected RegisterManager registerManager;
 
@@ -22,8 +25,6 @@ public abstract class Plugin {
     public long getVersion() {
     return version;
     }
-
-    public abstract Collection<String> getHandledURISubstrings();
 
     public RegisterManager getRegisterManager() {
         return this.registerManager;
@@ -40,4 +41,9 @@ public abstract class Plugin {
     public EntityManager getEntityManager(URI uri) {
         return this.registerManager.getEntityManager(uri);
     }
+
+    public abstract ConfigurationManager getConfigurationManager();
+
+    public abstract Collection<String> getHandledURISubstrings();
+    
 }
