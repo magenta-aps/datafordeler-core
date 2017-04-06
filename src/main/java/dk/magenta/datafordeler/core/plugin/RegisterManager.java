@@ -25,10 +25,6 @@ public abstract class RegisterManager {
 
     protected HashSet<String> handledSchemas;
 
-    private TriggerKey pullTriggerKey;
-
-    protected Class<? extends PullTask> pullTaskClass = PullTask.class;
-
     public RegisterManager() {
         this.handledSchemas = new HashSet<>();
         this.entityManagers = new ArrayList<>();
@@ -97,51 +93,6 @@ public abstract class RegisterManager {
 
     protected ItemInputStream<Event> parseEventResponse(InputStream responseContent) throws DataFordelerException {
         return ItemInputStream.parseJsonStream(responseContent, Event.class, "events", this.getObjectMapper());
-    }
-
-    public void setupPullSchedule() {
-        this.setupPullSchedule(this.getPullCronSchedule());
-    }
-
-    public void setupPullSchedule(String cronSchedule) {
-        this.setupPullSchedule(cronSchedule, false);
-    }
-
-    public void setupPullSchedule(String cronSchedule, boolean dummyRun) {
-        Scheduler scheduler;
-
-        try {
-            scheduler = StdSchedulerFactory.getDefaultScheduler();
-            if (cronSchedule != null) {
-                this.pullTriggerKey = TriggerKey.triggerKey("pullTrigger", this.getClass().getName());
-                // Set up new schedule, or replace existing
-                Trigger pullTrigger = TriggerBuilder.newTrigger()
-                        .withIdentity(this.pullTriggerKey)
-                        .withSchedule(
-                                CronScheduleBuilder.cronSchedule(cronSchedule)
-                        ).build();
-                this.pullTriggerKey = pullTrigger.getKey();
-
-                JobDataMap jobData = new JobDataMap();
-                jobData.put(PullTask.DATA_REGISTERMANAGER, this);
-                jobData.put(PullTask.DATA_DUMMYRUN, dummyRun);
-                JobDetail job = JobBuilder.newJob(this.pullTaskClass)
-                        .withIdentity("pullTask")
-                        .setJobData(jobData)
-                        .build();
-
-                scheduler.scheduleJob(job, Collections.singleton(pullTrigger), true);
-                scheduler.start();
-            } else {
-                // Remove old schedule
-                if (this.pullTriggerKey != null) {
-                    scheduler.unscheduleJob(this.pullTriggerKey);
-                }
-            }
-
-        } catch (SchedulerException e) {
-
-        }
     }
 
     /**
