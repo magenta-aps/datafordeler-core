@@ -99,12 +99,15 @@ public abstract class RegisterManager {
         return ItemInputStream.parseJsonStream(responseContent, Event.class, "events", this.getObjectMapper());
     }
 
+    public void setupPullSchedule() {
+        this.setupPullSchedule(this.getPullCronSchedule());
+    }
+
     public void setupPullSchedule(String cronSchedule) {
         this.setupPullSchedule(cronSchedule, false);
     }
 
     public void setupPullSchedule(String cronSchedule, boolean dummyRun) {
-        //String cronSchedule = this.getPullCronSchedule();
         Scheduler scheduler;
 
         try {
@@ -143,6 +146,7 @@ public abstract class RegisterManager {
 
     /**
      * Return a Cron expression telling when to perform a pull from the register
+     * Subclasses that want to enable pull must override this and return a valid cron expression
      * @return
      */
     public String getPullCronSchedule() {
