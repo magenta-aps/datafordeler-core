@@ -2,7 +2,6 @@ package dk.magenta.datafordeler.core.configuration;
 
 import dk.magenta.datafordeler.core.SessionManager;
 import org.hibernate.Session;
-import org.springframework.stereotype.Component;
 
 import javax.persistence.NoResultException;
 
@@ -19,7 +18,7 @@ public abstract class ConfigurationManager<C extends Configuration> {
             Class<C> configurationClass = this.getConfigurationClass();
             this.configuration = session.createQuery("select c from "+configurationClass.getSimpleName()+" c", configurationClass).getSingleResult();
         } catch (NoResultException e) {
-            C defaultConfiguration = this.initConfiguration();
+            C defaultConfiguration = this.createConfiguration();
             session.save(defaultConfiguration);
             this.configuration = defaultConfiguration;
         }
@@ -28,8 +27,11 @@ public abstract class ConfigurationManager<C extends Configuration> {
 
     protected abstract Class<C> getConfigurationClass();
 
-    protected abstract C initConfiguration();
+    protected abstract C createConfiguration();
 
     protected abstract SessionManager getSessionManager();
 
+    public C getConfiguration() {
+        return this.configuration;
+    }
 }
