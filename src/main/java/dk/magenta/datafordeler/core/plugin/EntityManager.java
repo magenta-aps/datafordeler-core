@@ -1,13 +1,11 @@
-package dk.magenta.datafordeler.core.event;
+package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Checksum;
 import dk.magenta.datafordeler.core.ItemInputStream;
 import dk.magenta.datafordeler.core.Receipt;
-import dk.magenta.datafordeler.core.exception.DataFordelerException;
-import dk.magenta.datafordeler.core.exception.FailedReferenceException;
-import dk.magenta.datafordeler.core.exception.HttpStatusException;
-import dk.magenta.datafordeler.core.exception.WrongSubclassException;
+import dk.magenta.datafordeler.core.event.Event;
+import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.model.Entity;
 import dk.magenta.datafordeler.core.model.EntityReference;
 import dk.magenta.datafordeler.core.model.RegistrationReference;
@@ -19,7 +17,10 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -40,7 +41,6 @@ public abstract class EntityManager {
     protected Class<? extends Entity> managedEntityClass;
     protected Class<? extends RegistrationReference> managedRegistrationReferenceClass;
     protected Class<? extends Registration> managedRegistrationClass;
-    protected Fetcher registrationFetcher;
 
     public Class<? extends Entity> getManagedEntityClass() {
         return this.managedEntityClass;
@@ -61,6 +61,12 @@ public abstract class EntityManager {
      * @return
      */
     protected abstract ObjectMapper getObjectMapper();
+
+    /**
+     * Plugins must return a Fetcher instance from this method
+     * @return
+     */
+    protected abstract Fetcher getRegistrationFetcher();
 
 
 
@@ -207,14 +213,15 @@ public abstract class EntityManager {
      * @throws IOException
      * @throws FailedReferenceException
      */
-    public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException {
+    public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException, DataStreamException {
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
         }
         InputStream registrationData = null;
         URI uri = this.getRegistrationInterface(reference);
+        System.out.println(uri.toString());
         try {
-            registrationData = this.registrationFetcher.fetch(uri);
+            registrationData = this.getRegistrationFetcher().fetch(uri);
         } catch (HttpStatusException e) {
             throw new FailedReferenceException(reference, e);
         }
@@ -249,7 +256,6 @@ public abstract class EntityManager {
     public ItemInputStream<? extends EntityReference> listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException, IOException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet get = new HttpGet(this.getListChecksumInterface(fromDate));
-        System.out.println(this.getListChecksumInterface(fromDate));
         // TODO: Do this in a thread?
         CloseableHttpResponse response = httpclient.execute(get);
         InputStream responseBody = response.getEntity().getContent();
@@ -266,8 +272,6 @@ public abstract class EntityManager {
 
 
 
-
-
     /**
      * Utility method to be used by subclasses
      * @param base
@@ -276,7 +280,7 @@ public abstract class EntityManager {
      * @throws URISyntaxException
      */
     public static URI expandBaseURI(URI base, String path) throws URISyntaxException {
-        return expandBaseURI(base, path, null, null);
+        return RegisterManager.expandBaseURI(base, path);
     }
     /**
      * Utility method to be used by subclasses
@@ -286,6 +290,6 @@ public abstract class EntityManager {
      * @throws URISyntaxException
      */
     public static URI expandBaseURI(URI base, String path, String query, String fragment) throws URISyntaxException {
-        return new URI(base.getScheme(), base.getUserInfo(), base.getHost(), base.getPort(), (base.getPath() == null ? "" : base.getPath()) + path, query, fragment);
+        return RegisterManager.expandBaseURI(base, path, query, fragment);
     }
 }

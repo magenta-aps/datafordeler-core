@@ -73,21 +73,20 @@ public class QueryManager {
                 duplicates.add(authoritative.get(key1, key2), effect);
             }
         }
-        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-        System.out.println("---DUPLICATES---");
-        System.out.println(duplicates);
-        for (V master : duplicates.keySet()) {
-            List<V> dups = duplicates.get(master);
-            for (V dup : dups) {
-                System.out.println(dup.getDataItems().size()+" dataitems");
-                for (D dataItem : dup.getDataItems()) {
-                    dataItem.addEffect(master);
-                    dataItem.removeEffect(dup);
+        if (!duplicates.isEmpty()) {
+            System.out.println("Duplicates: " + duplicates);
+            for (V master : duplicates.keySet()) {
+                List<V> dups = duplicates.get(master);
+                for (V dup : dups) {
+                    System.out.println(dup.getDataItems().size() + " dataitems");
+                    for (D dataItem : dup.getDataItems()) {
+                        dataItem.addEffect(master);
+                        dataItem.removeEffect(dup);
+                    }
+                    registration.removeEffect(dup);
+                    session.delete(dup);
                 }
-                registration.removeEffect(dup);
-                session.delete(dup);
             }
         }
-
     }
 }

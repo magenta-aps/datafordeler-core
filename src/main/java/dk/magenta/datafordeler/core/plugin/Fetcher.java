@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ public interface Fetcher {
 
   // public abstract String fetchEntityData();
 
-  public abstract InputStream fetch(URI uri) throws IOException, HttpStatusException;
+  public abstract InputStream fetch(URI uri) throws HttpStatusException, DataStreamException;
 
   // public abstract String fetchEntitiesData();
 

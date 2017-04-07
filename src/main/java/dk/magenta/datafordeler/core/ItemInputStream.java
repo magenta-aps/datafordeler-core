@@ -26,15 +26,17 @@ public class ItemInputStream<T> extends ObjectInputStream {
             // This would mean that there's a non-Checksum object in there.
             // Ignore it and get the next one instead
             return this.next();
+        } catch (EOFException e) {
+            // Apparently we always get this at the end of the stream
+            return null;
         }
     }
 
-    public static <T> ItemInputStream<T> parseJsonStream(InputStream jsonStream, Class<T> itemClass, ObjectMapper objectMapper) {
+    public static <T> ItemInputStream<T> parseJsonStream(InputStream jsonStream, Class<T> itemClass, final String objectListName, ObjectMapper objectMapper) {
         PipedInputStream inputStream = new PipedInputStream();
         try {
             final PipedOutputStream outputStream = new PipedOutputStream(inputStream);
             final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            final String objectListName = "items";
 
             Thread t = new Thread(new Runnable() {
                 @Override

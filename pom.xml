@@ -16,6 +16,7 @@
         <junit.version>LATEST</junit.version>
         <spring.version>4.3.6.RELEASE</spring.version>
         <spring.boot.version>1.5.1.RELEASE</spring.boot.version>
+        <quartz.version>2.2.3</quartz.version>
     </properties>
 
     <repositories>
@@ -120,6 +121,14 @@
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
         </dependency>
+
+        <!-- Cron scheduling -->
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>${quartz.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
