@@ -38,12 +38,19 @@ import java.util.Map;
  * A plugin can have any number of Entity classes, each needing their own way of handling
  */
 public abstract class EntityManager {
+    private RegisterManager registerManager;
+    private String schema;
     protected Class<? extends Entity> managedEntityClass;
+    protected Class<? extends EntityReference> managedEntityReferenceClass;
     protected Class<? extends RegistrationReference> managedRegistrationReferenceClass;
     protected Class<? extends Registration> managedRegistrationClass;
 
     public Class<? extends Entity> getManagedEntityClass() {
         return this.managedEntityClass;
+    }
+
+    public Class<? extends EntityReference> getManagedEntityReferenceClass() {
+        return this.managedEntityReferenceClass;
     }
 
     public Class<? extends RegistrationReference> getManagedRegistrationReferenceClass() {
@@ -72,12 +79,21 @@ public abstract class EntityManager {
 
     public abstract URI getBaseEndpoint();
 
+    public RegisterManager getRegisterManager() {
+        return this.registerManager;
+    }
 
+    public void setRegisterManager(RegisterManager registerManager) {
+        this.registerManager = registerManager;
+    }
 
+    public String getSchema() {
+        return this.schema;
+    }
 
-
-
-
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
 
     /** Receipt sending **/
 
@@ -267,7 +283,6 @@ public abstract class EntityManager {
         // TODO: Should we return a Map instead, for quicker lookup?
         return null;
     }
-
 
 
 

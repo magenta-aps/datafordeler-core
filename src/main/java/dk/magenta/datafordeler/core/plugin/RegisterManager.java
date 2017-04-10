@@ -4,12 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.ItemInputStream;
 import dk.magenta.datafordeler.core.event.Event;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
+import dk.magenta.datafordeler.core.model.EntityReference;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -66,6 +73,8 @@ public abstract class RegisterManager {
     }
 
     public void addEntityManager(EntityManager entityManager, String schema) {
+        entityManager.setRegisterManager(this);
+        entityManager.setSchema(schema);
         this.handledSchemas.add(schema);
         this.entityManagers.add(entityManager);
         this.entityManagerBySchema.put(schema, entityManager);
@@ -103,6 +112,40 @@ public abstract class RegisterManager {
     public String getPullCronSchedule() {
         return null;
     }
+
+    /** Checksum fetching **/
+
+    public abstract URI getListChecksumInterface(String schema, OffsetDateTime from);
+
+    /**
+     * Fetches checksum data (for synchronization) from the register. Plugins are free to implement their own version
+     * @param fromDate
+     * @return
+     * @throws DataFordelerException
+     */
+    public ItemInputStream<? extends EntityReference> listRegisterChecksums(String schema, OffsetDateTime fromDate) throws DataFordelerException, IOException {
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        HttpGet get = new HttpGet(this.getListChecksumInterface(schema, fromDate));
+        // TODO: Do this in a thread?
+        CloseableHttpResponse response = httpclient.execute(get);
+        InputStream responseBody = response.getEntity().getContent();
+        if (schema != null) {
+            EntityManager entityManager = this.getEntityManager(schema);
+            if (entityManager != null) {
+                return entityManager.parseChecksumResponse(responseBody);
+            }
+        }
+        System.out.println("schema unknown");
+        return this.parseChecksumResponse(responseBody);
+    }
+
+
+    protected abstract ItemInputStream<? extends EntityReference> parseChecksumResponse(InputStream responseContent) throws DataFordelerException;
+
+
+
+
+
 
     /**
      * Utility method to be used by subclasses
