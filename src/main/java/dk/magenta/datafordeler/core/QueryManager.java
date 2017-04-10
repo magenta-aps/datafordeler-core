@@ -113,6 +113,7 @@ public class QueryManager {
 
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, R registration) {
         this.saveEntity(session, registration.getEntity());
+        this.dedupEffects(session, registration);
         session.saveOrUpdate(registration);
         for (V effect : registration.getEffects()) {
             session.saveOrUpdate(effect);
