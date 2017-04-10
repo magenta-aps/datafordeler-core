@@ -7,17 +7,17 @@ import java.util.UUID;
  * Created by lars on 20-02-17.
  */
 @javax.persistence.Entity
-@Table(name = "identifikation")
-public class Identification {
+@Table(name = "identifikation", indexes = {@Index(name="uuid", columnList = "uuid"), @Index(name="id", columnList = "uuid, domain")})
+public class Identification extends DatabaseEntry {
 
-    @Id
-    @Column(name = "id")
+    @Column(unique = true, nullable = false, insertable = true, updatable = false)
     private UUID uuid;
 
-    @Column(nullable = false, insertable = true, updatable = true)
+    @Column(nullable = false, insertable = true, updatable = false)
     private String domain;
 
-    public Identification() {}
+    public Identification() {
+    }
 
     public Identification(UUID uuid, String domain) {
         this.uuid = uuid;
@@ -39,6 +39,7 @@ public class Identification {
     public void setDomain(String domain) {
         this.domain = domain;
     }
+
     public static String getTableName() {
         return Identification.class.getAnnotation(Table.class).name();
     }

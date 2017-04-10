@@ -14,7 +14,7 @@ import java.util.StringJoiner;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
-public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> {
+public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry {
 
     public Registration() {
         this.effects = new HashSet<V>();
@@ -50,7 +50,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         );
     }
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.ALL})
     @JsonProperty
     protected E entity;
 
@@ -65,12 +65,6 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     public Set<V> getEffects() {
         return this.effects;
     }
-
-    @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @JsonIgnore
-    private Long id;
 
     @Column(nullable = false, insertable = true, updatable = false)
     @JsonProperty
@@ -109,7 +103,8 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         StringJoiner s = new StringJoiner("\n");
         s.add(indentString + "Registration["+this.hashCode()+"] {");
         if (this.entity != null) {
-            s.add(subIndentString + "entity: " + this.entity.getIdentification().getUuid());
+            Identification identification = this.entity.getIdentification();
+            s.add(subIndentString + "entity: " + identification.getUuid()+" @ "+identification.getDomain());
         } else {
             s.add(subIndentString + "entity: NULL");
         }

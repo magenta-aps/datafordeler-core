@@ -20,13 +20,9 @@ public class TestEntity extends Entity<TestEntity, TestRegistration> {
         super(uuid, domain);
     }
 
-    public static TestEntity get(Session session, long id) {
-        return session.get(TestEntity.class, id);
-    }
-
     public static TestEntity get(Session session, UUID uuid, String domain) {
-        Query<TestEntity> query = session.createQuery("select e from TestEntity e join e.identification i where i.id = :id and i.domain = :domain", TestEntity.class);
-        query.setParameter("id", uuid);
+        Query<TestEntity> query = session.createQuery("select e from TestEntity e join e.identification i where i.uuid = :uuid and i.domain = :domain", TestEntity.class);
+        query.setParameter("uuid", uuid);
         query.setParameter("domain", domain);
         return query.getSingleResult();
     }

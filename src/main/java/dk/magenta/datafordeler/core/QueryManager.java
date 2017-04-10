@@ -7,6 +7,7 @@ import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.NoResultException;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -16,15 +17,25 @@ import java.util.*;
 @Component
 public class QueryManager {
 
+    public <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
+        Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i where i.uuid != null", eClass);
+        List<E> results = query.getResultList();
+        return results;
+    }
+
     public Identification getIdentification(Session session, UUID uuid) {
-        Query<Identification> query = session.createQuery("select i from Identification i where i.id = :id", Identification.class);
-        query.setParameter("id", uuid);
-        return query.getSingleResult();
+        Query<Identification> query = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
+        query.setParameter("uuid", uuid);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     public <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
-        Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i where i.id = :id", eClass);
-        query.setParameter("id", uuid);
+        Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i where i.uuid = :uuid", eClass);
+        query.setParameter("uuid", uuid);
         query.setMaxResults(1);
         List<E> results = query.getResultList();
         return results.isEmpty() ? null : results.get(0);
@@ -86,6 +97,27 @@ public class QueryManager {
                     registration.removeEffect(dup);
                     session.delete(dup);
                 }
+            }
+        }
+    }
+
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveEntity(Session session, E entity) {
+        Identification existing = this.getIdentification(session, entity.getUUID());
+        if (existing != null && existing != entity.getIdentification()) {
+            entity.setIdentification(existing);
+        } else {
+            session.saveOrUpdate(entity.getIdentification());
+        }
+        session.saveOrUpdate(entity);
+    }
+
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, R registration) {
+        this.saveEntity(session, registration.getEntity());
+        session.saveOrUpdate(registration);
+        for (V effect : registration.getEffects()) {
+            session.saveOrUpdate(effect);
+            for (D dataItem : effect.getDataItems()) {
+                session.saveOrUpdate(dataItem);
             }
         }
     }

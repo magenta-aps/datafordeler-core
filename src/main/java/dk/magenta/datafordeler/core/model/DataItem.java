@@ -14,17 +14,11 @@ import java.util.StringJoiner;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
-public abstract class DataItem<V extends Effect, D extends DataItem> {
+public abstract class DataItem<V extends Effect, D extends DataItem> extends DatabaseEntry {
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @ManyToMany(cascade = {CascadeType.ALL})
     @JsonIgnore
     protected Set<V> effects;
-
-    @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @JsonIgnore
-    private Long id;
 
     public DataItem() {
         this.effects = new HashSet<V>();

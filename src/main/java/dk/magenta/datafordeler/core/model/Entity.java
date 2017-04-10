@@ -15,24 +15,19 @@ import java.util.UUID;
  */
 @MappedSuperclass
 @Embeddable
-public abstract class Entity<E extends Entity, R extends Registration> {
+public abstract class Entity<E extends Entity, R extends Registration> extends DatabaseEntry {
 
     public static String getSchema() {
         return "Entity";
     }
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.EAGER)
     @JsonIgnore
     protected Identification identification;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonIgnore
     protected Set<R> registrations;
-
-    @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
 
     public Entity() {
         this.registrations = new HashSet<R>();
@@ -72,9 +67,6 @@ public abstract class Entity<E extends Entity, R extends Registration> {
         this.identification.setDomain(domain);
     }
 
-    public Long getId() {
-        return this.id;
-    }
 
     public Set<R> getRegistrations() {
         return this.registrations;
@@ -82,6 +74,14 @@ public abstract class Entity<E extends Entity, R extends Registration> {
 
     public static String getTableName(Class<? extends Entity> cls) {
         return cls.getAnnotation(Table.class).name();
+    }
+
+    public void updateIdentification(Session session) {
+        //this.identification = (Identification) session.merge(this.identification);
+    }
+
+    public void setIdentification(Identification identification) {
+        this.identification = identification;
     }
 
 }

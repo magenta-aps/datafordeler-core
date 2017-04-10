@@ -15,7 +15,7 @@ import java.util.StringJoiner;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
-public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> {
+public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> extends DatabaseEntry {
 
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JsonIgnore
@@ -24,12 +24,6 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonProperty
     protected Set<D> dataItems;
-
-    @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @JsonIgnore
-    private Long id;
 
     @Column(nullable = false, insertable = true, updatable = false)
     @JsonProperty
