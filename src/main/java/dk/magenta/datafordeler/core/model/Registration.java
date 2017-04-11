@@ -50,12 +50,16 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         );
     }
 
-    @ManyToOne(cascade = {CascadeType.ALL})
+    @ManyToOne(cascade = CascadeType.ALL)
     @JsonProperty
     protected E entity;
 
     public E getEntity() {
         return this.entity;
+    }
+
+    public void setEntity(E entity) {
+        this.entity = entity;
     }
 
     @OneToMany(cascade = CascadeType.ALL)

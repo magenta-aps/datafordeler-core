@@ -110,7 +110,6 @@ public class ItemInputStream<T> extends ObjectInputStream {
      * @return
      */
     public static <T> ItemInputStream<T> parseJsonStream(InputStream jsonStream, Map<String, Class<? extends T>> classMap, final String objectListName, final String schemaKey, ObjectMapper objectMapper) {
-        System.out.println("parseJsonStream");
         PipedInputStream inputStream = new PipedInputStream();
         try {
             final PipedOutputStream outputStream = new PipedOutputStream(inputStream);

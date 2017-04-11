@@ -17,6 +17,7 @@ public class HttpStatusException extends DataFordelerException {
         this.statusLine = statusLine;
         this.uri = uri;
     }
+
     public HttpStatusException(StatusLine statusLine) {
         this(statusLine, null);
     }
@@ -27,10 +28,10 @@ public class HttpStatusException extends DataFordelerException {
     }
 
     public StatusLine getStatusLine() {
-        return statusLine;
+        return this.statusLine;
     }
 
     public URI getUri() {
-        return uri;
+        return this.uri;
     }
 }

@@ -16,7 +16,8 @@ public class FailedReferenceException extends HttpStatusException {
     }
 
     public FailedReferenceException(RegistrationReference reference, HttpStatusException cause) {
-        this(reference, cause.getStatusLine());
+        super(cause.getStatusLine(), cause.getUri());
+        this.reference = reference;
         this.initCause(cause);
     }
 }

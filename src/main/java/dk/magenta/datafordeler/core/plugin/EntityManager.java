@@ -114,8 +114,6 @@ public abstract class EntityManager {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
         String payload = objectMapper.writeValueAsString(receipt);
-        System.out.println("Sending receipt to " + receiptEndpoint);
-        System.out.println(payload);
         HttpPost post = new HttpPost(receiptEndpoint);
         post.setEntity(new StringEntity(payload));
         // TODO: Do this in a thread?
@@ -233,9 +231,8 @@ public abstract class EntityManager {
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
         }
-        InputStream registrationData = null;
+        InputStream registrationData;
         URI uri = this.getRegistrationInterface(reference);
-        System.out.println(uri.toString());
         try {
             registrationData = this.getRegistrationFetcher().fetch(uri);
         } catch (HttpStatusException e) {
@@ -278,7 +275,7 @@ public abstract class EntityManager {
         return this.parseChecksumResponse(responseBody);
     }
 
-    public List<Checksum> listLocalChecksums(OffsetDateTime fromDate) throws DataFordelerException {
+    public List<? extends EntityReference> listLocalChecksums(OffsetDateTime fromDate) throws DataFordelerException {
         // Look in the local database for checksums
         // TODO: Should we return a Map instead, for quicker lookup?
         return null;

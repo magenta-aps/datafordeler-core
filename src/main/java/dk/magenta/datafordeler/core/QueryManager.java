@@ -17,12 +17,6 @@ import java.util.*;
 @Component
 public class QueryManager {
 
-    public <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
-        Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i where i.uuid != null", eClass);
-        List<E> results = query.getResultList();
-        return results;
-    }
-
     public Identification getIdentification(Session session, UUID uuid) {
         Query<Identification> query = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
         query.setParameter("uuid", uuid);
@@ -33,12 +27,20 @@ public class QueryManager {
         }
     }
 
+    public <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
+        Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i where i.uuid != null", eClass);
+        List<E> results = query.getResultList();
+        return results;
+    }
+
     public <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
         Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i where i.uuid = :uuid", eClass);
         query.setParameter("uuid", uuid);
-        query.setMaxResults(1);
-        List<E> results = query.getResultList();
-        return results.isEmpty() ? null : results.get(0);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     public <V extends Effect> List<V> getEffects(Session session, Entity entity, OffsetDateTime effectFrom, OffsetDateTime effectTo, Class<V> vClass) {
@@ -50,7 +52,7 @@ public class QueryManager {
     }
 
     /*public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, OffsetDateTime effectFrom, OffsetDateTime effectTo, Class<D> dClass) {
-        Query<D> query = session.createQuery("select d from " + entity.getClass().getName() + " e join e.registrations r join r.effects v join v.dataItems d where e.id = :id and v.effectFrom = :from and v.effectTo = :to", dClass);
+        Query<D> query = session.createQuery("select d from " + entity.getClass().getName() + " e join e.registrationReferences r join r.effects v join v.dataItems d where e.id = :id and v.effectFrom = :from and v.effectTo = :to", dClass);
         query.setParameter("id", entity.getId());
         query.setParameter("from", effectFrom);
         query.setParameter("to", effectTo);

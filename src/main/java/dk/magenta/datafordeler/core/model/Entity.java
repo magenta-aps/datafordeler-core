@@ -21,11 +21,11 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return "Entity";
     }
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonIgnore
     protected Identification identification;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
     @JsonIgnore
     protected Set<R> registrations;
 

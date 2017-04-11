@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.ItemInputStream;
 import dk.magenta.datafordeler.core.event.Event;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
+import dk.magenta.datafordeler.core.model.Entity;
 import dk.magenta.datafordeler.core.model.EntityReference;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -58,6 +59,10 @@ public abstract class RegisterManager {
         return this.handledSchemas.contains(schema);
     }
 
+    public List<EntityManager> getEntityManagers() {
+        return this.entityManagers;
+    }
+
     public EntityManager getEntityManager(String schema) {
         return this.entityManagerBySchema.get(schema);
     }
@@ -67,6 +72,15 @@ public abstract class RegisterManager {
         for (String substring : this.entityManagerByURISubstring.keySet()) {
             if (uriString.startsWith(substring)) {
                 return this.entityManagerByURISubstring.get(substring);
+            }
+        }
+        return null;
+    }
+
+    public EntityManager getEntityManager(Class<? extends Entity> entityClass) {
+        for (EntityManager entityManager : this.entityManagers) {
+            if (entityManager.getManagedEntityClass() == entityClass) {
+                return entityManager;
             }
         }
         return null;
@@ -115,6 +129,12 @@ public abstract class RegisterManager {
 
     /** Checksum fetching **/
 
+    /**
+     * Plugins must return a Fetcher instance from this method
+     * @return
+     */
+    protected abstract Fetcher getChecksumFetcher();
+
     public abstract URI getListChecksumInterface(String schema, OffsetDateTime from);
 
     /**
@@ -123,19 +143,16 @@ public abstract class RegisterManager {
      * @return
      * @throws DataFordelerException
      */
-    public ItemInputStream<? extends EntityReference> listRegisterChecksums(String schema, OffsetDateTime fromDate) throws DataFordelerException, IOException {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpGet get = new HttpGet(this.getListChecksumInterface(schema, fromDate));
+    public ItemInputStream<? extends EntityReference> listRegisterChecksums(String schema, OffsetDateTime fromDate) throws DataFordelerException {
+        URI checksumInterface = this.getListChecksumInterface(schema, fromDate);
         // TODO: Do this in a thread?
-        CloseableHttpResponse response = httpclient.execute(get);
-        InputStream responseBody = response.getEntity().getContent();
+        InputStream responseBody = this.getChecksumFetcher().fetch(checksumInterface);
         if (schema != null) {
             EntityManager entityManager = this.getEntityManager(schema);
             if (entityManager != null) {
                 return entityManager.parseChecksumResponse(responseBody);
             }
         }
-        System.out.println("schema unknown");
         return this.parseChecksumResponse(responseBody);
     }
 
