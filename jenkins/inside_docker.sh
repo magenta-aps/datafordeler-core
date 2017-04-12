@@ -5,18 +5,16 @@ function subtitle(){ CHAR=' ';CONTENT="$CHAR $* $CHAR";BORDER=$(echo "$CONTENT" 
 
 title "Inside docker"
 
-echo "here's a bit of output"
-
 # Switch to the source directory
 # Example:
 #   cd src/
 # TODO: Insert something here
 
 # Setup the build environment
-# Example:
-#   title "Setting up build environment"
-#   apt-get update ...
-#   apt-get install ...
+    title "Setting up build environment"
+    apt-get update
+    apt-get -y install openjdk-8-jdk maven
+
 # TODO: Insert something here
 
 # Setup the project
@@ -29,8 +27,10 @@ echo "here's a bit of output"
 # TODO: Insert something here
 
 # Test the project (and collect coverage)
-# Example:
-#   title "Running tests"
+    title "Running tests"
+    mvn test
+    mkdir -p "jenkins/reports/test/"
+    cp "target/surefire-reports/*" "jenkins/reports/test/"
 #   echo "TEST_OUTPUT_DIR = 'reports/test/' >> project/settings.py
 #   echo "TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'" \
 #       >> project/settings.py
