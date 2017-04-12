@@ -113,7 +113,7 @@ public class QueryManager {
      * @param registration Registration to be saved
      */
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, R registration) {
-        log.info("Saving registration");
+        log.info("Saving registration with checksum "+registration.getRegisterChecksum());
         E entity = registration.getEntity();
         E existingEntity = this.getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
         if (existingEntity != null) {

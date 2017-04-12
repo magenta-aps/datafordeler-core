@@ -53,17 +53,11 @@ public class SessionManager {
                 managedClasses.add(cls);
             }
             for (Class cls : managedClasses) {
-                System.out.println("LOAD CLASS "+cls.getCanonicalName());
                 configuration.addAnnotatedClass(cls);
             }
-            System.out.println("-----------------------------------------------");
 
             // Create our session factory
             this.sessionFactory = configuration.buildSessionFactory();
-
-//            LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(dataSource);
-//            sessionBuilder.scanPackages("dk.magenta.datafordeler");
-//            this.sessionFactory = sessionBuilder.buildSessionFactory();
         }
         catch (Throwable ex) {
             // Make sure you log the exception, as it might be swallowed

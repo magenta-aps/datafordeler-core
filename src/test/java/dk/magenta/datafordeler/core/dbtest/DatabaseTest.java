@@ -115,7 +115,6 @@ public class DatabaseTest {
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         TestEntity testEntity = new TestEntity(uuid, domain);
-        System.out.println("saving: "+testEntity.getUUID()+"("+testEntity.getId()+"->"+testEntity.getIdentification().getId()+")");
         TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
         TestEffect testEffect = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
         TestData testData = new TestData(8000, "Århus");
@@ -129,7 +128,6 @@ public class DatabaseTest {
         transaction = session.beginTransaction();
 
         queryManager.getAllEntities(session, TestEntity.class);
-        System.out.println("looking for: "+uuid);
 
         TestEntity testEntity1 = queryManager.getEntity(session, uuid, TestEntity.class);
         Assert.assertNotNull(testEntity1);
@@ -176,7 +174,6 @@ public class DatabaseTest {
         TestEffect testEffect4 = new TestEffect(testRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
         TestEffect testEffect5 = new TestEffect(testRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
 
-        System.out.println("saving: "+testEntity.getUUID()+"("+testEntity.getId()+"->"+testEntity.getIdentification().getId()+")");
         queryManager.saveRegistration(session, testRegistration);
 
         transaction.commit();
@@ -203,6 +200,5 @@ public class DatabaseTest {
 
         transaction.commit();
         session.close();
-        System.out.println("testDedup end");
     }
 }

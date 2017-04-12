@@ -29,8 +29,6 @@ public class ObjectMapperConfiguration {
     @Bean
     public ObjectMapper objectMapper() {
 
-        System.out.println("ObjectMapper bean called;");
-
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         SimpleModule dateModule = new SimpleModule();

@@ -31,7 +31,6 @@ public class HttpFetcher implements Fetcher {
         }
         StatusLine statusLine = response.getStatusLine();
         if (statusLine.getStatusCode() != 200) {
-            System.out.println("uri: "+uri);
             throw new HttpStatusException(statusLine, uri);
         }
         try {

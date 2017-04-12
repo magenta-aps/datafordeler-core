@@ -72,7 +72,6 @@ public class EventTest {
       Assert.assertEquals("ID20165",
           eventMessage.messageDataList.get(0).objectReference.objectReference);
       Assert.assertNull(eventMessage.messageDataList.get(0).objectData);
-      System.out.println("Test parseJsonEvent complete!");
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     }
@@ -131,7 +130,6 @@ public class EventTest {
       Assert.assertEquals("ID20165",
           eventMessage.messageDataList.get(0).objectReference.objectReference);
       Assert.assertNull(eventMessage.messageDataList.get(0).objectData);
-      System.out.println("Test parseXmlEvent complete!");
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     }
