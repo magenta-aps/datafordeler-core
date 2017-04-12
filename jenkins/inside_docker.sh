@@ -29,8 +29,8 @@ title "Inside docker"
 # Test the project (and collect coverage)
     title "Running tests"
     mvn test
-    mkdir -p "jenkins/reports/test/"
-    cp "target/surefire-reports/*" "jenkins/reports/test/"
+    mkdir -p "reports/test/"
+    cp "target/surefire-reports/*" "reports/test/"
 #   echo "TEST_OUTPUT_DIR = 'reports/test/' >> project/settings.py
 #   echo "TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'" \
 #       >> project/settings.py
