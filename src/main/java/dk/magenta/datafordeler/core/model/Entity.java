@@ -67,7 +67,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         this.identification.setDomain(domain);
     }
 
-
     public Set<R> getRegistrations() {
         return this.registrations;
     }

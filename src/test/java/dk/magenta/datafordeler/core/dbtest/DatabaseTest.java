@@ -35,30 +35,6 @@ public class DatabaseTest {
 
     private static final String domain = "test";
 
-    @Test
-    public void testEntity() {
-        UUID uuid = UUID.randomUUID();
-        Session session = sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
-        TestEntity testEntity = new TestEntity(uuid, domain);
-        queryManager.saveEntity(session, testEntity);
-        transaction.commit();
-        session.close();
-
-        session = sessionManager.getSessionFactory().openSession();
-        transaction = session.beginTransaction();
-        testEntity = queryManager.getEntity(session, uuid, TestEntity.class);
-        Assert.assertNotNull(testEntity);
-        Assert.assertEquals(uuid, testEntity.getUUID());
-        Assert.assertEquals(domain, testEntity.getDomain());
-        Identification identification = queryManager.getIdentification(session, uuid);
-        Assert.assertNotNull(identification);
-        Assert.assertEquals(uuid, identification.getUuid());
-        Assert.assertEquals(domain, identification.getDomain());
-        session.delete(testEntity);
-        transaction.commit();
-        session.close();
-    }
 
     @Test
     public void testRegistration() {
@@ -71,11 +47,17 @@ public class DatabaseTest {
         Assert.assertTrue(testEntity.getRegistrations().contains(testRegistration));
         transaction.commit();
         session.close();
-
         session = sessionManager.getSessionFactory().openSession();
         testRegistration = (TestRegistration) session.merge(testRegistration);
         transaction = session.beginTransaction();
         testEntity = queryManager.getEntity(session, uuid, TestEntity.class);
+        Assert.assertNotNull(testEntity);
+        Assert.assertEquals(uuid, testEntity.getUUID());
+        Assert.assertEquals(domain, testEntity.getDomain());
+        Identification identification = queryManager.getIdentification(session, uuid);
+        Assert.assertNotNull(identification);
+        Assert.assertEquals(uuid, identification.getUuid());
+        Assert.assertEquals(domain, identification.getDomain());
         Assert.assertTrue(testEntity.getRegistrations().contains(testRegistration));
         transaction.commit();
         session.close();

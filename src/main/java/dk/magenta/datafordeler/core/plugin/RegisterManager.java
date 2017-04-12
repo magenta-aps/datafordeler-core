@@ -110,8 +110,7 @@ public abstract class RegisterManager {
 
     public ItemInputStream<Event> pullEvents() throws DataFordelerException {
         InputStream responseBody = this.getEventFetcher().fetch(this.getEventInterface());
-        ItemInputStream<Event> eventStream = this.parseEventResponse(responseBody);
-        return eventStream;
+        return this.parseEventResponse(responseBody);
     }
 
     protected ItemInputStream<Event> parseEventResponse(InputStream responseContent) throws DataFordelerException {

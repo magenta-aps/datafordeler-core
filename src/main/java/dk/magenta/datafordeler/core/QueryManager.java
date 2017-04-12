@@ -3,6 +3,8 @@ package dk.magenta.datafordeler.core;
 import dk.magenta.datafordeler.core.model.*;
 import dk.magenta.datafordeler.core.util.DoubleHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,8 @@ import java.util.*;
  */
 @Component
 public class QueryManager {
+
+    Logger log = LogManager.getLogger("Database");
 
     public Identification getIdentification(Session session, UUID uuid) {
         Query<Identification> query = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
@@ -87,11 +91,11 @@ public class QueryManager {
             }
         }
         if (!duplicates.isEmpty()) {
-            System.out.println("Duplicates: " + duplicates);
             for (V master : duplicates.keySet()) {
                 List<V> dups = duplicates.get(master);
+                log.debug(dups.size()+" duplicates of effect "+master.getEffectFrom()+" - "+master.getEffectTo());
                 for (V dup : dups) {
-                    System.out.println(dup.getDataItems().size() + " dataitems");
+                    log.debug("Duplicate contains " + dup.getDataItems().size() + " dataitems");
                     for (D dataItem : dup.getDataItems()) {
                         dataItem.addEffect(master);
                         dataItem.removeEffect(dup);
@@ -103,7 +107,32 @@ public class QueryManager {
         }
     }
 
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveEntity(Session session, E entity) {
+    /**
+     * Save registration to database, re-pointing the entity reference to a persistent entity if one exists, merging effects with identical timestamps, and saving all associated effects and dataitems.
+     * @param session A database session to work on
+     * @param registration Registration to be saved
+     */
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, R registration) {
+        log.info("Saving registration");
+        E entity = registration.getEntity();
+        E existingEntity = this.getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
+        if (existingEntity != null) {
+            entity = existingEntity;
+            registration.setEntity(entity);
+        }
+        for (V effect : registration.getEffects()) {
+            for (D dataItem : effect.getDataItems()) {
+                // Find existing DataItems on the Entity that hold the same data
+                List<D> existing = this.getDataItems(session, entity, dataItem, (Class<D>) dataItem.getClass());
+                // If found, use that DataItem instead
+                if (existing != null && !existing.isEmpty()) {
+                    dataItem = existing.get(0);
+                }
+                // Couple it with the Effect
+                dataItem.addEffect(effect);
+            }
+        }
+
         Identification existing = this.getIdentification(session, entity.getUUID());
         if (existing != null && existing != entity.getIdentification()) {
             entity.setIdentification(existing);
@@ -111,11 +140,9 @@ public class QueryManager {
             session.saveOrUpdate(entity.getIdentification());
         }
         session.saveOrUpdate(entity);
-    }
 
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, R registration) {
-        this.saveEntity(session, registration.getEntity());
         this.dedupEffects(session, registration);
+
         session.saveOrUpdate(registration);
         for (V effect : registration.getEffects()) {
             session.saveOrUpdate(effect);

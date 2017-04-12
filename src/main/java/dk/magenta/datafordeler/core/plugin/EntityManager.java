@@ -1,31 +1,28 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.Checksum;
 import dk.magenta.datafordeler.core.ItemInputStream;
 import dk.magenta.datafordeler.core.Receipt;
-import dk.magenta.datafordeler.core.event.Event;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.model.Entity;
 import dk.magenta.datafordeler.core.model.EntityReference;
 import dk.magenta.datafordeler.core.model.RegistrationReference;
 import dk.magenta.datafordeler.core.model.Registration;
-import dk.magenta.datafordeler.core.plugin.Fetcher;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.apache.logging.log4j.Logger;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +41,7 @@ public abstract class EntityManager {
     protected Class<? extends EntityReference> managedEntityReferenceClass;
     protected Class<? extends RegistrationReference> managedRegistrationReferenceClass;
     protected Class<? extends Registration> managedRegistrationClass;
+
 
     public Class<? extends Entity> getManagedEntityClass() {
         return this.managedEntityClass;
@@ -118,7 +116,9 @@ public abstract class EntityManager {
         post.setEntity(new StringEntity(payload));
         // TODO: Do this in a thread?
         CloseableHttpResponse response = httpclient.execute(post);
-        return response.getStatusLine().getStatusCode();
+        StatusLine statusLine = response.getStatusLine();
+        this.getLog().info("Receipt sent to "+receiptEndpoint+", response was: HTTP "+statusLine.getStatusCode()+" "+statusLine.getReasonPhrase());
+        return statusLine.getStatusCode();
     }
 
     /**
@@ -228,6 +228,7 @@ public abstract class EntityManager {
      * @throws FailedReferenceException
      */
     public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException, DataStreamException {
+        this.getLog().info("Fetching registration from reference "+reference.getURI());
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
         }
@@ -267,6 +268,7 @@ public abstract class EntityManager {
      * @throws DataFordelerException
      */
     public ItemInputStream<? extends EntityReference> listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException, IOException {
+        this.getLog().info("Listing register checksums (" + (fromDate == null ? "ALL" : "since "+fromDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) + ")");
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet get = new HttpGet(this.getListChecksumInterface(fromDate));
         // TODO: Do this in a thread?
@@ -304,4 +306,6 @@ public abstract class EntityManager {
     public static URI expandBaseURI(URI base, String path, String query, String fragment) throws URISyntaxException {
         return RegisterManager.expandBaseURI(base, path, query, fragment);
     }
+
+    protected abstract Logger getLog();
 }

@@ -105,7 +105,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         String indentString = new String(new char[4 * (indent)]).replace("\0", " ");
         String subIndentString = new String(new char[4 * (indent + 1)]).replace("\0", " ");
         StringJoiner s = new StringJoiner("\n");
-        s.add(indentString + "Registration["+this.hashCode()+"] {");
+        s.add(indentString + this.getClass().getSimpleName()+"["+this.hashCode()+"] {");
         if (this.entity != null) {
             Identification identification = this.entity.getIdentification();
             s.add(subIndentString + "entity: " + identification.getUuid()+" @ "+identification.getDomain());

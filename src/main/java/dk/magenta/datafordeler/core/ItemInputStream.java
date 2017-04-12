@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.util.Map;
@@ -13,6 +15,8 @@ import java.util.Map;
  * Created by lars on 16-02-17.
  */
 public class ItemInputStream<T> extends ObjectInputStream {
+
+    private static Logger log = LogManager.getLogger("ItemInputStream");
 
     public ItemInputStream(InputStream in) throws IOException {
         super(in);
@@ -135,7 +139,7 @@ public class ItemInputStream<T> extends ObjectInputStream {
                                         T item = objectMapper.convertValue(node, classMap.get(type));
                                         objectOutputStream.writeObject(item);
                                     } else {
-                                        System.out.println("Found an item with unrecognized schemaKey ("+schemaKey+"): "+type);
+                                        log.debug("Found an item with unrecognized schemaKey ("+schemaKey+"): "+type+". This item will be ignored");
                                     }
                                 }
                             } else if (nextToken == JsonToken.END_OBJECT) {
