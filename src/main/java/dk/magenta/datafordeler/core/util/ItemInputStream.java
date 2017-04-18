@@ -1,4 +1,4 @@
-package dk.magenta.datafordeler.core;
+package dk.magenta.datafordeler.core.util;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
