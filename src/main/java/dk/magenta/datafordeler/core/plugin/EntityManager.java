@@ -2,7 +2,7 @@ package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
-import dk.magenta.datafordeler.core.Receipt;
+import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.model.Entity;
 import dk.magenta.datafordeler.core.model.EntityReference;

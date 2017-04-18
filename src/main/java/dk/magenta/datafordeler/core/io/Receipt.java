@@ -1,4 +1,4 @@
-package dk.magenta.datafordeler.core;
+package dk.magenta.datafordeler.core.io;
 
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 

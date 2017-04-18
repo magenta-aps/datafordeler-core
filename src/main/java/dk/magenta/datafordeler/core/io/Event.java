@@ -1,4 +1,4 @@
-package dk.magenta.datafordeler.core.event;
+package dk.magenta.datafordeler.core.io;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,7 +9,7 @@ import java.util.StringJoiner;
 /**
  * Created by lars on 15-02-17.
  *
- * A generic envelope for an event, containing the payload in parseable strings
+ * A generic envelope for an io, containing the payload in parseable strings
  */
 public class Event implements Serializable {
 
