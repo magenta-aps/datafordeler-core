@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.configuration;
 
-import dk.magenta.datafordeler.core.SessionManager;
+import dk.magenta.datafordeler.core.database.SessionManager;
 import org.hibernate.Session;
 
 import javax.persistence.NoResultException;

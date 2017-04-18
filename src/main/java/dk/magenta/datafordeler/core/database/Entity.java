@@ -1,9 +1,8 @@
-package dk.magenta.datafordeler.core.model;
+package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.Session;
-import org.hibernate.query.*;
 
 import javax.persistence.*;
 import java.util.HashSet;

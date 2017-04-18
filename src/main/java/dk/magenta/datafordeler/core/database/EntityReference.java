@@ -1,4 +1,4 @@
-package dk.magenta.datafordeler.core.model;
+package dk.magenta.datafordeler.core.database;
 
 import java.io.Serializable;
 import java.util.ArrayList;

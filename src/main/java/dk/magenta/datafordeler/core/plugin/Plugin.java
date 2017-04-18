@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.configuration.Configuration;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 
 import java.net.URI;
@@ -14,8 +13,6 @@ public abstract class Plugin {
     protected long version = 1L;
 
     protected RolesDefinition roleDefinition;
-
-    protected Configuration configuration;
 
     protected RegisterManager registerManager;
 

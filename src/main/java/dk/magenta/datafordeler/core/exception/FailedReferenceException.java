@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.exception;
 
-import dk.magenta.datafordeler.core.model.RegistrationReference;
+import dk.magenta.datafordeler.core.database.RegistrationReference;
 import org.apache.http.StatusLine;
 
 /**

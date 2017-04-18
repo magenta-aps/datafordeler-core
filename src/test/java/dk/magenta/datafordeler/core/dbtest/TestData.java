@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.dbtest;
 
-import dk.magenta.datafordeler.core.model.DataItem;
+import dk.magenta.datafordeler.core.database.DataItem;
 
 import javax.persistence.Column;
 import javax.persistence.Table;

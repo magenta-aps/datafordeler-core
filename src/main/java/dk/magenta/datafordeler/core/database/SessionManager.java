@@ -1,21 +1,13 @@
-package dk.magenta.datafordeler.core;
+package dk.magenta.datafordeler.core.database;
 
-import dk.magenta.datafordeler.core.model.Entity;
-import dk.magenta.datafordeler.core.model.*;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.metadata.ClassMetadata;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.core.type.filter.AssignableTypeFilter;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,11 +30,11 @@ public class SessionManager {
             configuration.configure();
 
             Set<Class> managedClasses = new HashSet<>();
-            managedClasses.add(dk.magenta.datafordeler.core.model.Identification.class);
-            managedClasses.add(dk.magenta.datafordeler.core.model.Entity.class);
-            managedClasses.add(dk.magenta.datafordeler.core.model.Registration.class);
-            managedClasses.add(dk.magenta.datafordeler.core.model.Effect.class);
-            managedClasses.add(dk.magenta.datafordeler.core.model.DataItem.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.Identification.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.Entity.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.Registration.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.Effect.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.DataItem.class);
 
             ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
             componentProvider.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));

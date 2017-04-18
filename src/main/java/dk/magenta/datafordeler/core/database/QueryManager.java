@@ -1,6 +1,5 @@
-package dk.magenta.datafordeler.core;
+package dk.magenta.datafordeler.core.database;
 
-import dk.magenta.datafordeler.core.model.*;
 import dk.magenta.datafordeler.core.util.DoubleHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.LogManager;

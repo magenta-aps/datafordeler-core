@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.dbtest;
 
-import dk.magenta.datafordeler.core.model.Entity;
+import dk.magenta.datafordeler.core.database.Entity;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 

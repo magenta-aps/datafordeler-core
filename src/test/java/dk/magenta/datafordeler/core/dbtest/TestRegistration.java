@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.dbtest;
 
-import dk.magenta.datafordeler.core.model.Registration;
+import dk.magenta.datafordeler.core.database.Registration;
 
 import javax.persistence.Table;
 import java.time.OffsetDateTime;

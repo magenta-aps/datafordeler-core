@@ -1,6 +1,5 @@
-package dk.magenta.datafordeler.core.model;
+package dk.magenta.datafordeler.core.database;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;

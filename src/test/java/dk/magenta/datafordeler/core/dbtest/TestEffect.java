@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.dbtest;
 
-import dk.magenta.datafordeler.core.model.Effect;
+import dk.magenta.datafordeler.core.database.Effect;
 
 import javax.persistence.Table;
 import java.time.OffsetDateTime;

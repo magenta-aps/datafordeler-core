@@ -1,13 +1,12 @@
 package dk.magenta.datafordeler.core.dbtest;
 
 import dk.magenta.datafordeler.core.AppConfig;
-import dk.magenta.datafordeler.core.QueryManager;
-import dk.magenta.datafordeler.core.SessionManager;
-import dk.magenta.datafordeler.core.model.Identification;
+import dk.magenta.datafordeler.core.database.QueryManager;
+import dk.magenta.datafordeler.core.database.SessionManager;
+import dk.magenta.datafordeler.core.database.Identification;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
 
 /**
  * Created by lars on 21-02-17.
