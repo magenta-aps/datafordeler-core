@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import dk.magenta.datafordeler.core.exception.InvalidServiceOwnerDefinitionException;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -8,9 +9,12 @@ import org.apache.cxf.bus.spring.SpringBus;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.cxf.jaxws.EndpointImpl;
 import org.apache.cxf.transport.servlet.CXFServlet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
@@ -19,6 +23,8 @@ import java.util.regex.Pattern;
  * Created by lars on 20-04-17.
  */
 public abstract class ServletConfiguration {
+
+    private Logger log = LogManager.getLogger("FAPI Servlet configuration");
 
     protected abstract Plugin getPlugin();
 
@@ -58,12 +64,18 @@ public abstract class ServletConfiguration {
             EndpointImpl soapEndpoint = new EndpointImpl(bus, service);
             soapEndpoint.publish(base + "/soap");
             soapEndpoint.setExecutor(Executors.newFixedThreadPool(10));
+            this.log.info("Set up SOAP handler on " + base + "/soap");
 
             // REST
             JAXRSServerFactoryBean restEndpoint = new JAXRSServerFactoryBean();
             restEndpoint.setBus(bus);
             restEndpoint.setAddress(base + "/rest");
-            restEndpoint.setServiceBeans(Collections.singletonList(service));
+            restEndpoint.setServiceBean(service);
+            ArrayList<Object> providers = new ArrayList<>();
+            providers.add(new JacksonJaxbJsonProvider());
+            restEndpoint.setProviders(providers);
+            restEndpoint.create();
+            this.log.info("Set up REST handler on " + base + "/rest");
         }
 
         servletRegistrationBean = new ServletRegistrationBean(cxfServlet, "/" + serviceOwner + "/*");
