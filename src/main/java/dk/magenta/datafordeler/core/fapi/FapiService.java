@@ -67,18 +67,13 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod
     @GET
     @Path("{id}")
-    @Produces("application/json")
+    @Produces("application/xml,application/json")
     public E get(@WebParam(name="id") @PathParam("id") @XmlElement(required=true) String id) {
         try {
             E entity = this.searchById(id);
-            String responseBody = this.objectMapper.writeValueAsString(entity);
-            HttpHeaders headers = new HttpHeaders();
             return entity;
         } catch (IllegalArgumentException e) {
             throw new InvalidClientInputException(e.getMessage());
-        } catch (JsonProcessingException e) {
-            this.getLogger().error("Error outputting JSON: ", e);
-            throw new DataOutputException(e);
         }
     }
 
@@ -86,7 +81,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     @GET
     @Path("search")
-    @Produces("application/json")
+    @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
     public String searchRest(@Context UriInfo uriInfo) {
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();

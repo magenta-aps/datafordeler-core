@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.fasterxml.jackson.jaxrs.xml.JacksonJaxbXMLProvider;
 import dk.magenta.datafordeler.core.exception.InvalidServiceOwnerDefinitionException;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -73,6 +74,7 @@ public abstract class ServletConfiguration {
             restEndpoint.setServiceBean(service);
             ArrayList<Object> providers = new ArrayList<>();
             providers.add(new JacksonJaxbJsonProvider());
+            providers.add(new JacksonJaxbXMLProvider());
             restEndpoint.setProviders(providers);
             restEndpoint.create();
             this.log.info("Set up REST handler on " + base + "/rest");
