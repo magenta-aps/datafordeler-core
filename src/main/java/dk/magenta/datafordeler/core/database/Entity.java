@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.Session;
 
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlTransient;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +23,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
 
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonIgnore
+    @XmlTransient
     protected Identification identification;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
@@ -43,6 +45,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     @JsonIgnore
+    @XmlTransient
     public Identification getIdentification() {
         return this.identification;
     }
