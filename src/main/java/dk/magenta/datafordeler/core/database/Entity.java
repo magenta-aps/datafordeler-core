@@ -6,9 +6,7 @@ import org.hibernate.Session;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlTransient;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
@@ -27,7 +25,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     protected Identification identification;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
-    @JsonIgnore
     protected Set<R> registrations;
 
     public Entity() {
@@ -69,8 +66,9 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         this.identification.setDomain(domain);
     }
 
-    public Set<R> getRegistrations() {
-        return this.registrations;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    public List<R> getRegistrations() {
+        return new ArrayList<R>(this.registrations);
     }
 
     public static String getTableName(Class<? extends Entity> cls) {

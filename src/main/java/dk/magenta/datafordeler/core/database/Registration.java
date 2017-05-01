@@ -49,10 +49,13 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         );
     }
 
+
+
+
     @ManyToOne(cascade = CascadeType.ALL)
-    @JsonProperty
     protected E entity;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public E getEntity() {
         return this.entity;
     }
@@ -61,40 +64,72 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.entity = entity;
     }
 
+
+
+
+
     @OneToMany(cascade = CascadeType.ALL)
-    @JsonProperty
     protected Set<V> effects;
 
+    @JsonProperty(value = "effects")
     public Set<V> getEffects() {
         return this.effects;
     }
 
+
+    public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
+        for (V effect : this.effects) {
+            if (effect.getEffectFrom().equals(effectFrom) && effect.getEffectTo().equals(effectTo)) {
+                return effect;
+            }
+        }
+        return null;
+    }
+
+    public void removeEffect(V effect) {
+        // Be sure to also delete the effect yourself, since it still points to the Registration
+        this.effects.remove(effect);
+    }
+
+
+
     @Column(nullable = false, insertable = true, updatable = false)
-    @JsonProperty
     protected OffsetDateTime registrationFrom;
 
+    @JsonProperty(value = "registrationFrom")
     public OffsetDateTime getRegistrationFrom() {
         return this.registrationFrom;
     }
 
+
+
+
     @Column(nullable = true, insertable = true, updatable = false)
-    @JsonProperty
     protected OffsetDateTime registrationTo;
 
+    @JsonProperty(value = "registrationTo")
     public OffsetDateTime getRegistrationTo() {
         return this.registrationTo;
     }
+
+
+
+
 
     @JsonProperty
     protected int sequenceNumber;
 
     // The checksum as reported by the register
-    @JsonProperty("checksum")
     protected String registerChecksum;
 
+    @JsonProperty("checksum")
     public String getRegisterChecksum() {
         return this.registerChecksum;
     }
+
+
+
+
 
     public String toString() {
         return this.toString(0);
@@ -127,19 +162,6 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
 
-    public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
-        for (V effect : this.effects) {
-            if (effect.getEffectFrom().equals(effectFrom) && effect.getEffectTo().equals(effectTo)) {
-                return effect;
-            }
-        }
-        return null;
-    }
-
-    public void removeEffect(V effect) {
-        // Be sure to also delete the effect yourself, since it still points to the Registration
-        this.effects.remove(effect);
-    }
 
     public static String getTableName(Class<? extends Registration> cls) {
         return cls.getAnnotation(Table.class).name();
