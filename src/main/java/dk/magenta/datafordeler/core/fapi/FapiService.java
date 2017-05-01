@@ -26,6 +26,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlElement;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -43,6 +46,11 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     @Autowired
     private QueryManager queryManager;
+
+    public static final String PARAM_PAGE = "page";
+    public static final String PARAM_PAGESIZE = "pageSize";
+    public static final String PARAM_REGISTERFROM = "registerFrom";
+    public static final String PARAM_REGISTERTO = "registerTo";
 
 
     @WebMethod(exclude = true)
@@ -64,20 +72,51 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         return this.log;
     }
 
-    @WebMethod
     @GET
     @Path("{id}")
     @Produces("application/xml,application/json")
-    public E get(@WebParam(name="id") @PathParam("id") @XmlElement(required=true) String id) {
+    @WebMethod(exclude = true)
+    public E getRest(@PathParam(value = "id") String id, @Context UriInfo uriInfo) {
+        MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
+        Q query = this.getQuery(parameters);
         try {
-            E entity = this.searchById(id);
+            E entity = this.searchById(id, query);
             return entity;
         } catch (IllegalArgumentException e) {
             throw new InvalidClientInputException(e.getMessage());
         }
     }
 
-    protected abstract Q getQuery(MultivaluedMap<String, String> parameters);
+    @WebMethod(operationName = "get")
+    public E getSoap(@WebParam(name="id") @XmlElement(required=true) String id,
+                     @WebParam(name="registerFrom") @XmlElement(required = false) String registerFrom,
+                     @WebParam(name="registerTo") @XmlElement(required = false) String registerTo) {
+        Q query = this.getQuery(registerFrom, registerTo);
+        try {
+            E entity = this.searchById(id, query);
+            return entity;
+        } catch (IllegalArgumentException e) {
+            throw new InvalidClientInputException(e.getMessage());
+        }
+    }
+
+    protected abstract Q getQuery();
+
+    protected Q getQuery(MultivaluedMap<String, String> parameters) {
+        Q query = this.getQuery();
+        query.setPage(parameters.getFirst(PARAM_PAGE));
+        query.setPageSize(parameters.getFirst(PARAM_PAGESIZE));
+        query.setRegistrationFrom(parameters.getFirst(PARAM_REGISTERFROM));
+        query.setRegistrationTo(parameters.getFirst(PARAM_REGISTERTO));
+        return query;
+    }
+
+    private Q getQuery(String registrationFrom, String registrationTo) {
+        Q query = this.getQuery();
+        query.setRegistrationFrom(registrationFrom);
+        query.setRegistrationTo(registrationTo);
+        return query;
+    }
 
     @GET
     @Path("search")
@@ -109,12 +148,12 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected abstract Set<E> searchByQuery(Q query);
 
     @WebMethod(exclude = true)
-    protected E searchById(String id) {
-        return this.searchById(UUID.fromString(id));
+    protected E searchById(String id, Q query) {
+        return this.searchById(UUID.fromString(id), query);
     }
 
     @WebMethod(exclude = true)
-    protected E searchById(UUID uuid) {
+    protected E searchById(UUID uuid, Q query) {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         return this.queryManager.getEntity(session, uuid, this.getEntityClass());
     }
