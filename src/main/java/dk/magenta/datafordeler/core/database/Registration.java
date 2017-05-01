@@ -1,6 +1,8 @@
 package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 import javax.persistence.*;
 import java.time.OffsetDateTime;
@@ -13,6 +15,7 @@ import java.util.StringJoiner;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
+@FilterDef(name="registrationFromFilter", parameters=@ParamDef(name="registrationFromDate", type="java.time.OffsetDateTime"))
 public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry {
 
     public Registration() {

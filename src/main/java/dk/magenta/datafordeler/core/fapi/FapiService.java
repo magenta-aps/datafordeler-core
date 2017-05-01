@@ -9,6 +9,7 @@ import dk.magenta.datafordeler.core.exception.DataOutputException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -83,6 +84,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             E entity = this.searchById(id, query);
             return entity;
         } catch (IllegalArgumentException e) {
+            e.printStackTrace();
             throw new InvalidClientInputException(e.getMessage());
         }
     }
@@ -155,7 +157,14 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(exclude = true)
     protected E searchById(UUID uuid, Q query) {
         Session session = this.getSessionManager().getSessionFactory().openSession();
-        return this.queryManager.getEntity(session, uuid, this.getEntityClass());
+        if (query != null && query.getRegistrationFrom() != null) {
+            System.out.println("activating filter");
+            Filter filter = session.enableFilter("registrationFromFilter");
+            filter.setParameter("registrationFromDate", query.getRegistrationFrom());
+        }
+        E entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
+        entity.setFilter(query);
+        return entity;
     }
 
 }

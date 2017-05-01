@@ -120,15 +120,21 @@ public class QueryManager {
             registration.setEntity(entity);
         }
         for (V effect : registration.getEffects()) {
+            HashSet<D> obsolete = new HashSet<D>();
             for (D dataItem : effect.getDataItems()) {
                 // Find existing DataItems on the Entity that hold the same data
                 List<D> existing = this.getDataItems(session, entity, dataItem, (Class<D>) dataItem.getClass());
                 // If found, use that DataItem instead
-                if (existing != null && !existing.isEmpty()) {
+                if (existing != null && !existing.isEmpty() && dataItem != existing.get(0)) {
+                    obsolete.add(dataItem);
                     dataItem = existing.get(0);
                 }
                 // Couple it with the Effect
                 dataItem.addEffect(effect);
+            }
+            for (D dataItem : obsolete) {
+                session.delete(dataItem);
+                dataItem.removeEffect(effect);
             }
         }
 

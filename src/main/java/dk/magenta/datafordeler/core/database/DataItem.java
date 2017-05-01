@@ -15,21 +15,14 @@ import java.util.StringJoiner;
 @MappedSuperclass
 public abstract class DataItem<V extends Effect, D extends DataItem> extends DatabaseEntry {
 
-    @ManyToMany(cascade = {CascadeType.ALL})
-    @JsonIgnore
-    protected Set<V> effects;
-
     public DataItem() {
-        this.effects = new HashSet<V>();
     }
 
     public void addEffect(V effect) {
-        this.effects.add(effect);
         effect.dataItems.add(this);
     }
 
     public void removeEffect(V effect) {
-        this.effects.remove(effect);
         effect.dataItems.remove(this);
     }
 
