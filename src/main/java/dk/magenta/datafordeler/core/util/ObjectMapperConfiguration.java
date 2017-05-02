@@ -22,15 +22,7 @@ import java.util.UUID;
 @Configuration
 public class ObjectMapperConfiguration {
 
-    /**
-     * ObjectMapper configuration; add serializers here
-     */
-    @Primary
-    @Bean
-    public ObjectMapper objectMapper() {
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
+    private SimpleModule getOffsetDateTimeModule() {
         SimpleModule dateModule = new SimpleModule();
         dateModule.addSerializer(OffsetDateTime.class, new JsonSerializer<OffsetDateTime>() {
             @Override
@@ -52,8 +44,10 @@ public class ObjectMapperConfiguration {
                 }
             }
         });
-        objectMapper.registerModule(dateModule);
+        return dateModule;
+    }
 
+    private SimpleModule getUUIDModule() {
         SimpleModule uuidModule = new SimpleModule();
         uuidModule.addSerializer(UUID.class, new JsonSerializer<UUID>() {
             @Override
@@ -75,8 +69,19 @@ public class ObjectMapperConfiguration {
                 }
             }
         });
-        objectMapper.registerModule(uuidModule);
+        return uuidModule;
+    }
 
+    /**
+     * ObjectMapper configuration; add serializers here
+     */
+    @Primary
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.registerModule(this.getOffsetDateTimeModule());
+        objectMapper.registerModule(this.getUUIDModule());
         return objectMapper;
     }
 

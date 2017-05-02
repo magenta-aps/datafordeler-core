@@ -5,6 +5,10 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.HashSet;
@@ -15,8 +19,12 @@ import java.util.StringJoiner;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
-@FilterDef(name="registrationFromFilter", parameters=@ParamDef(name="registrationFromDate", type="java.time.OffsetDateTime"))
+@FilterDef(name=Registration.FILTER_REGISTRATION_FROM, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_FROM, type="java.time.OffsetDateTime"))
+@XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry {
+
+    public static final String FILTER_REGISTRATION_FROM = "registrationFromFilter";
+    public static final String FILTERPARAM_REGISTRATION_FROM = "registrationFromDate";
 
     public Registration() {
         this.effects = new HashSet<V>();
@@ -59,10 +67,12 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     protected E entity;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @XmlTransient
     public E getEntity() {
         return this.entity;
     }
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public void setEntity(E entity) {
         this.entity = entity;
     }
@@ -74,6 +84,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @OneToMany(cascade = CascadeType.ALL)
     protected Set<V> effects;
 
+    @XmlElement
     @JsonProperty(value = "effects")
     public Set<V> getEffects() {
         return this.effects;
@@ -94,14 +105,27 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.effects.remove(effect);
     }
 
+    @JsonProperty
+    public void setEffects(Set<V> effects) {
+        this.effects = new HashSet<V>(effects);
+    }
+
+
 
 
     @Column(nullable = false, insertable = true, updatable = false)
     protected OffsetDateTime registrationFrom;
 
     @JsonProperty(value = "registrationFrom")
+    @XmlElement
     public OffsetDateTime getRegistrationFrom() {
         return this.registrationFrom;
+    }
+
+
+    @JsonProperty
+    public void setRegistrationFrom(OffsetDateTime registrationFrom) {
+        this.registrationFrom = registrationFrom;
     }
 
 
@@ -111,6 +135,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     protected OffsetDateTime registrationTo;
 
     @JsonProperty(value = "registrationTo")
+    @XmlElement
     public OffsetDateTime getRegistrationTo() {
         return this.registrationTo;
     }
@@ -120,17 +145,27 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
     @JsonProperty
+    public void setRegistrationTo(OffsetDateTime registrationTo) {
+        this.registrationTo = registrationTo;
+    }
+
+    @JsonProperty
     protected int sequenceNumber;
 
     // The checksum as reported by the register
     protected String registerChecksum;
 
     @JsonProperty("checksum")
+    @XmlElement
     public String getRegisterChecksum() {
         return this.registerChecksum;
     }
 
 
+    @JsonProperty("checksum")
+    public void setRegisterChecksum(String registerChecksum) {
+        this.registerChecksum = registerChecksum;
+    }
 
 
 

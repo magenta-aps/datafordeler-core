@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.magenta.datafordeler.core.fapi.Query;
 import org.hibernate.Session;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.*;
 
 import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.OrderBy;
+import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.*;
 
@@ -28,8 +30,10 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @XmlTransient
     protected Identification identification;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
-    protected Set<R> registrations;
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "entity")
+    @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registrationFrom >= :"+Registration.FILTERPARAM_REGISTRATION_FROM)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    protected List<R> registrations;
 
     @Transient
     @JsonIgnore
@@ -37,7 +41,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     private Query filter = null;
 
     public Entity() {
-        this.registrations = new HashSet<R>();
+        this.registrations = new ArrayList<R>();
         this.identification = new Identification();
     }
 
@@ -76,13 +80,12 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @Filter(name = "registrationFromFilter", condition="registrationFrom >= :registrationFromDate")
+    @XmlElement(name="registrations")
+    @OrderBy("registrationFrom")
     public List<R> getRegistrations() {
-        if (this.filter != null && (this.filter.getRegistrationFrom() != null || this.filter.getRegistrationTo() != null)) {
-            System.out.println("There is a modifying filter present");
-        }
-        return new ArrayList<R>(this.registrations);
+        return this.registrations;
     }
+
 
     public static String getTableName(Class<? extends Entity> cls) {
         return cls.getAnnotation(Table.class).name();
@@ -94,14 +97,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
 
     public void setIdentification(Identification identification) {
         this.identification = identification;
-    }
-
-    /**
-     * Set a modifying Query to filter the output, such as limiting which registrations will be included in serialization
-     * @param filter
-     */
-    public void setFilter(Query filter) {
-        this.filter = filter;
     }
 
 }

@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.cfg.Annotations;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.xml.JacksonJaxbXMLProvider;
 import dk.magenta.datafordeler.core.exception.InvalidServiceOwnerDefinitionException;
@@ -28,6 +30,8 @@ public abstract class ServletConfiguration {
     private Logger log = LogManager.getLogger("FAPI Servlet configuration");
 
     protected abstract Plugin getPlugin();
+
+    protected abstract ObjectMapper getObjectMapper();
 
     /**
      * Plugins must return the "owner" part of the FAPI services that will be hosted, e.g. "cpr", "cvr", "gis"
@@ -73,7 +77,7 @@ public abstract class ServletConfiguration {
             restEndpoint.setAddress(base + "/rest");
             restEndpoint.setServiceBean(service);
             ArrayList<Object> providers = new ArrayList<>();
-            providers.add(new JacksonJaxbJsonProvider());
+            providers.add(new JacksonJaxbJsonProvider(this.getObjectMapper(), new Annotations[]{Annotations.JACKSON}));
             providers.add(new JacksonJaxbXMLProvider());
             restEndpoint.setProviders(providers);
             restEndpoint.create();

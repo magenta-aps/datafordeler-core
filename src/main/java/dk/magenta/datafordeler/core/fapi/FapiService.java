@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.QueryManager;
+import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataOutputException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
@@ -12,9 +13,6 @@ import org.apache.logging.log4j.LogManager;
 import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import javax.jws.WebMethod;
@@ -27,9 +25,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlElement;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Set;
 import java.util.UUID;
 
@@ -158,13 +153,10 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected E searchById(UUID uuid, Q query) {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         if (query != null && query.getRegistrationFrom() != null) {
-            System.out.println("activating filter");
-            Filter filter = session.enableFilter("registrationFromFilter");
-            filter.setParameter("registrationFromDate", query.getRegistrationFrom());
+            Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
+            filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, query.getRegistrationFrom());
         }
-        E entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
-        entity.setFilter(query);
-        return entity;
+        return this.queryManager.getEntity(session, uuid, this.getEntityClass());
     }
 
 }
