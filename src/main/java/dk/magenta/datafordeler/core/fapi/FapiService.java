@@ -61,6 +61,10 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         return this.sessionManager;
     }
 
+    protected QueryManager getQueryManager() {
+        return this.queryManager;
+    }
+
     private Logger log = LogManager.getLogger("FapiService");
 
     protected Logger getLogger() {
@@ -154,7 +158,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected E searchById(UUID uuid, Q query) {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         this.applyQuery(session, query);
-        return this.queryManager.getEntity(session, uuid, this.getEntityClass());
+        E entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
+        return entity;
     }
 
     protected void applyQuery(Session session, Q query) {

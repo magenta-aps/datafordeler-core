@@ -36,6 +36,29 @@ public class QueryManager {
         return results;
     }
 
+    public <E extends Entity> List<E> getAllEntities(Session session, Map<String, Object> parameters, Class<E> eClass) {
+        return this.getAllEntities(session, parameters, 0, Integer.MAX_VALUE, eClass);
+    }
+
+    public <E extends Entity> List<E> getAllEntities(Session session, Map<String, Object> parameters, int offset, int limit, Class<E> eClass) {
+        StringJoiner queryString = new StringJoiner(" and ");
+        for (String key : parameters.keySet()) {
+            queryString.add("d."+key+" = :"+key);
+        }
+        Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i join e.registrations r join r.effects v join v.dataItems d where i.uuid != null and " + queryString.toString(), eClass);
+        for (String key : parameters.keySet()) {
+            query.setParameter(key, parameters.get(key));
+        }
+        if (offset > 0) {
+            query.setFirstResult(offset);
+        }
+        if (limit < Integer.MAX_VALUE) {
+            query.setMaxResults(limit);
+        }
+        List<E> results = query.getResultList();
+        return results;
+    }
+
     public <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
         Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i where i.uuid = :uuid", eClass);
         query.setParameter("uuid", uuid);

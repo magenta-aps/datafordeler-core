@@ -6,6 +6,8 @@ import javax.xml.bind.annotation.XmlElement;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by lars on 19-04-17.
@@ -69,6 +71,14 @@ public class Query {
         }
     }
 
+    public int getOffset() {
+        return (this.page - 1) * this.pageSize;
+    }
+
+    public int getCount() {
+        return this.pageSize;
+    }
+
     public OffsetDateTime getRegistrationFrom() {
         return this.registrationFrom;
     }
@@ -115,6 +125,10 @@ public class Query {
 
     public void setEffectTo(String effectTo) {
         this.effectTo = parseDateTime(effectTo);
+    }
+
+    public Map<String, Object> getSearchParameters() {
+        return new HashMap<>();
     }
 
     protected static int intFromString(String s, int def) {
