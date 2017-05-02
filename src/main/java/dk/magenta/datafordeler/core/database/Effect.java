@@ -3,6 +3,8 @@ package dk.magenta.datafordeler.core.database;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 import javax.persistence.*;
 import java.time.OffsetDateTime;
@@ -15,7 +17,14 @@ import java.util.StringJoiner;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
+@FilterDef(name=Effect.FILTER_EFFECT_FROM, parameters=@ParamDef(name=Effect.FILTERPARAM_EFFECT_FROM, type="java.time.OffsetDateTime"))
+@FilterDef(name=Effect.FILTER_EFFECT_TO, parameters=@ParamDef(name=Effect.FILTERPARAM_EFFECT_TO, type="java.time.OffsetDateTime"))
 public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> extends DatabaseEntry {
+
+    public static final String FILTER_EFFECT_FROM = "effectFromFilter";
+    public static final String FILTERPARAM_EFFECT_FROM = "effectFromDate";
+    public static final String FILTER_EFFECT_TO = "effectToFilter";
+    public static final String FILTERPARAM_EFFECT_TO = "effectToDate";
 
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JsonIgnore

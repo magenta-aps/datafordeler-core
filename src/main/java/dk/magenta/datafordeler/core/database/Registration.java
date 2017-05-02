@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
@@ -85,6 +86,8 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
     @OneToMany(cascade = CascadeType.ALL)
+    @Filter(name = Effect.FILTER_EFFECT_FROM, condition="(effectTo >= :"+Effect.FILTERPARAM_EFFECT_FROM+" OR effectTo is null)")
+    @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+")")
     protected Set<V> effects;
 
     @XmlElement

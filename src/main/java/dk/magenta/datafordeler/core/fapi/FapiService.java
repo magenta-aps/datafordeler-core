@@ -2,10 +2,7 @@ package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.database.Entity;
-import dk.magenta.datafordeler.core.database.QueryManager;
-import dk.magenta.datafordeler.core.database.Registration;
-import dk.magenta.datafordeler.core.database.SessionManager;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.DataOutputException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import org.apache.logging.log4j.Logger;
@@ -47,6 +44,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public static final String PARAM_PAGESIZE = "pageSize";
     public static final String PARAM_REGISTERFROM = "registerFrom";
     public static final String PARAM_REGISTERTO = "registerTo";
+    public static final String PARAM_EFFECTFROM = "effectFrom";
+    public static final String PARAM_EFFECTTO = "effectTo";
 
 
     @WebMethod(exclude = true)
@@ -105,6 +104,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         query.setPageSize(parameters.getFirst(PARAM_PAGESIZE));
         query.setRegistrationFrom(parameters.getFirst(PARAM_REGISTERFROM));
         query.setRegistrationTo(parameters.getFirst(PARAM_REGISTERTO));
+        query.setEffectFrom(parameters.getFirst(PARAM_EFFECTFROM));
+        query.setEffectTo(parameters.getFirst(PARAM_EFFECTTO));
         return query;
     }
 
@@ -152,11 +153,33 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(exclude = true)
     protected E searchById(UUID uuid, Q query) {
         Session session = this.getSessionManager().getSessionFactory().openSession();
-        if (query != null && query.getRegistrationFrom() != null) {
-            Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
-            filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, query.getRegistrationFrom());
-        }
+        this.applyQuery(session, query);
         return this.queryManager.getEntity(session, uuid, this.getEntityClass());
+    }
+
+    protected void applyQuery(Session session, Q query) {
+        if (query != null) {
+            if (query.getRegistrationFrom() != null) {
+                Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
+                System.out.println(Registration.FILTERPARAM_REGISTRATION_FROM+" = "+query.getRegistrationFrom());
+                filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, query.getRegistrationFrom());
+            }
+            if (query.getRegistrationTo() != null) {
+                Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
+                System.out.println(Registration.FILTERPARAM_REGISTRATION_TO+" = "+query.getRegistrationTo());
+                filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, query.getRegistrationTo());
+            }
+            if (query.getEffectFrom() != null) {
+                Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
+                System.out.println(Effect.FILTERPARAM_EFFECT_FROM+" = "+query.getEffectFrom());
+                filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, query.getEffectFrom());
+            }
+            if (query.getEffectTo() != null) {
+                Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
+                System.out.println(Effect.FILTERPARAM_EFFECT_TO+" = "+query.getEffectTo());
+                filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, query.getEffectTo());
+            }
+        }
     }
 
 }

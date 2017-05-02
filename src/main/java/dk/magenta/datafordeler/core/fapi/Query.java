@@ -16,6 +16,8 @@ public class Query {
     protected int pageSize = 10;
     protected OffsetDateTime registrationFrom = null;
     protected OffsetDateTime registrationTo = null;
+    protected OffsetDateTime effectFrom = null;
+    protected OffsetDateTime effectTo = null;
 
     public Query() {
     }
@@ -89,6 +91,30 @@ public class Query {
 
     public void setRegistrationTo(String registrationTo) throws DateTimeParseException {
         this.registrationTo = parseDateTime(registrationTo);
+    }
+
+    public OffsetDateTime getEffectFrom() {
+        return this.effectFrom;
+    }
+
+    public void setEffectFrom(OffsetDateTime effectFrom) {
+        this.effectFrom = effectFrom;
+    }
+
+    public void setEffectFrom(String effectFrom) {
+        this.effectFrom = parseDateTime(effectFrom);
+    }
+
+    public OffsetDateTime getEffectTo() {
+        return this.effectTo;
+    }
+
+    public void setEffectTo(OffsetDateTime effectTo) {
+        this.effectTo = effectTo;
+    }
+
+    public void setEffectTo(String effectTo) {
+        this.effectTo = parseDateTime(effectTo);
     }
 
     protected static int intFromString(String s, int def) {
