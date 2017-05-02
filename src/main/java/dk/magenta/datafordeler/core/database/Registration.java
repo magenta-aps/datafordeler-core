@@ -20,11 +20,14 @@ import java.util.StringJoiner;
  */
 @MappedSuperclass
 @FilterDef(name=Registration.FILTER_REGISTRATION_FROM, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_FROM, type="java.time.OffsetDateTime"))
+@FilterDef(name=Registration.FILTER_REGISTRATION_TO, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_TO, type="java.time.OffsetDateTime"))
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry {
 
     public static final String FILTER_REGISTRATION_FROM = "registrationFromFilter";
     public static final String FILTERPARAM_REGISTRATION_FROM = "registrationFromDate";
+    public static final String FILTER_REGISTRATION_TO = "registrationToFilter";
+    public static final String FILTERPARAM_REGISTRATION_TO = "registrationToDate";
 
     public Registration() {
         this.effects = new HashSet<V>();
