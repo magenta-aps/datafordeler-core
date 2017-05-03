@@ -30,7 +30,7 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     @JsonIgnore
     protected R registration;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonProperty
     protected Set<D> dataItems;
 

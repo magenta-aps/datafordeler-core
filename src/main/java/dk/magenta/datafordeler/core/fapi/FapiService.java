@@ -159,6 +159,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         this.applyQuery(session, query);
         E entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
+        session.close();
         return entity;
     }
 
