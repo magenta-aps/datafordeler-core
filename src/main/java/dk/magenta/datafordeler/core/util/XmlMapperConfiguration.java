@@ -49,31 +49,6 @@ public class XmlMapperConfiguration {
         return dateModule;
     }
 
-    private SimpleModule getUUIDModule() {
-        SimpleModule uuidModule = new SimpleModule();
-        uuidModule.addSerializer(UUID.class, new StdSerializer<UUID>(UUID.class) {
-            @Override
-            public void serialize(UUID uuid, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-                jsonGenerator.writeString(uuid.toString());
-            }
-        });
-        uuidModule.addDeserializer(UUID.class, new StdDeserializer<UUID>(UUID.class) {
-            @Override
-            public UUID deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
-                if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
-                    jsonParser.nextToken();
-                }
-                String tokenValue = jsonParser.getValueAsString();
-                if (tokenValue != null) {
-                    return UUID.fromString(tokenValue);
-                } else {
-                    return null;
-                }
-            }
-        });
-        return uuidModule;
-    }
-
     /**
      * ObjectMapper configuration; add serializers here
      */
@@ -82,7 +57,6 @@ public class XmlMapperConfiguration {
         XmlMapper xmlMapper = new XmlMapper();
         xmlMapper.registerModule(new JavaTimeModule());
         xmlMapper.registerModule(this.getOffsetDateTimeModule());
-        //xmlMapper.registerModule(this.getUUIDModule());
         return xmlMapper;
     }
 
