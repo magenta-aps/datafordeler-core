@@ -5,11 +5,13 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -20,19 +22,19 @@ import java.util.UUID;
  * Created by lars on 24-02-17.
  */
 @Configuration
-public class ObjectMapperConfiguration {
+public class XmlMapperConfiguration {
 
     private SimpleModule getOffsetDateTimeModule() {
         SimpleModule dateModule = new SimpleModule();
-        dateModule.addSerializer(OffsetDateTime.class, new JsonSerializer<OffsetDateTime>() {
+        dateModule.addSerializer(OffsetDateTime.class, new StdSerializer<OffsetDateTime>(OffsetDateTime.class) {
             @Override
-            public void serialize(OffsetDateTime offsetDateTime, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+            public void serialize(OffsetDateTime offsetDateTime, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
                 jsonGenerator.writeString(DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(offsetDateTime));
             }
         });
-        dateModule.addDeserializer(OffsetDateTime.class, new JsonDeserializer<OffsetDateTime>() {
+        dateModule.addDeserializer(OffsetDateTime.class, new StdDeserializer<OffsetDateTime>(OffsetDateTime.class) {
             @Override
-            public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+            public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
                 if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
                     jsonParser.nextToken();
                 }
@@ -49,15 +51,15 @@ public class ObjectMapperConfiguration {
 
     private SimpleModule getUUIDModule() {
         SimpleModule uuidModule = new SimpleModule();
-        uuidModule.addSerializer(UUID.class, new JsonSerializer<UUID>() {
+        uuidModule.addSerializer(UUID.class, new StdSerializer<UUID>(UUID.class) {
             @Override
-            public void serialize(UUID uuid, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+            public void serialize(UUID uuid, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
                 jsonGenerator.writeString(uuid.toString());
             }
         });
-        uuidModule.addDeserializer(UUID.class, new JsonDeserializer<UUID>() {
+        uuidModule.addDeserializer(UUID.class, new StdDeserializer<UUID>(UUID.class) {
             @Override
-            public UUID deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+            public UUID deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
                 if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
                     jsonParser.nextToken();
                 }
@@ -75,14 +77,13 @@ public class ObjectMapperConfiguration {
     /**
      * ObjectMapper configuration; add serializers here
      */
-    @Primary
-    @Bean()
-    public ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.registerModule(this.getOffsetDateTimeModule());
-        objectMapper.registerModule(this.getUUIDModule());
-        return objectMapper;
+    @Bean
+    public XmlMapper xmlMapper() {
+        XmlMapper xmlMapper = new XmlMapper();
+        xmlMapper.registerModule(new JavaTimeModule());
+        xmlMapper.registerModule(this.getOffsetDateTimeModule());
+        //xmlMapper.registerModule(this.getUUIDModule());
+        return xmlMapper;
     }
 
 }

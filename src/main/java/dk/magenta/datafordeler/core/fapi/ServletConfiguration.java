@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.jaxrs.cfg.Annotations;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.xml.JacksonJaxbXMLProvider;
@@ -33,6 +34,8 @@ public abstract class ServletConfiguration {
 
     protected abstract ObjectMapper getObjectMapper();
 
+    protected abstract XmlMapper getXmlMapper();
+
     /**
      * Plugins must return the "owner" part of the FAPI services that will be hosted, e.g. "cpr", "cvr", "gis"
      * These will be placed in the servlet path of the FAPI: https://data.gl/[owner]/[service]/[version]/[method]
@@ -50,7 +53,7 @@ public abstract class ServletConfiguration {
 
     @Bean(name="pluginServletRegistration")
     public ServletRegistrationBean dispatcherServlet() throws InvalidServiceOwnerDefinitionException {
-
+        System.out.println("WE GET HERE");
         ServletRegistrationBean servletRegistrationBean;
 
         CXFServlet cxfServlet = new CXFServlet();
@@ -78,7 +81,8 @@ public abstract class ServletConfiguration {
             restEndpoint.setServiceBean(service);
             ArrayList<Object> providers = new ArrayList<>();
             providers.add(new JacksonJaxbJsonProvider(this.getObjectMapper(), new Annotations[]{Annotations.JACKSON}));
-            providers.add(new JacksonJaxbXMLProvider());
+            System.out.println(this.getXmlMapper());
+            providers.add(new JacksonJaxbXMLProvider(this.getXmlMapper(), new Annotations[]{Annotations.JAXB}));
             restEndpoint.setProviders(providers);
             restEndpoint.create();
             this.log.info("Set up REST handler on " + base + "/rest");
