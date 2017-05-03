@@ -104,10 +104,19 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return cls.getAnnotation(Table.class).name();
     }
 
+    /**
+     * Pretty-print contained data
+     * @return Compiled string output
+     */
     public String toString() {
         return this.toString(0);
     }
 
+    /**
+     * Pretty-print contained data
+     * @param indent Number of spaces to indent the output with
+     * @return Compiled string output
+     */
     public String toString(int indent) {
         String indentString = new String(new char[4 * (indent)]).replace("\0", " ");
         String subIndentString = new String(new char[4 * (indent + 1)]).replace("\0", " ");

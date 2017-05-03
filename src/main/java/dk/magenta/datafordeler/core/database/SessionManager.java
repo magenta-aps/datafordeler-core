@@ -13,7 +13,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by lars on 21-02-17.
+ * A bean to obtain Sessions with. Autowire this in, and obtain sessions with
+ * sessionManager.getSessionFactory().openSession();
  */
 @Component
 public class SessionManager {

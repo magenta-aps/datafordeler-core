@@ -174,11 +174,19 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
 
-
+    /**
+     * Pretty-print contained data
+     * @return Compiled string output
+     */
     public String toString() {
         return this.toString(0);
     }
 
+    /**
+     * Pretty-print contained data
+     * @param indent Number of spaces to indent the output with
+     * @return Compiled string output
+     */
     public String toString(int indent) {
         String indentString = new String(new char[4 * (indent)]).replace("\0", " ");
         String subIndentString = new String(new char[4 * (indent + 1)]).replace("\0", " ");
@@ -201,11 +209,6 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         s.add(indentString+"}");
         return s.toString();
     }
-
-
-
-
-
 
     public static String getTableName(Class<? extends Registration> cls) {
         return cls.getAnnotation(Table.class).name();

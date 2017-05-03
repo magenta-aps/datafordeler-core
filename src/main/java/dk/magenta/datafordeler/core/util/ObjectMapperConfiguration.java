@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Primary;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 /**
  * Created by lars on 24-02-17.

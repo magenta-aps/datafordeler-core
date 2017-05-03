@@ -51,9 +51,16 @@ public abstract class ServletConfiguration {
         }
     }
 
+    /**
+     * Sets up a servlet bean to listen for requests on defined paths
+     * Plugins will be queried for EntityManagers, and for each one found, a SOAP and a REST interface
+     * will be set up on the appropriate path (/<servicename>/<serviceversion>/soap and /<servicename>/<serviceversion>/soap)
+     * Plugins must subclass FapiService and point to an instance with the EntityManager subclass method getEntityService()
+     * @return A ServletRegistrationBean for use by Spring Boot
+     * @throws InvalidServiceOwnerDefinitionException
+     */
     @Bean(name="pluginServletRegistration")
     public ServletRegistrationBean dispatcherServlet() throws InvalidServiceOwnerDefinitionException {
-        System.out.println("WE GET HERE");
         ServletRegistrationBean servletRegistrationBean;
 
         CXFServlet cxfServlet = new CXFServlet();
@@ -81,7 +88,6 @@ public abstract class ServletConfiguration {
             restEndpoint.setServiceBean(service);
             ArrayList<Object> providers = new ArrayList<>();
             providers.add(new JacksonJaxbJsonProvider(this.getObjectMapper(), new Annotations[]{Annotations.JACKSON}));
-            System.out.println(this.getXmlMapper());
             providers.add(new JacksonJaxbXMLProvider(this.getXmlMapper(), new Annotations[]{Annotations.JAXB}));
             restEndpoint.setProviders(providers);
             restEndpoint.create();
