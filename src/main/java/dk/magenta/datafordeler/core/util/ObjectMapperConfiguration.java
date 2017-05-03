@@ -22,6 +22,10 @@ import java.util.UUID;
 @Configuration
 public class ObjectMapperConfiguration {
 
+    /**
+     * Creates a module to serialize and deserialize objects of type "java.time.OffsetDateTime"
+     * @return The created module
+     */
     private SimpleModule getOffsetDateTimeModule() {
         SimpleModule dateModule = new SimpleModule();
         dateModule.addSerializer(OffsetDateTime.class, new JsonSerializer<OffsetDateTime>() {
@@ -47,31 +51,6 @@ public class ObjectMapperConfiguration {
         return dateModule;
     }
 
-    private SimpleModule getUUIDModule() {
-        SimpleModule uuidModule = new SimpleModule();
-        uuidModule.addSerializer(UUID.class, new JsonSerializer<UUID>() {
-            @Override
-            public void serialize(UUID uuid, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
-                jsonGenerator.writeString(uuid.toString());
-            }
-        });
-        uuidModule.addDeserializer(UUID.class, new JsonDeserializer<UUID>() {
-            @Override
-            public UUID deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
-                if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
-                    jsonParser.nextToken();
-                }
-                String tokenValue = jsonParser.getValueAsString();
-                if (tokenValue != null) {
-                    return UUID.fromString(tokenValue);
-                } else {
-                    return null;
-                }
-            }
-        });
-        return uuidModule;
-    }
-
     /**
      * ObjectMapper configuration; add serializers here
      */
@@ -81,7 +60,6 @@ public class ObjectMapperConfiguration {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.registerModule(this.getOffsetDateTimeModule());
-        objectMapper.registerModule(this.getUUIDModule());
         return objectMapper;
     }
 

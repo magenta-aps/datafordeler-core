@@ -2,7 +2,6 @@ package dk.magenta.datafordeler.core.util;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -16,7 +15,6 @@ import org.springframework.context.annotation.Configuration;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 /**
  * Created by lars on 24-02-17.
@@ -24,6 +22,10 @@ import java.util.UUID;
 @Configuration
 public class XmlMapperConfiguration {
 
+    /**
+     * Creates a module to serialize and deserialize objects of type "java.time.OffsetDateTime"
+     * @return The created module
+     */
     private SimpleModule getOffsetDateTimeModule() {
         SimpleModule dateModule = new SimpleModule();
         dateModule.addSerializer(OffsetDateTime.class, new StdSerializer<OffsetDateTime>(OffsetDateTime.class) {
@@ -50,7 +52,7 @@ public class XmlMapperConfiguration {
     }
 
     /**
-     * ObjectMapper configuration; add serializers here
+     * XmlMapper configuration; add serializers here
      */
     @Bean
     public XmlMapper xmlMapper() {
