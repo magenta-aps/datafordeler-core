@@ -7,7 +7,6 @@ import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -214,10 +213,6 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         s.add(subIndentString + "]");
         s.add(indentString+"}");
         return s.toString();
-    }
-
-    public static String getTableName(Class<? extends Registration> cls) {
-        return cls.getAnnotation(Table.class).name();
     }
 
 }

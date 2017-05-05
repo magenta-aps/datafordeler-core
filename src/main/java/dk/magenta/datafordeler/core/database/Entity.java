@@ -5,16 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.fapi.Query;
-import org.hibernate.Session;
 import org.hibernate.annotations.*;
-
 import javax.persistence.*;
 import javax.persistence.CascadeType;
 import javax.persistence.OrderBy;
-import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.*;
 
@@ -90,14 +85,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.registrations;
     }
 
-
-    public static String getTableName(Class<? extends Entity> cls) {
-        return cls.getAnnotation(Table.class).name();
-    }
-
-    public void updateIdentification(Session session) {
-        //this.identification = (Identification) session.merge(this.identification);
-    }
 
     public void setIdentification(Identification identification) {
         this.identification = identification;

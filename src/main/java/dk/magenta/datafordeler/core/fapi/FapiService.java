@@ -11,7 +11,6 @@ import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.ws.rs.GET;

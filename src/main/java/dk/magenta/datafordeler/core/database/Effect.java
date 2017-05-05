@@ -5,13 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
-import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;

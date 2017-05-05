@@ -3,11 +3,8 @@ package dk.magenta.datafordeler.core.database;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlElement;
 import java.time.OffsetDateTime;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
 
 /**
