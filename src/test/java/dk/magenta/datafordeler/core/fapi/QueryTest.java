@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.AppConfig;
-import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -11,12 +10,7 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
 
 /**
