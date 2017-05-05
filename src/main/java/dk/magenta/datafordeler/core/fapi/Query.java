@@ -1,11 +1,9 @@
 package dk.magenta.datafordeler.core.fapi;
 
-import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
-
-import javax.xml.bind.annotation.XmlElement;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,8 +23,8 @@ public class Query {
     }
 
     public Query(int page, int pageSize) {
-        this.page = page;
-        this.pageSize = pageSize;
+        this.setPage(page);
+        this.setPageSize(pageSize);
     }
 
     public Query(int page, int pageSize, OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
@@ -48,6 +46,9 @@ public class Query {
     }
 
     public void setPageSize(int pageSize) {
+        if (pageSize <= 0) {
+            throw new IllegalArgumentException("pageSize must be at least 1");
+        }
         this.pageSize = pageSize;
     }
 
@@ -62,6 +63,9 @@ public class Query {
     }
 
     public void setPage(int page) {
+        if (page < 0) {
+            throw new IllegalArgumentException("page must be at least 0");
+        }
         this.page = page;
     }
 
@@ -143,28 +147,58 @@ public class Query {
     }
 
 
-    private static DateTimeFormatter[] parseFormats = new DateTimeFormatter[]{
+    private static DateTimeFormatter[] zonedDateTimeFormatters = new DateTimeFormatter[]{
             DateTimeFormatter.ISO_OFFSET_DATE_TIME,
-            DateTimeFormatter.ISO_OFFSET_DATE,
             DateTimeFormatter.ISO_ZONED_DATE_TIME,
-            DateTimeFormatter.ISO_DATE_TIME,
-            DateTimeFormatter.ISO_DATE,
             DateTimeFormatter.ISO_INSTANT,
             DateTimeFormatter.RFC_1123_DATE_TIME,
+    };
+
+    private static DateTimeFormatter[] zonedDateFormatters = new DateTimeFormatter[]{
+            DateTimeFormatter.ISO_OFFSET_DATE,
+    };
+
+    private static DateTimeFormatter[] unzonedDateTimeFormatters = new DateTimeFormatter[]{
+            DateTimeFormatter.ISO_DATE_TIME,
             DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+    };
+
+
+    private static DateTimeFormatter[] unzonedDateFormatters = new DateTimeFormatter[]{
+            DateTimeFormatter.ISO_DATE,
             DateTimeFormatter.BASIC_ISO_DATE
     };
 
     private static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
         if (dateTime != null) {
-            for (DateTimeFormatter formatter : parseFormats) {
+            for (DateTimeFormatter formatter : zonedDateTimeFormatters) {
                 try {
                     return OffsetDateTime.parse(dateTime, formatter);
                 } catch (DateTimeParseException e) {
-                    // try next parser
                 }
             }
-            throw new DateTimeParseException("Unable to parse date string, tried "+parseFormats.length+" parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
+            for (DateTimeFormatter formatter : zonedDateFormatters) {
+                try {
+                    TemporalAccessor accessor = formatter.parse(dateTime);
+                    return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.from(accessor));
+                } catch (DateTimeParseException e) {
+                }
+            }
+            for (DateTimeFormatter formatter : unzonedDateTimeFormatters) {
+                try {
+                    TemporalAccessor accessor = formatter.parse(dateTime);
+                    return OffsetDateTime.of(LocalDateTime.from(accessor), ZoneOffset.UTC);
+                } catch (DateTimeParseException e) {
+                }
+            }
+            for (DateTimeFormatter formatter : unzonedDateFormatters) {
+                try {
+                    TemporalAccessor accessor = formatter.parse(dateTime);
+                    return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.UTC);
+                } catch (DateTimeParseException e) {
+                }
+            }
+            throw new DateTimeParseException("Unable to parse date string, tried "+ zonedDateTimeFormatters.length+" parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
         }
         return null;
     }
