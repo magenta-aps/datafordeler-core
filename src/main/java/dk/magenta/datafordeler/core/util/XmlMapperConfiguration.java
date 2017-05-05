@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
@@ -28,26 +29,9 @@ public class XmlMapperConfiguration {
      */
     private SimpleModule getOffsetDateTimeModule() {
         SimpleModule dateModule = new SimpleModule();
-        dateModule.addSerializer(OffsetDateTime.class, new StdSerializer<OffsetDateTime>(OffsetDateTime.class) {
-            @Override
-            public void serialize(OffsetDateTime offsetDateTime, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-                jsonGenerator.writeString(DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(offsetDateTime));
-            }
-        });
-        dateModule.addDeserializer(OffsetDateTime.class, new StdDeserializer<OffsetDateTime>(OffsetDateTime.class) {
-            @Override
-            public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
-                if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
-                    jsonParser.nextToken();
-                }
-                String tokenValue = jsonParser.getValueAsString();
-                if (tokenValue != null) {
-                    return OffsetDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(tokenValue));
-                } else {
-                    return null;
-                }
-            }
-        });
+        OffsetDateTimeAdapter adapter = new OffsetDateTimeAdapter();
+        dateModule.addSerializer(adapter.getSerializer());
+        dateModule.addDeserializer(OffsetDateTime.class, adapter.getDeserializer());
         return dateModule;
     }
 
@@ -56,7 +40,7 @@ public class XmlMapperConfiguration {
      */
     @Bean
     public XmlMapper xmlMapper() {
-        XmlMapper xmlMapper = new XmlMapper();
+        XmlMapper xmlMapper = new XmlMapper(new JacksonXmlModule());
         xmlMapper.registerModule(new JavaTimeModule());
         xmlMapper.registerModule(this.getOffsetDateTimeModule());
         return xmlMapper;

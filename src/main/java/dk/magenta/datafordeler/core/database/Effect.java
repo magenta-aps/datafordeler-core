@@ -1,12 +1,18 @@
 package dk.magenta.datafordeler.core.database;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
+import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.HashSet;
@@ -31,17 +37,12 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     protected R registration;
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JsonProperty
     protected Set<D> dataItems;
 
     @Column(nullable = false, insertable = true, updatable = false)
-    @JsonProperty
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm a z")
     private OffsetDateTime effectFrom;
 
     @Column(nullable = true, insertable = true, updatable = false)
-    @JsonProperty
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm a z")
     private OffsetDateTime effectTo;
 
     public Effect() {
@@ -81,14 +82,26 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return this.registration;
     }
 
+    @JsonProperty
+    @XmlElement
+    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
     public OffsetDateTime getEffectFrom() {
         return this.effectFrom;
     }
 
+
+    @JsonProperty
+    @XmlElement
+    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
     public OffsetDateTime getEffectTo() {
         return this.effectTo;
     }
 
+
+    @JsonProperty(value = "dataItems")
+    @XmlElement(name = "dataItem")
+    @JacksonXmlProperty(localName = "dataItem")
+    @JacksonXmlElementWrapper(useWrapping = false)
     public Set<D> getDataItems() {
         return this.dataItems;
     }

@@ -2,6 +2,8 @@ package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.fapi.Query;
 import org.hibernate.Session;
 import org.hibernate.annotations.*;
@@ -10,7 +12,9 @@ import javax.persistence.*;
 import javax.persistence.CascadeType;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.*;
 
@@ -33,12 +37,10 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
     @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null")
     @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO)
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     protected List<R> registrations;
 
     @Transient
     @JsonIgnore
-    @XmlTransient
     private Query filter = null;
 
     public Entity() {
@@ -56,7 +58,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     @JsonIgnore
-    @XmlTransient
     public Identification getIdentification() {
         return this.identification;
     }
@@ -80,9 +81,11 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         this.identification.setDomain(domain);
     }
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @XmlElement(name="registrations")
     @OrderBy("registrationFrom")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @XmlElement(name="registration")
+    @JacksonXmlProperty(localName = "registration")
+    @JacksonXmlElementWrapper(useWrapping = false)
     public List<R> getRegistrations() {
         return this.registrations;
     }

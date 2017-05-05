@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.database;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlElement;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Map;
@@ -59,6 +60,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
     public void setEffectTo(OffsetDateTime effectTo) {
         this.effectTo = effectTo;
     }
+
 
     /**
      * Compares this object with another DataItem

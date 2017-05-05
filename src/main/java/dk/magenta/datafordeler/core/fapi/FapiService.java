@@ -22,6 +22,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlElement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -180,14 +182,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @return Found Entities
      */
     @WebMethod(operationName = "search")
-    public String searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) {
-        this.log.info("Incoming REST request, searching for query "+query.toString());
-        try {
-            return this.objectMapper.writeValueAsString(this.searchByQuery(query));
-        } catch (JsonProcessingException e) {
-            this.log.error("Error outputting JSON: ", e);
-            throw new DataOutputException(e);
-        }
+    public List<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) {
+        this.log.info("Incoming SOAP request, searching for query "+query.toString());
+        return new ArrayList<>(this.searchByQuery(query));
     }
 
 

@@ -10,14 +10,18 @@ import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import org.apache.cxf.bus.spring.SpringBus;
+import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.cxf.jaxws.EndpointImpl;
+import org.apache.cxf.jaxws.JaxWsServerFactoryBean;
+import org.apache.cxf.jaxws.support.JaxWsServiceConfiguration;
 import org.apache.cxf.transport.servlet.CXFServlet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 
+import javax.xml.ws.Provider;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.Executors;
@@ -76,9 +80,11 @@ public abstract class ServletConfiguration {
             String base = "/" + service.getServiceName() + "/" + service.getVersion();
 
             // SOAP
-            EndpointImpl soapEndpoint = new EndpointImpl(bus, service);
-            soapEndpoint.publish(base + "/soap");
-            soapEndpoint.setExecutor(Executors.newFixedThreadPool(10));
+            JaxWsServerFactoryBean serverFactoryBean = new JaxWsServerFactoryBean();
+            serverFactoryBean.setBus(bus);
+            serverFactoryBean.setAddress(base + "/soap");
+            serverFactoryBean.setServiceBean(service);
+            serverFactoryBean.create();
             this.log.info("Set up SOAP handler on " + base + "/soap");
 
             // REST
@@ -86,10 +92,8 @@ public abstract class ServletConfiguration {
             restEndpoint.setBus(bus);
             restEndpoint.setAddress(base + "/rest");
             restEndpoint.setServiceBean(service);
-            ArrayList<Object> providers = new ArrayList<>();
-            providers.add(new JacksonJaxbJsonProvider(this.getObjectMapper(), new Annotations[]{Annotations.JACKSON}));
-            providers.add(new JacksonJaxbXMLProvider(this.getXmlMapper(), new Annotations[]{Annotations.JAXB}));
-            restEndpoint.setProviders(providers);
+            restEndpoint.setProvider(new JacksonJaxbJsonProvider(this.getObjectMapper(), new Annotations[]{Annotations.JACKSON}));
+            restEndpoint.setProvider(new JacksonJaxbXMLProvider(this.getXmlMapper(), new Annotations[]{Annotations.JACKSON}));
             restEndpoint.create();
             this.log.info("Set up REST handler on " + base + "/rest");
         }

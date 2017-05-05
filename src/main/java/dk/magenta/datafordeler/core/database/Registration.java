@@ -1,6 +1,9 @@
 package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
@@ -10,6 +13,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.HashSet;
@@ -90,8 +94,10 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+")")
     protected Set<V> effects;
 
-    @XmlElement
     @JsonProperty(value = "effects")
+    @XmlElement(name = "effect")
+    @JacksonXmlProperty(localName = "effect")
+    @JacksonXmlElementWrapper(useWrapping = false)
     public Set<V> getEffects() {
         return this.effects;
     }
@@ -124,12 +130,12 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
     @JsonProperty(value = "registrationFrom")
     @XmlElement
+    @XmlJavaTypeAdapter(type = OffsetDateTime.class, value = OffsetDateTimeAdapter.class)
     public OffsetDateTime getRegistrationFrom() {
         return this.registrationFrom;
     }
 
-
-    @JsonProperty
+    @JsonProperty(value = "registrationTo")
     public void setRegistrationFrom(OffsetDateTime registrationFrom) {
         this.registrationFrom = registrationFrom;
     }
@@ -142,18 +148,19 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
     @JsonProperty(value = "registrationTo")
     @XmlElement
+    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
     public OffsetDateTime getRegistrationTo() {
         return this.registrationTo;
     }
 
-
-
-
-
-    @JsonProperty
+    @JsonProperty(value = "registrationTo")
     public void setRegistrationTo(OffsetDateTime registrationTo) {
         this.registrationTo = registrationTo;
     }
+
+
+
+
 
     @JsonProperty
     protected int sequenceNumber;
@@ -162,7 +169,6 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     protected String registerChecksum;
 
     @JsonProperty("checksum")
-    @XmlElement
     public String getRegisterChecksum() {
         return this.registerChecksum;
     }
