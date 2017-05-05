@@ -247,12 +247,12 @@ public class QueryManager {
     }
 
     private void logQuery(Query query) {
-        if (this.log.isInfoEnabled()) {
+        if (this.log.isDebugEnabled()) {
             StringJoiner sj = new StringJoiner(", ");
             for (Parameter parameter : query.getParameters()) {
                 sj.add(parameter.getName() + ": " + query.getParameterValue(parameter));
             }
-            this.log.info(query.getQueryString() + " [" + sj.toString() + "]");
+            this.log.debug(query.getQueryString() + " [" + sj.toString() + "]");
         }
     }
 }

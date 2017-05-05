@@ -24,29 +24,13 @@ import java.util.regex.Pattern;
  */
 public abstract class ServletConfiguration {
 
-    private Logger log = LogManager.getLogger("FAPI Servlet configuration");
+    private Logger log = LogManager.getLogger("FAPI ServletConfiguration");
 
     protected abstract Plugin getPlugin();
 
     protected abstract ObjectMapper getObjectMapper();
 
     protected abstract XmlMapper getXmlMapper();
-
-    /**
-     * Plugins must return the "owner" part of the FAPI services that will be hosted, e.g. "cpr", "cvr", "gis"
-     * These will be placed in the servlet path of the FAPI: https://data.gl/[owner]/[service]/[version]/[method]
-     * @return
-     */
-    protected abstract String getServiceOwner();
-
-    private final Pattern ownerValidation = Pattern.compile("^[a-zA-Z0-9_]+$");
-
-    private void validateServiceOwner(String serviceOwner) throws InvalidServiceOwnerDefinitionException {
-        if (!ownerValidation.matcher(serviceOwner).matches()) {
-            this.log.error("Invalid service owner: " + serviceOwner);
-            throw new InvalidServiceOwnerDefinitionException(this.getPlugin(), serviceOwner, this.ownerValidation);
-        }
-    }
 
     /**
      * Sets up a servlet bean to listen for requests on defined paths
@@ -99,5 +83,27 @@ public abstract class ServletConfiguration {
         this.log.info("ServletRegistrationBean \"" + servletRegistrationBean.getServletName() + "\" created");
 
         return servletRegistrationBean;
+    }
+
+
+    /**
+     * Plugins must return the "owner" part of the FAPI services that will be hosted, e.g. "cpr", "cvr", "gis"
+     * These will be placed in the servlet path of the FAPI: https://data.gl/[owner]/[service]/[version]/[method]
+     * @return
+     */
+    protected abstract String getServiceOwner();
+
+    private final Pattern ownerValidation = Pattern.compile("^[a-zA-Z0-9_]+$");
+
+    /**
+     * Validates that the given serviceOwner matches the allowed pattern
+     * @param serviceOwner
+     * @throws InvalidServiceOwnerDefinitionException
+     */
+    private void validateServiceOwner(String serviceOwner) throws InvalidServiceOwnerDefinitionException {
+        if (!ownerValidation.matcher(serviceOwner).matches()) {
+            this.log.error("Invalid service owner: " + serviceOwner);
+            throw new InvalidServiceOwnerDefinitionException(this.getPlugin(), serviceOwner, this.ownerValidation);
+        }
     }
 }

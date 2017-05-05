@@ -109,6 +109,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         Q query = this.getQuery(parameters);
         try {
             E entity = this.searchById(id, query);
+            this.log.debug("Item found, returning");
             return entity;
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -132,6 +133,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         Q query = this.getQuery(registerFrom, registerTo);
         try {
             E entity = this.searchById(id, query);
+            this.log.debug("Item found, returning");
             return entity;
         } catch (IllegalArgumentException e) {
             throw new InvalidClientInputException(e.getMessage());
@@ -166,6 +168,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
         this.log.info("Incoming REST request, searching for parameters "+parameters.toString());
         Set<E> results = this.searchByQuery(this.getQuery(parameters));
+        this.log.debug("Items found, returning");
         try {
             return this.objectMapper.writeValueAsString(results);
         } catch (JsonProcessingException e) {
@@ -183,7 +186,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(operationName = "search")
     public List<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) {
         this.log.info("Incoming SOAP request, searching for query "+query.toString());
-        return new ArrayList<>(this.searchByQuery(query));
+        Set<E> results = this.searchByQuery(query);
+        this.log.debug("Items found, returning");
+        return new ArrayList<>(results);
     }
 
 
@@ -258,22 +263,18 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         if (query != null) {
             if (query.getRegistrationFrom() != null) {
                 Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
-                System.out.println(Registration.FILTERPARAM_REGISTRATION_FROM+" = "+query.getRegistrationFrom());
                 filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, query.getRegistrationFrom());
             }
             if (query.getRegistrationTo() != null) {
                 Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
-                System.out.println(Registration.FILTERPARAM_REGISTRATION_TO+" = "+query.getRegistrationTo());
                 filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, query.getRegistrationTo());
             }
             if (query.getEffectFrom() != null) {
                 Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
-                System.out.println(Effect.FILTERPARAM_EFFECT_FROM+" = "+query.getEffectFrom());
                 filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, query.getEffectFrom());
             }
             if (query.getEffectTo() != null) {
                 Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
-                System.out.println(Effect.FILTERPARAM_EFFECT_TO+" = "+query.getEffectTo());
                 filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, query.getEffectTo());
             }
         }
