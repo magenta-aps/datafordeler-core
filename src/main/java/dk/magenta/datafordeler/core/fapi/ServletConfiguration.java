@@ -43,6 +43,7 @@ public abstract class ServletConfiguration {
 
     private void validateServiceOwner(String serviceOwner) throws InvalidServiceOwnerDefinitionException {
         if (!ownerValidation.matcher(serviceOwner).matches()) {
+            this.log.error("Invalid service owner: " + serviceOwner);
             throw new InvalidServiceOwnerDefinitionException(this.getPlugin(), serviceOwner, this.ownerValidation);
         }
     }
@@ -57,14 +58,17 @@ public abstract class ServletConfiguration {
      */
     @Bean(name="pluginServletRegistration")
     public ServletRegistrationBean dispatcherServlet() throws InvalidServiceOwnerDefinitionException {
+        this.log.info("Initialize ServletRegistrationBean for Plugin "+this.getPlugin().getClass().getCanonicalName());
         ServletRegistrationBean servletRegistrationBean;
 
         CXFServlet cxfServlet = new CXFServlet();
+        this.log.info("Setting up Spring Bus");
         SpringBus bus = new SpringBus();
         cxfServlet.setBus(bus);
 
         RegisterManager registerManager = this.getPlugin().getRegisterManager();
         String serviceOwner = this.getServiceOwner();
+        this.log.info("Service owner for " + this.getPlugin().getClass().getCanonicalName() + " is " + serviceOwner);
         this.validateServiceOwner(serviceOwner);
 
         for (EntityManager entityManager : registerManager.getEntityManagers()) {
@@ -72,14 +76,15 @@ public abstract class ServletConfiguration {
             String base = "/" + service.getServiceName() + "/" + service.getVersion();
 
             // SOAP
+            this.log.info("Setting up SOAP handler on " + base + "/soap");
             JaxWsServerFactoryBean serverFactoryBean = new JaxWsServerFactoryBean();
             serverFactoryBean.setBus(bus);
             serverFactoryBean.setAddress(base + "/soap");
             serverFactoryBean.setServiceBean(service);
             serverFactoryBean.create();
-            this.log.info("Set up SOAP handler on " + base + "/soap");
 
             // REST
+            this.log.info("Setting up REST handler on " + base + "/rest");
             JAXRSServerFactoryBean restEndpoint = new JAXRSServerFactoryBean();
             restEndpoint.setBus(bus);
             restEndpoint.setAddress(base + "/rest");
@@ -87,11 +92,11 @@ public abstract class ServletConfiguration {
             restEndpoint.setProvider(new JacksonJaxbJsonProvider(this.getObjectMapper(), new Annotations[]{Annotations.JACKSON}));
             restEndpoint.setProvider(new JacksonJaxbXMLProvider(this.getXmlMapper(), new Annotations[]{Annotations.JACKSON}));
             restEndpoint.create();
-            this.log.info("Set up REST handler on " + base + "/rest");
         }
 
         servletRegistrationBean = new ServletRegistrationBean(cxfServlet, "/" + serviceOwner + "/*");
         servletRegistrationBean.setName(serviceOwner + "Servlet");
+        this.log.info("ServletRegistrationBean \"" + servletRegistrationBean.getServletName() + "\" created");
 
         return servletRegistrationBean;
     }
