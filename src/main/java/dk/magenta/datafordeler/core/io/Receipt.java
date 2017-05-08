@@ -20,8 +20,6 @@ public class Receipt {
     protected String errorCode;
     protected String errorMessage;
 
-    public Receipt() {}
-
     public Receipt(String objectID, OffsetDateTime received) {
         this.objectID = objectID;
         this.status = Status.ok;

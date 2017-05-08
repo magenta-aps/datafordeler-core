@@ -168,7 +168,7 @@ public class Event implements Serializable {
         this.ensureMessageData().setObjektData(objektData);
     }
 
-    public String getObjectReference() {
+    public String getObjektReference() {
         if (this.beskedData != null) {
             return this.beskedData.getObjektReference();
         }
@@ -187,7 +187,7 @@ public class Event implements Serializable {
         joiner.add("beskedVersion: "+this.getBeskedVersion());
         joiner.add("dataskema: "+this.getDataskema());
         joiner.add("objektData: "+this.getObjektData());
-        joiner.add("objektReference: "+this.getObjectReference());
+        joiner.add("objektReference: "+this.getObjektReference());
         sb.append(joiner.toString());
         sb.append(")");
         return sb.toString();

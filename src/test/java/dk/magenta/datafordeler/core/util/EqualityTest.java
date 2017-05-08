@@ -15,7 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class EqualityTest {
 
     @Test
-    public void testEqual() {;
+    public void testEqual() {
         Assert.assertFalse(Equality.equal("abc", null));
         Assert.assertFalse(Equality.equal(null, "abc"));
         Assert.assertFalse(Equality.equal("abc", "bce"));
