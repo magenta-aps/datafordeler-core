@@ -35,5 +35,8 @@ public class ListHashMapTest {
         map.add(key, value2);
         Assert.assertEquals(value1, map.get(key, 0));
         Assert.assertEquals(value2, map.get(key, 1));
+        Assert.assertNull(map.get(key, 2));
+        Assert.assertNull(map.get("nothing_here", 0));
+        Assert.assertNull(map.get("nothing_here", 1));
     }
 }

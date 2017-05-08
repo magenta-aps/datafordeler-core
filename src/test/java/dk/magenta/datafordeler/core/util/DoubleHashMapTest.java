@@ -31,9 +31,10 @@ public class DoubleHashMapTest {
         String key1 = "foo";
         String key2 = "bar";
         String value = "foobar";
-        map.put(key1, key2, value);
         map.put(key1, key2, "dummy");
+        map.put(key1, key2, value);
         Assert.assertEquals(value, map.get(key1, key2));
+        Assert.assertNotEquals("dummy", map.get(key1, key2));
         Assert.assertNotEquals(value, map.get(key1, "nothing_here"));
         Assert.assertNotEquals(value, map.get("nothing_here", "nothing_here"));
     }

@@ -32,7 +32,7 @@ public class ListHashMap<K, V> extends HashMap<K, ArrayList<V>> {
      */
     public V get(K key, int index) {
         ArrayList<V> list = super.get(key);
-        if (list != null) {
+        if (list != null && index < list.size()) {
             return list.get(index);
         }
         return null;
