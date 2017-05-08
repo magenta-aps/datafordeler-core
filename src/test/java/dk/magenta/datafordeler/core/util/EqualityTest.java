@@ -14,6 +14,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration(classes = AppConfig.class)
 public class EqualityTest {
 
+    private class EqualityImpl extends Equality {}
+
+    @Test
+    public void init() {
+        EqualityImpl equality = new EqualityImpl();
+    }
+
     @Test
     public void testEqual() {
         Assert.assertFalse(Equality.equal("abc", null));
