@@ -21,6 +21,8 @@ public class DoubleHashMapTest {
         String key2 = "bar";
         map.put(key1, key2, "foobar");
         Assert.assertTrue(map.containsKey(key1, key2));
+        Assert.assertFalse(map.containsKey(key1, "nothing_here"));
+        Assert.assertFalse(map.containsKey("nothing_here", "nothing_here"));
     }
 
     @Test
@@ -30,6 +32,9 @@ public class DoubleHashMapTest {
         String key2 = "bar";
         String value = "foobar";
         map.put(key1, key2, value);
+        map.put(key1, key2, "dummy");
         Assert.assertEquals(value, map.get(key1, key2));
+        Assert.assertNotEquals(value, map.get(key1, "nothing_here"));
+        Assert.assertNotEquals(value, map.get("nothing_here", "nothing_here"));
     }
 }
