@@ -29,8 +29,11 @@ public class ListHashMapTest {
     public void testGet() {
         ListHashMap<String, String> map = new ListHashMap<>();
         String key = "foo";
-        String value = "bar";
-        map.add(key, value);
-        Assert.assertEquals(value, map.get(key, 0));
+        String value1 = "bar";
+        String value2 = "baz";
+        map.add(key, value1);
+        map.add(key, value2);
+        Assert.assertEquals(value1, map.get(key, 0));
+        Assert.assertEquals(value2, map.get(key, 1));
     }
 }
