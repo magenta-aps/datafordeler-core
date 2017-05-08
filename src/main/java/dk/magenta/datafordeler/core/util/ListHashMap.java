@@ -16,7 +16,11 @@ public class ListHashMap<K, V> extends HashMap<K, ArrayList<V>> {
      * @param value Value to insert
      */
     public void add(K key, V value) {
-        ArrayList<V> list = super.computeIfAbsent(key, k -> new ArrayList<V>());
+        ArrayList<V> list = this.get(key);
+        if (list == null) {
+            list = new ArrayList<>();
+            this.put(key, list);
+        }
         list.add(value);
     }
 
