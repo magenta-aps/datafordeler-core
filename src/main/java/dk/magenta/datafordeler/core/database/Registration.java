@@ -15,9 +15,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
@@ -34,7 +32,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     public static final String FILTERPARAM_REGISTRATION_TO = "registrationToDate";
 
     public Registration() {
-        this.effects = new HashSet<V>();
+        this.effects = new ArrayList<V>();
     }
 
     public Registration(E entity, OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
@@ -91,13 +89,13 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @Filter(name = Effect.FILTER_EFFECT_FROM, condition="(effectTo >= :"+Effect.FILTERPARAM_EFFECT_FROM+" OR effectTo is null)")
     @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+")")
-    protected Set<V> effects;
+    protected List<V> effects;
 
     @JsonProperty(value = "effects")
     @XmlElement(name = "effect")
     @JacksonXmlProperty(localName = "effect")
     @JacksonXmlElementWrapper(useWrapping = false)
-    public Set<V> getEffects() {
+    public List<V> getEffects() {
         return this.effects;
     }
 
@@ -117,8 +115,8 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
     @JsonProperty
-    public void setEffects(Set<V> effects) {
-        this.effects = new HashSet<V>(effects);
+    public void setEffects(Collection<V> effects) {
+        this.effects = new ArrayList<V>(effects);
     }
 
 

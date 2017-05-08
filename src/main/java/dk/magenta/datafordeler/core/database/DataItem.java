@@ -3,6 +3,8 @@ package dk.magenta.datafordeler.core.database;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -72,6 +74,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
      * @return Map of all relevant attributes
      */
     public abstract Map<String, Object> asMap();
+
 
     /**
      * Pretty-print contained data

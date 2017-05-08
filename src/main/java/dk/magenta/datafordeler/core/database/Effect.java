@@ -10,12 +10,11 @@ import org.hibernate.annotations.ParamDef;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
@@ -97,11 +96,10 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
 
     @JsonProperty(value = "dataItems")
-    @XmlElement(name = "dataItem")
     @JacksonXmlProperty(localName = "dataItem")
     @JacksonXmlElementWrapper(useWrapping = false)
-    public Set<D> getDataItems() {
-        return this.dataItems;
+    public List<D> getDataItems() {
+        return new ArrayList(this.dataItems);
     }
 
     public boolean equalData(V other) {
@@ -113,6 +111,15 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public static String getTableName(Class<? extends Effect> cls) {
         return cls.getAnnotation(Table.class).name();
+    }
+
+    @XmlElementWrapper(name="data")
+    public Map<String, Object> getData() {
+        HashMap<String, Object> data = new HashMap<>();
+        for (DataItem d : this.dataItems) {
+            data.putAll(d.asMap());
+        }
+        return data;
     }
 
     /**

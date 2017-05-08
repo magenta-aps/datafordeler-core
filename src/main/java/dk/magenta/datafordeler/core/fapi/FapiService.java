@@ -147,7 +147,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param registrationTo High boundary for registration inclusion
      * @return Query subclass instance
      */
-    private Q getQuery(String registrationFrom, String registrationTo) {
+    protected Q getQuery(String registrationFrom, String registrationTo) {
         Q query = this.getQuery();
         query.setRegistrationFrom(registrationFrom);
         query.setRegistrationTo(registrationTo);

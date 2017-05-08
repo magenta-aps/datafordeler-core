@@ -180,7 +180,7 @@ public class DatabaseTest {
         testRegistration = (TestRegistration) session.merge(testRegistration);
 
         queryManager.dedupEffects(session, testRegistration);
-        Set<TestEffect> testEffects = testRegistration.getEffects();
+        List<TestEffect> testEffects = testRegistration.getEffects();
 
         Assert.assertEquals(2, testEffects.size());
         for (TestEffect e1 : testEffects) {

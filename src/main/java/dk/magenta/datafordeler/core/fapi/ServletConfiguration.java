@@ -17,6 +17,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
+
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 /**
@@ -57,6 +59,7 @@ public abstract class ServletConfiguration {
 
         for (EntityManager entityManager : registerManager.getEntityManagers()) {
             FapiService service = entityManager.getEntityService();
+            System.out.println(service);
             String base = "/" + service.getServiceName() + "/" + service.getVersion();
 
             // SOAP
@@ -65,6 +68,8 @@ public abstract class ServletConfiguration {
             serverFactoryBean.setBus(bus);
             serverFactoryBean.setAddress(base + "/soap");
             serverFactoryBean.setServiceBean(service);
+
+            serverFactoryBean.addHandlers(Collections.singletonList(new SoapHandler()));
             serverFactoryBean.create();
 
             // REST
