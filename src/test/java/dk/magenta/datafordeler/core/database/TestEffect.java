@@ -1,6 +1,4 @@
-package dk.magenta.datafordeler.core.dbtest;
-
-import dk.magenta.datafordeler.core.database.Effect;
+package dk.magenta.datafordeler.core.database;
 
 import javax.persistence.Table;
 import java.time.OffsetDateTime;
@@ -11,7 +9,7 @@ import java.time.temporal.TemporalAccessor;
  */
 @javax.persistence.Entity
 @Table(name="test_effect")
-public class TestEffect extends Effect<TestRegistration, TestEffect, TestData> {
+public class TestEffect extends Effect<TestRegistration, TestEffect, TestDataItem> {
 
     public TestEffect() {
         super();

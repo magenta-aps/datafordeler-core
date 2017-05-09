@@ -1,4 +1,4 @@
-package dk.magenta.datafordeler.core.dbtest;
+package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.database.Registration;
 

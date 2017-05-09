@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.exception.*;
@@ -72,6 +73,12 @@ public abstract class EntityManager {
      * @return
      */
     protected abstract Fetcher getRegistrationFetcher();
+
+    /**
+     * Plugins must return an instance of a FapiService subclass from this method
+     * @return
+     */
+    public abstract FapiService getEntityService();
 
 
 
