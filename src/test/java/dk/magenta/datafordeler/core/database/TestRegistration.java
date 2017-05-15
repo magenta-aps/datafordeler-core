@@ -15,13 +15,13 @@ public class TestRegistration extends Registration<TestEntity, TestRegistration,
 
     public TestRegistration() {}
 
-    public TestRegistration(TestEntity entity, OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
-        super(entity, registrationFrom, registrationTo);
+    public TestRegistration(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, int sequenceNumber) {
+        super(registrationFrom, registrationTo, sequenceNumber);
     }
-    public TestRegistration(TestEntity entity, TemporalAccessor registrationFrom, TemporalAccessor registrationTo) {
-        super(entity, registrationFrom, registrationTo);
+    public TestRegistration(TemporalAccessor registrationFrom, TemporalAccessor registrationTo, int sequenceNumber) {
+        super(registrationFrom, registrationTo, sequenceNumber);
     }
-    public TestRegistration(TestEntity entity, String registrationFrom, String registrationTo) {
-        super(entity, registrationFrom, registrationTo);
+    public TestRegistration(String registrationFrom, String registrationTo, int sequenceNumber) {
+        super(registrationFrom, registrationTo, sequenceNumber);
     }
 }

@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.database;
 
+import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.util.DoubleHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.LogManager;
@@ -200,14 +201,52 @@ public class QueryManager {
      * @param session A database session to work on
      * @param registration Registration to be saved
      */
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, R registration) {
-        this.log.info("Saving registration with checksum "+registration.getRegisterChecksum());
-        E entity = registration.getEntity();
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration) throws InvalidDataInputException {
+        this.log.info("Saving registration with checksum "+registration.getRegisterChecksum()+" and sequence number "+registration.getSequenceNumber());
+        if (entity == null && registration.entity != null) {
+            entity = registration.entity;
+        }
         E existingEntity = this.getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
         if (existingEntity != null) {
+            this.log.debug("There is an existing entity with uuid "+existingEntity.getUUID().toString());
             entity = existingEntity;
-            registration.setEntity(entity);
         }
+        registration.setEntity(entity);
+        entity.addRegistration(registration);
+
+        // Validate registration:
+        // * No existing registration on the entity may have the same sequence number
+        // * The registration must have a sequence number one higher than the highest existing one
+        int highestSequenceNumber = -1;
+        R lastExistingRegistration = null;
+        if (registration.getId() == null) {
+            // New registration
+            for (R otherRegistration : entity.getRegistrations()) {
+                if (otherRegistration != registration) { // Consider only other registrations
+                    if (otherRegistration.getId() != null || session.contains(otherRegistration)) { // Consider only saved registrations
+                        if (otherRegistration.getSequenceNumber() == registration.getSequenceNumber()) {
+                            throw new DuplicateSequenceNumberException(registration, otherRegistration);
+                        }
+                        if (otherRegistration.getSequenceNumber() > highestSequenceNumber) {
+                            highestSequenceNumber = otherRegistration.getSequenceNumber();
+                            lastExistingRegistration = otherRegistration;
+                        }
+                    }
+                }
+            }
+            if (highestSequenceNumber > -1 && registration.getSequenceNumber() != highestSequenceNumber + 1) {
+                throw new SkippedSequenceNumberException(registration, highestSequenceNumber);
+            }
+            if (lastExistingRegistration != null) {
+                if (lastExistingRegistration.getRegistrationTo() == null) {
+                    lastExistingRegistration.setRegistrationTo(registration.getRegistrationFrom());
+                } else if (!lastExistingRegistration.getRegistrationTo().equals(registration.getRegistrationFrom())) {
+                    throw new MismatchingRegistrationBoundaryException(registration, lastExistingRegistration);
+                }
+            }
+        }
+
+
         for (V effect : registration.getEffects()) {
             HashSet<D> obsolete = new HashSet<D>();
             for (D dataItem : effect.getDataItems()) {
@@ -238,6 +277,9 @@ public class QueryManager {
         this.dedupEffects(session, registration);
 
         session.saveOrUpdate(registration);
+        if (lastExistingRegistration != null) {
+            session.update(lastExistingRegistration);
+        }
         for (V effect : registration.getEffects()) {
             session.saveOrUpdate(effect);
             for (D dataItem : effect.getDataItems()) {

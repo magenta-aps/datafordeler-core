@@ -85,6 +85,10 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.registrations;
     }
 
+    public void addRegistration(R registration) {
+        this.registrations.add(registration);
+    }
+
 
     public void setIdentification(Identification identification) {
         this.identification = identification;

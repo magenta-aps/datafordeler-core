@@ -35,33 +35,31 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.effects = new ArrayList<V>();
     }
 
-    public Registration(E entity, OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
+    public Registration(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, int sequenceNumber) {
         this();
-        this.entity = entity;
         this.registrationFrom = registrationFrom;
         this.registrationTo = registrationTo;
-        this.entity.registrations.add(this);
+        this.sequenceNumber = sequenceNumber;
     }
 
-    public Registration(E entity, TemporalAccessor registrationFrom, TemporalAccessor registrationTo) {
+    public Registration(TemporalAccessor registrationFrom, TemporalAccessor registrationTo, int sequenceNumber) {
         this(
-                entity,
                 registrationFrom != null ? OffsetDateTime.from(registrationFrom) : null,
-                registrationTo != null ? OffsetDateTime.from(registrationTo) : null
+                registrationTo != null ? OffsetDateTime.from(registrationTo) : null,
+                sequenceNumber
         );
     }
 
     /**
-     * @param entity
      * @param registrationFrom A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * @param registrationTo A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * If you want other date formats, consider using java.time.OffsetDateTime.parse() to generate an OffsetDateTime object and pass it
      */
-    public Registration(E entity, String registrationFrom, String registrationTo) {
+    public Registration(String registrationFrom, String registrationTo, int sequenceNumber) {
         this(
-                entity,
                 registrationFrom != null ? OffsetDateTime.parse(registrationFrom) : null,
-                registrationTo != null ? OffsetDateTime.parse(registrationTo) : null
+                registrationTo != null ? OffsetDateTime.parse(registrationTo) : null,
+                sequenceNumber
         );
     }
 
@@ -80,6 +78,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public void setEntity(E entity) {
         this.entity = entity;
+        this.entity.addRegistration(this);
     }
 
 
@@ -157,10 +156,20 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
 
-
-
-    @JsonProperty
+    @Column(nullable = false, insertable = true, updatable = false)
     protected int sequenceNumber;
+
+    @JsonProperty(value = "sequenceNumber")
+    @XmlElement
+    public int getSequenceNumber() {
+        return this.sequenceNumber;
+    }
+
+    @JsonProperty(value = "sequenceNumber")
+    public void setSequenceNumber(int sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
+    }
+
 
     // The checksum as reported by the register
     protected String registerChecksum;
