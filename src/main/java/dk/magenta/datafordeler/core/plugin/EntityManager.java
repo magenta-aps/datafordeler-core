@@ -274,13 +274,10 @@ public abstract class EntityManager {
      * @return
      * @throws DataFordelerException
      */
-    public ItemInputStream<? extends EntityReference> listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException, IOException {
+    public ItemInputStream<? extends EntityReference> listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException {
         this.getLog().info("Listing register checksums (" + (fromDate == null ? "ALL" : "since "+fromDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) + ")");
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpGet get = new HttpGet(this.getListChecksumInterface(fromDate));
-        // TODO: Do this in a thread?
-        CloseableHttpResponse response = httpclient.execute(get);
-        InputStream responseBody = response.getEntity().getContent();
+        URI checksumInterface = this.getListChecksumInterface(fromDate);
+        InputStream responseBody = this.getRegisterManager().getChecksumFetcher().fetch(checksumInterface);
         return this.parseChecksumResponse(responseBody);
     }
 

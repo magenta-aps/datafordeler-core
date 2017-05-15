@@ -174,6 +174,6 @@ public abstract class RegisterManager {
      * @throws URISyntaxException
      */
     public static URI expandBaseURI(URI base, String path, String query, String fragment) throws URISyntaxException {
-        return new URI(base.getScheme(), base.getUserInfo(), base.getHost(), base.getPort(), (base.getPath() == null ? "" : base.getPath()) + path, query, fragment);
+        return new URI(base.getScheme(), base.getUserInfo(), base.getHost(), base.getPort(),base.getPath() + path, query, fragment);
     }
 }

@@ -211,14 +211,14 @@ public class EntityManagerTest extends PluginTestBase {
             Assert.assertEquals(2, allReferences.size());
 
             DemoEntityReference firstReference = (DemoEntityReference) allReferences.get(0);
-            Assert.assertEquals("vej", firstReference.getType());
+            Assert.assertEquals("Postnummer", firstReference.getType());
             Assert.assertEquals(UUID.fromString("2eed5323-f94f-5a9f-9607-39739c3585b5"), firstReference.getObjectId());
             Assert.assertEquals(1, firstReference.getRegistrationReferences().size());
             Assert.assertEquals(1, firstReference.getRegistrationReferences().get(0).getSequenceNumber());
             Assert.assertEquals("2a2ef17de084b10fe30ca726e2168c2e", firstReference.getRegistrationReferences().get(0).getChecksum());
 
             DemoEntityReference secondReference = (DemoEntityReference) allReferences.get(1);
-            Assert.assertEquals("vej", secondReference.getType());
+            Assert.assertEquals("Postnummer", secondReference.getType());
             Assert.assertEquals(UUID.fromString("2eed5323-f94f-5a9f-9607-39739c3585b6"), secondReference.getObjectId());
             Assert.assertEquals(1, secondReference.getRegistrationReferences().size());
             Assert.assertEquals(2, secondReference.getRegistrationReferences().get(0).getSequenceNumber());

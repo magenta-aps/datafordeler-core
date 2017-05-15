@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * Created by lars on 15-05-17.
@@ -23,6 +25,10 @@ public abstract class PluginTestBase {
         return IOUtils.toString(PluginTestBase.class.getResourceAsStream(resourceName), StandardCharsets.UTF_8);
     }
 
+    protected String envelopReference(String schema, String reference) throws IOException {
+        String template = IOUtils.toString(PluginTestBase.class.getResourceAsStream("/referenceenvelope.json"), StandardCharsets.UTF_8);
+        return template.replace("%{skema}", schema).replace("%{reference}", reference.replace("\"", "\\\""));
+    }
 
     protected String hash(String input) {
         MessageDigest md = null;
@@ -35,6 +41,14 @@ public abstract class PluginTestBase {
             e.printStackTrace();
         }
         return null;
+    }
+
+    protected String jsonList(List<String> jsonData, String listKey) {
+        StringJoiner sj = new StringJoiner(",");
+        for (String j : jsonData) {
+            sj.add(j);
+        }
+        return "{\""+listKey+"\":["+sj.toString()+"]}";
     }
 
 }
