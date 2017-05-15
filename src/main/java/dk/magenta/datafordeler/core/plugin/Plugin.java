@@ -12,7 +12,7 @@ public abstract class Plugin {
 
     protected long version = 1L;
 
-    protected RolesDefinition roleDefinition;
+    protected RolesDefinition rolesDefinition;
 
     protected RegisterManager registerManager;
 
@@ -42,5 +42,8 @@ public abstract class Plugin {
     public abstract ConfigurationManager getConfigurationManager();
 
     public abstract Collection<String> getHandledURISubstrings();
-    
+
+    public RolesDefinition getRolesDefinition() {
+        return this.rolesDefinition;
+    }
 }

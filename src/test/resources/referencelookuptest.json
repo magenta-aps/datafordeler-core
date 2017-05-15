@@ -1,0 +1,22 @@
+{
+  "sequenceNumber":%{sequencenumber},
+  "checksum":"%{checksum}",
+  "registerFrom":"2017-03-29T09:18:46.818+02:00",
+  "registerTo":null,
+  "entity":{
+    "uuid":"%{entityid}",
+    "domain":"testing"
+  },
+  "virkninger":[
+    {
+      "effectFrom":"2017-01-01T00:00:00Z",
+      "effectTo":"2017-07-01T00:00:00Z",
+      "dataItems":[
+        {
+          "nummer":8000,
+          "bynavn":"Aarhus C"
+        }
+      ]
+    }
+  ]
+}
