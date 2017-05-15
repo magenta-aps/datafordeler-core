@@ -2,12 +2,16 @@ package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.hibernate.Session;
-
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import dk.magenta.datafordeler.core.fapi.Query;
+import org.hibernate.annotations.*;
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import javax.persistence.CascadeType;
+import javax.persistence.OrderBy;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
+import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
@@ -22,14 +26,20 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
 
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonIgnore
+    @XmlTransient
     protected Identification identification;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
+    @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null")
+    @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO)
+    protected List<R> registrations;
+
+    @Transient
     @JsonIgnore
-    protected Set<R> registrations;
+    private Query filter = null;
 
     public Entity() {
-        this.registrations = new HashSet<R>();
+        this.registrations = new ArrayList<R>();
         this.identification = new Identification();
     }
 
@@ -66,17 +76,19 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         this.identification.setDomain(domain);
     }
 
-    public Set<R> getRegistrations() {
+    @OrderBy("registrationFrom")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @XmlElement(name="registration")
+    @JacksonXmlProperty(localName = "registration")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    public List<R> getRegistrations() {
         return this.registrations;
     }
 
-    public static String getTableName(Class<? extends Entity> cls) {
-        return cls.getAnnotation(Table.class).name();
+    public void addRegistration(R registration) {
+        this.registrations.add(registration);
     }
 
-    public void updateIdentification(Session session) {
-        //this.identification = (Identification) session.merge(this.identification);
-    }
 
     public void setIdentification(Identification identification) {
         this.identification = identification;

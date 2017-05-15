@@ -24,7 +24,7 @@ public class HttpStatusException extends DataFordelerException {
 
     @Override
     public String getCode() {
-        return null;
+        return "datafordeler.input.http_status";
     }
 
     public StatusLine getStatusLine() {

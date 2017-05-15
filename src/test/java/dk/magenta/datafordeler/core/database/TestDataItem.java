@@ -1,6 +1,4 @@
-package dk.magenta.datafordeler.core.dbtest;
-
-import dk.magenta.datafordeler.core.database.DataItem;
+package dk.magenta.datafordeler.core.database;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
@@ -12,7 +10,7 @@ import java.util.Map;
  */
 @javax.persistence.Entity
 @Table(name="test_data")
-public class TestData extends DataItem<TestEffect, TestData> {
+public class TestDataItem extends DataItem<TestEffect, TestDataItem> {
 
     @Column
     private int postnr;
@@ -20,10 +18,10 @@ public class TestData extends DataItem<TestEffect, TestData> {
     @Column
     private String bynavn;
 
-    public TestData() {}
+    public TestDataItem() {}
 
 
-    public TestData(int postnr, String bynavn) {
+    public TestDataItem(int postnr, String bynavn) {
         this.postnr = postnr;
         this.bynavn = bynavn;
     }
@@ -37,7 +35,7 @@ public class TestData extends DataItem<TestEffect, TestData> {
     }
 
     @Override
-    public boolean equalData(TestData other) {
+    public boolean equalData(TestDataItem other) {
         return (this.postnr != other.postnr && (this.bynavn == null ? (other.bynavn == null) : this.bynavn.equals(other.bynavn)));
     }
 

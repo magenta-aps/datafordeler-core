@@ -1,9 +1,7 @@
-package dk.magenta.datafordeler.core.dbtest;
+package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.AppConfig;
-import dk.magenta.datafordeler.core.database.QueryManager;
-import dk.magenta.datafordeler.core.database.SessionManager;
-import dk.magenta.datafordeler.core.database.Identification;
+import dk.magenta.datafordeler.core.exception.InvalidDataInputException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.Assert;
@@ -35,15 +33,16 @@ public class DatabaseTest {
 
 
     @Test
-    public void testRegistration() {
+    public void testRegistration() throws InvalidDataInputException {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         TestEntity testEntity = new TestEntity(uuid, domain);
-        TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
-        queryManager.saveRegistration(session, testRegistration);
-        Assert.assertTrue(testEntity.getRegistrations().contains(testRegistration));
+        TestRegistration testRegistration = new TestRegistration("2017-02-21T16:02:50+01:00", null, 1);
+        queryManager.saveRegistration(session, testEntity, testRegistration);
+        session.flush();
         transaction.commit();
+        Assert.assertTrue(testEntity.getRegistrations().contains(testRegistration));
         session.close();
         session = sessionManager.getSessionFactory().openSession();
         testRegistration = (TestRegistration) session.merge(testRegistration);
@@ -62,14 +61,14 @@ public class DatabaseTest {
     }
 
     @Test
-    public void testEffect() {
+    public void testEffect() throws InvalidDataInputException {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         TestEntity testEntity = new TestEntity(uuid, domain);
-        TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
+        TestRegistration testRegistration = new TestRegistration("2017-02-21T16:02:50+01:00", null, 1);
         TestEffect testEffect = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        queryManager.saveRegistration(session, testRegistration);
+        queryManager.saveRegistration(session, testEntity, testRegistration);
         transaction.commit();
         session.close();
 
@@ -108,16 +107,16 @@ public class DatabaseTest {
     }
 
     @Test
-    public void testData() {
+    public void testDataItem() throws InvalidDataInputException {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         TestEntity testEntity = new TestEntity(uuid, domain);
-        TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
+        TestRegistration testRegistration = new TestRegistration("2017-02-21T16:02:50+01:00", null, 1);
         TestEffect testEffect = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        TestData testData = new TestData(8000, "Århus");
-        testData.addEffect(testEffect);
-        queryManager.saveRegistration(session, testRegistration);
+        TestDataItem testDataItem = new TestDataItem(8000, "Århus");
+        testDataItem.addEffect(testEffect);
+        queryManager.saveRegistration(session, testEntity, testRegistration);
         session.flush();
         transaction.commit();
         //session.close();
@@ -132,7 +131,7 @@ public class DatabaseTest {
         boolean found = false;
         for (TestRegistration registration : testEntity1.getRegistrations()) {
             for (TestEffect effect : registration.getEffects()) {
-                for (TestData data : effect.getDataItems()) {
+                for (TestDataItem data : effect.getDataItems()) {
                     if (data.getPostnr() == 8000 && data.getBynavn().equals("Århus")) {
                         found = true;
                     }
@@ -141,13 +140,13 @@ public class DatabaseTest {
         }
         Assert.assertTrue(found);
 
-        testData = (TestData) session.merge(testData);
-        List<TestData> results = queryManager.getDataItems(session, testEntity, testData, TestData.class);
-        Assert.assertTrue(results.contains(testData));
-        List<TestData> results1 = queryManager.getDataItems(session, testEntity, new TestData(8000, "Århus"), TestData.class);
-        Assert.assertTrue(results1.contains(testData));
-        List<TestData> results2 = queryManager.getDataItems(session, testEntity, new TestData(8200, "Århus N"), TestData.class);
-        Assert.assertFalse(results2.contains(testData));
+        testDataItem = (TestDataItem) session.merge(testDataItem);
+        List<TestDataItem> results = queryManager.getDataItems(session, testEntity, testDataItem, TestDataItem.class);
+        Assert.assertTrue(results.contains(testDataItem));
+        List<TestDataItem> results1 = queryManager.getDataItems(session, testEntity, new TestDataItem(8000, "Århus"), TestDataItem.class);
+        Assert.assertTrue(results1.contains(testDataItem));
+        List<TestDataItem> results2 = queryManager.getDataItems(session, testEntity, new TestDataItem(8200, "Århus N"), TestDataItem.class);
+        Assert.assertFalse(results2.contains(testDataItem));
 
         transaction.commit();
 
@@ -159,20 +158,20 @@ public class DatabaseTest {
     }
 
     @Test
-    public void testDedup() {
+    public void testDedup() throws InvalidDataInputException {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
 
         TestEntity testEntity = new TestEntity(uuid, domain);
-        TestRegistration testRegistration = new TestRegistration(testEntity, "2017-02-21T16:02:50+01:00", null);
+        TestRegistration testRegistration = new TestRegistration("2017-02-21T16:02:50+01:00", null, 1);
         TestEffect testEffect1 = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
         TestEffect testEffect2 = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
         TestEffect testEffect3 = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
         TestEffect testEffect4 = new TestEffect(testRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
         TestEffect testEffect5 = new TestEffect(testRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
 
-        queryManager.saveRegistration(session, testRegistration);
+        queryManager.saveRegistration(session, testEntity, testRegistration);
 
         transaction.commit();
         session.close();
@@ -183,7 +182,7 @@ public class DatabaseTest {
         testRegistration = (TestRegistration) session.merge(testRegistration);
 
         queryManager.dedupEffects(session, testRegistration);
-        Set<TestEffect> testEffects = testRegistration.getEffects();
+        List<TestEffect> testEffects = testRegistration.getEffects();
 
         Assert.assertEquals(2, testEffects.size());
         for (TestEffect e1 : testEffects) {

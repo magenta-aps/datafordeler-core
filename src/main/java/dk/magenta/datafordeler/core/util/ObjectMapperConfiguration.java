@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Primary;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 /**
  * Created by lars on 24-02-17.
@@ -23,14 +22,10 @@ import java.util.UUID;
 public class ObjectMapperConfiguration {
 
     /**
-     * ObjectMapper configuration; add serializers here
+     * Creates a module to serialize and deserialize objects of type "java.time.OffsetDateTime"
+     * @return The created module
      */
-    @Primary
-    @Bean
-    public ObjectMapper objectMapper() {
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
+    private SimpleModule getOffsetDateTimeModule() {
         SimpleModule dateModule = new SimpleModule();
         dateModule.addSerializer(OffsetDateTime.class, new JsonSerializer<OffsetDateTime>() {
             @Override
@@ -52,31 +47,18 @@ public class ObjectMapperConfiguration {
                 }
             }
         });
-        objectMapper.registerModule(dateModule);
+        return dateModule;
+    }
 
-        SimpleModule uuidModule = new SimpleModule();
-        uuidModule.addSerializer(UUID.class, new JsonSerializer<UUID>() {
-            @Override
-            public void serialize(UUID uuid, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
-                jsonGenerator.writeString(uuid.toString());
-            }
-        });
-        uuidModule.addDeserializer(UUID.class, new JsonDeserializer<UUID>() {
-            @Override
-            public UUID deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
-                if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
-                    jsonParser.nextToken();
-                }
-                String tokenValue = jsonParser.getValueAsString();
-                if (tokenValue != null) {
-                    return UUID.fromString(tokenValue);
-                } else {
-                    return null;
-                }
-            }
-        });
-        objectMapper.registerModule(uuidModule);
-
+    /**
+     * ObjectMapper configuration; add serializers here
+     */
+    @Primary
+    @Bean()
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.registerModule(this.getOffsetDateTimeModule());
         return objectMapper;
     }
 

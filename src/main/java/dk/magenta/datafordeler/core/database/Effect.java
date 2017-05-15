@@ -1,38 +1,45 @@
 package dk.magenta.datafordeler.core.database;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
+@FilterDef(name=Effect.FILTER_EFFECT_FROM, parameters=@ParamDef(name=Effect.FILTERPARAM_EFFECT_FROM, type="java.time.OffsetDateTime"))
+@FilterDef(name=Effect.FILTER_EFFECT_TO, parameters=@ParamDef(name=Effect.FILTERPARAM_EFFECT_TO, type="java.time.OffsetDateTime"))
 public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> extends DatabaseEntry {
+
+    public static final String FILTER_EFFECT_FROM = "effectFromFilter";
+    public static final String FILTERPARAM_EFFECT_FROM = "effectFromDate";
+    public static final String FILTER_EFFECT_TO = "effectToFilter";
+    public static final String FILTERPARAM_EFFECT_TO = "effectToDate";
 
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JsonIgnore
     protected R registration;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JsonProperty
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     protected Set<D> dataItems;
 
     @Column(nullable = false, insertable = true, updatable = false)
-    @JsonProperty
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm a z")
     private OffsetDateTime effectFrom;
 
     @Column(nullable = true, insertable = true, updatable = false)
-    @JsonProperty
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm a z")
     private OffsetDateTime effectTo;
 
     public Effect() {
@@ -72,16 +79,27 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return this.registration;
     }
 
+    @JsonProperty
+    @XmlElement
+    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
     public OffsetDateTime getEffectFrom() {
         return this.effectFrom;
     }
 
+
+    @JsonProperty
+    @XmlElement
+    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
     public OffsetDateTime getEffectTo() {
         return this.effectTo;
     }
 
-    public Set<D> getDataItems() {
-        return this.dataItems;
+
+    @JsonProperty(value = "dataItems")
+    @JacksonXmlProperty(localName = "dataItem")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    public List<D> getDataItems() {
+        return new ArrayList(this.dataItems);
     }
 
     public boolean equalData(V other) {
@@ -95,10 +113,28 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return cls.getAnnotation(Table.class).name();
     }
 
+    @XmlElementWrapper(name="data")
+    public Map<String, Object> getData() {
+        HashMap<String, Object> data = new HashMap<>();
+        for (DataItem d : this.dataItems) {
+            data.putAll(d.asMap());
+        }
+        return data;
+    }
+
+    /**
+     * Pretty-print contained data
+     * @return Compiled string output
+     */
     public String toString() {
         return this.toString(0);
     }
 
+    /**
+     * Pretty-print contained data
+     * @param indent Number of spaces to indent the output with
+     * @return Compiled string output
+     */
     public String toString(int indent) {
         String indentString = new String(new char[4 * (indent)]).replace("\0", " ");
         String subIndentString = new String(new char[4 * (indent + 1)]).replace("\0", " ");
