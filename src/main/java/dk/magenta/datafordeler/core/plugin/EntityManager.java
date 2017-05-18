@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
@@ -24,10 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by lars on 13-03-17.
@@ -204,7 +202,10 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public abstract Registration parseRegistration(InputStream registrationData) throws IOException;
+    public Registration parseRegistration(InputStream registrationData) throws ParseException, IOException {
+        String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
+        return this.parseRegistration(data);
+    }
 
     /**
      * Parse incoming data into a Registration (data coming from within a request envelope)
@@ -212,9 +213,24 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public abstract Registration parseRegistration(String registrationData, String charsetName) throws IOException;
+    public Registration parseRegistration(String registrationData) throws ParseException, IOException {
+        return this.parseRegistration(this.getObjectMapper().readTree(registrationData));
+    }
+
+    public abstract Registration parseRegistration(JsonNode registrationData) throws ParseException;
 
 
+
+    public Map<String, Registration> parseRegistrationList(JsonNode registrationData) throws ParseException {
+        HashMap<String, Registration> registrations = new HashMap<>();
+        Iterator<String> keyIterator = registrationData.fieldNames();
+        while (keyIterator.hasNext()) {
+            String key = keyIterator.next();
+            Registration registration = this.parseRegistration(registrationData.get(key));
+            registrations.put(key, registration);
+        }
+        return registrations;
+    }
 
     /** Registration fetching **/
 
@@ -234,7 +250,7 @@ public abstract class EntityManager {
      * @throws IOException
      * @throws FailedReferenceException
      */
-    public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException, DataStreamException {
+    public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException, DataStreamException, ParseException {
         this.getLog().info("Fetching registration from reference "+reference.getURI());
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
@@ -300,7 +316,7 @@ public abstract class EntityManager {
      * @return Expanded URI, with scheme, host and port from the base, a custom path, and no query or fragment
      * @throws URISyntaxException
      */
-    public static URI expandBaseURI(URI base, String path) throws URISyntaxException {
+    public static URI expandBaseURI(URI base, String path) {
         return RegisterManager.expandBaseURI(base, path);
     }
     /**
@@ -310,7 +326,7 @@ public abstract class EntityManager {
      * @return Expanded URI, with scheme, host and port from the base, and a custom path query and fragment
      * @throws URISyntaxException
      */
-    public static URI expandBaseURI(URI base, String path, String query, String fragment) throws URISyntaxException {
+    public static URI expandBaseURI(URI base, String path, String query, String fragment) {
         return RegisterManager.expandBaseURI(base, path, query, fragment);
     }
 

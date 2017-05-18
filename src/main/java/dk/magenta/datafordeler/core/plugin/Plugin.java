@@ -12,9 +12,7 @@ public abstract class Plugin {
 
     protected long version = 1L;
 
-    protected RolesDefinition roleDefinition;
-
-    protected RegisterManager registerManager;
+    protected RolesDefinition rolesDefinition;
 
     public Plugin() {
     }
@@ -23,24 +21,32 @@ public abstract class Plugin {
     return version;
     }
 
-    public RegisterManager getRegisterManager() {
-        return this.registerManager;
-    }
+    public abstract RegisterManager getRegisterManager();
 
     public boolean handlesSchema(String schema) {
-        return this.registerManager.handlesSchema(schema);
+        return this.getRegisterManager().handlesSchema(schema);
     }
 
     public EntityManager getEntityManager(String schema) {
-        return this.registerManager.getEntityManager(schema);
+        return this.getRegisterManager().getEntityManager(schema);
     }
 
     public EntityManager getEntityManager(URI uri) {
-        return this.registerManager.getEntityManager(uri);
+        return this.getRegisterManager().getEntityManager(uri);
     }
 
     public abstract ConfigurationManager getConfigurationManager();
 
-    public abstract Collection<String> getHandledURISubstrings();
-    
+    public Collection<String> getHandledURISubstrings() {
+        return this.getRegisterManager().getHandledURISubstrings();
+    }
+
+    public RolesDefinition getRolesDefinition() {
+        return this.rolesDefinition;
+    }
+
+    public boolean isDemo() {
+        return false;
+    }
+
 }

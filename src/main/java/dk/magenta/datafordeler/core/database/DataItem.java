@@ -66,7 +66,9 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
      * @param other
      * @return
      */
-    public abstract boolean equalData(D other);
+    public boolean equalData(D other) {
+        return this.asMap().equals(other.asMap());
+    }
 
     /**
      * Obtain contained data as a Map

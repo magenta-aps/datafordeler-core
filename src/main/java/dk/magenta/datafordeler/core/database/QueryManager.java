@@ -143,7 +143,7 @@ public class QueryManager {
      * @return
      */
     public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) {
-        this.log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content maching DataItem "+similar.getId());
+        this.log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content maching DataItem "+similar.asMap());
         StringJoiner s = new StringJoiner(" and ");
         Map<String, Object> similarMap = similar.asMap();
         for (String key : similarMap.keySet()) {
@@ -177,7 +177,9 @@ public class QueryManager {
                 duplicates.add(authoritative.get(key1, key2), effect);
             }
         }
-        if (!duplicates.isEmpty()) {
+        if (duplicates.isEmpty()) {
+            this.log.debug("No duplicates found");
+        } else {
             for (V master : duplicates.keySet()) {
                 List<V> dups = duplicates.get(master);
                 this.log.debug("There are " + dups.size() + " duplicates of Effect " + master.getEffectFrom() + " - " + master.getEffectTo());
@@ -201,10 +203,13 @@ public class QueryManager {
      * @param session A database session to work on
      * @param registration Registration to be saved
      */
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration) throws InvalidDataInputException {
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration) throws DataFordelerException {
         this.log.info("Saving registration with checksum "+registration.getRegisterChecksum()+" and sequence number "+registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
+        }
+        if (entity == null) {
+            throw new MissingEntityException(registration);
         }
         E existingEntity = this.getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
         if (existingEntity != null) {

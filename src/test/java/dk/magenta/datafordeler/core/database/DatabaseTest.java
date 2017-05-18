@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.AppConfig;
+import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.InvalidDataInputException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -33,7 +34,7 @@ public class DatabaseTest {
 
 
     @Test
-    public void testRegistration() throws InvalidDataInputException {
+    public void testRegistration() throws DataFordelerException {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
@@ -61,7 +62,7 @@ public class DatabaseTest {
     }
 
     @Test
-    public void testEffect() throws InvalidDataInputException {
+    public void testEffect() throws DataFordelerException {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
@@ -107,7 +108,7 @@ public class DatabaseTest {
     }
 
     @Test
-    public void testDataItem() throws InvalidDataInputException {
+    public void testDataItem() throws DataFordelerException {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
@@ -158,7 +159,7 @@ public class DatabaseTest {
     }
 
     @Test
-    public void testDedup() throws InvalidDataInputException {
+    public void testDedup() throws DataFordelerException {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
