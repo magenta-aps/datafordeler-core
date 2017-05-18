@@ -1,11 +1,10 @@
-package dk.magenta.datafordeler.core.role;
+package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.AppConfig;
-import dk.magenta.datafordeler.plugindemo.DemoPlugin;
+import dk.magenta.datafordeler.core.role.SystemRole;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -16,11 +15,12 @@ import java.util.List;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = AppConfig.class)
-public class RoleTest {
+public class RolesDefintionTest extends PluginTestBase {
 
     @Test
-    public void testEqual() {
-        SystemRole role = new SystemRole();
+    public void testGetRoles() {
+        //RolesDefinition rolesDefinition = this.plugin.getRolesDefinition();
+        //List<SystemRole> roles = rolesDefinition.getRoles();
     }
 
 }

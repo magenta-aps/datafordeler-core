@@ -13,6 +13,11 @@ public abstract class Plugin {
     protected long version = 1L;
 
     protected RolesDefinition rolesDefinition;
+<<<<<<< HEAD
+=======
+
+    protected RegisterManager registerManager;
+>>>>>>> feature/unittests
 
     public Plugin() {
     }
