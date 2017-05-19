@@ -14,27 +14,27 @@ public class Receipt {
         failed
     }
 
-    protected String objectID;
+    protected String eventID;
     protected Status status;
     protected OffsetDateTime received;
     protected String errorCode;
     protected String errorMessage;
 
-    public Receipt(String objectID, OffsetDateTime received) {
-        this.objectID = objectID;
+    public Receipt(String eventID, OffsetDateTime received) {
+        this.eventID = eventID;
         this.status = Status.ok;
         this.received = received;
     }
 
-    public Receipt(String objectID, OffsetDateTime received, DataFordelerException e) {
-        this(objectID, received);
+    public Receipt(String eventID, OffsetDateTime received, DataFordelerException e) {
+        this(eventID, received);
         this.status = Status.failed;
         this.errorCode = e.getCode();
         this.errorMessage = e.getMessage();
     }
 
-    public String getObjectID() {
-        return objectID;
+    public String getEventID() {
+        return eventID;
     }
 
     public Status getStatus() {

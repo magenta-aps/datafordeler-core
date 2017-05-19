@@ -11,12 +11,6 @@ import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.database.Registration;
 import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
@@ -70,7 +64,9 @@ public abstract class EntityManager {
      * Plugins must return a Fetcher instance from this method
      * @return
      */
-    protected abstract Fetcher getRegistrationFetcher();
+    protected abstract Communicator getRegistrationFetcher();
+
+    protected abstract Communicator getReceiptSender();
 
     /**
      * Plugins must return an instance of a FapiService subclass from this method
@@ -102,9 +98,10 @@ public abstract class EntityManager {
 
     /**
      * @return A URL to send the given receipt to
-     * Depending on the register, the URL could change between receipts (such as the objectID being part of it)
+     * Depending on the register, the URL could change between receipts (such as the eventID being part of it)
      */
     protected abstract URI getReceiptEndpoint(Receipt receipt);
+
 
     /**
      * Sends a receipt to the register. Plugins are free to overload this with their own implementation
@@ -114,14 +111,9 @@ public abstract class EntityManager {
      */
     public int sendReceipt(Receipt receipt) throws IOException {
         ObjectMapper objectMapper = this.getObjectMapper();
-        CloseableHttpClient httpclient = HttpClients.createDefault();
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
         String payload = objectMapper.writeValueAsString(receipt);
-        HttpPost post = new HttpPost(receiptEndpoint);
-        post.setEntity(new StringEntity(payload));
-        // TODO: Do this in a thread?
-        CloseableHttpResponse response = httpclient.execute(post);
-        StatusLine statusLine = response.getStatusLine();
+        StatusLine statusLine = this.getReceiptSender().send(receiptEndpoint, payload);
         this.getLog().info("Receipt sent to "+receiptEndpoint+", response was: HTTP "+statusLine.getStatusCode()+" "+statusLine.getReasonPhrase());
         return statusLine.getStatusCode();
     }

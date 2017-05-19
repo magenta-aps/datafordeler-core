@@ -115,19 +115,19 @@ public class Event implements Serializable {
         }
     }
 
-    private String beskedID;
+    private String eventID;
     private String beskedVersion;
 
     @JsonProperty
     private MessageData beskedData;
 
 
-    public String getBeskedID() {
-        return beskedID;
+    public String getEventID() {
+        return eventID;
     }
 
-    public void setBeskedID(String beskedID) {
-        this.beskedID = beskedID;
+    public void setEventID(String eventID) {
+        this.eventID = eventID;
     }
 
     public String getBeskedVersion() {
@@ -183,7 +183,7 @@ public class Event implements Serializable {
         StringBuilder sb = new StringBuilder();
         sb.append("Event(");
         StringJoiner joiner = new StringJoiner(", ");
-        joiner.add("beskedID: "+this.getBeskedID());
+        joiner.add("eventID: "+this.getEventID());
         joiner.add("beskedVersion: "+this.getBeskedVersion());
         joiner.add("dataskema: "+this.getDataskema());
         joiner.add("objektData: "+this.getObjektData());

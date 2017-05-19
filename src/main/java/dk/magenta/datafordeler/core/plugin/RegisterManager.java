@@ -49,7 +49,7 @@ public abstract class RegisterManager {
      * Plugins must return a Fetcher instance from this method
      * @return
      */
-    protected abstract Fetcher getEventFetcher();
+    protected abstract Communicator getEventFetcher();
 
     /**
      * Plugins must return an autowired ObjectMapper instance from this method
@@ -113,7 +113,8 @@ public abstract class RegisterManager {
     public ItemInputStream<Event> pullEvents() throws DataFordelerException {
         URI eventInterface = this.getEventInterface();
         this.getLog().info("Pulling events from "+eventInterface);
-        InputStream responseBody = this.getEventFetcher().fetch(eventInterface);
+        Communicator eventCommunicator = this.getEventFetcher();
+        InputStream responseBody = eventCommunicator.fetch(eventInterface);
         return this.parseEventResponse(responseBody);
     }
 
@@ -136,7 +137,7 @@ public abstract class RegisterManager {
      * Plugins must return a Fetcher instance from this method
      * @return
      */
-    protected abstract Fetcher getChecksumFetcher();
+    protected abstract Communicator getChecksumFetcher();
 
     public abstract URI getListChecksumInterface(String schema, OffsetDateTime from);
 
