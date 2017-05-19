@@ -49,4 +49,8 @@ public class ListHashMap<K, V> extends HashMap<K, ArrayList<V>> {
         }
         return null;
     }
+
+    public V getFirst(K key) {
+        return this.get(key, 0);
+    }
 }

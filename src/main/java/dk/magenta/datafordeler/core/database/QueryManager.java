@@ -65,6 +65,14 @@ public class QueryManager {
         return this.getAllEntities(session, parameters, 0, Integer.MAX_VALUE, eClass);
     }
 
+    private static boolean parameterValueWildcard(Object value) {
+        if (value instanceof String) {
+            String stringValue = (String) value;
+            return stringValue.startsWith("*") || stringValue.endsWith("*");
+        }
+        return false;
+    }
+
     /**
      * Get all Entities of a specific class, that match the given parameters
      * @param session Database session to work from
@@ -78,21 +86,40 @@ public class QueryManager {
         this.log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + parameters + " [offset: " + offset + ", limit: " + limit + "]");
         StringJoiner queryString = new StringJoiner(" and ");
         for (String key : parameters.keySet()) {
-            queryString.add("d." + key + " = :" + key);
+            Object value = parameters.get(key);
+            if (value != null) {
+                if (parameterValueWildcard(value)) {
+                    queryString.add("d." + key + " like :" + key);
+                } else {
+                    queryString.add("d." + key + " = :" + key);
+                }
+            }
         }
-        Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i join e.registrations r join r.effects v join v.dataItems d where i.uuid != null and " + queryString.toString(), eClass);
-        for (String key : parameters.keySet()) {
-            query.setParameter(key, parameters.get(key));
+        if (queryString.length() > 0) {
+            Query<E> query = session.createQuery("select e from " + eClass.getName() + " e join e.identification i join e.registrations r join r.effects v join v.dataItems d where i.uuid != null and " + queryString.toString(), eClass);
+            for (String key : parameters.keySet()) {
+                Object value = parameters.get(key);
+                if (value != null) {
+                    if (parameterValueWildcard(value)) {
+                        query.setParameter(key, ((String) value).replace("*", "%"));
+                    } else {
+                        query.setParameter(key, value);
+                    }
+                }
+            }
+            if (offset > 0) {
+                query.setFirstResult(offset);
+            }
+            if (limit < Integer.MAX_VALUE) {
+                query.setMaxResults(limit);
+            }
+            this.logQuery(query);
+            List<E> results = query.getResultList();
+            return results;
+        } else {
+            // Throw error?
+            return Collections.emptyList();
         }
-        if (offset > 0) {
-            query.setFirstResult(offset);
-        }
-        if (limit < Integer.MAX_VALUE) {
-            query.setMaxResults(limit);
-        }
-        this.logQuery(query);
-        List<E> results = query.getResultList();
-        return results;
     }
 
     /**

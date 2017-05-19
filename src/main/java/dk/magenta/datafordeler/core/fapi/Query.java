@@ -1,5 +1,8 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import dk.magenta.datafordeler.core.util.ListHashMap;
+
+import javax.ws.rs.core.MultivaluedMap;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -10,7 +13,7 @@ import java.util.Map;
 /**
  * Created by lars on 19-04-17.
  */
-public class Query {
+public abstract class Query {
 
     protected int page = 0;
     protected int pageSize = 10;
@@ -131,11 +134,14 @@ public class Query {
         this.effectTo = parseDateTime(effectTo);
     }
 
-    public Map<String, Object> getSearchParameters() {
-        return new HashMap<>();
-    }
+    public abstract Map<String, Object> getSearchParameters();
 
-    protected static int intFromString(String s, int def) {
+    public abstract void setFromParameters(ListHashMap<String, String> parameters);
+
+    protected static Integer intFromString(String s) {
+        return Query.intFromString(s, null);
+    }
+    protected static Integer intFromString(String s, Integer def) {
         if (s == null) {
             return def;
         }
@@ -144,6 +150,22 @@ public class Query {
         } catch (NumberFormatException e) {
             return def;
         }
+    }
+
+    protected static Boolean booleanFromString(String s) {
+        return Query.booleanFromString(s, null);
+    }
+    protected static Boolean booleanFromString(String s, Boolean def) {
+        if (s != null) {
+            s = s.toLowerCase();
+            if (s.equals("1") || s.equals("true") || s.equals("yes")) {
+                return true;
+            }
+            if (s.equals("0") || s.equals("false") || s.equals("no")) {
+                return false;
+            }
+        }
+        return def;
     }
 
 
@@ -169,7 +191,7 @@ public class Query {
             DateTimeFormatter.BASIC_ISO_DATE
     };
 
-    private static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
+    protected static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
         if (dateTime != null) {
             for (DateTimeFormatter formatter : zonedDateTimeFormatters) {
                 try {

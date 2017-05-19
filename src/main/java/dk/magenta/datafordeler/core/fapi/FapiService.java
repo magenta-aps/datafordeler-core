@@ -1,10 +1,9 @@
 package dk.magenta.datafordeler.core.fapi;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
-import dk.magenta.datafordeler.core.exception.DataOutputException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
+import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.hibernate.Filter;
@@ -21,10 +20,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlElement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by lars on 19-04-17.
@@ -106,7 +102,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public E getRest(@PathParam(value = "id") String id, @Context UriInfo uriInfo) {
         this.log.info("Incoming REST request for item "+id);
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
-        Q query = this.getQuery(parameters);
+        Q query = this.getQuery(parameters, true);
         try {
             E entity = this.searchById(id, query);
             this.log.debug("Item found, returning");
@@ -148,7 +144,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @return Query subclass instance
      */
     protected Q getQuery(String registrationFrom, String registrationTo) {
-        Q query = this.getQuery();
+        Q query = this.getEmptyQuery();
         query.setRegistrationFrom(registrationFrom);
         query.setRegistrationTo(registrationTo);
         return query;
@@ -164,17 +160,12 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Path("search")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    public String searchRest(@Context UriInfo uriInfo) {
+    public Collection<E> searchRest(@Context UriInfo uriInfo) {
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
         this.log.info("Incoming REST request, searching for parameters "+parameters.toString());
-        Set<E> results = this.searchByQuery(this.getQuery(parameters));
-        this.log.debug("Items found, returning");
-        try {
-            return this.objectMapper.writeValueAsString(results);
-        } catch (JsonProcessingException e) {
-            this.log.error("Error outputting JSON: ", e);
-            throw new DataOutputException(e);
-        }
+        Set<E> results = this.searchByQuery(this.getQuery(parameters, false));
+        this.log.info(results.size() + " items found, returning");
+        return results;
     }
 
 
@@ -187,7 +178,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public List<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) {
         this.log.info("Incoming SOAP request, searching for query "+query.toString());
         Set<E> results = this.searchByQuery(query);
-        this.log.debug("Items found, returning");
+        this.log.info(results.size() + " items found, returning");
         return new ArrayList<>(results);
     }
 
@@ -196,7 +187,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * Obtain an empty Query instance of the correct subclass
      * @return Query subclass instance
      */
-    protected abstract Q getQuery();
+    protected abstract Q getEmptyQuery();
 
 
     /**
@@ -204,8 +195,11 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param parameters URL parameters received in a request
      * @return Query subclass instance
      */
-    protected Q getQuery(MultivaluedMap<String, String> parameters) {
-        Q query = this.getQuery();
+    protected Q getQuery(MultivaluedMap<String, String> parameters, boolean limitsOnly) {
+        Q query = this.getEmptyQuery();
+        if (!limitsOnly) {
+            query.setFromParameters(new ListHashMap<String, String>(parameters));
+        }
         query.setPage(parameters.getFirst(PARAM_PAGE));
         query.setPageSize(parameters.getFirst(PARAM_PAGESIZE));
         query.setRegistrationFrom(parameters.getFirst(PARAM_REGISTERFROM));
@@ -221,9 +215,17 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param query Query objects to search by
      * @return Found Entities
      */
-    @WebMethod(exclude = true)
-    protected abstract Set<E> searchByQuery(Q query);
-
+    //@WebMethod(exclude = true)
+    //protected abstract Set<E> searchByQuery(Q query);
+    @WebMethod(exclude = true) // Non-soap methods must have this
+    protected Set<E> searchByQuery(Q query) {
+        Session session = this.getSessionManager().getSessionFactory().openSession();
+        this.applyQuery(session, query);
+        Set<E> entities = null;
+        entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query.getSearchParameters(), query.getOffset(), query.getCount(), this.getEntityClass()));
+        session.close();
+        return entities;
+    }
 
     /**
      * Perform a search for Entities by id
