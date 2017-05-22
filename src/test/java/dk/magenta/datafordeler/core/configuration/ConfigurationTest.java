@@ -2,6 +2,8 @@ package dk.magenta.datafordeler.core.configuration;
 
 import dk.magenta.datafordeler.core.AppConfig;
 import dk.magenta.datafordeler.core.database.SessionManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,10 +21,13 @@ public class ConfigurationTest {
     @Autowired
     private SessionManager sessionManager;
 
+
     private class ConfigurationImpl implements Configuration {
     }
 
     private class ConfigurationManagerImpl extends ConfigurationManager<ConfigurationImpl> {
+
+        private Logger log = LogManager.getLogger("ConfigurationManagerImpl");
 
         @Override
         protected Class<ConfigurationImpl> getConfigurationClass() {
@@ -37,6 +42,11 @@ public class ConfigurationTest {
         @Override
         protected SessionManager getSessionManager() {
             return ConfigurationTest.this.sessionManager;
+        }
+
+        @Override
+        protected Logger getLog() {
+            return this.log;
         }
     }
     @Test

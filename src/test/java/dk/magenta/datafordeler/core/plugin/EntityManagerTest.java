@@ -4,10 +4,7 @@ import dk.magenta.datafordeler.core.AppConfig;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
-import dk.magenta.datafordeler.core.exception.DataFordelerException;
-import dk.magenta.datafordeler.core.exception.DataStreamException;
-import dk.magenta.datafordeler.core.exception.FailedReferenceException;
-import dk.magenta.datafordeler.core.exception.WrongSubclassException;
+import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.testutil.CallbackController;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
@@ -97,7 +94,7 @@ public class EntityManagerTest extends PluginTestBase {
 
 
     @Test
-    public void testFetchRegistration() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException {
+    public void testFetchRegistration() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException, ParseException {
         DemoEntityManager entityManager = (DemoEntityManager) this.plugin.getEntityManager(DemoEntity.schema);
 
         String checksum = this.hash(UUID.randomUUID().toString());
@@ -121,7 +118,7 @@ public class EntityManagerTest extends PluginTestBase {
 
 
     @Test
-    public void testFetchRegistrationFail1() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException {
+    public void testFetchRegistrationFail1() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException, ParseException {
         DemoEntityManager entityManager = (DemoEntityManager) this.plugin.getEntityManager(DemoEntity.schema);
 
         String checksum = this.hash(UUID.randomUUID().toString());
@@ -166,7 +163,7 @@ public class EntityManagerTest extends PluginTestBase {
     }
 
     @Test
-    public void testFetchRegistrationFail2() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException {
+    public void testFetchRegistrationFail2() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException, ParseException {
         DemoEntityManager entityManager = (DemoEntityManager) this.plugin.getEntityManager(DemoEntity.schema);
 
         String checksum = this.hash(UUID.randomUUID().toString());

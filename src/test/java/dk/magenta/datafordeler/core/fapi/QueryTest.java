@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.AppConfig;
+import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -12,6 +13,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by lars on 05-05-17.
@@ -20,12 +22,32 @@ import java.util.HashMap;
 @ContextConfiguration(classes = AppConfig.class)
 public class QueryTest {
 
+    private class QueryImpl extends Query {
+
+        public QueryImpl() {
+            super();
+        }
+
+        public QueryImpl(int page, int pageSize) {
+            super(page, pageSize);
+        }
+
+        @Override
+        public Map<String, Object> getSearchParameters() {
+            return new HashMap<>();
+        }
+
+        @Override
+        public void setFromParameters(ListHashMap<String, String> parameters) {
+        }
+    }
+
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
     @Test
     public void testPagesize() throws Exception {
-        Query query = new Query(1, 10);
+        Query query = new QueryImpl(1, 10);
         Assert.assertEquals(10, query.getPageSize());
         query.setPageSize(20);
         Assert.assertEquals(20, query.getPageSize());
@@ -38,12 +60,12 @@ public class QueryTest {
     @Test
     public void testPagesizeFail() throws Exception {
         exception.expect(IllegalArgumentException.class);
-        Query query = new Query(1, 0);
+        Query query = new QueryImpl(1, 0);
     }
 
     @Test
     public void testPage() throws Exception {
-        Query query = new Query(1, 10);
+        Query query = new QueryImpl(1, 10);
         Assert.assertEquals(1, query.getPage());
         query.setPage(2);
         Assert.assertEquals(2, query.getPage());
@@ -56,18 +78,18 @@ public class QueryTest {
     @Test
     public void testPageFail() throws Exception {
         exception.expect(IllegalArgumentException.class);
-        Query query = new Query(-1, 1);
+        Query query = new QueryImpl(-1, 1);
     }
 
     @Test
     public void testOffset() {
-        Query query = new Query(2, 10);
+        Query query = new QueryImpl(2, 10);
         Assert.assertEquals(10, query.getOffset());
     }
 
     @Test
     public void testCount() {
-        Query query = new Query(1, 10);
+        Query query = new QueryImpl(1, 10);
         Assert.assertEquals(10, query.getCount());
     }
 
@@ -86,7 +108,7 @@ public class QueryTest {
 
     @Test
     public void testRegistrationFrom() throws Exception {
-        Query query = new Query();
+        Query query = new QueryImpl();
         OffsetDateTime time = OffsetDateTime.now();
         query.setRegistrationFrom(time);
         Assert.assertEquals(time, query.getRegistrationFrom());
@@ -99,7 +121,7 @@ public class QueryTest {
 
     @Test
     public void testRegistrationTo() throws Exception {
-        Query query = new Query();
+        Query query = new QueryImpl();
         OffsetDateTime time = OffsetDateTime.now();
         query.setRegistrationTo(time);
         Assert.assertEquals(time, query.getRegistrationTo());
@@ -112,7 +134,7 @@ public class QueryTest {
 
     @Test
     public void testEffectFrom() throws Exception {
-        Query query = new Query();
+        Query query = new QueryImpl();
         OffsetDateTime time = OffsetDateTime.now();
         query.setEffectFrom(time);
         Assert.assertEquals(time, query.getEffectFrom());
@@ -125,7 +147,7 @@ public class QueryTest {
 
     @Test
     public void testEffectTo() throws Exception {
-        Query query = new Query();
+        Query query = new QueryImpl();
         OffsetDateTime time = OffsetDateTime.now();
         query.setEffectTo(time);
         Assert.assertEquals(time, query.getEffectTo());
@@ -138,7 +160,7 @@ public class QueryTest {
 
     @Test
     public void testGetSearchParameters() {
-        Query query = new Query();
+        Query query = new QueryImpl();
         Assert.assertNotNull(query.getSearchParameters());
         Assert.assertEquals(0, query.getSearchParameters().size());
     }

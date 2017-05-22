@@ -231,7 +231,7 @@ public class QueryManager {
      * @param registration Registration to be saved
      */
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration) throws DataFordelerException {
-        this.log.info("Saving registration with checksum "+registration.getRegisterChecksum()+" and sequence number "+registration.getSequenceNumber());
+        this.log.info("Saving registration of type "+registration.getClass().getCanonicalName()+" with checksum "+registration.getRegisterChecksum()+" and sequence number "+registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
         }

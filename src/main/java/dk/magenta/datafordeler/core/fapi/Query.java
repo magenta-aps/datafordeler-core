@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public abstract class Query {
 
-    protected int page = 0;
+    protected int page = 1;
     protected int pageSize = 10;
     protected OffsetDateTime registrationFrom = null;
     protected OffsetDateTime registrationTo = null;
@@ -66,8 +66,8 @@ public abstract class Query {
     }
 
     public void setPage(int page) {
-        if (page < 0) {
-            throw new IllegalArgumentException("page must be at least 0");
+        if (page < 1) {
+            throw new IllegalArgumentException("page must be at least 1");
         }
         this.page = page;
     }
