@@ -101,16 +101,14 @@ public class QueryManager {
                             Field field = query.getField(key);
                             if (field.isAnnotationPresent(QueryField.class)) {
                                 QueryField.FieldType type = field.getAnnotation(QueryField.class).type();
-                                if (type == QueryField.FieldType.INT) {
-                                    databaseQuery.setParameter(key, Integer.parseInt((String) value));
+                                if (type == QueryField.FieldType.INT && !(value instanceof Integer)) {
+                                    value = Integer.parseInt((String) value);
                                 } else if (type == QueryField.FieldType.BOOLEAN && !(value instanceof Boolean)) {
-                                    databaseQuery.setParameter(key, Query.booleanFromString((String) value));
-                                } else {
-                                    databaseQuery.setParameter(key, value);
+                                    value = Query.booleanFromString((String) value);
                                 }
-                            } else {
-                                databaseQuery.setParameter(key, value);
                             }
+                            databaseQuery.setParameter(key, value);
+
                         } catch (NoSuchFieldException e) {
                             throw new PluginImplementationException("Field "+key+" is missing from query class "+query.getClass().getCanonicalName()+", but defined in getSearchParameters() on that class", e);
                         }
