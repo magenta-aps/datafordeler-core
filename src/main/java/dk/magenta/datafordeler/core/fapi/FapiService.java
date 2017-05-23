@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
+import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.Logger;
@@ -160,7 +161,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Path("search")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    public Collection<E> searchRest(@Context UriInfo uriInfo) {
+    public Collection<E> searchRest(@Context UriInfo uriInfo) throws DataFordelerException {
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
         this.log.info("Incoming REST request, searching for parameters "+parameters.toString());
         Set<E> results = this.searchByQuery(this.getQuery(parameters, false));
@@ -175,7 +176,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @return Found Entities
      */
     @WebMethod(operationName = "search")
-    public List<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) {
+    public List<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
         this.log.info("Incoming SOAP request, searching for query "+query.toString());
         Set<E> results = this.searchByQuery(query);
         this.log.info(results.size() + " items found, returning");
@@ -218,12 +219,17 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     //@WebMethod(exclude = true)
     //protected abstract Set<E> searchByQuery(Q query);
     @WebMethod(exclude = true) // Non-soap methods must have this
-    protected Set<E> searchByQuery(Q query) {
+    protected Set<E> searchByQuery(Q query) throws DataFordelerException {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         this.applyQuery(session, query);
         Set<E> entities = null;
-        entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query.getSearchParameters(), query.getOffset(), query.getCount(), this.getEntityClass()));
-        session.close();
+        try {
+            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
+            session.close();
+        } catch (DataFordelerException e) {
+            session.close();
+            throw e;
+        }
         return entities;
     }
 

@@ -1,8 +1,10 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 
 import javax.ws.rs.core.MultivaluedMap;
+import java.lang.reflect.Field;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -138,10 +140,10 @@ public abstract class Query {
 
     public abstract void setFromParameters(ListHashMap<String, String> parameters);
 
-    protected static Integer intFromString(String s) {
+    public static Integer intFromString(String s) {
         return Query.intFromString(s, null);
     }
-    protected static Integer intFromString(String s, Integer def) {
+    public static Integer intFromString(String s, Integer def) {
         if (s == null) {
             return def;
         }
@@ -152,10 +154,10 @@ public abstract class Query {
         }
     }
 
-    protected static Boolean booleanFromString(String s) {
+    public static Boolean booleanFromString(String s) {
         return Query.booleanFromString(s, null);
     }
-    protected static Boolean booleanFromString(String s, Boolean def) {
+    public static Boolean booleanFromString(String s, Boolean def) {
         if (s != null) {
             s = s.toLowerCase();
             if (s.equals("1") || s.equals("true") || s.equals("yes")) {
@@ -223,6 +225,18 @@ public abstract class Query {
             throw new DateTimeParseException("Unable to parse date string, tried "+ zonedDateTimeFormatters.length+" parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
         }
         return null;
+    }
+
+    public abstract Class<? extends Entity> getEntityClass();
+
+    public Field getField(String key) throws NoSuchFieldException {
+        for (Class cls = this.getClass(); cls != null; cls = cls.getSuperclass()) {
+            try {
+                return cls.getDeclaredField(key);
+            } catch (NoSuchFieldException e) {
+            }
+        }
+        throw new NoSuchFieldException(key);
     }
 
 }

@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.AppConfig;
+import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,6 +40,11 @@ public class QueryTest {
 
         @Override
         public void setFromParameters(ListHashMap<String, String> parameters) {
+        }
+
+        @Override
+        public Class<? extends Entity> getEntityClass() {
+            return Entity.class;
         }
     }
 

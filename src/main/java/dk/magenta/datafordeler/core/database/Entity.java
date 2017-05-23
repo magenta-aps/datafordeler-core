@@ -11,6 +11,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.OrderBy;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 
 /**
@@ -88,7 +89,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     public void addRegistration(R registration) {
         this.registrations.add(registration);
     }
-
 
     public void setIdentification(Identification identification) {
         this.identification = identification;
