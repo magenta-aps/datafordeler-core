@@ -298,12 +298,14 @@ public class QueryManager {
                 boolean changed = false;
                 for (String key : references.keySet()) {
                     Identification reference = references.get(key);
-                    Identification otherReference = this.getIdentification(session, reference.getUuid());
-                    if (otherReference != null && reference != otherReference) {
-                        references.put(key, otherReference);
-                        changed = true;
-                    } else {
-                        session.saveOrUpdate(reference);
+                    if (reference != null) {
+                        Identification otherReference = this.getIdentification(session, reference.getUuid());
+                        if (otherReference != null && reference != otherReference) {
+                            references.put(key, otherReference);
+                            changed = true;
+                        } else {
+                            session.saveOrUpdate(reference);
+                        }
                     }
                 }
                 if (changed) {
