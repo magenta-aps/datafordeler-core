@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
@@ -105,4 +105,26 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
         s.add(indentString + "}");
         return s.toString();
     }
+
+    public HashMap<String, Identification> getReferences() {
+        return new HashMap<>();
+    }
+
+    public void updateReferences(HashMap<String, Identification> references) {
+    }
+
+    /*public Set<Identification> getReferences() {
+        HashSet<Identification> references = new HashSet<>();
+        for (Field field : this.getClass().getDeclaredFields()) {
+            if (field.getType() == Identification.class) {
+                try {
+                    references.add((Identification) field.get(this));
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        System.out.println("references size: "+references.size());
+        return references;
+    }*/
 }

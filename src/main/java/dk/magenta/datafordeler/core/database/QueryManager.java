@@ -256,6 +256,8 @@ public class QueryManager {
         registration.setEntity(entity);
         entity.addRegistration(registration);
 
+
+
         // Validate registration:
         // * No existing registration on the entity may have the same sequence number
         // * The registration must have a sequence number one higher than the highest existing one
@@ -288,6 +290,27 @@ public class QueryManager {
             }
         }
 
+        // Normalize references: setting them to existing Identification entries if possible
+        // If no existing Identification exists, keep the one we have and save it to the session
+        for (V effect : registration.getEffects()) {
+            for (D dataItem : effect.getDataItems()) {
+                HashMap<String, Identification> references = dataItem.getReferences();
+                boolean changed = false;
+                for (String key : references.keySet()) {
+                    Identification reference = references.get(key);
+                    Identification otherReference = this.getIdentification(session, reference.getUuid());
+                    if (otherReference != null && reference != otherReference) {
+                        references.put(key, otherReference);
+                        changed = true;
+                    } else {
+                        session.saveOrUpdate(reference);
+                    }
+                }
+                if (changed) {
+                    dataItem.updateReferences(references);
+                }
+            }
+        }
 
         for (V effect : registration.getEffects()) {
             HashSet<D> obsolete = new HashSet<D>();
@@ -326,6 +349,10 @@ public class QueryManager {
             session.saveOrUpdate(effect);
             for (D dataItem : effect.getDataItems()) {
                 session.saveOrUpdate(dataItem);
+                /*for (Identification reference : dataItem.getReferences()) {
+                    System.out.println("saving reference "+reference);
+                    session.saveOrUpdate(reference);
+                }*/
             }
         }
     }
