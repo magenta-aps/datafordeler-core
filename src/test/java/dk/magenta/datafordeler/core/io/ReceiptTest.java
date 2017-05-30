@@ -25,7 +25,7 @@ public class ReceiptTest {
     public void testGetObjectID() {
         String objectId = UUID.randomUUID().toString();
         Receipt receipt = new Receipt(objectId, OffsetDateTime.now());
-        Assert.assertEquals(objectId, receipt.getObjectID());
+        Assert.assertEquals(objectId, receipt.getEventID());
     }
 
     @Test

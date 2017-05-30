@@ -131,7 +131,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return this.registrationFrom;
     }
 
-    @JsonProperty(value = "registrationTo")
+    @JsonProperty(value = "registrationFrom")
     public void setRegistrationFrom(OffsetDateTime registrationFrom) {
         this.registrationFrom = registrationFrom;
     }

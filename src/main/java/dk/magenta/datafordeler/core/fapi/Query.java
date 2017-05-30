@@ -1,5 +1,10 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import dk.magenta.datafordeler.core.database.Entity;
+import dk.magenta.datafordeler.core.util.ListHashMap;
+
+import javax.ws.rs.core.MultivaluedMap;
+import java.lang.reflect.Field;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -10,9 +15,9 @@ import java.util.Map;
 /**
  * Created by lars on 19-04-17.
  */
-public class Query {
+public abstract class Query {
 
-    protected int page = 0;
+    protected int page = 1;
     protected int pageSize = 10;
     protected OffsetDateTime registrationFrom = null;
     protected OffsetDateTime registrationTo = null;
@@ -63,8 +68,8 @@ public class Query {
     }
 
     public void setPage(int page) {
-        if (page < 0) {
-            throw new IllegalArgumentException("page must be at least 0");
+        if (page < 1) {
+            throw new IllegalArgumentException("page must be at least 1");
         }
         this.page = page;
     }
@@ -131,11 +136,14 @@ public class Query {
         this.effectTo = parseDateTime(effectTo);
     }
 
-    public Map<String, Object> getSearchParameters() {
-        return new HashMap<>();
-    }
+    public abstract Map<String, Object> getSearchParameters();
 
-    protected static int intFromString(String s, int def) {
+    public abstract void setFromParameters(ListHashMap<String, String> parameters);
+
+    public static Integer intFromString(String s) {
+        return Query.intFromString(s, null);
+    }
+    public static Integer intFromString(String s, Integer def) {
         if (s == null) {
             return def;
         }
@@ -144,6 +152,22 @@ public class Query {
         } catch (NumberFormatException e) {
             return def;
         }
+    }
+
+    public static Boolean booleanFromString(String s) {
+        return Query.booleanFromString(s, null);
+    }
+    public static Boolean booleanFromString(String s, Boolean def) {
+        if (s != null) {
+            s = s.toLowerCase();
+            if (s.equals("1") || s.equals("true") || s.equals("yes")) {
+                return true;
+            }
+            if (s.equals("0") || s.equals("false") || s.equals("no")) {
+                return false;
+            }
+        }
+        return def;
     }
 
 
@@ -169,7 +193,7 @@ public class Query {
             DateTimeFormatter.BASIC_ISO_DATE
     };
 
-    private static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
+    protected static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
         if (dateTime != null) {
             for (DateTimeFormatter formatter : zonedDateTimeFormatters) {
                 try {
@@ -201,6 +225,18 @@ public class Query {
             throw new DateTimeParseException("Unable to parse date string, tried "+ zonedDateTimeFormatters.length+" parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
         }
         return null;
+    }
+
+    public abstract Class<? extends Entity> getEntityClass();
+
+    public Field getField(String key) throws NoSuchFieldException {
+        for (Class cls = this.getClass(); cls != null; cls = cls.getSuperclass()) {
+            try {
+                return cls.getDeclaredField(key);
+            } catch (NoSuchFieldException e) {
+            }
+        }
+        throw new NoSuchFieldException(key);
     }
 
 }

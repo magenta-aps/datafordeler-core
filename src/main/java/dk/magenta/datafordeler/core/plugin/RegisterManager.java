@@ -6,11 +6,16 @@ import dk.magenta.datafordeler.core.io.Event;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
+import dk.magenta.datafordeler.core.util.ListHashMap;
+import org.apache.logging.log4j.Logger;
+import org.springframework.web.util.UriUtils;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -33,6 +38,10 @@ public abstract class RegisterManager {
         this.entityManagerByURISubstring = new HashMap<>();
     }
 
+    protected abstract Logger getLog();
+
+    public abstract Plugin getPlugin();
+
 
     public abstract URI getBaseEndpoint();
 
@@ -40,7 +49,7 @@ public abstract class RegisterManager {
      * Plugins must return a Fetcher instance from this method
      * @return
      */
-    protected abstract Fetcher getEventFetcher();
+    protected abstract Communicator getEventFetcher();
 
     /**
      * Plugins must return an autowired ObjectMapper instance from this method
@@ -102,7 +111,10 @@ public abstract class RegisterManager {
     protected abstract URI getEventInterface();
 
     public ItemInputStream<Event> pullEvents() throws DataFordelerException {
-        InputStream responseBody = this.getEventFetcher().fetch(this.getEventInterface());
+        URI eventInterface = this.getEventInterface();
+        this.getLog().info("Pulling events from "+eventInterface);
+        Communicator eventCommunicator = this.getEventFetcher();
+        InputStream responseBody = eventCommunicator.fetch(eventInterface);
         return this.parseEventResponse(responseBody);
     }
 
@@ -125,7 +137,7 @@ public abstract class RegisterManager {
      * Plugins must return a Fetcher instance from this method
      * @return
      */
-    protected abstract Fetcher getChecksumFetcher();
+    protected abstract Communicator getChecksumFetcher();
 
     public abstract URI getListChecksumInterface(String schema, OffsetDateTime from);
 
@@ -137,6 +149,11 @@ public abstract class RegisterManager {
      */
     public ItemInputStream<? extends EntityReference> listRegisterChecksums(String schema, OffsetDateTime fromDate) throws DataFordelerException {
         URI checksumInterface = this.getListChecksumInterface(schema, fromDate);
+        this.getLog().info(
+                "Getting " + (fromDate==null ? "all " : "") + "checksums for " +
+                (schema==null ? "all schemas":("schema "+schema)) +
+                (fromDate!=null ? (" since "+fromDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)):"") +
+                " from address "+checksumInterface);
         // TODO: Do this in a thread?
         InputStream responseBody = this.getChecksumFetcher().fetch(checksumInterface);
         if (schema != null) {
@@ -148,8 +165,13 @@ public abstract class RegisterManager {
         return this.parseChecksumResponse(responseBody);
     }
 
-
-    protected abstract ItemInputStream<? extends EntityReference> parseChecksumResponse(InputStream responseContent) throws DataFordelerException;
+    protected ItemInputStream<? extends EntityReference> parseChecksumResponse(InputStream responseContent) throws DataFordelerException {
+        HashMap<String, Class<? extends EntityReference>> classMap = new HashMap<>();
+        for (EntityManager entityManager : this.entityManagers) {
+            classMap.put(entityManager.getSchema(), entityManager.getManagedEntityReferenceClass());
+        }
+        return ItemInputStream.parseJsonStream(responseContent, classMap, "items", "type", this.getObjectMapper());
+    }
 
 
 
@@ -163,7 +185,7 @@ public abstract class RegisterManager {
      * @return Expanded URI, with scheme, host and port from the base, a custom path, and no query or fragment
      * @throws URISyntaxException
      */
-    public static URI expandBaseURI(URI base, String path) throws URISyntaxException {
+    public static URI expandBaseURI(URI base, String path) {
         return expandBaseURI(base, path, null, null);
     }
     /**
@@ -173,7 +195,30 @@ public abstract class RegisterManager {
      * @return Expanded URI, with scheme, host and port from the base, and a custom path query and fragment
      * @throws URISyntaxException
      */
-    public static URI expandBaseURI(URI base, String path, String query, String fragment) throws URISyntaxException {
-        return new URI(base.getScheme(), base.getUserInfo(), base.getHost(), base.getPort(), (base.getPath() == null ? "" : base.getPath()) + path, query, fragment);
+    public static URI expandBaseURI(URI base, String path, String query, String fragment) {
+        try {
+            return new URI(base.getScheme(), base.getUserInfo(), base.getHost(), base.getPort(),base.getPath() + path, query, fragment);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String joinQueryString(ListHashMap<String, String> params)  {
+        StringJoiner sj = new StringJoiner("&");
+        for (String key : params.keySet()) {
+            ArrayList<String> values = params.get(key);
+            if (values != null && !values.isEmpty()) {
+                for (String value : values) {
+                    try {
+                        sj.add(key+"="+ UriUtils.encodeQueryParam(value, "utf-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        return sj.toString();
+
     }
 }

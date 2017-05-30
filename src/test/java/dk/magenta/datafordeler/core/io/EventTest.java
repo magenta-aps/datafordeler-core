@@ -19,8 +19,8 @@ public class EventTest {
     public void testBeskedID() {
         Event event = new Event();
         UUID uuid = UUID.randomUUID();
-        event.setBeskedID(uuid.toString());
-        Assert.assertEquals(uuid.toString(), event.getBeskedID());
+        event.setEventID(uuid.toString());
+        Assert.assertEquals(uuid.toString(), event.getEventID());
     }
     @Test
     public void testBeskedversion() {

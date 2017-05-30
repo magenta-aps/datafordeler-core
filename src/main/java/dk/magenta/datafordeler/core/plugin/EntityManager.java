@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
@@ -10,12 +11,6 @@ import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.database.Registration;
 import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
@@ -24,10 +19,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by lars on 13-03-17.
@@ -72,7 +64,9 @@ public abstract class EntityManager {
      * Plugins must return a Fetcher instance from this method
      * @return
      */
-    protected abstract Fetcher getRegistrationFetcher();
+    protected abstract Communicator getRegistrationFetcher();
+
+    protected abstract Communicator getReceiptSender();
 
     /**
      * Plugins must return an instance of a FapiService subclass from this method
@@ -104,9 +98,10 @@ public abstract class EntityManager {
 
     /**
      * @return A URL to send the given receipt to
-     * Depending on the register, the URL could change between receipts (such as the objectID being part of it)
+     * Depending on the register, the URL could change between receipts (such as the eventID being part of it)
      */
     protected abstract URI getReceiptEndpoint(Receipt receipt);
+
 
     /**
      * Sends a receipt to the register. Plugins are free to overload this with their own implementation
@@ -116,14 +111,9 @@ public abstract class EntityManager {
      */
     public int sendReceipt(Receipt receipt) throws IOException {
         ObjectMapper objectMapper = this.getObjectMapper();
-        CloseableHttpClient httpclient = HttpClients.createDefault();
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
         String payload = objectMapper.writeValueAsString(receipt);
-        HttpPost post = new HttpPost(receiptEndpoint);
-        post.setEntity(new StringEntity(payload));
-        // TODO: Do this in a thread?
-        CloseableHttpResponse response = httpclient.execute(post);
-        StatusLine statusLine = response.getStatusLine();
+        StatusLine statusLine = this.getReceiptSender().send(receiptEndpoint, payload);
         this.getLog().info("Receipt sent to "+receiptEndpoint+", response was: HTTP "+statusLine.getStatusCode()+" "+statusLine.getReasonPhrase());
         return statusLine.getStatusCode();
     }
@@ -204,7 +194,10 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public abstract Registration parseRegistration(InputStream registrationData) throws IOException;
+    public Registration parseRegistration(InputStream registrationData) throws ParseException, IOException {
+        String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
+        return this.parseRegistration(data);
+    }
 
     /**
      * Parse incoming data into a Registration (data coming from within a request envelope)
@@ -212,9 +205,24 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public abstract Registration parseRegistration(String registrationData, String charsetName) throws IOException;
+    public Registration parseRegistration(String registrationData) throws ParseException, IOException {
+        return this.parseRegistration(this.getObjectMapper().readTree(registrationData));
+    }
+
+    public abstract Registration parseRegistration(JsonNode registrationData) throws ParseException;
 
 
+
+    public Map<String, Registration> parseRegistrationList(JsonNode registrationData) throws ParseException {
+        HashMap<String, Registration> registrations = new HashMap<>();
+        Iterator<String> keyIterator = registrationData.fieldNames();
+        while (keyIterator.hasNext()) {
+            String key = keyIterator.next();
+            Registration registration = this.parseRegistration(registrationData.get(key));
+            registrations.put(key, registration);
+        }
+        return registrations;
+    }
 
     /** Registration fetching **/
 
@@ -234,7 +242,7 @@ public abstract class EntityManager {
      * @throws IOException
      * @throws FailedReferenceException
      */
-    public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException, DataStreamException {
+    public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException, DataStreamException, ParseException {
         this.getLog().info("Fetching registration from reference "+reference.getURI());
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
@@ -274,13 +282,10 @@ public abstract class EntityManager {
      * @return
      * @throws DataFordelerException
      */
-    public ItemInputStream<? extends EntityReference> listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException, IOException {
+    public ItemInputStream<? extends EntityReference> listRegisterChecksums(OffsetDateTime fromDate) throws DataFordelerException {
         this.getLog().info("Listing register checksums (" + (fromDate == null ? "ALL" : "since "+fromDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) + ")");
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpGet get = new HttpGet(this.getListChecksumInterface(fromDate));
-        // TODO: Do this in a thread?
-        CloseableHttpResponse response = httpclient.execute(get);
-        InputStream responseBody = response.getEntity().getContent();
+        URI checksumInterface = this.getListChecksumInterface(fromDate);
+        InputStream responseBody = this.getRegisterManager().getChecksumFetcher().fetch(checksumInterface);
         return this.parseChecksumResponse(responseBody);
     }
 
@@ -300,7 +305,7 @@ public abstract class EntityManager {
      * @return Expanded URI, with scheme, host and port from the base, a custom path, and no query or fragment
      * @throws URISyntaxException
      */
-    public static URI expandBaseURI(URI base, String path) throws URISyntaxException {
+    public static URI expandBaseURI(URI base, String path) {
         return RegisterManager.expandBaseURI(base, path);
     }
     /**
@@ -310,7 +315,7 @@ public abstract class EntityManager {
      * @return Expanded URI, with scheme, host and port from the base, and a custom path query and fragment
      * @throws URISyntaxException
      */
-    public static URI expandBaseURI(URI base, String path, String query, String fragment) throws URISyntaxException {
+    public static URI expandBaseURI(URI base, String path, String query, String fragment) {
         return RegisterManager.expandBaseURI(base, path, query, fragment);
     }
 

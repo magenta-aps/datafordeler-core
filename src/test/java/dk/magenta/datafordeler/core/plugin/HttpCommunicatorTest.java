@@ -21,30 +21,30 @@ import java.net.URISyntaxException;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = AppConfig.class)
-public class HttpFetcherTest {
+public class HttpCommunicatorTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
     @Test
     public void testFetchOk() throws URISyntaxException, HttpStatusException, DataStreamException, IOException {
-        Fetcher fetcher = new HttpFetcher();
-        InputStream data = fetcher.fetch(new URI("https://www.example.com"));
+        Communicator communicator = new HttpCommunicator();
+        InputStream data = communicator.fetch(new URI("https://www.example.com"));
         Assert.assertNotNull(data);
         Assert.assertNotNull(data.read(new byte[10]));
     }
 
     @Test
     public void testFetchFail1() throws URISyntaxException, HttpStatusException, DataStreamException, IOException {
-        Fetcher fetcher = new HttpFetcher();
+        Communicator communicator = new HttpCommunicator();
         exception.expect(DataStreamException.class);
-        fetcher.fetch(new URI("https://frsghr8hffdh0gtonxhpjd.gl"));
+        communicator.fetch(new URI("https://frsghr8hffdh0gtonxhpjd.gl"));
     }
 
     @Test
     public void testFetchFail2() throws URISyntaxException, HttpStatusException, DataStreamException, IOException {
-        Fetcher fetcher = new HttpFetcher();
+        Communicator communicator = new HttpCommunicator();
         exception.expect(HttpStatusException.class);
-        fetcher.fetch(new URI("https://www.example.com/foo"));
+        communicator.fetch(new URI("https://www.example.com/foo"));
     }
 }

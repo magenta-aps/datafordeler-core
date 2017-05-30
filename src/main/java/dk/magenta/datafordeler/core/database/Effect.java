@@ -95,7 +95,7 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     }
 
 
-    @JsonProperty(value = "dataItems")
+    @JsonProperty(value = "dataItems", access = JsonProperty.Access.WRITE_ONLY)
     @JacksonXmlProperty(localName = "dataItem")
     @JacksonXmlElementWrapper(useWrapping = false)
     public List<D> getDataItems() {
