@@ -1,6 +1,6 @@
 {
   "beskedVersion":"1.0",
-  "beskedID":"msgid",
+  "eventID":"msgid",
   "beskedData":{
     "Objektreference":{
       "objektreference":"%{reference}"
