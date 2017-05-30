@@ -12,10 +12,15 @@ public class PluginNotFoundException extends DataFordelerException {
     }
 
     private String schema;
+    private String name;
     private URI uri;
 
-    public PluginNotFoundException(String schema) {
-        this.schema = schema;
+    public PluginNotFoundException(String identifier, boolean isSchema) {
+        if (isSchema) {
+            this.schema = identifier;
+        } else {
+            this.name = identifier;
+        }
     }
 
     public PluginNotFoundException(URI uri) {
@@ -24,7 +29,9 @@ public class PluginNotFoundException extends DataFordelerException {
 
     @Override
     public String getMessage() {
-        if (this.schema != null) {
+        if (this.name != null) {
+            return "Plugin named " + this.name + " was not found";
+        } else if (this.schema != null) {
             return "Plugin that handles schema " + this.schema + " was not found";
         } else if (this.uri != null) {
             return "Plugin that handles URI " + this.uri.toString() + " was not found";

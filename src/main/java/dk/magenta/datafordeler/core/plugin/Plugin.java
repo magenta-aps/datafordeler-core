@@ -18,8 +18,10 @@ public abstract class Plugin {
     }
 
     public long getVersion() {
-    return version;
+        return version;
     }
+
+    public abstract String getName();
 
     public abstract RegisterManager getRegisterManager();
 
