@@ -41,7 +41,7 @@ public class DemoPlugin extends Plugin {
 
     @PostConstruct
     public void init() {
-        this.demoRegisterManager.addEntityManager(this.demoEntityManager, DemoEntity.schema);
+        this.demoRegisterManager.addEntityManager(this.demoEntityManager);
     }
 
     @Override

@@ -26,7 +26,7 @@ public class PluginTest extends PluginTestBase {
 
     @Test
     public void testGetEntityManager() throws URISyntaxException {
-        URI uri = new URI("http://localhost:8444");
+        URI uri = new URI("http://localhost:" + AppConfig.servicePort);
         Assert.assertTrue(this.plugin.getRegisterManager() instanceof RegisterManager);
         Assert.assertEquals(this.plugin.getEntityManager(DemoEntity.schema), this.plugin.getRegisterManager().getEntityManager(DemoEntity.class));
         Assert.assertEquals(this.plugin.getEntityManager(uri), this.plugin.getEntityManager(DemoEntity.schema));

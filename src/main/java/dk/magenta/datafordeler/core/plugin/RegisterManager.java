@@ -88,9 +88,9 @@ public abstract class RegisterManager {
         return null;
     }
 
-    public void addEntityManager(EntityManager entityManager, String schema) {
+    public void addEntityManager(EntityManager entityManager) {
         entityManager.setRegisterManager(this);
-        entityManager.setSchema(schema);
+        String schema = entityManager.getSchema();
         this.handledSchemas.add(schema);
         this.entityManagers.add(entityManager);
         this.entityManagerBySchema.put(schema, entityManager);

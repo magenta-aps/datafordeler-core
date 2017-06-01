@@ -57,13 +57,14 @@ public class RegisterManagerTest extends PluginTestBase {
 
     @Test
     public void testLinks() throws URISyntaxException {
+        System.out.println("AppConfig.servicePort: "+AppConfig.servicePort);
         EntityManager entityManager = this.plugin.getEntityManager(DemoEntity.schema);
         RegisterManager registerManager = this.plugin.getRegisterManager();
         Assert.assertEquals(entityManager, registerManager.getEntityManager(DemoEntity.class));
         Assert.assertEquals(entityManager, registerManager.getEntityManager(DemoEntity.schema));
-        Assert.assertEquals(entityManager, registerManager.getEntityManager(new URI("http://localhost:8444")));
-        Assert.assertEquals(entityManager, registerManager.getEntityManager(new URI("http://localhost:8444/foo")));
-        Assert.assertNull(registerManager.getEntityManager(new URI("http://localhost:8445")));
+        Assert.assertEquals(entityManager, registerManager.getEntityManager(new URI("http://localhost:" + AppConfig.servicePort)));
+        Assert.assertEquals(entityManager, registerManager.getEntityManager(new URI("http://localhost:" + AppConfig.servicePort + "/foo")));
+        Assert.assertNull(registerManager.getEntityManager(new URI("http://localhost:" + (AppConfig.servicePort + 1))));
 
         Assert.assertNotEquals(entityManager, registerManager.getEntityManager(OtherEntity.class));
     }
@@ -78,9 +79,9 @@ public class RegisterManagerTest extends PluginTestBase {
     @Test
     public void testGetHandledURISubstrings() {
         RegisterManager registerManager = this.plugin.getRegisterManager();
-        Assert.assertTrue(registerManager.getHandledURISubstrings().contains("http://localhost:8444"));
-        Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:8445"));
-        Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:8444/foobar"));
+        Assert.assertTrue(registerManager.getHandledURISubstrings().contains("http://localhost:" + AppConfig.servicePort));
+        Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:" + (AppConfig.servicePort + 1)));
+        Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:" + AppConfig.servicePort + "/foobar"));
     }
 
     @Test
@@ -174,7 +175,7 @@ public class RegisterManagerTest extends PluginTestBase {
     public void testPullEvents() throws DataFordelerException, IOException, InterruptedException, ExecutionException, TimeoutException {
 
         String checksum = this.hash(UUID.randomUUID().toString());
-        String reference = "http://localhost:8444/test/get/" + checksum;
+        String reference = "http://localhost:" + AppConfig.servicePort + "/test/get/" + checksum;
         String uuid = UUID.randomUUID().toString();
         String full = this.getPayload("/referencelookuptest.json")
                 .replace("%{checksum}", checksum)

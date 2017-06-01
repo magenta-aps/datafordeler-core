@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.plugindemo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.AppConfig;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.io.Event;
@@ -60,7 +61,7 @@ public class DemoRegisterManager extends RegisterManager {
     @Override
     public URI getBaseEndpoint() {
         try {
-            return new URI("http", null, "localhost", 8444, "/test", null, null);
+            return new URI("http", null, "localhost", AppConfig.servicePort, "/test", null, null);
         } catch (URISyntaxException e) {
             e.printStackTrace();
             return null;

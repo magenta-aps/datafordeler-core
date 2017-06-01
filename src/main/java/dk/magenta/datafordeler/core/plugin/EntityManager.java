@@ -29,7 +29,6 @@ import java.util.*;
  */
 public abstract class EntityManager {
     private RegisterManager registerManager;
-    private String schema;
     protected Class<? extends Entity> managedEntityClass;
     protected Class<? extends EntityReference> managedEntityReferenceClass;
     protected Class<? extends RegistrationReference> managedRegistrationReferenceClass;
@@ -86,13 +85,7 @@ public abstract class EntityManager {
         this.registerManager = registerManager;
     }
 
-    public String getSchema() {
-        return this.schema;
-    }
-
-    public void setSchema(String schema) {
-        this.schema = schema;
-    }
+    public abstract String getSchema();
 
     /** Receipt sending **/
 

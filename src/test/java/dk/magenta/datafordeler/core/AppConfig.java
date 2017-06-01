@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Configuration;
 @SpringBootApplication
 public class AppConfig {
 
-    public static final int servicePort = 8444;
+    public static final int servicePort = 8445;
 
     /* For testing the servlet in a throwaway Tomcat container */
     @Bean
