@@ -3,6 +3,10 @@ package dk.magenta.datafordeler.core.database;
 import dk.magenta.datafordeler.core.AppConfig;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.InvalidDataInputException;
+import dk.magenta.datafordeler.plugindemo.model.DemoData;
+import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
+import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.Assert;
@@ -38,25 +42,27 @@ public class DatabaseTest {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
-        TestEntity testEntity = new TestEntity(uuid, domain);
-        TestRegistration testRegistration = new TestRegistration("2017-02-21T16:02:50+01:00", null, 1);
-        queryManager.saveRegistration(session, testEntity, testRegistration);
+        DemoEntity demoEntity = new DemoEntity();
+        Identification demoIdentification = new Identification(uuid, domain);
+        demoEntity.setIdentification(demoIdentification);
+        DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
+        queryManager.saveRegistration(session, demoEntity, demoRegistration);
         session.flush();
         transaction.commit();
-        Assert.assertTrue(testEntity.getRegistrations().contains(testRegistration));
+        Assert.assertTrue(demoEntity.getRegistrations().contains(demoRegistration));
         session.close();
         session = sessionManager.getSessionFactory().openSession();
-        testRegistration = (TestRegistration) session.merge(testRegistration);
+        demoRegistration = (DemoRegistration) session.merge(demoRegistration);
         transaction = session.beginTransaction();
-        testEntity = queryManager.getEntity(session, uuid, TestEntity.class);
-        Assert.assertNotNull(testEntity);
-        Assert.assertEquals(uuid, testEntity.getUUID());
-        Assert.assertEquals(domain, testEntity.getDomain());
+        demoEntity = queryManager.getEntity(session, uuid, DemoEntity.class);
+        Assert.assertNotNull(demoEntity);
+        Assert.assertEquals(uuid, demoEntity.getUUID());
+        Assert.assertEquals(domain, demoEntity.getDomain());
         Identification identification = queryManager.getIdentification(session, uuid);
         Assert.assertNotNull(identification);
         Assert.assertEquals(uuid, identification.getUuid());
         Assert.assertEquals(domain, identification.getDomain());
-        Assert.assertTrue(testEntity.getRegistrations().contains(testRegistration));
+        Assert.assertTrue(demoEntity.getRegistrations().contains(demoRegistration));
         transaction.commit();
         session.close();
     }
@@ -66,24 +72,26 @@ public class DatabaseTest {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
-        TestEntity testEntity = new TestEntity(uuid, domain);
-        TestRegistration testRegistration = new TestRegistration("2017-02-21T16:02:50+01:00", null, 1);
-        TestEffect testEffect = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        queryManager.saveRegistration(session, testEntity, testRegistration);
+        DemoEntity demoEntity = new DemoEntity();
+        Identification demoIdentification = new Identification(uuid, domain);
+        demoEntity.setIdentification(demoIdentification);
+        DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
+        DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        queryManager.saveRegistration(session, demoEntity, demoRegistration);
         transaction.commit();
         session.close();
 
         session = sessionManager.getSessionFactory().openSession();
         transaction = session.beginTransaction();
 
-        queryManager.getAllEntities(session, TestEntity.class);
+        queryManager.getAllEntities(session, DemoEntity.class);
 
-        testEffect = (TestEffect) session.merge(testEffect);
-        testEntity = queryManager.getEntity(session, uuid, TestEntity.class);
+        demoEffect = (DemoEffect) session.merge(demoEffect);
+        demoEntity = queryManager.getEntity(session, uuid, DemoEntity.class);
         boolean found = false;
-        for (TestRegistration registration : testEntity.getRegistrations()) {
-            for (TestEffect effect : registration.getEffects()) {
-                if (effect == testEffect) {
+        for (DemoRegistration registration : demoEntity.getRegistrations()) {
+            for (DemoEffect effect : registration.getEffects()) {
+                if (effect == demoEffect) {
                     found = true;
                 }
             }
@@ -93,12 +101,12 @@ public class DatabaseTest {
         session.close();
 
         session = sessionManager.getSessionFactory().openSession();
-        testEntity = (TestEntity) session.merge(testEntity);
-        List<TestEffect> effects = queryManager.getEffects(session, testEntity, OffsetDateTime.parse("2017-02-22T13:59:30+01:00"), OffsetDateTime.parse("2017-12-31T23:59:59+01:00"), TestEffect.class);
+        demoEntity = (DemoEntity) session.merge(demoEntity);
+        List<DemoEffect> effects = queryManager.getEffects(session, demoEntity, OffsetDateTime.parse("2017-02-22T13:59:30+01:00"), OffsetDateTime.parse("2017-12-31T23:59:59+01:00"), DemoEffect.class);
 
         found = false;
-        for (TestEffect effect : effects) {
-            if (effect.getEffectFrom().equals(testEffect.getEffectFrom()) && effect.getEffectTo().equals(testEffect.getEffectTo())) {
+        for (DemoEffect effect : effects) {
+            if (effect.getEffectFrom().equals(demoEffect.getEffectFrom()) && effect.getEffectTo().equals(demoEffect.getEffectTo())) {
                 found = true;
             }
         }
@@ -112,12 +120,14 @@ public class DatabaseTest {
         UUID uuid = UUID.randomUUID();
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
-        TestEntity testEntity = new TestEntity(uuid, domain);
-        TestRegistration testRegistration = new TestRegistration("2017-02-21T16:02:50+01:00", null, 1);
-        TestEffect testEffect = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        TestDataItem testDataItem = new TestDataItem(8000, "Århus");
-        testDataItem.addEffect(testEffect);
-        queryManager.saveRegistration(session, testEntity, testRegistration);
+        DemoEntity demoEntity = new DemoEntity();
+        Identification demoIdentification = new Identification(uuid, domain);
+        demoEntity.setIdentification(demoIdentification);
+        DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
+        DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        DemoData demoDataItem = new DemoData(8000, "Århus");
+        demoDataItem.addEffect(demoEffect);
+        queryManager.saveRegistration(session, demoEntity, demoRegistration);
         session.flush();
         transaction.commit();
         //session.close();
@@ -125,14 +135,14 @@ public class DatabaseTest {
         //session = sessionManager.getSessionFactory().openSession();
         transaction = session.beginTransaction();
 
-        queryManager.getAllEntities(session, TestEntity.class);
+        queryManager.getAllEntities(session, DemoEntity.class);
 
-        TestEntity testEntity1 = queryManager.getEntity(session, uuid, TestEntity.class);
-        Assert.assertNotNull(testEntity1);
+        DemoEntity demoEntity1 = queryManager.getEntity(session, uuid, DemoEntity.class);
+        Assert.assertNotNull(demoEntity1);
         boolean found = false;
-        for (TestRegistration registration : testEntity1.getRegistrations()) {
-            for (TestEffect effect : registration.getEffects()) {
-                for (TestDataItem data : effect.getDataItems()) {
+        for (DemoRegistration registration : demoEntity1.getRegistrations()) {
+            for (DemoEffect effect : registration.getEffects()) {
+                for (DemoData data : effect.getDataItems()) {
                     if (data.getPostnr() == 8000 && data.getBynavn().equals("Århus")) {
                         found = true;
                     }
@@ -141,20 +151,15 @@ public class DatabaseTest {
         }
         Assert.assertTrue(found);
 
-        testDataItem = (TestDataItem) session.merge(testDataItem);
-        List<TestDataItem> results = queryManager.getDataItems(session, testEntity, testDataItem, TestDataItem.class);
-        Assert.assertTrue(results.contains(testDataItem));
-        List<TestDataItem> results1 = queryManager.getDataItems(session, testEntity, new TestDataItem(8000, "Århus"), TestDataItem.class);
-        Assert.assertTrue(results1.contains(testDataItem));
-        List<TestDataItem> results2 = queryManager.getDataItems(session, testEntity, new TestDataItem(8200, "Århus N"), TestDataItem.class);
-        Assert.assertFalse(results2.contains(testDataItem));
+        demoDataItem = (DemoData) session.merge(demoDataItem);
+        List<DemoData> results = queryManager.getDataItems(session, demoEntity, demoDataItem, DemoData.class);
+        Assert.assertTrue(results.contains(demoDataItem));
+        List<DemoData> results1 = queryManager.getDataItems(session, demoEntity, new DemoData(8000, "Århus"), DemoData.class);
+        Assert.assertTrue(results1.contains(demoDataItem));
+        List<DemoData> results2 = queryManager.getDataItems(session, demoEntity, new DemoData(8200, "Århus N"), DemoData.class);
+        Assert.assertFalse(results2.contains(demoDataItem));
 
         transaction.commit();
-
-        /*transaction = session.beginTransaction();
-        session.delete(testEntity);
-        session.delete(testRegistration);
-        transaction.commit();*/
         session.close();
     }
 
@@ -164,15 +169,17 @@ public class DatabaseTest {
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
 
-        TestEntity testEntity = new TestEntity(uuid, domain);
-        TestRegistration testRegistration = new TestRegistration("2017-02-21T16:02:50+01:00", null, 1);
-        TestEffect testEffect1 = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        TestEffect testEffect2 = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        TestEffect testEffect3 = new TestEffect(testRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        TestEffect testEffect4 = new TestEffect(testRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
-        TestEffect testEffect5 = new TestEffect(testRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
+        DemoEntity demoEntity = new DemoEntity();
+        Identification demoIdentification = new Identification(uuid, domain);
+        demoEntity.setIdentification(demoIdentification);
+        DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
+        DemoEffect demoEffect1 = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        DemoEffect demoEffect2 = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        DemoEffect demoEffect3 = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+        DemoEffect demoEffect4 = new DemoEffect(demoRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
+        DemoEffect demoEffect5 = new DemoEffect(demoRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
 
-        queryManager.saveRegistration(session, testEntity, testRegistration);
+        queryManager.saveRegistration(session, demoEntity, demoRegistration);
 
         transaction.commit();
         session.close();
@@ -180,21 +187,21 @@ public class DatabaseTest {
         session = sessionManager.getSessionFactory().openSession();
         transaction = session.beginTransaction();
 
-        testRegistration = (TestRegistration) session.merge(testRegistration);
+        demoRegistration = (DemoRegistration) session.merge(demoRegistration);
 
-        queryManager.dedupEffects(session, testRegistration);
-        List<TestEffect> testEffects = testRegistration.getEffects();
+        queryManager.dedupEffects(session, demoRegistration);
+        List<DemoEffect> demoEffects = demoRegistration.getEffects();
 
-        Assert.assertEquals(2, testEffects.size());
-        for (TestEffect e1 : testEffects) {
-            for (TestEffect e2 : testEffects) {
+        Assert.assertEquals(2, demoEffects.size());
+        for (DemoEffect e1 : demoEffects) {
+            for (DemoEffect e2 : demoEffects) {
                 if (e1 != e2) {
                     Assert.assertFalse(e1.equalData(e2));
                 }
             }
         }
 
-        session.saveOrUpdate(testRegistration);
+        session.saveOrUpdate(demoRegistration);
 
         transaction.commit();
         session.close();
