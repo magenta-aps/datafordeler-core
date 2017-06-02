@@ -2,8 +2,12 @@ package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.AppConfig;
 import dk.magenta.datafordeler.core.database.DataItem;
+import dk.magenta.datafordeler.core.database.Effect;
 import dk.magenta.datafordeler.core.database.Identification;
 import dk.magenta.datafordeler.plugindemo.model.DemoData;
+import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
+import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,7 +15,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -22,10 +29,78 @@ import java.util.UUID;
 public class ModelTest {
 
     @Test
+    public void testEffect() {
+        DemoRegistration demoRegistration1 = new DemoRegistration();
+        DemoRegistration demoRegistration2 = new DemoRegistration();
+
+        // Test constructors
+        Assert.assertTrue(
+                new DemoEffect(demoRegistration1, ZonedDateTime.parse("2017-06-02T15:39:16+02:00"), ZonedDateTime.parse("2017-06-05T08:00:16+02:00"))
+                        .equalData(
+                                new DemoEffect(demoRegistration1, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))
+                        )
+        );
+        Assert.assertTrue(
+                new DemoEffect(demoRegistration1, "2017-06-02T15:39:16+02:00", "2017-06-05T08:00:16+02:00")
+                        .equalData(
+                                new DemoEffect(demoRegistration1, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))
+                        )
+        );
+
+        // Test equalData
+        DemoEffect demoEffect1 = new DemoEffect(demoRegistration1, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"));
+        Assert.assertTrue(demoEffect1.equalData(new DemoEffect(demoRegistration1, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))));
+        Assert.assertTrue(demoEffect1.equalData(new DemoEffect(demoRegistration2, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))));
+        Assert.assertFalse(demoEffect1.equalData(new DemoEffect(demoRegistration2, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), OffsetDateTime.parse("2017-06-05T09:00:16+02:00"))));
+        Assert.assertFalse(demoEffect1.equalData(new DemoEffect(demoRegistration2, OffsetDateTime.parse("2017-06-02T16:00:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))));
+
+        // Test getRegistration
+        Assert.assertEquals(demoRegistration1, demoEffect1.getRegistration());
+        Assert.assertNotEquals(demoRegistration2, demoEffect1.getRegistration());
+
+        // Test getTableName
+        Assert.assertEquals("demo_effect", Effect.getTableName(DemoEffect.class));
+
+        // Test toString
+        DemoData demoData1 = new DemoData(8000, "Århus C");
+        demoData1.addEffect(demoEffect1);
+        Assert.assertEquals("DemoEffect["+demoEffect1.hashCode()+"] {\n" +
+                "    from: 2017-06-02T15:39:16+02:00\n" +
+                "    to: 2017-06-05T08:00:16+02:00\n" +
+                "    data: [\n" +
+                "        DemoData["+demoData1.hashCode()+"] {\n" +
+                "            bynavn: Århus C\n" +
+                "            postnr: 8000\n" +
+                "            reference: null\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}", demoEffect1.toString());
+        Assert.assertEquals("        DemoEffect["+demoEffect1.hashCode()+"] {\n" +
+                "            from: 2017-06-02T15:39:16+02:00\n" +
+                "            to: 2017-06-05T08:00:16+02:00\n" +
+                "            data: [\n" +
+                "                DemoData["+demoData1.hashCode()+"] {\n" +
+                "                    bynavn: Århus C\n" +
+                "                    postnr: 8000\n" +
+                "                    reference: null\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }", demoEffect1.toString(2));
+
+        // Test getData
+        Map<String, Object> data = demoEffect1.getData();
+        Assert.assertEquals("Århus C", data.get("bynavn"));
+        Assert.assertEquals(8000, data.get("postnr"));
+        Assert.assertEquals(null, data.get("reference"));
+        Assert.assertEquals(3, data.keySet().size());
+    }
+
+    @Test
     public void testDataItem() {
         DemoData demoData1 = new DemoData(8000, "Århus C");
         DemoData demoData2 = new DemoData(8000, "Århus C");
         DemoData demoData3 = new DemoData(8200, "Århus N");
+        // Test equalData
         Assert.assertTrue(demoData1.equalData(demoData2));
         Assert.assertTrue(demoData2.equalData(demoData1));
         Assert.assertFalse(demoData1.equalData(demoData3));
@@ -33,8 +108,10 @@ public class ModelTest {
         Assert.assertFalse(demoData2.equalData(demoData3));
         Assert.assertFalse(demoData3.equalData(demoData2));
 
+        // Test getTableName
         Assert.assertEquals("demo_data", DataItem.getTableName(DemoData.class));
 
+        // Test toString
         Assert.assertEquals("DemoData["+demoData1.hashCode()+"] {\n" +
                 "    bynavn: Århus C\n" +
                 "    postnr: 8000\n" +
@@ -47,12 +124,14 @@ public class ModelTest {
                 "        }", demoData1.toString(2));
 
 
+        // Test getReferences
         Identification identification = new Identification(UUID.randomUUID(), "test");
         demoData1.setReference(identification);
         Assert.assertEquals(identification, demoData1.getReference());
         Assert.assertEquals(1, demoData1.getReferences().size());
         Assert.assertTrue(demoData1.getReferences().containsValue(identification));
 
+        // Test updateReferences
         Identification identification2 = new Identification(UUID.randomUUID(), "test");
         HashMap<String, Identification> newReferences = new HashMap<>();
         newReferences.put("reference", identification2);
