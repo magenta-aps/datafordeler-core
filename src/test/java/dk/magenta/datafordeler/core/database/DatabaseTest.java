@@ -127,6 +127,10 @@ public class DatabaseTest {
         DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
         DemoData demoDataItem = new DemoData(8000, "Århus");
         demoDataItem.addEffect(demoEffect);
+        Assert.assertTrue(demoEffect.getDataItems().contains(demoDataItem));
+        demoDataItem.removeEffect(demoEffect);
+        Assert.assertFalse(demoEffect.getDataItems().contains(demoDataItem));
+        demoDataItem.addEffect(demoEffect);
         queryManager.saveRegistration(session, demoEntity, demoRegistration);
         session.flush();
         transaction.commit();

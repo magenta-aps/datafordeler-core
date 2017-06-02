@@ -67,6 +67,7 @@ public class DemoData extends DataItem<DemoEffect, DemoData> {
     }
 
     public void updateReferences(HashMap<String, Identification> references) {
+        super.updateReferences(references);
         if (references.containsKey("reference")) {
             this.reference = references.get("reference");
         }
