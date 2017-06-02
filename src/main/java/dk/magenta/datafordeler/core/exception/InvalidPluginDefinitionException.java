@@ -16,7 +16,7 @@ public class InvalidPluginDefinitionException extends DataFordelerException {
 
     @Override
     public String getCode() {
-        return "datafordeler.plugin.invalid_definition";
+        return "datafordeler.plugin.invalid_plugin_definition";
     }
 
     public Plugin getPlugin() {

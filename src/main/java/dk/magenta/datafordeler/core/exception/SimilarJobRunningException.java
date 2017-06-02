@@ -11,6 +11,6 @@ public class SimilarJobRunningException extends DataFordelerException {
 
     @Override
     public String getCode() {
-        return "datafordeler.engine.similarjobrunning";
+        return "datafordeler.import.similar_job_running";
     }
 }

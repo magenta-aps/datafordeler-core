@@ -11,4 +11,9 @@ public class InvalidServiceOwnerDefinitionException extends InvalidPluginDefinit
     public InvalidServiceOwnerDefinitionException(Plugin plugin, String ownerDefinition, Pattern validationRegex) {
         super(plugin, "\"" + ownerDefinition + "\" is not a valid owner definition, must conform to regex /" + validationRegex.pattern() + "/");
     }
+
+    @Override
+    public String getCode() {
+        return "datafordeler.plugin.invalid_owner_definition";
+    }
 }

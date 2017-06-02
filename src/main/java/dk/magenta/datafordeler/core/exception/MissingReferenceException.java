@@ -14,8 +14,12 @@ public class MissingReferenceException extends DataFordelerException {
         this.event = event;
     }
 
+    public Event getEvent() {
+        return event;
+    }
+
     @Override
     public String getCode() {
-        return "datafordeler.engine.oldevent.missing_reference";
+        return "datafordeler.import.missing_reference";
     }
 }

@@ -20,6 +20,15 @@ public class WrongSubclassException extends DataFordelerException {
         this.receivedObject = receivedObject;
     }
 
+
+    public Class[] getExpectedClasses() {
+        return expectedClasses;
+    }
+
+    public Object getReceivedObject() {
+        return receivedObject;
+    }
+
     @Override
     public String getCode() {
         return "datafordeler.plugin.plugin_received_wrong_class";

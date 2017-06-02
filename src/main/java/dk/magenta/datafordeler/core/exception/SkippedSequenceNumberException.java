@@ -26,6 +26,6 @@ public class SkippedSequenceNumberException extends InvalidDataInputException {
 
     @Override
     public String getCode() {
-        return "datafordeler.input.skipped_sequence_number";
+        return "datafordeler.import.skipped_sequence_number";
     }
 }

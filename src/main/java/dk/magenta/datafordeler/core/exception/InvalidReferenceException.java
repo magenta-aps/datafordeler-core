@@ -13,7 +13,7 @@ public class InvalidReferenceException extends DataFordelerException {
 
     @Override
     public String getCode() {
-        return "datafordeler.reference_invalid";
+        return "datafordeler.import.reference_invalid";
     }
 
 }

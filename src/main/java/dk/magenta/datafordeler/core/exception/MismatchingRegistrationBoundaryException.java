@@ -31,6 +31,6 @@ public class MismatchingRegistrationBoundaryException extends InvalidDataInputEx
 
     @Override
     public String getCode() {
-        return "datafordeler.input.registration_boundary_mismatch";
+        return "datafordeler.import.registration_boundary_mismatch";
     }
 }

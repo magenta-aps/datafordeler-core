@@ -15,6 +15,6 @@ public class PluginImplementationException extends DataFordelerException {
 
     @Override
     public String getCode() {
-        return "datafordeler.plugin.implementation";
+        return "datafordeler.plugin.implementation_error";
     }
 }

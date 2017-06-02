@@ -12,8 +12,13 @@ public class MissingEntityException extends DataFordelerException {
     public MissingEntityException(Registration registration) {
         this.registration = registration;
     }
+
+    public Registration getRegistration() {
+        return registration;
+    }
+
     @Override
     public String getCode() {
-        return null;
+        return "datafordeler.import.missing_entity";
     }
 }

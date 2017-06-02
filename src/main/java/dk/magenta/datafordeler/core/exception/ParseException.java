@@ -16,6 +16,6 @@ public class ParseException extends InvalidDataInputException {
 
     @Override
     public String getCode() {
-        return null;
+        return "datafordeler.import.parse_error";
     }
 }

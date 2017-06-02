@@ -26,6 +26,6 @@ public class DuplicateSequenceNumberException extends InvalidDataInputException 
 
     @Override
     public String getCode() {
-        return "datafordeler.input.duplicate_sequence_number";
+        return "datafordeler.import.duplicate_sequence_number";
     }
 }
