@@ -88,6 +88,83 @@ public class ModelTest {
     }
 
     @Test
+    public void testRegistration() {
+        String registerChecksum = "7A07CD32F33B66B468C1E1FEA19B35EBF13406E0B4A21BD7A5CFEF323D3E7BD0";
+        DemoEntity demoEntity = new DemoEntity();
+        DemoRegistration demoRegistration1 = new DemoRegistration(OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"), 0);
+        demoRegistration1.setEntity(demoEntity);
+        demoRegistration1.setRegisterChecksum(registerChecksum);
+        DemoEffect demoEffect1 = new DemoEffect(demoRegistration1, OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"));
+        DemoData demoData1 = new DemoData(8000, "Århus C");
+        demoData1.addEffect(demoEffect1);
+
+        // Test getEffects
+        Assert.assertEquals(1, demoRegistration1.getEffects().size());
+        Assert.assertTrue(demoRegistration1.getEffects().contains(demoEffect1));
+
+        // Test getEffect
+        Assert.assertEquals(demoEffect1, demoRegistration1.getEffect(OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00")));
+        Assert.assertNotEquals(demoEffect1, demoRegistration1.getEffect(OffsetDateTime.parse("2017-06-02T17:30:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00")));
+        Assert.assertNotEquals(demoEffect1, demoRegistration1.getEffect(OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+01:00")));
+
+        // Test getEntity
+        Assert.assertEquals(demoEntity, demoRegistration1.getEntity());
+        Assert.assertTrue(demoEntity.getRegistrations().contains(demoRegistration1));
+
+        // Test getSequenceNumber
+        Assert.assertEquals(0, demoRegistration1.getSequenceNumber());
+
+        // Test getRegisterChecksum
+        Assert.assertEquals(registerChecksum, demoRegistration1.getRegisterChecksum());
+
+        // Test getRegistrationFrom
+        Assert.assertEquals(OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), demoRegistration1.getRegistrationFrom());
+
+        // Test getRegistrationTo
+        Assert.assertEquals(OffsetDateTime.parse("2017-06-05T08:00:16+02:00"), demoRegistration1.getRegistrationTo());
+
+        // Test toString
+        Assert.assertEquals("DemoRegistration["+demoRegistration1.hashCode()+"] {\n" +
+                "    entity: null @ null\n" +
+                "    checksum: 7A07CD32F33B66B468C1E1FEA19B35EBF13406E0B4A21BD7A5CFEF323D3E7BD0\n" +
+                "    from: 2017-06-02T17:00+02:00\n" +
+                "    to: 2017-06-05T08:00:16+02:00\n" +
+                "    effects: [\n" +
+                "        DemoEffect["+demoEffect1.hashCode()+"] {\n" +
+                "            from: 2017-06-02T17:00+02:00\n" +
+                "            to: 2017-06-05T08:00:16+02:00\n" +
+                "            data: [\n" +
+                "                DemoData["+demoData1.hashCode()+"] {\n" +
+                "                    bynavn: Århus C\n" +
+                "                    postnr: 8000\n" +
+                "                    reference: null\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}", demoRegistration1.toString());
+        Assert.assertEquals("        DemoRegistration["+demoRegistration1.hashCode()+"] {\n" +
+                "            entity: null @ null\n" +
+                "            checksum: 7A07CD32F33B66B468C1E1FEA19B35EBF13406E0B4A21BD7A5CFEF323D3E7BD0\n" +
+                "            from: 2017-06-02T17:00+02:00\n" +
+                "            to: 2017-06-05T08:00:16+02:00\n" +
+                "            effects: [\n" +
+                "                DemoEffect["+demoEffect1.hashCode()+"] {\n" +
+                "                    from: 2017-06-02T17:00+02:00\n" +
+                "                    to: 2017-06-05T08:00:16+02:00\n" +
+                "                    data: [\n" +
+                "                        DemoData["+demoData1.hashCode()+"] {\n" +
+                "                            bynavn: Århus C\n" +
+                "                            postnr: 8000\n" +
+                "                            reference: null\n" +
+                "                        }\n" +
+                "                    ]\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }", demoRegistration1.toString(2));
+    }
+
+    @Test
     public void testEffect() {
         DemoRegistration demoRegistration1 = new DemoRegistration();
         DemoRegistration demoRegistration2 = new DemoRegistration();
@@ -112,6 +189,15 @@ public class ModelTest {
         Assert.assertTrue(demoEffect1.equalData(new DemoEffect(demoRegistration2, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))));
         Assert.assertFalse(demoEffect1.equalData(new DemoEffect(demoRegistration2, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), OffsetDateTime.parse("2017-06-05T09:00:16+02:00"))));
         Assert.assertFalse(demoEffect1.equalData(new DemoEffect(demoRegistration2, OffsetDateTime.parse("2017-06-02T16:00:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))));
+        Assert.assertFalse(demoEffect1.equalData(new DemoEffect(demoRegistration1, null, OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))));
+        Assert.assertFalse(demoEffect1.equalData(new DemoEffect(demoRegistration1, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), null)));
+
+        DemoEffect demoEffect3 = new DemoEffect();
+        DemoRegistration demoRegistration3 = new DemoRegistration();
+        Assert.assertFalse(demoEffect3.equalData(new DemoEffect(demoRegistration3, OffsetDateTime.parse("2017-06-02T16:00:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))));
+        Assert.assertFalse(demoEffect3.equalData(new DemoEffect(demoRegistration3, null, OffsetDateTime.parse("2017-06-05T08:00:16+02:00"))));
+        Assert.assertFalse(demoEffect3.equalData(new DemoEffect(demoRegistration3, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), null)));
+        Assert.assertTrue(demoEffect3.equalData(new DemoEffect()));
 
         // Test getRegistration
         Assert.assertEquals(demoRegistration1, demoEffect1.getRegistration());
