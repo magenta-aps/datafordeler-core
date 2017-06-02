@@ -30,36 +30,6 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
         return cls.getAnnotation(Table.class).name();
     }
 
-    /**
-     * This member should not be saved to the database; rather, the plugin should populate it,
-     * and the engine should then turn that data into a real Effect reference
-     */
-    @JsonIgnore
-    protected OffsetDateTime effectFrom;
-
-    public OffsetDateTime getEffectFrom() {
-        return effectFrom;
-    }
-
-    public void setEffectFrom(OffsetDateTime effectFrom) {
-        this.effectFrom = effectFrom;
-    }
-
-    /**
-     * This member should not be saved to the database; rather, the plugin should populate it,
-     * and the engine should then turn that data into a real Effect reference
-     */
-    @JsonIgnore
-    protected OffsetDateTime effectTo;
-
-    public OffsetDateTime getEffectTo() {
-        return effectTo;
-    }
-
-    public void setEffectTo(OffsetDateTime effectTo) {
-        this.effectTo = effectTo;
-    }
-
 
     /**
      * Compares this object with another DataItem
@@ -98,7 +68,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
         s.add(indentString + this.getClass().getSimpleName() + "["+this.hashCode()+"] {");
 
         Map<String, Object> map = this.asMap();
-        for (String key : map.keySet()) {
+        for (String key : new TreeSet<>(map.keySet())) {
             s.add(subIndentString + key + ": " + map.get(key));
         }
 
@@ -113,18 +83,4 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
     public void updateReferences(HashMap<String, Identification> references) {
     }
 
-    /*public Set<Identification> getReferences() {
-        HashSet<Identification> references = new HashSet<>();
-        for (Field field : this.getClass().getDeclaredFields()) {
-            if (field.getType() == Identification.class) {
-                try {
-                    references.add((Identification) field.get(this));
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        System.out.println("references size: "+references.size());
-        return references;
-    }*/
 }
