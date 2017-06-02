@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Query object specifying a search, with basic filter parameters
+ * Subclasses should specify further searchable parameters, annotated with @QueryField.
+ * SOAP clients should pass a serialized instance of a Query class to the SOAP interface
  * Created by lars on 19-04-17.
  */
 public abstract class Query {
@@ -27,21 +30,44 @@ public abstract class Query {
     public Query() {
     }
 
+    /**
+     * Create a basic Query, filtering on page and pageSize (akin to offset & limit)
+     * @param page
+     * @param pageSize
+     */
     public Query(int page, int pageSize) {
         this.setPage(page);
         this.setPageSize(pageSize);
     }
 
+    /**
+     * Create a basic Query, filtering on page and pageSize (akin to offset & limit), as well as output filtering
+     * (Found entities will only include registrations that fall within the registrationTime limits)
+     * @param page
+     * @param pageSize
+     */
     public Query(int page, int pageSize, OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
         this(page, pageSize);
         this.registrationFrom = registrationFrom;
         this.registrationTo = registrationTo;
     }
 
+    /**
+     * Create a basic Query, filtering on page and pageSize (akin to offset & limit). This is the String parameter version; the parameters will be parsed as integers.
+     * @param page
+     * @param pageSize
+     */
     public Query(String page, String pageSize) {
         this(intFromString(page, 0), intFromString(pageSize, 10), null, null);
     }
 
+    /**
+     * Create a basic Query, filtering on page and pageSize (akin to offset & limit), as well as output filtering
+     * (Found entities will only include registrations that fall within the registrationTime limits)
+     * This is the String parameter version; the parameters will be parsed as integers and OffsetDateTimes
+     * @param page
+     * @param pageSize
+     */
     public Query(String page, String pageSize, String registrationFrom, String registrationTo) {
         this(intFromString(page, 0), intFromString(pageSize, 10), parseDateTime(registrationFrom), parseDateTime(registrationTo));
     }
@@ -140,9 +166,21 @@ public abstract class Query {
 
     public abstract void setFromParameters(ListHashMap<String, String> parameters);
 
+    /**
+     * Convenience method for parsing a String as an integer, without throwing a parseexception
+     * @param s String holding integer to be parsed
+     * @return Parse result, or null if unparseable
+     */
     public static Integer intFromString(String s) {
         return Query.intFromString(s, null);
     }
+
+    /**
+     * Convenience method for parsing a String as an integer, without throwing a parseexception
+     * @param s String holding integer to be parsed
+     * @param def Fallback value if string is unparseable
+     * @return Parse result, or def if unparseable
+     */
     public static Integer intFromString(String s, Integer def) {
         if (s == null) {
             return def;
@@ -154,9 +192,21 @@ public abstract class Query {
         }
     }
 
+    /**
+     * Convenience method for parsing a String as a boolean
+     * @param s String holding boolean to be parsed ("1", "true", "yes", "0", "false", "no")
+     * @return Parse result, or null if neither of the above are found
+     */
     public static Boolean booleanFromString(String s) {
         return Query.booleanFromString(s, null);
     }
+
+    /**
+     * Convenience method for parsing a String as a boolean
+     * @param s String holding boolean to be parsed ("1", "true", "yes", "0", "false", "no")
+     * @param def Fallback value if string doesn't match
+     * @return Parse result, or def if neither of the above are found
+     */
     public static Boolean booleanFromString(String s, Boolean def) {
         if (s != null) {
             s = s.toLowerCase();
@@ -193,7 +243,24 @@ public abstract class Query {
             DateTimeFormatter.BASIC_ISO_DATE
     };
 
-    protected static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
+    /**
+     * Convenience method for parsing a String as an OffsetDateTime
+     * A series of parsers will attempt to parse the input string, returning on the first success.
+     * The Parsers, in order, are:
+     *   DateTimeFormatter.ISO_OFFSET_DATE_TIME
+     *   DateTimeFormatter.ISO_ZONED_DATE_TIME
+     *   DateTimeFormatter.ISO_INSTANT
+     *   DateTimeFormatter.RFC_1123_DATE_TIME
+     *   DateTimeFormatter.ISO_OFFSET_DATE
+     *   DateTimeFormatter.ISO_DATE_TIME
+     *   DateTimeFormatter.ISO_LOCAL_DATE_TIME
+     *   DateTimeFormatter.ISO_DATE
+     *   DateTimeFormatter.BASIC_ISO_DATE
+     * @param dateTime
+     * @return Parsed OffsetDateTime, or null if input was null
+     * @throws DateTimeParseException if no parser succeeded on a non-null input string
+     */
+    public static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
         if (dateTime != null) {
             for (DateTimeFormatter formatter : zonedDateTimeFormatters) {
                 try {
@@ -227,16 +294,27 @@ public abstract class Query {
         return null;
     }
 
+    /**
+     * Subclasses should return the EntityClass that the Query class pertains to
+     * @return
+     */
     public abstract Class<? extends Entity> getEntityClass();
 
-    public Field getField(String key) throws NoSuchFieldException {
+    /**
+     * Returns a Field for database query building
+     * Subclass fields are exposed in this manner, so the database query manager can inspect them and cast search fields based on their annotations
+     * @param fieldName A valid field (class member) name on the Query subclass
+     * @return
+     * @throws NoSuchFieldException
+     */
+    public Field getField(String fieldName) throws NoSuchFieldException {
         for (Class cls = this.getClass(); cls != null; cls = cls.getSuperclass()) {
             try {
-                return cls.getDeclaredField(key);
+                return cls.getDeclaredField(fieldName);
             } catch (NoSuchFieldException e) {
             }
         }
-        throw new NoSuchFieldException(key);
+        throw new NoSuchFieldException(fieldName);
     }
 
 }
