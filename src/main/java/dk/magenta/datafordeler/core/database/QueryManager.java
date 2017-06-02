@@ -180,17 +180,24 @@ public class QueryManager {
      * @return
      */
     public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) {
-        this.log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content maching DataItem "+similar.asMap());
+        this.log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         StringJoiner s = new StringJoiner(" and ");
         Map<String, Object> similarMap = similar.asMap();
         for (String key : similarMap.keySet()) {
-            s.add("d."+key+"=:"+key);
+            if (similarMap.get(key) == null) {
+                s.add("d."+key+" is null");
+            } else {
+                s.add("d." + key + "=:" + key);
+            }
         }
         String entityIdKey = "E" + UUID.randomUUID().toString().replace("-", "");
         org.hibernate.query.Query<D> query = session.createQuery("select d from " + entity.getClass().getName() + " e join e.registrations r join r.effects v join v.dataItems d where e.id = :"+entityIdKey+" and "+ s.toString(), dClass);
         query.setParameter(entityIdKey, entity.getId());
         for (String key : similarMap.keySet()) {
-            query.setParameter(key, similarMap.get(key));
+            Object value = similarMap.get(key);
+            if (value != null) {
+                query.setParameter(key, similarMap.get(key));
+            }
         }
         this.logQuery(query);
         return query.list();
