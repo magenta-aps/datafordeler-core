@@ -29,6 +29,65 @@ import java.util.UUID;
 public class ModelTest {
 
     @Test
+    public void testEntity() {
+
+        DemoEntity demoEntity1 = new DemoEntity();
+        Identification identification1 = new Identification(UUID.randomUUID(), "test");
+        demoEntity1.setIdentification(identification1);
+
+        // Test getIdentification
+        Assert.assertEquals(identification1, demoEntity1.getIdentification());
+
+        // Test getDomain
+        Assert.assertEquals(identification1.getDomain(), demoEntity1.getDomain());
+
+        // Test getUUID
+        Assert.assertEquals(identification1.getUuid(), demoEntity1.getUUID());
+
+
+        Identification identification2 = new Identification(UUID.randomUUID(), "test");
+        DemoEntity demoEntity2 = new DemoEntity(identification2);
+
+        // Test getIdentification
+        Assert.assertEquals(identification2, demoEntity2.getIdentification());
+
+        // Test getDomain
+        Assert.assertEquals(identification2.getDomain(), demoEntity2.getDomain());
+
+        // Test getUUID
+        Assert.assertEquals(identification2.getUuid(), demoEntity2.getUUID());
+
+
+        UUID uuid3 = UUID.randomUUID();
+        String domain3 = "test";
+        DemoEntity demoEntity3 = new DemoEntity(uuid3, domain3);
+
+        // Test getDomain
+        Assert.assertEquals(domain3, demoEntity3.getDomain());
+
+        // Test getUUID
+        Assert.assertEquals(uuid3, demoEntity3.getUUID());
+
+        UUID uuid4 = UUID.randomUUID();
+        String domain4 = "demo";
+        DemoEntity demoEntity4 = demoEntity3;
+        demoEntity4.setDomain(domain4);
+        demoEntity4.setUUID(uuid4);
+
+        // Test getDomain
+        Assert.assertEquals(domain4, demoEntity4.getDomain());
+
+        // Test getUUID
+        Assert.assertEquals(uuid4, demoEntity4.getUUID());
+
+        // Test getRegistrations
+        DemoRegistration demoRegistration = new DemoRegistration();
+        demoEntity1.addRegistration(demoRegistration);
+        Assert.assertEquals(1, demoEntity1.getRegistrations().size());
+        Assert.assertEquals(demoRegistration, demoEntity1.getRegistrations().get(0));
+    }
+
+    @Test
     public void testEffect() {
         DemoRegistration demoRegistration1 = new DemoRegistration();
         DemoRegistration demoRegistration2 = new DemoRegistration();

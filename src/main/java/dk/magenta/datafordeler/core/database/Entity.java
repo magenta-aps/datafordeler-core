@@ -21,10 +21,6 @@ import java.util.*;
 @Embeddable
 public abstract class Entity<E extends Entity, R extends Registration> extends DatabaseEntry {
 
-    public static String getSchema() {
-        return "Entity";
-    }
-
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonIgnore
     @XmlTransient
