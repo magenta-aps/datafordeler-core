@@ -11,7 +11,6 @@ import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -135,6 +134,7 @@ public class ModelTest {
                 "            to: 2017-06-05T08:00:16+02:00\n" +
                 "            data: [\n" +
                 "                DemoData["+demoData1.hashCode()+"] {\n" +
+                "                    aktiv: true\n" +
                 "                    bynavn: Århus C\n" +
                 "                    postnr: 8000\n" +
                 "                    reference: null\n" +
@@ -154,6 +154,7 @@ public class ModelTest {
                 "                    to: 2017-06-05T08:00:16+02:00\n" +
                 "                    data: [\n" +
                 "                        DemoData["+demoData1.hashCode()+"] {\n" +
+                "                            aktiv: true\n" +
                 "                            bynavn: Århus C\n" +
                 "                            postnr: 8000\n" +
                 "                            reference: null\n" +
@@ -214,6 +215,7 @@ public class ModelTest {
                 "    to: 2017-06-05T08:00:16+02:00\n" +
                 "    data: [\n" +
                 "        DemoData["+demoData1.hashCode()+"] {\n" +
+                "            aktiv: true\n" +
                 "            bynavn: Århus C\n" +
                 "            postnr: 8000\n" +
                 "            reference: null\n" +
@@ -225,6 +227,7 @@ public class ModelTest {
                 "            to: 2017-06-05T08:00:16+02:00\n" +
                 "            data: [\n" +
                 "                DemoData["+demoData1.hashCode()+"] {\n" +
+                "                    aktiv: true\n" +
                 "                    bynavn: Århus C\n" +
                 "                    postnr: 8000\n" +
                 "                    reference: null\n" +
@@ -237,7 +240,7 @@ public class ModelTest {
         Assert.assertEquals("Århus C", data.get("bynavn"));
         Assert.assertEquals(8000, data.get("postnr"));
         Assert.assertEquals(null, data.get("reference"));
-        Assert.assertEquals(3, data.keySet().size());
+        Assert.assertEquals(4, data.keySet().size());
     }
 
     @Test
@@ -258,11 +261,13 @@ public class ModelTest {
 
         // Test toString
         Assert.assertEquals("DemoData["+demoData1.hashCode()+"] {\n" +
+                "    aktiv: true\n" +
                 "    bynavn: Århus C\n" +
                 "    postnr: 8000\n" +
                 "    reference: null\n" +
                 "}", demoData1.toString());
         Assert.assertEquals("        DemoData["+demoData1.hashCode()+"] {\n" +
+                "            aktiv: true\n" +
                 "            bynavn: Århus C\n" +
                 "            postnr: 8000\n" +
                 "            reference: null\n" +

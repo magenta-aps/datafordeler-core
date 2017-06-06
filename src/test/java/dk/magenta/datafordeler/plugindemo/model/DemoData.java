@@ -29,6 +29,10 @@ public class DemoData extends DataItem<DemoEffect, DemoData> {
     @JsonProperty("bynavn")
     private String bynavn;
 
+    @Column
+    @JsonProperty("aktiv")
+    private boolean aktiv = true;
+
     @ManyToOne(optional = true, fetch = FetchType.EAGER)
     private Identification reference;
 
@@ -51,11 +55,17 @@ public class DemoData extends DataItem<DemoEffect, DemoData> {
         return bynavn;
     }
 
+    @XmlElement(name="aktiv")
+    public boolean getAktiv() {
+        return aktiv;
+    }
+
     @Override
     public Map<String, Object> asMap() {
         HashMap<String, Object> map = new HashMap<>();
         map.put("postnr", this.postnr);
         map.put("bynavn", this.bynavn);
+        map.put("aktiv", this.aktiv);
         map.put("reference", this.reference);
         return map;
     }
