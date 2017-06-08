@@ -247,14 +247,9 @@ public abstract class EntityManager {
         } catch (HttpStatusException e) {
             throw new FailedReferenceException(reference, e);
         }
-
-        try {
-            return this.parseRegistration(
-                registrationData
-            );
-        } finally {
-            registrationData.close();
-        }
+        return this.parseRegistration(
+            registrationData
+        );
     }
 
 
@@ -269,6 +264,7 @@ public abstract class EntityManager {
 
     /**
      * Parse the response contents into Checksum instances
+     * Must close the responseContent InputStream when done parsing
      * @param responseContent
      * @return Stream of Checksum instances for further processing
      */
@@ -284,15 +280,7 @@ public abstract class EntityManager {
         this.getLog().info("Listing register checksums (" + (fromDate == null ? "ALL" : "since "+fromDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) + ")");
         URI checksumInterface = this.getListChecksumInterface(fromDate);
         InputStream responseBody = this.getRegisterManager().getChecksumFetcher().fetch(checksumInterface);
-        try {
-            return this.parseChecksumResponse(responseBody);
-        } finally {
-            try {
-                responseBody.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        return this.parseChecksumResponse(responseBody);
     }
 
     public List<? extends EntityReference> listLocalChecksums(OffsetDateTime fromDate) throws DataFordelerException {
