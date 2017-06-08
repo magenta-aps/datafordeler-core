@@ -89,6 +89,10 @@ public class ItemInputStream<T> extends ObjectInputStream {
                             objectOutputStream.close();
                         } catch (IOException e) {
                         }
+                        try {
+                            jsonStream.close();
+                        } catch (IOException e) {
+                        }
                     }
                 }
             });
@@ -159,6 +163,10 @@ public class ItemInputStream<T> extends ObjectInputStream {
                     } finally {
                         try {
                             objectOutputStream.close();
+                        } catch (IOException e) {
+                        }
+                        try {
+                            jsonStream.close();
                         } catch (IOException e) {
                         }
                     }

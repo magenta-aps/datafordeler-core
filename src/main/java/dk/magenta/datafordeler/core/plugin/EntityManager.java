@@ -235,7 +235,7 @@ public abstract class EntityManager {
      * @throws IOException
      * @throws FailedReferenceException
      */
-    public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException, DataStreamException, ParseException {
+    public Registration fetchRegistration(RegistrationReference reference) throws IOException, ParseException, WrongSubclassException, DataStreamException, FailedReferenceException {
         this.getLog().info("Fetching registration from reference "+reference.getURI());
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
@@ -264,6 +264,7 @@ public abstract class EntityManager {
 
     /**
      * Parse the response contents into Checksum instances
+     * Must close the responseContent InputStream when done parsing
      * @param responseContent
      * @return Stream of Checksum instances for further processing
      */

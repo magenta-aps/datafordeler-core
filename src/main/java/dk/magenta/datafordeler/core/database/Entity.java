@@ -11,7 +11,6 @@ import javax.persistence.CascadeType;
 import javax.persistence.OrderBy;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.lang.reflect.ParameterizedType;
 import java.util.*;
 
 /**

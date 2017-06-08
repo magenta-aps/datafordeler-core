@@ -133,6 +133,18 @@
             <artifactId>httpclient</artifactId>
             <version>4.4</version>
         </dependency>
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ftpserver</groupId>
+            <artifactId>ftpserver</artifactId>
+            <version>1.1.1</version>
+            <scope>test</scope>
+            <type>pom</type>
+        </dependency>
 
         <!-- Apache commons (logging) -->
         <dependency>
