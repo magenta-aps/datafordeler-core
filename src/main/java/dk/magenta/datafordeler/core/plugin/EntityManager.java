@@ -235,7 +235,7 @@ public abstract class EntityManager {
      * @throws IOException
      * @throws FailedReferenceException
      */
-    public Registration fetchRegistration(RegistrationReference reference) throws WrongSubclassException, IOException, FailedReferenceException, DataStreamException, ParseException {
+    public Registration fetchRegistration(RegistrationReference reference) throws IOException, ParseException, WrongSubclassException, DataStreamException, FailedReferenceException {
         this.getLog().info("Fetching registration from reference "+reference.getURI());
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
@@ -247,9 +247,14 @@ public abstract class EntityManager {
         } catch (HttpStatusException e) {
             throw new FailedReferenceException(reference, e);
         }
-        return this.parseRegistration(
-            registrationData
-        );
+
+        try {
+            return this.parseRegistration(
+                registrationData
+            );
+        } finally {
+            registrationData.close();
+        }
     }
 
 
@@ -279,7 +284,15 @@ public abstract class EntityManager {
         this.getLog().info("Listing register checksums (" + (fromDate == null ? "ALL" : "since "+fromDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) + ")");
         URI checksumInterface = this.getListChecksumInterface(fromDate);
         InputStream responseBody = this.getRegisterManager().getChecksumFetcher().fetch(checksumInterface);
-        return this.parseChecksumResponse(responseBody);
+        try {
+            return this.parseChecksumResponse(responseBody);
+        } finally {
+            try {
+                responseBody.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public List<? extends EntityReference> listLocalChecksums(OffsetDateTime fromDate) throws DataFordelerException {
