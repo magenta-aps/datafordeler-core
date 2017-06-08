@@ -143,6 +143,7 @@
             <artifactId>ftpserver</artifactId>
             <version>1.1.1</version>
             <scope>test</scope>
+            <type>pom</type>
         </dependency>
 
         <!-- Apache commons (logging) -->
