@@ -62,9 +62,12 @@ public class FtpCommunicatorTest {
         future.get(10, TimeUnit.SECONDS);
         executorService.shutdownNow();
         this.stopServer();
+        tempFile.delete();
     }
 
-    private FtpServer server;
+    private FtpServer server = null;
+    private File usersFile = null;
+    private File tempDir = null;
 
     public void startServer(String username, String password, int port, List<File> files) throws Exception {
         /**
@@ -85,8 +88,8 @@ public class FtpCommunicatorTest {
 
         serverFactory.addListener("default", factory.createListener());
         PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
-        File usersFile = File.createTempFile("ftpusers", ".properties");
-        userManagerFactory.setFile(usersFile);//choose any. We're telling the FTP-server where to read it's user list
+        this.usersFile = File.createTempFile("ftpusers", ".properties");
+        userManagerFactory.setFile(this.usersFile);//choose any. We're telling the FTP-server where to read it's user list
         userManagerFactory.setPasswordEncryptor(new PasswordEncryptor() {//We store clear-text passwords in this example
             @Override
             public String encrypt(String password) {
@@ -102,14 +105,14 @@ public class FtpCommunicatorTest {
         user.setName(username);
         user.setPassword(password);
 
-        File tempDir = Files.createTempDirectory(null, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxrwxrwx"))).toFile();
+        this.tempDir = Files.createTempDirectory(null, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxrwxrwx"))).toFile();
 
         for (File sourcefile : files) {
-            File destFile = new File(tempDir, sourcefile.getName());
+            File destFile = new File(this.tempDir, sourcefile.getName());
             FileUtils.copyFile(sourcefile, destFile);
         }
 
-        user.setHomeDirectory(tempDir.toString());
+        user.setHomeDirectory(this.tempDir.toString());
         List<Authority> authorities = new ArrayList<>();
         authorities.add(new WritePermission());
         user.setAuthorities(authorities);
@@ -131,6 +134,12 @@ public class FtpCommunicatorTest {
         if (this.server != null) {
             this.server.stop();
             this.server = null;
+        }
+        if (this.usersFile != null) {
+            this.usersFile.delete();
+        }
+        if (this.tempDir != null) {
+            this.tempDir.delete();
         }
     }
 }
