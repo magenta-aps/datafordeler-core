@@ -101,7 +101,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
     public E getRest(@PathParam(value = "id") String id, @Context UriInfo uriInfo) {
-        this.log.info("Incoming REST request for item "+id);
+        this.log.info("Incoming REST request for item "+id); // TODO: add user from request
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
         Q query = this.getQuery(parameters, true);
         try {
@@ -126,11 +126,12 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public E getSoap(@WebParam(name="id") @XmlElement(required=true) String id,
                      @WebParam(name="registerFrom") @XmlElement(required = false) String registerFrom,
                      @WebParam(name="registerTo") @XmlElement(required = false) String registerTo) {
-        this.log.info("Incoming SOAP request for item "+id);
+        this.log.info("Incoming SOAP request for item "+id); // TODO: add user from request
         Q query = this.getQuery(registerFrom, registerTo);
         try {
             E entity = this.searchById(id, query);
             this.log.debug("Item found, returning");
+            this.log.info("registrations: "+entity.getRegistrations());
             return entity;
         } catch (IllegalArgumentException e) {
             throw new InvalidClientInputException(e.getMessage());
@@ -163,7 +164,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(exclude = true)
     public Collection<E> searchRest(@Context UriInfo uriInfo) throws DataFordelerException {
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
-        this.log.info("Incoming REST request, searching for parameters "+parameters.toString());
+        this.log.info("Incoming REST request, searching for parameters "+parameters.toString()); // TODO: add user from request
         Set<E> results = this.searchByQuery(this.getQuery(parameters, false));
         this.log.info(results.size() + " items found, returning");
         return results;
@@ -177,7 +178,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      */
     @WebMethod(operationName = "search")
     public List<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
-        this.log.info("Incoming SOAP request, searching for query "+query.toString());
+        this.log.info("Incoming SOAP request, searching for query "+query.toString()); // TODO: add user from request
         Set<E> results = this.searchByQuery(query);
         this.log.info(results.size() + " items found, returning");
         return new ArrayList<>(results);
