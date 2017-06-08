@@ -19,7 +19,7 @@ title "Inside docker"
 
 # Setup the project
 # Example:
-#   title "Seeting up project"
+#   title "Setting up project"
 #   virtualenv ~/venv/
 #   source ~/venv/bin/activate
 #   pip install -r requirements.txt
