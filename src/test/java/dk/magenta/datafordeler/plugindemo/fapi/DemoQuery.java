@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Created by lars on 19-04-17.
  */
-public class DemoQuery extends Query {
+public class DemoQuery extends Query<DemoEntity> {
 
     public static final String POSTNR = "postnr";
     public static final String BYNAVN = "bynavn";
@@ -74,7 +74,7 @@ public class DemoQuery extends Query {
     }
 
     @Override
-    public Class<? extends Entity> getEntityClass() {
+    public Class<DemoEntity> getEntityClass() {
         return DemoEntity.class;
     }
 }

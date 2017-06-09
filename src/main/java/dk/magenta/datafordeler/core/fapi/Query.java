@@ -18,7 +18,7 @@ import java.util.Map;
  * SOAP clients should pass a serialized instance of a Query class to the SOAP interface
  * Created by lars on 19-04-17.
  */
-public abstract class Query {
+public abstract class Query<E extends Entity> {
 
     protected int page = 1;
     protected int pageSize = 10;
@@ -298,7 +298,7 @@ public abstract class Query {
      * Subclasses should return the EntityClass that the Query class pertains to
      * @return
      */
-    public abstract Class<? extends Entity> getEntityClass();
+    public abstract Class<E> getEntityClass();
 
     /**
      * Returns a Field for database query building

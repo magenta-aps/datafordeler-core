@@ -23,7 +23,7 @@ import java.util.Map;
 @ContextConfiguration(classes = AppConfig.class)
 public class QueryTest {
 
-    private class QueryImpl extends Query {
+    private class QueryImpl extends Query<Entity> {
 
         public QueryImpl() {
             super();
@@ -43,7 +43,7 @@ public class QueryTest {
         }
 
         @Override
-        public Class<? extends Entity> getEntityClass() {
+        public Class<Entity> getEntityClass() {
             return Entity.class;
         }
     }
