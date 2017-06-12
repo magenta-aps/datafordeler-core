@@ -1,7 +1,7 @@
 package dk.magenta.datafordeler.core.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.AppConfig;
+import dk.magenta.datafordeler.core.TestConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +18,7 @@ import java.util.HashMap;
  * Created by lars on 05-05-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = AppConfig.class)
+@ContextConfiguration(classes = TestConfig.class)
 public class ItemInputStreamTest {
 
     @Autowired

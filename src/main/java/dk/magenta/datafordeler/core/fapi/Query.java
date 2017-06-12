@@ -1,15 +1,12 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.database.Entity;
-import dk.magenta.datafordeler.core.util.ListHashMap;
 
-import javax.ws.rs.core.MultivaluedMap;
 import java.lang.reflect.Field;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -164,7 +161,7 @@ public abstract class Query<E extends Entity> {
 
     public abstract Map<String, Object> getSearchParameters();
 
-    public abstract void setFromParameters(ListHashMap<String, String> parameters);
+    public abstract void setFromParameters(ParameterMap parameters);
 
     /**
      * Convenience method for parsing a String as an integer, without throwing a parseexception

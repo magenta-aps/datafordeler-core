@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.AppConfig;
+import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
@@ -41,7 +41,7 @@ import java.util.UUID;
  * Created by lars on 15-05-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, classes = AppConfig.class)
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, classes = TestConfig.class)
 public class EntityManagerTest extends PluginTestBase {
 
     @Autowired
@@ -78,7 +78,7 @@ public class EntityManagerTest extends PluginTestBase {
         ExpectorCallback receiptResponder = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/receipt", "response body", receiptResponder);
         try {
-            entityManager.setBaseEndpoint(new URI("http", null, "localhost", AppConfig.servicePort, "/test", null, null));
+            entityManager.setBaseEndpoint(new URI("http", null, "localhost", TestConfig.servicePort, "/test", null, null));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -99,7 +99,7 @@ public class EntityManagerTest extends PluginTestBase {
 
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
-        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", AppConfig.servicePort, "/test/get/"+checksum, null, null));
+        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", TestConfig.servicePort, "/test/get/"+checksum, null, null));
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
@@ -123,7 +123,7 @@ public class EntityManagerTest extends PluginTestBase {
 
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
-        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", AppConfig.servicePort, "/test/get/"+checksum, null, null));
+        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", TestConfig.servicePort, "/test/get/"+checksum, null, null));
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
@@ -168,7 +168,7 @@ public class EntityManagerTest extends PluginTestBase {
 
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
-        RegistrationReference reference = new OtherRegistrationReference(new URI("http",null, "localhost", AppConfig.servicePort, "/test/get/"+checksum, null, null));
+        RegistrationReference reference = new OtherRegistrationReference(new URI("http",null, "localhost", TestConfig.servicePort, "/test/get/"+checksum, null, null));
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template

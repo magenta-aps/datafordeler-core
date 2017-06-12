@@ -8,7 +8,6 @@ import dk.magenta.datafordeler.core.role.ReadServiceRoleVersion;
 import dk.magenta.datafordeler.core.role.SystemRole;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

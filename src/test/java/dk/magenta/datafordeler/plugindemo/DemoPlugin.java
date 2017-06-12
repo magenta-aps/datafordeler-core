@@ -39,6 +39,10 @@ public class DemoPlugin extends Plugin {
         return this.demoRegisterManager;
     }
 
+    /**
+     * Run bean initialization
+     * Couple DemoEntityManager to DemoRegisterManager
+     */
     @PostConstruct
     public void init() {
         this.demoRegisterManager.addEntityManager(this.demoEntityManager);

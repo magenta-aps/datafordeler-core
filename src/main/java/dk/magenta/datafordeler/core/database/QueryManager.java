@@ -11,6 +11,7 @@ import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
+import java.awt.image.renderable.ParameterBlock;
 import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -182,7 +183,8 @@ public class QueryManager {
     public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) {
         this.log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         StringJoiner s = new StringJoiner(" and ");
-        Map<String, Object> similarMap = similar.asMap();
+        Map<String, Object> similarMap = similar.databaseFields();
+
         for (String key : similarMap.keySet()) {
             if (similarMap.get(key) == null) {
                 s.add("d."+key+" is null");
@@ -191,7 +193,12 @@ public class QueryManager {
             }
         }
         String entityIdKey = "E" + UUID.randomUUID().toString().replace("-", "");
-        org.hibernate.query.Query<D> query = session.createQuery("select d from " + entity.getClass().getName() + " e join e.registrations r join r.effects v join v.dataItems d where e.id = :"+entityIdKey+" and "+ s.toString(), dClass);
+        System.out.println(s.toString());
+        // org.hibernate.query.Query<D> query = session.createQuery("select d from " + entity.getClass().getName() + " e join e.registrations r join r.effects v join v.dataItems d where e.id = :"+entityIdKey+" and "+ s.toString(), dClass);
+        org.hibernate.query.Query<D> query = session.createQuery("select d from " + dClass.getSimpleName() + " d join d.effects e join e.registration v join v.entity e where e.id = :"+entityIdKey+" and "+ s.toString(), dClass);
+
+        System.out.println(query.getQueryString());
+
         query.setParameter(entityIdKey, entity.getId());
         for (String key : similarMap.keySet()) {
             Object value = similarMap.get(key);
@@ -200,7 +207,9 @@ public class QueryManager {
             }
         }
         this.logQuery(query);
-        return query.list();
+        List<D> results = query.list();
+        System.out.println("-----------------------------------------------");
+        return results;
     }
 
     /**

@@ -82,7 +82,9 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     public void addRegistration(R registration) {
-        this.registrations.add(registration);
+        if (!this.registrations.contains(registration)) {
+            this.registrations.add(registration);
+        }
     }
 
     public void setIdentification(Identification identification) {

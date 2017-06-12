@@ -13,7 +13,7 @@ public abstract class DatabaseEntry {
 
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.TABLE)
     @JsonIgnore
     private Long id;
 

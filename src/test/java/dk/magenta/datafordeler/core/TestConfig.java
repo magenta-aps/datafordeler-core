@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
@@ -16,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan(basePackages = "dk.magenta.datafordeler")
 @ServletComponentScan
 @SpringBootApplication
-public class AppConfig {
+public class TestConfig {
 
     public static final int servicePort = 8445;
 

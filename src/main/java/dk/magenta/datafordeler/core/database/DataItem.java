@@ -30,6 +30,9 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
         return cls.getAnnotation(Table.class).name();
     }
 
+    @ManyToMany(mappedBy = "dataItems")
+    private Set<V> effects = new HashSet<V>();
+
 
     /**
      * Compares this object with another DataItem
@@ -42,11 +45,19 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
 
     /**
      * Obtain contained data as a Map
-     * Internally used for comparing and pretty-printing DataItems
+     * Used for serializing DataItems merged into one wrapper
      * @return Map of all relevant attributes
      */
     public abstract Map<String, Object> asMap();
 
+    /**
+     * Obtain contained data as a Map
+     * Internally used for comparing DataItems
+     * @return Map of all relevant attributes
+     */
+    public Map<String, Object> databaseFields() {
+        return this.asMap();
+    }
 
     /**
      * Pretty-print contained data

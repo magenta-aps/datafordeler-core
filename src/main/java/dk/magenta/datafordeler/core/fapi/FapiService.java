@@ -15,6 +15,8 @@ import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.ws.rs.GET;
@@ -114,7 +116,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Path("{id}")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    public E getRest(@PathParam(value = "id") String id, @Context UriInfo uriInfo, @DafoUser DafoUserDetails user)
+    public E getRest(@PathParam(value = "id") String id, @Context UriInfo uriInfo, @RequestParam(required = false) @DafoUser DafoUserDetails user)
         throws AccessDeniedException, AccessRequiredException {
         this.log.info("Incoming REST request for item "+id); // TODO: add user from request
         this.checkAccess(user);
@@ -179,7 +181,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Path("search")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    public Collection<E> searchRest(@Context UriInfo uriInfo, @DafoUser DafoUserDetails user) throws DataFordelerException {
+    public Collection<E> searchRest(@Context UriInfo uriInfo, @RequestParam(required = false) @DafoUser DafoUserDetails user) throws DataFordelerException {
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
         this.log.info("Incoming REST request, searching for parameters "+parameters.toString()); // TODO: add user from request
         this.checkAccess(user);
@@ -219,7 +221,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected Q getQuery(MultivaluedMap<String, String> parameters, boolean limitsOnly) {
         Q query = this.getEmptyQuery();
         if (!limitsOnly) {
-            query.setFromParameters(new ListHashMap<String, String>(parameters));
+            query.setFromParameters(new ParameterMap(parameters));
         }
         query.setPage(parameters.getFirst(PARAM_PAGE));
         query.setPageSize(parameters.getFirst(PARAM_PAGESIZE));
