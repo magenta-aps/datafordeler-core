@@ -6,7 +6,7 @@ package dk.magenta.datafordeler.core.role;
 public class ReadAttributeRole extends SystemRole {
   private String attributeName;
 
-  protected ReadAttributeRole(
+  public ReadAttributeRole(
       String attributeName, ReadEntityRole parent, ReadAttributeRoleVersion... versions
 
   ) {

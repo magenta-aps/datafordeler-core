@@ -6,6 +6,6 @@ package dk.magenta.datafordeler.core.role;
 public enum SystemRoleGrant {
   Read, // Read objects
   Write, // Write, create or delete objects
-  Admin, // Grant other users access to objects
+  Grant, // Grant other users access to objects
   Custom
 }

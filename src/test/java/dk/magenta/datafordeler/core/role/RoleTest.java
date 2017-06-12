@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.role;
 import dk.magenta.datafordeler.core.AppConfig;
 import dk.magenta.datafordeler.plugindemo.DemoPlugin;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -17,7 +18,11 @@ public class RoleTest {
 
     @Test
     public void testEqual() {
-        SystemRole role = new SystemRole();
-    }
+        SystemRole role = new ReadServiceRole(
+            "MyService",
+            new ReadServiceRoleVersion(0.1f, "For testing only")
+        );
 
+        Assert.assertEquals("ReadMyService", role.getRoleName());
+    }
 }

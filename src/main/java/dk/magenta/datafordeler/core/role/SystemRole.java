@@ -65,4 +65,24 @@ public abstract class SystemRole {
   public String getRoleName() {
     return this.getGrantType() + this.getTargetName();
   };
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof SystemRole)) {
+      return false;
+    }
+
+    SystemRole that = (SystemRole) o;
+
+    // Roles are represented by their name, so equals should just match those
+    return this.getRoleName().equals(that.getRoleName());
+  }
+
+  public boolean equals(String that) {
+    return this.getRoleName().equals(that);
+  }
+
 }

@@ -7,7 +7,7 @@ public class ReadEntityRole extends SystemRole{
 
   private String entityName;
 
-  protected ReadEntityRole(
+  public ReadEntityRole(
       String entityName, ReadServiceRole parent, ReadEntityRoleVersion... versions
   ) {
     super(SystemRoleType.EntityRole, SystemRoleGrant.Read, parent, versions);
