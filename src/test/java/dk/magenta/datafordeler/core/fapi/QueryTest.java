@@ -1,8 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
-import dk.magenta.datafordeler.core.AppConfig;
+import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.database.Entity;
-import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -20,7 +19,7 @@ import java.util.Map;
  * Created by lars on 05-05-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = AppConfig.class)
+@ContextConfiguration(classes = TestConfig.class)
 public class QueryTest {
 
     private class QueryImpl extends Query<Entity> {
@@ -39,7 +38,7 @@ public class QueryTest {
         }
 
         @Override
-        public void setFromParameters(ListHashMap<String, String> parameters) {
+        public void setFromParameters(ParameterMap parameters) {
         }
 
         @Override

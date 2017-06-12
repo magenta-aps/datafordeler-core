@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan(basePackages = "dk.magenta.datafordeler")
 @ServletComponentScan
 @SpringBootApplication
-public class AppConfig {
+public class TestConfig {
 
     public static final int servicePort = 8445;
 

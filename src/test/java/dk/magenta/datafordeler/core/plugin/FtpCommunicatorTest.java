@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.AppConfig;
+import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.ftpserver.FtpServer;
@@ -30,7 +30,7 @@ import java.util.concurrent.*;
  * Created by lars on 08-06-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = AppConfig.class)
+@ContextConfiguration(classes = TestConfig.class)
 public class FtpCommunicatorTest {
 
     @Test

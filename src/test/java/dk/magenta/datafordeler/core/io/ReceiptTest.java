@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.io;
 
-import dk.magenta.datafordeler.core.AppConfig;
+import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,7 +15,7 @@ import java.util.UUID;
  * Created by lars on 05-05-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = AppConfig.class)
+@ContextConfiguration(classes = TestConfig.class)
 public class ReceiptTest {
 
     private static final String errorcode = "receipttest";

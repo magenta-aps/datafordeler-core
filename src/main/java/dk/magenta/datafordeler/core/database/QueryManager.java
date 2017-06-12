@@ -183,7 +183,7 @@ public class QueryManager {
     public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) {
         this.log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         StringJoiner s = new StringJoiner(" and ");
-        Map<String, Object> similarMap = similar.asMap();
+        Map<String, Object> similarMap = similar.databaseFields();
 
         for (String key : similarMap.keySet()) {
             if (similarMap.get(key) == null) {

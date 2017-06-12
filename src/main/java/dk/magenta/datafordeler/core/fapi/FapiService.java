@@ -200,7 +200,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected Q getQuery(MultivaluedMap<String, String> parameters, boolean limitsOnly) {
         Q query = this.getEmptyQuery();
         if (!limitsOnly) {
-            query.setFromParameters(new ListHashMap<String, String>(parameters));
+            query.setFromParameters(new ParameterMap(parameters));
         }
         query.setPage(parameters.getFirst(PARAM_PAGE));
         query.setPageSize(parameters.getFirst(PARAM_PAGESIZE));

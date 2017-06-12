@@ -1,9 +1,8 @@
 package dk.magenta.datafordeler.plugindemo.fapi;
 
-import dk.magenta.datafordeler.core.database.Entity;
+import dk.magenta.datafordeler.core.fapi.ParameterMap;
 import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.fapi.QueryField;
-import dk.magenta.datafordeler.core.util.ListHashMap;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 
 import java.util.HashMap;
@@ -67,7 +66,7 @@ public class DemoQuery extends Query<DemoEntity> {
     }
 
     @Override
-    public void setFromParameters(ListHashMap<String, String> listHashMap) {
+    public void setFromParameters(ParameterMap listHashMap) {
         this.setPostnr(listHashMap.get(POSTNR, 0));
         this.setBynavn(listHashMap.get(BYNAVN, 0));
         this.setAktiv(listHashMap.get(AKTIV, 0));

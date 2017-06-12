@@ -20,6 +20,10 @@ public class DemoConfigurationManager extends ConfigurationManager<DemoConfigura
 
     private Logger log = LogManager.getLogger("DemoConfigurationManager");
 
+    /**
+     * Run bean initialization
+     * Load configuration from database
+     */
     @PostConstruct
     public void init() {
         // Very important to call init() on ConfigurationManager, or the config will not be loaded

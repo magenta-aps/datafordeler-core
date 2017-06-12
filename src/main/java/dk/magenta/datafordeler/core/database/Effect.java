@@ -113,7 +113,8 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return cls.getAnnotation(Table.class).name();
     }
 
-    @XmlElementWrapper(name="data")
+    @JsonProperty(value = "data")
+    @XmlElementWrapper(name = "data")
     public Map<String, Object> getData() {
         HashMap<String, Object> data = new HashMap<>();
         for (DataItem d : this.dataItems) {
