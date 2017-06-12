@@ -30,6 +30,9 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
         return cls.getAnnotation(Table.class).name();
     }
 
+    @ManyToMany(mappedBy = "dataItems")
+    private Set<V> effects = new HashSet<V>();
+
 
     /**
      * Compares this object with another DataItem

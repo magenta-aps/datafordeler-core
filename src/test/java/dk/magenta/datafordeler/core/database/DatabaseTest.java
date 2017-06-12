@@ -158,6 +158,7 @@ public class DatabaseTest {
 
         demoDataItem = (DemoData) session.merge(demoDataItem);
         List<DemoData> results = queryManager.getDataItems(session, demoEntity, demoDataItem, DemoData.class);
+        System.out.println(results);
         Assert.assertTrue(results.contains(demoDataItem));
         List<DemoData> results1 = queryManager.getDataItems(session, demoEntity, new DemoData(8000, "Århus"), DemoData.class);
         Assert.assertTrue(results1.contains(demoDataItem));
