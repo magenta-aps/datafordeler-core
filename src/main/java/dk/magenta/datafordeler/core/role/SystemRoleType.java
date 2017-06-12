@@ -9,9 +9,5 @@ public enum SystemRoleType {
   /* A role that gives access to all data for a specific entity, eg. a Person */
   EntityRole,
   /* A role that gives access to a specific attribute on an entity, eg. the Cpr-nr on a Person */
-  AttributeRole,
-  /* A role that allows assigning access to another role */
-  AdminRole,
-  /* A role with a custom, register-specific meaning */
-  CustomRole
+  AttributeRole
 }
