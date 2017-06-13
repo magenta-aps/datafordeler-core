@@ -11,6 +11,7 @@ import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import javax.servlet.http.HttpServletRequest;
+import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.hibernate.Filter;
@@ -55,6 +56,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     @Autowired
     private DafoUserManager dafoUserManager;
+
+    @Context
+    private MessageContext context;
 
     private Logger log = LogManager.getLogger("FapiService");
 
@@ -121,10 +125,10 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Path("{id}")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    public E getRest(@PathParam(value = "id") String id, @Context UriInfo uriInfo, HttpServletRequest request)
+    public E getRest(@PathParam(value = "id") String id, @Context UriInfo uriInfo)
         throws AccessDeniedException, AccessRequiredException {
         this.log.info("Incoming REST request for item "+id); // TODO: add user from request
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
         this.checkAccess(user);
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
         Q query = this.getQuery(parameters, true);
@@ -187,10 +191,10 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Path("search")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    public Collection<E> searchRest(@Context UriInfo uriInfo, HttpServletRequest request) throws DataFordelerException {
+    public Collection<E> searchRest(@Context UriInfo uriInfo) throws DataFordelerException {
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
         this.log.info("Incoming REST request, searching for parameters "+parameters.toString()); // TODO: add user from request
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
         this.checkAccess(user);
         Set<E> results = this.searchByQuery(this.getQuery(parameters, false));
         this.log.info(results.size() + " items found, returning");
