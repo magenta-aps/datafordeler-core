@@ -7,11 +7,11 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 /**
  * Created by jubk on 12-06-2017.
  */
-public class DafoUserDetails {
+public abstract class DafoUserDetails {
 
-  public boolean hasSystemRole(String role) {
-    throw new NotImplementedException();
-  }
+  public abstract boolean hasSystemRole(String role);
+
+  public abstract boolean isAnonymous();
 
   public boolean hasSystemRole(SystemRole role) {
     return hasSystemRole(role.getRoleName());
