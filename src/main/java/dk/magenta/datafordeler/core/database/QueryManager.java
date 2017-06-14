@@ -11,7 +11,6 @@ import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
-import java.awt.image.renderable.ParameterBlock;
 import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +31,7 @@ public class QueryManager {
      * @return
      */
     public Identification getIdentification(Session session, UUID uuid) {
-        this.log.info("Get Identification from UUID " + uuid.toString());
+        this.log.info("Get Identification from UUID " + uuid);
         org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
         databaseQuery.setParameter("uuid", uuid);
         this.logQuery(databaseQuery);
@@ -141,7 +140,7 @@ public class QueryManager {
      * @return
      */
     public <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
-        this.log.info("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid.toString());
+        this.log.info("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid);
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select e from " + eClass.getName() + " e join e.identification i where i.uuid = :uuid", eClass);
         databaseQuery.setParameter("uuid", uuid);
         this.logQuery(databaseQuery);
@@ -182,29 +181,21 @@ public class QueryManager {
      */
     public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) {
         this.log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
-        StringJoiner s = new StringJoiner(" and ");
-        Map<String, Object> similarMap = similar.databaseFields();
+        LookupDefinition lookupDefinition = similar.getLookupDefinition();
+        String root = "d";
+        String extraJoin = lookupDefinition.getHqlJoinString(root);
+        String extraWhere = lookupDefinition.getHqlWhereString(root);
 
-        for (String key : similarMap.keySet()) {
-            if (similarMap.get(key) == null) {
-                s.add("d."+key+" is null");
-            } else {
-                s.add("d." + key + "=:" + key);
-            }
-        }
         String entityIdKey = "E" + UUID.randomUUID().toString().replace("-", "");
-        System.out.println(s.toString());
-        // org.hibernate.query.Query<D> query = session.createQuery("select d from " + entity.getClass().getName() + " e join e.registrations r join r.effects v join v.dataItems d where e.id = :"+entityIdKey+" and "+ s.toString(), dClass);
-        org.hibernate.query.Query<D> query = session.createQuery("select d from " + dClass.getSimpleName() + " d join d.effects e join e.registration v join v.entity e where e.id = :"+entityIdKey+" and "+ s.toString(), dClass);
+        System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.registration r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
+        org.hibernate.query.Query<D> query = session.createQuery("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.registration r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere, dClass);
 
         System.out.println(query.getQueryString());
 
         query.setParameter(entityIdKey, entity.getId());
-        for (String key : similarMap.keySet()) {
-            Object value = similarMap.get(key);
-            if (value != null) {
-                query.setParameter(key, similarMap.get(key));
-            }
+        HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root);
+        for (String key : extraParameters.keySet()) {
+            query.setParameter(key, extraParameters.get(key));
         }
         this.logQuery(query);
         List<D> results = query.list();

@@ -18,6 +18,7 @@ import java.util.*;
  */
 @MappedSuperclass
 @Embeddable
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class Entity<E extends Entity, R extends Registration> extends DatabaseEntry {
 
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -28,14 +29,14 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
     @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null")
     @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO)
-    protected List<R> registrations;
+    protected Set<R> registrations;
 
     @Transient
     @JsonIgnore
     private Query filter = null;
 
     public Entity() {
-        this.registrations = new ArrayList<R>();
+        this.registrations = new HashSet<R>();
         this.identification = new Identification();
     }
 
@@ -77,14 +78,12 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @XmlElement(name="registration")
     @JacksonXmlProperty(localName = "registration")
     @JacksonXmlElementWrapper(useWrapping = false)
-    public List<R> getRegistrations() {
+    public Set<R> getRegistrations() {
         return this.registrations;
     }
 
     public void addRegistration(R registration) {
-        if (!this.registrations.contains(registration)) {
-            this.registrations.add(registration);
-        }
+        this.registrations.add(registration);
     }
 
     public void setIdentification(Identification identification) {

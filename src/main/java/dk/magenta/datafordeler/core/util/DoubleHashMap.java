@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.util;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A utility class for storing values by two keys (like a table)
@@ -35,6 +36,20 @@ public class DoubleHashMap<K, S, V> extends HashMap<K, HashMap<S, V>> {
             super.put(key, subMap);
         }
         subMap.put(subKey, value);
+    }
+
+    /**
+     * Inserts a value in the table, by the specified keys
+     * @param key Primary key
+     * @param map map of values to insert
+     */
+    public void putAll(K key, Map<S, V> map) {
+        HashMap<S, V> subMap = super.get(key);
+        if (subMap == null) {
+            subMap = new HashMap<S, V>();
+            super.put(key, subMap);
+        }
+        subMap.putAll(map);
     }
 
     /**

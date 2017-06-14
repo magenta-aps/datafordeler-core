@@ -7,7 +7,10 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * Query object specifying a search, with basic filter parameters
@@ -312,6 +315,25 @@ public abstract class Query<E extends Entity> {
             }
         }
         throw new NoSuchFieldException(fieldName);
+    }
+
+    protected String getSubtable(String key) {
+        return null;
+    }
+
+    protected Set<String> getSubtables() {
+        return null;
+    }
+
+    public String getJoins(String root) {
+        StringJoiner s = new StringJoiner(" join ");
+        Set<String> subtables = this.getSubtables();
+        if (subtables != null) {
+            for (String table : this.getSubtables()) {
+                s.add(root + "." + table + " as " + root + "_" + table);
+            }
+        }
+        return s.toString();
     }
 
 }

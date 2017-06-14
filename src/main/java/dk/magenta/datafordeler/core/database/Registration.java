@@ -21,6 +21,7 @@ import java.util.*;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @FilterDef(name=Registration.FILTER_REGISTRATION_FROM, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_FROM, type="java.time.OffsetDateTime"))
 @FilterDef(name=Registration.FILTER_REGISTRATION_TO, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_TO, type="java.time.OffsetDateTime"))
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)

@@ -83,7 +83,7 @@ public class ModelTest {
         DemoRegistration demoRegistration = new DemoRegistration();
         demoEntity1.addRegistration(demoRegistration);
         Assert.assertEquals(1, demoEntity1.getRegistrations().size());
-        Assert.assertEquals(demoRegistration, demoEntity1.getRegistrations().get(0));
+        Assert.assertEquals(demoRegistration, demoEntity1.getRegistrations().iterator().next());
     }
 
     @Test

@@ -13,6 +13,8 @@ import java.util.*;
  * Created by lars on 20-02-17.
  */
 @MappedSuperclass
+@Embeddable
+// @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class DataItem<V extends Effect, D extends DataItem> extends DatabaseEntry {
 
     public DataItem() {
@@ -92,6 +94,10 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
     }
 
     public void updateReferences(HashMap<String, Identification> references) {
+    }
+
+    public LookupDefinition getLookupDefinition() {
+        return new LookupDefinition(this.databaseFields());
     }
 
 }
