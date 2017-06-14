@@ -151,6 +151,27 @@ public class QueryManager {
         }
     }
 
+    public <T extends DatabaseEntry> List<T> getItems(Session session, Class<T> tClass, Map<String, Object> filter) {
+        StringJoiner whereJoiner = new StringJoiner(" and ");
+        for (String key : filter.keySet()) {
+            whereJoiner.add("t."+key+" = :"+key);
+        }
+        org.hibernate.query.Query<T> databaseQuery = session.createQuery("select t from " + tClass.getName() + " t where " + whereJoiner.toString(), tClass);
+        for (String key : filter.keySet()) {
+            databaseQuery.setParameter(key, filter.get(key));
+        }
+        return databaseQuery.getResultList();
+    }
+
+    public <T extends DatabaseEntry> T getItem(Session session, Class<T> tClass, Map<String, Object> filter) {
+        List<T> items = this.getItems(session, tClass, filter);
+        if (!items.isEmpty()) {
+            return items.get(0);
+        } else {
+            return null;
+        }
+    }
+
     /**
      * Get Effects for a specific class, matching a start and end time
      * @param session Database session to work from
