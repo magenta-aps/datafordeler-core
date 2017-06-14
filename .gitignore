@@ -16,4 +16,4 @@ hs_err_pid*
 *.iml
 
 # compile results
-target/
+/target/

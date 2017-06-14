@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.role;
 
+import org.junit.Assert;
 import dk.magenta.datafordeler.core.TestConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,7 +16,11 @@ public class RoleTest {
 
     @Test
     public void testEqual() {
-        SystemRole role = new SystemRole();
-    }
+        SystemRole role = new ReadServiceRole(
+            "MyService",
+            new ReadServiceRoleVersion(0.1f, "For testing only")
+        );
 
+        Assert.assertEquals("ReadMyService", role.getRoleName());
+    }
 }

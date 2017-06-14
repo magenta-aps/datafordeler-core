@@ -1,7 +1,11 @@
 package dk.magenta.datafordeler.plugindemo.fapi.helloworld.v1;
 
+import dk.magenta.datafordeler.core.exception.AccessDeniedException;
+import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.user.DafoUserDetails;
+import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
 import dk.magenta.datafordeler.plugindemo.fapi.DemoQuery;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import org.hibernate.Session;
@@ -43,8 +47,22 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
         return new DemoQuery();
     }
 
+    @Override
+    protected void checkAccess(DafoUserDetails user)
+        throws AccessDeniedException, AccessRequiredException {
+        if(user == null) {
+            throw new AccessRequiredException(
+                "You must provide a DAFO token to use this service"
+            );
+        }
+
+        // Check that user has access to the service and to the necessary entity
+        user.checkHasSystemRole(DemoRolesDefinition.READ_SERVICE_ROLE);
+        user.checkHasSystemRole(DemoRolesDefinition.READ_DEMO_ENTITY_ROLE);
+    }
+
     @WebMethod(exclude = true) // Non-soap methods must have this
-    protected Set<DemoEntity> searchByQuery(DemoQuery query) {
+    protected Set<DemoEntity> searchByQuery(DemoQuery query) throws AccessDeniedException {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         this.applyQuery(session, query);
         Set<DemoEntity> entities = null;
