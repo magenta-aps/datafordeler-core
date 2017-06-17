@@ -202,7 +202,9 @@ public abstract class EntityManager {
         return this.parseRegistration(this.getObjectMapper().readTree(registrationData));
     }
 
-    public abstract Registration parseRegistration(JsonNode registrationData) throws ParseException;
+    public Registration parseRegistration(JsonNode registrationData) throws ParseException {
+        return null;
+    }
 
 
 

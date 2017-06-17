@@ -2,6 +2,8 @@ package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
@@ -95,12 +97,26 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return this.effectTo;
     }
 
-
-    @JsonProperty(value = "dataItems", access = JsonProperty.Access.WRITE_ONLY)
-    @JacksonXmlProperty(localName = "dataItem")
-    @JacksonXmlElementWrapper(useWrapping = false)
+    @JsonIgnore
     public List<D> getDataItems() {
         return new ArrayList(this.dataItems);
+    }
+
+    @JsonProperty(value = "dataItems")
+    @XmlElementWrapper(name = "dataItems")
+    public Map<String, Object> getData() {
+        HashMap<String, Object> data = new HashMap<>();
+        for (DataItem d : this.dataItems) {
+            data.putAll(d.asMap());
+        }
+        return data;
+    }
+
+    @JsonProperty(value = "dataItems"/*, access = JsonProperty.Access.READ_ONLY*/)
+    @JacksonXmlProperty(localName = "dataItem")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    public void setDataItems(Collection<D> items) {
+        this.dataItems.addAll(items);
     }
 
     public boolean equalData(V other) {
@@ -112,16 +128,6 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public static String getTableName(Class<? extends Effect> cls) {
         return cls.getAnnotation(Table.class).name();
-    }
-
-    @JsonProperty(value = "data")
-    @XmlElementWrapper(name = "data")
-    public Map<String, Object> getData() {
-        HashMap<String, Object> data = new HashMap<>();
-        for (DataItem d : this.dataItems) {
-            data.putAll(d.asMap());
-        }
-        return data;
     }
 
     /**
