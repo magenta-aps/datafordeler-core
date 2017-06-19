@@ -6,6 +6,7 @@ import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
+import dk.magenta.datafordeler.core.exception.InvalidTokenException;
 import dk.magenta.datafordeler.core.stereotypes.DafoUser;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
@@ -126,7 +127,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
     public E getRest(@PathParam(value = "id") String id, @Context UriInfo uriInfo)
-        throws AccessDeniedException, AccessRequiredException {
+        throws AccessDeniedException, AccessRequiredException, InvalidTokenException {
         this.log.info("Incoming REST request for item "+id); // TODO: add user from request
         DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
         this.checkAccess(user);

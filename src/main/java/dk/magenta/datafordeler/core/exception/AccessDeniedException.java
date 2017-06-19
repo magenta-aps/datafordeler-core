@@ -1,15 +1,17 @@
 package dk.magenta.datafordeler.core.exception;
 
+import org.springframework.http.HttpStatus;
+
 /**
- * Created by jubk on 12-06-2017.
+ * An exception class that tells the user that they have been denied access to a resource due
+ * to missing permissions.
  */
-public class AccessDeniedException extends DataFordelerException {
+public class AccessDeniedException extends HttpStatusResponseException {
 
   public AccessDeniedException(String message) {
-    super(message);
+    super(message, HttpStatus.FORBIDDEN);
   }
 
-  @Override
   public String getCode() {
     return "datafordeler.accessdenied";
   }
