@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.database.Entity;
+import dk.magenta.datafordeler.core.database.LookupDefinition;
 
 import java.lang.reflect.Field;
 import java.time.*;
@@ -164,6 +165,10 @@ public abstract class Query<E extends Entity> {
 
     public abstract Map<String, Object> getSearchParameters();
 
+    public LookupDefinition getLookupDefinition() {
+        return new LookupDefinition(this.getSearchParameters(), this);
+    }
+
     public abstract void setFromParameters(ParameterMap parameters);
 
     /**
@@ -299,6 +304,13 @@ public abstract class Query<E extends Entity> {
      * @return
      */
     public abstract Class<E> getEntityClass();
+
+
+    /**
+     * Subclasses should return the base Data class that the Query class pertains to
+     * @return
+     */
+    public abstract Class getDataClass();
 
     /**
      * Returns a Field for database query building
