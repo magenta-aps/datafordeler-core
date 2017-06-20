@@ -11,6 +11,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.StringJoiner;
 
@@ -34,7 +35,7 @@ public class FtpCommunicator implements Communicator {
     }
 
     @Override
-    public CloseDetectInputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
+    public InputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
         FTPClient ftpClient = this.useFtps ? new FTPSClient(true) : new FTPClient();
         String host = uri.getHost();
         int port = uri.getPort() != -1 ? uri.getPort() : 21;
@@ -44,7 +45,8 @@ public class FtpCommunicator implements Communicator {
             this.checkServerReply(ftpClient, "FTP server "+host+":"+port+" rejected connection");
             ftpClient.login(this.username, this.password);
             this.checkServerReply(ftpClient, "FTP server "+host+":"+port+" rejected login for user " + this.username);
-            data = new CloseDetectInputStream(ftpClient.retrieveFileStream(uri.getPath()));
+            InputStream inputStream = ftpClient.retrieveFileStream(uri.getPath());
+            data = new CloseDetectInputStream(inputStream);
             data.addAfterCloseListener(new Runnable() {
                 @Override
                 public void run() {
@@ -57,7 +59,7 @@ public class FtpCommunicator implements Communicator {
                 }
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new DataStreamException(e);
         }
         return data;
     }

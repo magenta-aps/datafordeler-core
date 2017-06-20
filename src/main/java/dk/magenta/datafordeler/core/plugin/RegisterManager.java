@@ -10,6 +10,7 @@ import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.util.UriUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -111,7 +112,10 @@ public abstract class RegisterManager {
     protected abstract URI getEventInterface();
 
     public ItemInputStream<Event> pullEvents() throws DataFordelerException {
-        URI eventInterface = this.getEventInterface();
+        return this.pullEvents(this.getEventInterface());
+    }
+
+    public ItemInputStream<Event> pullEvents(URI eventInterface) throws DataFordelerException {
         this.getLog().info("Pulling events from "+eventInterface);
         Communicator eventCommunicator = this.getEventFetcher();
         InputStream responseBody = eventCommunicator.fetch(eventInterface);

@@ -87,9 +87,6 @@ public class DemoRegisterManager extends RegisterManager {
 
     @Override
     protected ItemInputStream<Event> parseEventResponse(InputStream responseContent) throws DataFordelerException {
-        if (this.log.isDebugEnabled()) {
-            responseContent = this.printStream(responseContent); // Just for printing, can be omitted
-        }
         return super.parseEventResponse(responseContent);
     }
 
@@ -145,4 +142,5 @@ public class DemoRegisterManager extends RegisterManager {
         }
         return input;
     }
+
 }
