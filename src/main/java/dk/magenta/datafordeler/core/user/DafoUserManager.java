@@ -26,7 +26,7 @@ public class DafoUserManager {
     if(authHeader != null && authHeader.indexOf("SAML ") == 0) {
       Assertion samlAssertion = tokenParser.parseAssertion(authHeader.substring(5));
       tokenVerifier.verifyAssertion(samlAssertion);
-      return new SamlDafoUserDetails("");
+      return new SamlDafoUserDetails(samlAssertion);
     }
     // Fall back to an anonymous user
     return new AnonymousDafoUserDetails();

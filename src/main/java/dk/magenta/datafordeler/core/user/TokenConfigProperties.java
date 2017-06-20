@@ -11,7 +11,9 @@ public class TokenConfigProperties {
 
   private long maxAssertionTimeInSeconds = 60 * 60;
 
-  private static String issuerMetadataPath = null;
+  private String issuerMetadataPath = null;
+
+  private String audienceURI = "https://data.gl/";
 
   public int getTimeSkewInSeconds() {
     return timeSkewInSeconds;
@@ -29,11 +31,19 @@ public class TokenConfigProperties {
     this.maxAssertionTimeInSeconds = maxAssertionTimeInSeconds;
   }
 
-  public static String getIssuerMetadataPath() {
+  public String getIssuerMetadataPath() {
     return issuerMetadataPath;
   }
 
-  public static void setIssuerMetadataPath(String issuerMetadataPath) {
-    TokenConfigProperties.issuerMetadataPath = issuerMetadataPath;
+  public void setIssuerMetadataPath(String issuerMetadataPath) {
+    this.issuerMetadataPath = issuerMetadataPath;
+  }
+
+  public String getAudienceURI() {
+    return audienceURI;
+  }
+
+  public void setAudienceURI(String audienceURI) {
+    this.audienceURI = audienceURI;
   }
 }

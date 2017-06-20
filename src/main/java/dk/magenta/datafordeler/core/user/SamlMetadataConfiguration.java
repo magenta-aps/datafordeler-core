@@ -1,10 +1,8 @@
 package dk.magenta.datafordeler.core.user;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import org.opensaml.Configuration;
 import org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProvider;
@@ -13,7 +11,6 @@ import org.opensaml.security.MetadataCredentialResolver;
 import org.opensaml.util.resource.ClasspathResource;
 import org.opensaml.util.resource.ResourceException;
 import org.opensaml.xml.parse.BasicParserPool;
-import org.opensaml.xml.parse.ParserPool;
 import org.opensaml.xml.security.keyinfo.KeyInfoCredentialResolver;
 import org.opensaml.xml.signature.impl.ExplicitKeySignatureTrustEngine;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -32,7 +29,7 @@ public class SamlMetadataConfiguration {
     String path = config.getIssuerMetadataPath();
     if(path == null) {
       // TODO: Log warning about using the default issuer metadata
-      ClasspathResource issuerXmlResource = new ClasspathResource("/saml/dafo-idp.xml");
+      ClasspathResource issuerXmlResource = new ClasspathResource("/saml/sts_metadata.xml");
       path = new URI(issuerXmlResource.getLocation()).getPath();
     }
     FilesystemMetadataProvider provider = new FilesystemMetadataProvider(new File(path));

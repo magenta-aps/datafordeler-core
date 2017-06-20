@@ -1,41 +1,33 @@
 package dk.magenta.datafordeler.core.user;
 
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
-import java.io.File;
-import java.util.Timer;
-import javax.persistence.criteria.CriteriaBuilder.In;
 import org.joda.time.DateTime;
-import org.opensaml.Configuration;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.Assertion;
+import org.opensaml.saml2.core.Audience;
+import org.opensaml.saml2.core.AudienceRestriction;
+import org.opensaml.saml2.core.Conditions;
 import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.NameIDType;
+import org.opensaml.saml2.core.Subject;
+import org.opensaml.saml2.core.SubjectConfirmationData;
 import org.opensaml.saml2.metadata.EntityDescriptor;
 import org.opensaml.saml2.metadata.IDPSSODescriptor;
-import org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProviderException;
-import org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider;
-import org.opensaml.security.MetadataCredentialResolver;
 import org.opensaml.security.MetadataCriteria;
 import org.opensaml.security.SAMLSignatureProfileValidator;
-import org.opensaml.util.resource.ClasspathResource;
-import org.opensaml.util.resource.ResourceException;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.security.CriteriaSet;
 import org.opensaml.xml.security.SecurityException;
 import org.opensaml.xml.security.credential.UsageType;
 import org.opensaml.xml.security.criteria.EntityIDCriteria;
 import org.opensaml.xml.security.criteria.UsageCriteria;
-import org.opensaml.xml.security.keyinfo.KeyInfoCredentialResolver;
 import org.opensaml.xml.security.trust.TrustEngine;
 import org.opensaml.xml.signature.Signature;
-import org.opensaml.xml.signature.impl.ExplicitKeySignatureTrustEngine;
 import org.opensaml.xml.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -51,6 +43,24 @@ public class TokenVerifier {
   private TrustEngine trustEngine;
   @Autowired
   private TokenConfigProperties config;
+
+  private String cachedIssuerCert;
+
+  private String getCachedIssuerCert() throws InvalidTokenException {
+    if(cachedIssuerCert == null) {
+      try {
+        cachedIssuerCert = getIssuerEntityDescriptor().getIDPSSODescriptor(
+            "urn:oasis:names:tc:SAML:2.0:protocol"
+        ).getKeyDescriptors().get(0).getKeyInfo().getX509Datas().get(0).getX509Certificates()
+            .get(0).getValue().replaceAll("\\s+", "");
+      } catch(Exception e) {
+        throw new InvalidTokenException(
+            "Could not get signature certificate from token: " + e.getMessage(), e
+        );
+      }
+    }
+    return cachedIssuerCert;
+  }
 
   public TokenVerifier() throws ConfigurationException {
     // Initialize OpenSAML
@@ -78,14 +88,28 @@ public class TokenVerifier {
       throw new InvalidTokenException("Wrong issuer type: " + issuer.getFormat());
     }
     // Validate that issuer is expected peer entity
-    String entityid1 = getIssuerEntityDescriptor().getEntityID();
-    String entityId2 = issuer.getValue();
     if (!issuer.getValue().equals(getIssuerEntityDescriptor().getEntityID())) {
       throw new InvalidTokenException("Invalid issuer: " + issuer.getValue());
     }
   }
 
-  public void verifySignature(Signature signature) throws InvalidTokenException {
+  public void verifySignatureAndTrust(Signature signature) throws InvalidTokenException {
+    // Verify that the certificate used to sign the token is the one we associate with our
+    // trusted issuer.
+    String signatureCert;
+    try {
+      signatureCert = signature.getKeyInfo().getX509Datas().get(0).getX509Certificates()
+          .get(0).getValue().replaceAll("\\s+", "");
+    } catch(Exception e) {
+      throw new InvalidTokenException(
+          "Could not get signature certificate from token: " + e.getMessage(), e
+      );
+    }
+    if(!signatureCert.equals(getCachedIssuerCert())) {
+      throw new InvalidTokenException("Untrusted certificate used to sign token");
+    }
+
+
     // Validate the actual signing is correct
     SAMLSignatureProfileValidator validator = new SAMLSignatureProfileValidator();
 
@@ -131,16 +155,96 @@ public class TokenVerifier {
     }
   }
 
+  public boolean checkNotBefore(DateTime time) {
+    return !time.minusSeconds(config.getTimeSkewInSeconds()).isAfterNow();
+  }
+
+  public boolean checkNotOnOrafter(DateTime time) {
+    return !time.plusSeconds(config.getTimeSkewInSeconds()).isBeforeNow();
+  }
+
+  public void verifySubject(Subject subject) {
+    // TODO: Full BEARER validation? Would require recipient in the token
+    if(subject == null) {
+      throw new InvalidTokenException("No subject specified in token");
+    }
+    if(subject.getNameID() == null) {
+      throw new InvalidTokenException("No NameID specified in token subject");
+    }
+    // We expect there to be a single SubjectConfirmationData so we fetch that
+    SubjectConfirmationData subjectConfirmationData;
+    try {
+      subjectConfirmationData = subject.getSubjectConfirmations().get(0)
+          .getSubjectConfirmationData();
+    }
+    catch(Exception e) {
+      throw new InvalidTokenException(
+          "Unable to get SubjectConfirmationData from token: " + e.getMessage(), e
+      );
+    }
+    // Check the timestamps on the SubjectConfirmationData
+    DateTime notBefore = subjectConfirmationData.getNotBefore();
+    if(notBefore != null && !checkNotBefore(notBefore)) {
+      throw new InvalidTokenException("Failed NotBefore constraint on SubjectConfirmationData");
+    }
+    DateTime notOnOrAfter = subjectConfirmationData.getNotOnOrAfter();
+    if(notOnOrAfter == null) {
+      throw new InvalidTokenException("NotOnOrAfter not specified for SubjectConfirmationData");
+    } else {
+      if(!checkNotOnOrafter(notOnOrAfter)) {
+        throw new InvalidTokenException(
+            "Failed NotOnOrAfter constraint on SubjectConfirmationData"
+        );
+      }
+    }
+  }
+
+
+  public void verifyConditions(Conditions conditions) {
+    DateTime notBefore = conditions.getNotBefore();
+    if(notBefore == null) {
+      throw new InvalidTokenException("NotBefore not defined on Conditions");
+    } else {
+      if(!checkNotBefore(notBefore)) {
+        throw new InvalidTokenException("Failed NotBefore contraint on Conditions");
+      }
+    }
+    DateTime notOnOrAfter = conditions.getNotOnOrAfter();
+    if(notOnOrAfter == null) {
+      throw new InvalidTokenException("NotOnOrAfter not defined on Conditions");
+    } else {
+      if(!checkNotOnOrafter(notOnOrAfter)) {
+        throw new InvalidTokenException("Failed NotOnOrAfter constraint on Conditions");
+      }
+    }
+
+    AudienceRestriction audienceRestriction;
+    try {
+      audienceRestriction = conditions.getAudienceRestrictions().get(0);
+    }
+    catch(Exception e) {
+      throw new InvalidTokenException("No AudienceRestriction in token");
+    }
+    boolean found = false;
+    for(Audience audience:audienceRestriction.getAudiences()) {
+      if(audience.getAudienceURI().equals(config.getAudienceURI())) {
+        found = true;
+        break;
+      }
+    }
+    if(!found) {
+      throw new InvalidTokenException(
+          "Expected AudienceURI, " +  config.getAudienceURI() + ", was not found in the token"
+      );
+    }
+  }
 
   public void verifyAssertion(Assertion assertion) throws InvalidTokenException {
     verifyTokenAge(assertion.getIssueInstant());
     verifyIssuer(assertion.getIssuer());
-    verifySignature(assertion.getSignature());
-
-
-    // TODO: Validate expiration
-    // TODO: Validate signature
-    // TODO: Validate subject
+    verifySubject(assertion.getSubject());
+    verifyConditions(assertion.getConditions());
+    verifySignatureAndTrust(assertion.getSignature());
   }
 
 }
