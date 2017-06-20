@@ -29,14 +29,15 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
     @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null")
     @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO)
-    protected Set<R> registrations;
+    @OrderBy("sequenceNumber")
+    protected List<R> registrations;
 
     @Transient
     @JsonIgnore
     private Query filter = null;
 
     public Entity() {
-        this.registrations = new HashSet<R>();
+        this.registrations = new ArrayList<R>();
         this.identification = new Identification();
     }
 
@@ -78,7 +79,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @XmlElement(name="registration")
     @JacksonXmlProperty(localName = "registration")
     @JacksonXmlElementWrapper(useWrapping = false)
-    public Set<R> getRegistrations() {
+    public List<R> getRegistrations() {
         return this.registrations;
     }
 
