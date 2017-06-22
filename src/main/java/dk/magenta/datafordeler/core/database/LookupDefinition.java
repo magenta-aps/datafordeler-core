@@ -52,25 +52,32 @@ public class LookupDefinition extends HashMap<String, Object> {
     }
 
     public String getHqlJoinString(String root, boolean withPrefix) {
-        StringJoiner s = new StringJoiner(" JOIN ");
+        HashMap<String, String> joinTables = new HashMap<>();
         for (String key : this.keySet()) {
+            System.out.println("joinString key: "+key);
             if (key.contains(separator)) {
                 String[] parts = key.split(quotedSeparator);
                 if (parts[0].equals(entityref)) {
                     root = QueryManager.ENTITY;
                     parts = Arrays.copyOfRange(parts, 1, parts.length);
                 }
+                System.out.println("joinString parts: "+Arrays.asList(parts));
                 String lastPart = root;
                 StringBuilder fullParts = new StringBuilder(root);
                 for (int i = 0; i<parts.length - 1; i++) {
                     String part = parts[i];
-                    s.add(lastPart + "." + part + " " + fullParts + "_" + part);
+                    joinTables.put(lastPart + "." + part, fullParts + "_" + part);
+                    //s.add(lastPart + "." + part + " " + fullParts + "_" + part);
                     lastPart = root + "_" + part;
                     fullParts.append("_").append(part);
                 }
             }
         }
-        if (s.length() > 0) {
+        if (!joinTables.isEmpty()) {
+            StringJoiner s = new StringJoiner(" JOIN ");
+            for (String table : joinTables.keySet()) {
+                s.add(table + " " + joinTables.get(table));
+            }
             return "JOIN " + s.toString();
         }
         return "";
