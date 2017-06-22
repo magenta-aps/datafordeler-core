@@ -11,6 +11,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.OrderBy;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -60,6 +61,10 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.identification.getUuid();
     }
 
+    public void setIdentification(Identification identification) {
+        this.identification = identification;
+    }
+
     @JsonProperty("uuid")
     public void setUUID(UUID uuid) {
         this.identification.setUuid(uuid);
@@ -84,11 +89,32 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     public void addRegistration(R registration) {
-        this.registrations.add(registration);
+        if (!this.registrations.contains(registration)) {
+            this.registrations.add(registration);
+        }
     }
 
-    public void setIdentification(Identification identification) {
-        this.identification = identification;
+    public R getRegistration(OffsetDateTime registrationFrom) {
+        System.out.println("Looking for registration at "+registrationFrom);
+        for (R registration : this.registrations) {
+            System.out.println("    Testing registration "+registration.getRegistrationFrom());
+            if (registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) {
+                System.out.println("    match");
+                return registration;
+            }
+            System.out.println("    no match");
+        }
+        return null;
+    }
+
+    public R getRegistration(OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
+        for (R registration : this.registrations) {
+            if ((registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) &&
+                    (registration.getRegistrationTo() == null ? registrationTo == null : registration.getRegistrationTo().equals(registrationTo))) {
+                return registration;
+            }
+        }
+        return null;
     }
 
 }

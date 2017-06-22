@@ -51,8 +51,7 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public Effect(R registration, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         this();
-        this.registration = registration;
-        registration.effects.add(this);
+        this.setRegistration(registration);
         this.effectFrom = effectFrom;
         this.effectTo = effectTo;
     }
@@ -80,6 +79,13 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public R getRegistration() {
         return this.registration;
+    }
+
+    protected void setRegistration(R registration) {
+        if (registration != null) {
+            this.registration = registration;
+            registration.effects.add(this);
+        }
     }
 
     @JsonProperty
