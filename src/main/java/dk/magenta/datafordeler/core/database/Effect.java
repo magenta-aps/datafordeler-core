@@ -39,7 +39,7 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     protected Set<D> dataItems;
 
-    @Column(nullable = false, insertable = true, updatable = false)
+    @Column(nullable = true, insertable = true, updatable = false)
     private OffsetDateTime effectFrom;
 
     @Column(nullable = true, insertable = true, updatable = false)
