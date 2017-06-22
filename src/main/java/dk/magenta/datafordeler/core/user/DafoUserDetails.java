@@ -1,11 +1,10 @@
 package dk.magenta.datafordeler.core.user;
 
+import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.role.SystemRole;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Created by jubk on 12-06-2017.
@@ -56,7 +55,7 @@ public abstract class DafoUserDetails {
   public Collection<AreaRestriction> getAreaRestrictionsForRole(String role) {
     ArrayList<AreaRestriction> result = new ArrayList<>();
 
-    for(UserProfile userProfile:getUserProfilesForRole(role)) {
+    for(UserProfile userProfile : getUserProfilesForRole(role)) {
       result.addAll(userProfile.getAreaRestrictions());
     }
 
@@ -69,6 +68,6 @@ public abstract class DafoUserDetails {
 
   @Override
   public String toString() {
-    return "[" + getNameQualifier() + "]:[" + getIdentity() + "]";
+    return "[" + getIdentity() + "]@[" + getNameQualifier() + "]";
   }
 }

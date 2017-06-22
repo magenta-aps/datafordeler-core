@@ -1,7 +1,9 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 
+import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import java.net.URI;
 import java.util.*;
 
@@ -14,10 +16,10 @@ public abstract class Plugin {
 
     protected RolesDefinition rolesDefinition;
 
+    protected List<AreaRestrictionType> areaRestrictionTypes = new ArrayList<>();
+
     public Plugin() {
     }
-
-
 
     public long getVersion() {
         return version;
@@ -53,4 +55,16 @@ public abstract class Plugin {
         return false;
     }
 
+    public AreaRestrictionType addAreaRestrictionType(String name, String description) {
+        AreaRestrictionType areaRestrictionType = new AreaRestrictionType(
+            name, description, this
+        );
+        this.areaRestrictionTypes.add(areaRestrictionType);
+
+        return areaRestrictionType;
+    }
+
+    public List<AreaRestrictionType> getAreaRestrictionTypes() {
+        return areaRestrictionTypes;
+    }
 }

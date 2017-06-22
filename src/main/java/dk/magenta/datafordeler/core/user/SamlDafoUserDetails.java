@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.NameID;
 
@@ -29,19 +29,9 @@ public class SamlDafoUserDetails extends DafoUserDetails {
 
     this.nameQualifier = assertion.getSubject().getNameID().getNameQualifier();
     this.identity = assertion.getSubject().getNameID().getValue();
-
-    // TODO: Loop over UserProfile attributes.
-
-
-    // TODO: Setup areaRestrictions
   }
 
-  private void addUserProfileByName(String userProfileName) {
-    // TODO: Make this look up full data in the database
-    this.addUserProfile(new UserProfile(userProfileName));
-  }
-
-  private void addUserProfile(UserProfile userprofile) {
+  public void addUserProfile(UserProfile userprofile) {
     this.userProfiles.put(userprofile.getName(), userprofile);
     for(String systemRole : userprofile.getSystemRoles()) {
       if(systemRoles.containsKey(systemRole)) {
@@ -50,6 +40,10 @@ public class SamlDafoUserDetails extends DafoUserDetails {
         systemRoles.put(systemRole, Collections.singletonList(userprofile));
       }
     }
+  }
+
+  public List<String> getAssertionUserProfileNames() {
+    return new ArrayList<>();
   }
 
   @Override

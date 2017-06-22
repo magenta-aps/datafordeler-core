@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
+import java.nio.file.FileSystems;
 import org.apache.commons.io.FileUtils;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
@@ -15,7 +16,8 @@ import org.apache.ftpserver.usermanager.impl.WritePermission;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.File;
@@ -30,7 +32,7 @@ import java.util.concurrent.*;
  * Created by lars on 08-06-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, classes = TestConfig.class)
 public class FtpCommunicatorTest {
 
     @Test
@@ -105,7 +107,17 @@ public class FtpCommunicatorTest {
         user.setName(username);
         user.setPassword(password);
 
-        this.tempDir = Files.createTempDirectory(null, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxrwxrwx"))).toFile();
+        if(FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            this.tempDir = Files.createTempDirectory(
+                null,
+                PosixFilePermissions.asFileAttribute(
+                    PosixFilePermissions.fromString("rwxrwxrwx")
+                )
+            ).toFile();
+        } else {
+            this.tempDir = Files.createTempDirectory(null).toFile();
+        }
+
 
         for (File sourcefile : files) {
             File destFile = new File(this.tempDir, sourcefile.getName());

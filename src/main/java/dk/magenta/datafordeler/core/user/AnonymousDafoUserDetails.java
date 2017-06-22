@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core.user;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 

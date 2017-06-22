@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.user;
 
-import java.util.Collection;
-import java.util.Collections;
+import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import java.util.HashSet;
 import java.util.List;
 
@@ -9,6 +8,9 @@ import java.util.List;
  * Created by jubk on 20-06-2017.
  */
 public class UserProfile {
+  public static int INVALID_DATABASE_ID = -1;
+
+  private int databaseId = INVALID_DATABASE_ID;
   private String name;
   private HashSet<String> systemRoles = new HashSet<>();
   private HashSet<AreaRestriction> areaRestrictions = new HashSet<>();
@@ -31,6 +33,14 @@ public class UserProfile {
     if(areaRestrictions != null) {
       this.areaRestrictions.addAll(areaRestrictions);
     }
+  }
+
+  public int getDatabaseId() {
+    return databaseId;
+  }
+
+  public void setDatabaseId(int databaseId) {
+    this.databaseId = databaseId;
   }
 
   public String getName() {
