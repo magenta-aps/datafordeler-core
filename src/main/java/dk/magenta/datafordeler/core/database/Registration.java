@@ -102,7 +102,8 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
     public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         for (V effect : this.effects) {
-            if (effect.getEffectFrom().equals(effectFrom) && effect.getEffectTo().equals(effectTo)) {
+            if ((effect.getEffectFrom() == null ? effectFrom == null : effect.getEffectFrom().equals(effectFrom)) &&
+                (effect.getEffectTo() == null ? effectTo == null : effect.getEffectTo().equals(effectTo))) {
                 return effect;
             }
         }
