@@ -52,7 +52,7 @@ public class LookupDefinition extends HashMap<String, Object> {
     }
 
     public String getHqlJoinString(String root, boolean withPrefix) {
-        HashMap<String, String> joinTables = new HashMap<>();
+        ArrayList<String> joinTables = new ArrayList<>();
         for (String key : this.keySet()) {
             System.out.println("joinString key: "+key);
             if (key.contains(separator)) {
@@ -66,7 +66,11 @@ public class LookupDefinition extends HashMap<String, Object> {
                 StringBuilder fullParts = new StringBuilder(root);
                 for (int i = 0; i<parts.length - 1; i++) {
                     String part = parts[i];
-                    joinTables.put(lastPart + "." + part, fullParts + "_" + part);
+                    String joinEntry = lastPart + "." + part + " " + fullParts + "_" + part;
+                    if (!joinTables.contains(joinEntry)) {
+                        joinTables.add(joinEntry);
+                    }
+
                     //s.add(lastPart + "." + part + " " + fullParts + "_" + part);
                     lastPart = root + "_" + part;
                     fullParts.append("_").append(part);
@@ -75,8 +79,8 @@ public class LookupDefinition extends HashMap<String, Object> {
         }
         if (!joinTables.isEmpty()) {
             StringJoiner s = new StringJoiner(" JOIN ");
-            for (String table : joinTables.keySet()) {
-                s.add(table + " " + joinTables.get(table));
+            for (String table : joinTables) {
+                s.add(table);
             }
             return "JOIN " + s.toString();
         }

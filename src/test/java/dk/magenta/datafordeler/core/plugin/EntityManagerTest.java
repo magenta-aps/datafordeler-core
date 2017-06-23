@@ -34,6 +34,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -110,7 +111,10 @@ public class EntityManagerTest extends PluginTestBase {
         ExpectorCallback lookupCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/get/" + checksum, full, lookupCallback);
 
-        Registration registration = entityManager.fetchRegistration(reference);
+        List<Registration> registrations = entityManager.fetchRegistration(reference);
+        Assert.assertNotNull(registrations);
+        Assert.assertFalse(registrations.isEmpty());
+        Registration registration = registrations.get(0);
         Assert.assertNotNull(registration);
         Assert.assertEquals(checksum, registration.getRegisterChecksum());
         Assert.assertEquals(uuid, registration.getEntity().getUUID().toString());
@@ -136,7 +140,7 @@ public class EntityManagerTest extends PluginTestBase {
         this.callbackController.addCallbackResponse(otherEndpoint, full, lookupCallback);
 
         exception.expect(FailedReferenceException.class);
-        Registration registration = entityManager.fetchRegistration(reference);
+        List<Registration> registration = entityManager.fetchRegistration(reference);
 
 
         this.callbackController.removeCallback(otherEndpoint);
@@ -180,7 +184,7 @@ public class EntityManagerTest extends PluginTestBase {
         this.callbackController.addCallbackResponse("/test/get/" + UUID.randomUUID().toString(), full, lookupCallback);
 
         exception.expect(WrongSubclassException.class);
-        Registration registration = entityManager.fetchRegistration(reference);
+        List<Registration> registration = entityManager.fetchRegistration(reference);
     }
 
 

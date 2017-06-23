@@ -30,10 +30,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by lars on 13-03-17.
@@ -146,24 +143,24 @@ public class DemoEntityManager extends EntityManager {
 
     /** Registration parsing **/
 
-    public Registration parseRegistration(InputStream registrationData) throws IOException {
+    public List<Registration> parseRegistration(InputStream registrationData) throws IOException {
         String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
         return this.parseRegistration(data, "utf-8");
         // return this.objectMapper.readValue(registrationData, this.managedRegistrationClass);
     }
 
     @Override
-    public Registration parseRegistration(JsonNode jsonNode) throws ParseException {
+    public List<Registration> parseRegistration(JsonNode jsonNode) throws ParseException {
         try {
-            return this.objectMapper.treeToValue(jsonNode, this.managedRegistrationClass);
+            return Collections.singletonList(this.objectMapper.treeToValue(jsonNode, this.managedRegistrationClass));
         } catch (JsonProcessingException e) {
             throw new ParseException(e.getMessage());
         }
     }
 
-    public Registration parseRegistration(String registrationData, String charsetName) throws IOException {
+    public List<Registration> parseRegistration(String registrationData, String charsetName) throws IOException {
         this.getLog().info("Parsing registration data");
-        return this.objectMapper.readValue(registrationData.getBytes(charsetName), this.managedRegistrationClass);
+        return Collections.singletonList(this.objectMapper.readValue(registrationData.getBytes(charsetName), this.managedRegistrationClass));
     }
 
     /** Registration fetching **/

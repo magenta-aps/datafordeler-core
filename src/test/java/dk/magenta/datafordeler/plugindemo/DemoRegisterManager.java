@@ -142,5 +142,4 @@ public class DemoRegisterManager extends RegisterManager {
         }
         return input;
     }
-
 }
