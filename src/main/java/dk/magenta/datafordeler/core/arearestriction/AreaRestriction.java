@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.arearestriction;
 
+import java.awt.geom.Area;
 import java.util.HashMap;
 
 /**
@@ -20,6 +21,7 @@ public class AreaRestriction {
     this.description = description;
     this.sumiffiik = sumiffiik;
     this.type = type;
+    lookupMap.put(this.lookupName(), this);
   }
 
   public String getName() {
@@ -40,6 +42,10 @@ public class AreaRestriction {
 
   public String lookupName() {
     return this.type.lookupName() + ":" + this.getName();
+  }
+
+  public static AreaRestriction lookup(String lookupName) {
+    return lookupMap.get(lookupName);
   }
 
 }
