@@ -6,17 +6,22 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import org.opensaml.saml2.core.Assertion;
-import org.opensaml.saml2.core.NameID;
+import org.opensaml.saml2.core.Attribute;
+import org.opensaml.saml2.core.AttributeStatement;
+import org.opensaml.xml.XMLObject;
+import org.opensaml.xml.schema.XSAny;
+import org.opensaml.xml.schema.XSString;
 
 /**
  * Created by jubk on 13-06-2017.
  */
 public class SamlDafoUserDetails extends DafoUserDetails {
 
+  public static String USERPROFILE_CLAIM_URL = "https://data.gl/claims/userprofile";
+
   private HashMap<String, UserProfile> userProfiles = new HashMap<>();
   private HashMap<String, Collection<UserProfile>> systemRoles = new HashMap<>();
 
-  private NameID nameID;
   private Assertion sourceAssertion;
 
   private String nameQualifier;
@@ -43,8 +48,29 @@ public class SamlDafoUserDetails extends DafoUserDetails {
   }
 
   public List<String> getAssertionUserProfileNames() {
-    return new ArrayList<>();
+    ArrayList<String> result = new ArrayList<>();
+    for(AttributeStatement attributeStatement : sourceAssertion.getAttributeStatements()) {
+      for(Attribute attribute : attributeStatement.getAttributes()) {
+        if(attribute.getName().equals(USERPROFILE_CLAIM_URL)) {
+          for(XMLObject value : attribute.getAttributeValues()) {
+            result.add(getString(value));
+          }
+        }
+      }
+    }
+    return result;
   }
+
+  private String getString(XMLObject xmlValue) {
+    if (xmlValue instanceof XSString) {
+      return ((XSString) xmlValue).getValue();
+    } else if (xmlValue instanceof XSAny) {
+      return ((XSAny) xmlValue).getTextContent();
+    } else {
+      return null;
+    }
+  }
+
 
   @Override
   public String getNameQualifier() {
