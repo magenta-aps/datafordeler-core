@@ -1,14 +1,22 @@
 package dk.magenta.datafordeler.core.user;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import org.joda.time.DateTime;
 import org.opensaml.Configuration;
 import org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProviderException;
+import org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider;
 import org.opensaml.security.MetadataCredentialResolver;
 import org.opensaml.util.resource.ClasspathResource;
+import org.opensaml.util.resource.Resource;
 import org.opensaml.util.resource.ResourceException;
 import org.opensaml.xml.parse.BasicParserPool;
 import org.opensaml.xml.security.keyinfo.KeyInfoCredentialResolver;
@@ -25,14 +33,42 @@ public class SamlMetadataConfiguration {
 
   @Bean
   public MetadataProvider samlMetadataProvider(TokenConfigProperties config)
-      throws ResourceException, MetadataProviderException, URISyntaxException {
+      throws ResourceException, MetadataProviderException, URISyntaxException, IOException {
     String path = config.getIssuerMetadataPath();
+    File metadataFile;
     if(path == null) {
-      // TODO: Log warning about using the default issuer metadata
-      ClasspathResource issuerXmlResource = new ClasspathResource("/saml/sts_metadata.xml");
-      path = new URI(issuerXmlResource.getLocation()).getPath();
+      // Copy the classpath resource sts metadata to a temporary file
+      Resource resource = new ClasspathResource(
+          "/dk/magenta/datafordeler/core/user/sts_metadata.xml"
+      );
+      metadataFile = File.createTempFile("sts_metadata","xml");
+      InputStream inputStream = null;
+      OutputStream outputStream = null;
+      try {
+        inputStream = resource.getInputStream();
+        outputStream = new FileOutputStream(metadataFile);
+
+        int read = 0;
+        byte[] bytes = new byte[1024];
+
+        while ((read = inputStream.read(bytes)) != -1) {
+          outputStream.write(bytes, 0, read);
+        }
+      }
+      finally {
+        if (inputStream != null) {
+          try { inputStream.close(); }
+          catch (IOException e) { e.printStackTrace(); }
+        }
+        if (outputStream != null) {
+          try { outputStream.close(); }
+          catch (IOException e) { e.printStackTrace(); }
+        }
+      }
+    } else {
+      metadataFile = new File(path);
     }
-    FilesystemMetadataProvider provider = new FilesystemMetadataProvider(new File(path));
+    FilesystemMetadataProvider provider = new FilesystemMetadataProvider(metadataFile);
     provider.setRequireValidMetadata(false);
     provider.setParserPool(new BasicParserPool());
     provider.initialize();
