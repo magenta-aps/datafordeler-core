@@ -44,9 +44,7 @@ public class FtpCommunicatorTest {
         File tempFile = File.createTempFile("ftpdownload","test");
         tempFile.createNewFile();
 
-        FileWriter fileWriter = new FileWriter(tempFile);
-        fileWriter.write(contents);
-        fileWriter.close();
+        FileUtils.writeByteArrayToFile(tempFile, contents.getBytes("UTF-8"));
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<Boolean> future = executorService.submit(new Callable<Boolean>() {
