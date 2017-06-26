@@ -47,14 +47,19 @@ public class DafoUserManager {
     // SAML token based user.
     String authHeader = request.getHeader("Authorization");
     if(authHeader != null && authHeader.indexOf("SAML ") == 0) {
-      Assertion samlAssertion = parseAndVerifyToken(authHeader.substring(5));
-      SamlDafoUserDetails samlDafoUserDetails = new SamlDafoUserDetails(samlAssertion);
-      this.addUserProfilesToSamlUser(samlDafoUserDetails);
-
-      return samlDafoUserDetails;
+      return getSamlUserDetailsFromToken(authHeader.substring(5));
     }
     // Fall back to an anonymous user
     return new AnonymousDafoUserDetails();
+  }
+
+  public SamlDafoUserDetails getSamlUserDetailsFromToken(String tokenData)
+      throws InvalidTokenException{
+    Assertion samlAssertion = parseAndVerifyToken(tokenData);
+    SamlDafoUserDetails samlDafoUserDetails = new SamlDafoUserDetails(samlAssertion);
+    this.addUserProfilesToSamlUser(samlDafoUserDetails);
+
+    return samlDafoUserDetails;
   }
 
   /**
