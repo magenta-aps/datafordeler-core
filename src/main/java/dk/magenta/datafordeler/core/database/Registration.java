@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
@@ -41,6 +41,14 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.registrationFrom = registrationFrom;
         this.registrationTo = registrationTo;
         this.sequenceNumber = sequenceNumber;
+    }
+
+    public Registration(LocalDate registrationFrom, LocalDate registrationTo, int sequenceNumber) {
+        this(
+                registrationFrom != null ? OffsetDateTime.of(registrationFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                registrationTo != null ? OffsetDateTime.of(registrationTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                sequenceNumber
+        );
     }
 
     public Registration(TemporalAccessor registrationFrom, TemporalAccessor registrationTo, int sequenceNumber) {
@@ -109,6 +117,15 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         }
         return null;
     }
+
+    public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
+        return this.getEffect(OffsetDateTime.of(effectFrom, ZoneOffset.UTC), OffsetDateTime.of(effectTo, ZoneOffset.UTC));
+    }
+
+    public V getEffect(LocalDate effectFrom, LocalDate effectTo) {
+        return this.getEffect(OffsetDateTime.of(effectFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC), OffsetDateTime.of(effectTo, LocalTime.MIDNIGHT, ZoneOffset.UTC));
+    }
+
 
     public void removeEffect(V effect) {
         // Be sure to also delete the effect yourself, since it still points to the Registration

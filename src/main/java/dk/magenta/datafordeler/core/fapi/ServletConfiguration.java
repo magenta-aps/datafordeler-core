@@ -42,8 +42,7 @@ public abstract class ServletConfiguration {
      * @return A ServletRegistrationBean for use by Spring Boot
      * @throws InvalidServiceOwnerDefinitionException
      */
-    @Bean(name="pluginServletRegistration")
-    public ServletRegistrationBean dispatcherServlet() throws InvalidServiceOwnerDefinitionException {
+    protected ServletRegistrationBean dispatcherServlet() throws InvalidServiceOwnerDefinitionException {
         this.log.info("Initialize ServletRegistrationBean for Plugin "+this.getPlugin().getClass().getCanonicalName());
         ServletRegistrationBean servletRegistrationBean;
 

@@ -53,4 +53,8 @@ public abstract class Plugin {
         return false;
     }
 
+    public String getServiceOwner() {
+        return this.getName().toLowerCase();
+    }
+
 }

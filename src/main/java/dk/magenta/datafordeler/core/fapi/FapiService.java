@@ -195,7 +195,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
         this.log.info("Incoming REST request, searching for parameters "+parameters.toString()); // TODO: add user from request
         DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
-        this.checkAccess(user);
+        // this.checkAccess(user);
         Set<E> results = this.searchByQuery(this.getQuery(parameters, false));
         this.log.info(results.size() + " items found, returning");
         return results;
