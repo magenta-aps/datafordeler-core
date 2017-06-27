@@ -111,7 +111,7 @@ public class EntityManagerTest extends PluginTestBase {
         ExpectorCallback lookupCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/get/" + checksum, full, lookupCallback);
 
-        List<Registration> registrations = entityManager.fetchRegistration(reference);
+        List<? extends Registration> registrations = entityManager.fetchRegistration(reference);
         Assert.assertNotNull(registrations);
         Assert.assertFalse(registrations.isEmpty());
         Registration registration = registrations.get(0);
@@ -140,7 +140,7 @@ public class EntityManagerTest extends PluginTestBase {
         this.callbackController.addCallbackResponse(otherEndpoint, full, lookupCallback);
 
         exception.expect(FailedReferenceException.class);
-        List<Registration> registration = entityManager.fetchRegistration(reference);
+        List<? extends Registration> registration = entityManager.fetchRegistration(reference);
 
 
         this.callbackController.removeCallback(otherEndpoint);
@@ -184,7 +184,7 @@ public class EntityManagerTest extends PluginTestBase {
         this.callbackController.addCallbackResponse("/test/get/" + UUID.randomUUID().toString(), full, lookupCallback);
 
         exception.expect(WrongSubclassException.class);
-        List<Registration> registration = entityManager.fetchRegistration(reference);
+        List<? extends Registration> registration = entityManager.fetchRegistration(reference);
     }
 
 
