@@ -14,7 +14,10 @@ import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
@@ -61,6 +64,14 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
                 registration,
                 effectFrom != null ? OffsetDateTime.from(effectFrom) : null,
                 effectTo != null ? OffsetDateTime.from(effectTo) : null
+        );
+    }
+
+    public Effect(R registration, LocalDate effectFrom, LocalDate effectTo) {
+        this(
+                registration,
+                effectFrom != null ? OffsetDateTime.of(effectFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                effectTo != null ? OffsetDateTime.of(effectTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null
         );
     }
 

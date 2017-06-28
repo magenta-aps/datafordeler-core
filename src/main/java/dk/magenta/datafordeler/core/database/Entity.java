@@ -95,14 +95,10 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     public R getRegistration(OffsetDateTime registrationFrom) {
-        System.out.println("Looking for registration at "+registrationFrom);
         for (R registration : this.registrations) {
-            System.out.println("    Testing registration "+registration.getRegistrationFrom());
             if (registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) {
-                System.out.println("    match");
                 return registration;
             }
-            System.out.println("    no match");
         }
         return null;
     }

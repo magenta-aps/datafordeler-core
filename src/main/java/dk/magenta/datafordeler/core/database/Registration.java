@@ -119,11 +119,17 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
     public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
-        return this.getEffect(OffsetDateTime.of(effectFrom, ZoneOffset.UTC), OffsetDateTime.of(effectTo, ZoneOffset.UTC));
+        return this.getEffect(
+                effectFrom != null ? OffsetDateTime.of(effectFrom, ZoneOffset.UTC) : null,
+                effectTo != null ? OffsetDateTime.of(effectTo, ZoneOffset.UTC) : null
+        );
     }
 
     public V getEffect(LocalDate effectFrom, LocalDate effectTo) {
-        return this.getEffect(OffsetDateTime.of(effectFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC), OffsetDateTime.of(effectTo, LocalTime.MIDNIGHT, ZoneOffset.UTC));
+        return this.getEffect(
+                effectFrom != null ? OffsetDateTime.of(effectFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                effectTo != null ? OffsetDateTime.of(effectTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null
+        );
     }
 
 

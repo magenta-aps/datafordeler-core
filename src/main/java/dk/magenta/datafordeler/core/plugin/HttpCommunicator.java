@@ -4,14 +4,16 @@ package dk.magenta.datafordeler.core.plugin;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import org.apache.http.*;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,8 +27,17 @@ public class HttpCommunicator implements Communicator {
 
     private CookieStore cookieStore;
 
+    private String username;
+    private String password;
+
     public HttpCommunicator() {
         this.cookieStore = new BasicCookieStore();
+    }
+
+    public HttpCommunicator(String username, String password) {
+        this();
+        this.username = username;
+        this.password = password;
     }
 
     @Override
@@ -66,8 +77,15 @@ public class HttpCommunicator implements Communicator {
         return response.getStatusLine();
     }
 
-    private CloseableHttpClient buildClient() {
-        return HttpClients.custom().setDefaultCookieStore(this.cookieStore).build();
+    protected CloseableHttpClient buildClient() {
+        HttpClientBuilder builder = HttpClients.custom();
+        if (this.username != null && this.password != null) {
+            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(this.username, this.password));
+            builder.setDefaultCredentialsProvider(credentialsProvider);
+        }
+        builder.setDefaultCookieStore(this.cookieStore);
+        return builder.build();
     }
 
 }
