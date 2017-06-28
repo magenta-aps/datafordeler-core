@@ -105,10 +105,13 @@ public abstract class EntityManager {
     public int sendReceipt(Receipt receipt) throws IOException {
         ObjectMapper objectMapper = this.getObjectMapper();
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
-        String payload = objectMapper.writeValueAsString(receipt);
-        StatusLine statusLine = this.getReceiptSender().send(receiptEndpoint, payload);
-        this.getLog().info("Receipt sent to "+receiptEndpoint+", response was: HTTP "+statusLine.getStatusCode()+" "+statusLine.getReasonPhrase());
-        return statusLine.getStatusCode();
+        if (receiptEndpoint != null) {
+            String payload = objectMapper.writeValueAsString(receipt);
+            StatusLine statusLine = this.getReceiptSender().send(receiptEndpoint, payload);
+            this.getLog().info("Receipt sent to " + receiptEndpoint + ", response was: HTTP " + statusLine.getStatusCode() + " " + statusLine.getReasonPhrase());
+            return statusLine.getStatusCode();
+        }
+        return 0;
     }
 
     /**

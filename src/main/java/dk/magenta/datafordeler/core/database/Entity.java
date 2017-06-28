@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.fapi.Query;
+import org.hibernate.Session;
 import org.hibernate.annotations.*;
 import javax.persistence.*;
 import javax.persistence.CascadeType;
@@ -111,6 +112,12 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
             }
         }
         return null;
+    }
+
+    public void forceLoad(Session session) {
+        for (R registration : this.registrations) {
+            registration.forceLoad(session);
+        }
     }
 
 }

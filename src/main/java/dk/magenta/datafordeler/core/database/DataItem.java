@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.Session;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
@@ -98,6 +99,9 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
 
     public LookupDefinition getLookupDefinition() {
         return new LookupDefinition(this.databaseFields());
+    }
+
+    public void forceLoad(Session session) {
     }
 
 }

@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
@@ -15,7 +16,9 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.hibernate.Filter;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -254,14 +257,17 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(exclude = true) // Non-soap methods must have this
     protected Set<E> searchByQuery(Q query) throws DataFordelerException {
         Session session = this.getSessionManager().getSessionFactory().openSession();
+        Transaction transaction = session.beginTransaction();
         this.applyQuery(session, query);
         Set<E> entities = null;
         try {
             entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
+            for (E entity : entities) {
+                entity.forceLoad(session);
+            }
+        } finally {
+            transaction.commit();
             session.close();
-        } catch (DataFordelerException e) {
-            session.close();
-            throw e;
         }
         return entities;
     }
@@ -289,6 +295,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         this.applyQuery(session, query);
         E entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
+        entity.forceLoad(session);
         session.close();
         return entity;
     }

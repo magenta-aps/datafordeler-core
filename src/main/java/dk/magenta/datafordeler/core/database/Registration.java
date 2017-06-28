@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
+import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
@@ -245,6 +246,12 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         s.add(subIndentString + "]");
         s.add(indentString+"}");
         return s.toString();
+    }
+
+    public void forceLoad(Session session) {
+        for (V effect : this.effects) {
+            effect.forceLoad(session);
+        }
     }
 
 }

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
+import org.hibernate.Session;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
@@ -174,6 +175,12 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         s.add(subIndentString + "]");
         s.add(indentString + "}");
         return s.toString();
+    }
+
+    public void forceLoad(Session session) {
+        for (D dataItem : this.dataItems) {
+            dataItem.forceLoad(session);
+        }
     }
 
 }
