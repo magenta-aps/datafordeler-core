@@ -93,13 +93,13 @@ public class QueryManager {
 
         // Build query
         //org.hibernate.query.Query<E> databaseQuery = session.createQuery("select e from " + eClass.getName() + " e join e.identification i join e.registrations r join r.effects v join v.dataItems d where i.uuid != null and " + queryString.toString(), eClass);
-        System.out.println("select distinct "+ENTITY+" from " + eClass.getSimpleName() + " " + ENTITY + " join "+ENTITY+".identification i join "+ENTITY+".registrations r join r.effects v join v.dataItems d "+extraJoin+" where i.uuid != null "+ extraWhere);
+        //System.out.println("select distinct "+ENTITY+" from " + eClass.getSimpleName() + " " + ENTITY + " join "+ENTITY+".identification i join "+ENTITY+".registrations r join r.effects v join v.dataItems d "+extraJoin+" where i.uuid != null "+ extraWhere);
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select distinct "+ENTITY+" from " + eClass.getSimpleName() + " " + ENTITY + " join "+ENTITY+".identification i join "+ENTITY+".registrations r join r.effects v join v.dataItems d "+extraJoin+" where i.uuid != null "+ extraWhere, eClass);
 
         // Insert parameters, casting as necessary
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root);
         for (String key : extraParameters.keySet()) {
-            System.out.println(key +" = "+extraParameters.get(key)+ " ("+extraParameters.get(key).getClass().getSimpleName()+")");
+            //System.out.println(key +" = "+extraParameters.get(key)+ " ("+extraParameters.get(key).getClass().getSimpleName()+")");
             databaseQuery.setParameter(key, extraParameters.get(key));
         }
 
@@ -191,10 +191,9 @@ public class QueryManager {
         String extraWhere = lookupDefinition.getHqlWhereString(root);
 
         String entityIdKey = "E" + UUID.randomUUID().toString().replace("-", "");
-        System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.registration r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
+        //System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.registration r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
         org.hibernate.query.Query<D> query = session.createQuery("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.registration r join r.entity "+ENTITY+" "+extraJoin+" where "+ENTITY+".id = :"+entityIdKey+" "+ extraWhere, dClass);
-
-        System.out.println(query.getQueryString());
+        //System.out.println(query.getQueryString());
 
         query.setParameter(entityIdKey, entity.getId());
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root);
@@ -203,7 +202,6 @@ public class QueryManager {
         }
         this.logQuery(query);
         List<D> results = query.list();
-        System.out.println("-----------------------------------------------");
         return results;
     }
 
@@ -342,8 +340,12 @@ public class QueryManager {
                 dataItem.addEffect(effect);
             }
             for (D dataItem : obsolete) {
+                Set<V> effects = dataItem.getEffects();
+                for (V e : effects) {
+                    e.dataItems.remove(dataItem);
+                    session.saveOrUpdate(e);
+                }
                 session.delete(dataItem);
-                dataItem.removeEffect(effect);
             }
         }
 

@@ -54,14 +54,14 @@ public class LookupDefinition extends HashMap<String, Object> {
     public String getHqlJoinString(String root, boolean withPrefix) {
         ArrayList<String> joinTables = new ArrayList<>();
         for (String key : this.keySet()) {
-            System.out.println("joinString key: "+key);
+            //System.out.println("joinString key: "+key);
             if (key.contains(separator)) {
                 String[] parts = key.split(quotedSeparator);
                 if (parts[0].equals(entityref)) {
                     root = QueryManager.ENTITY;
                     parts = Arrays.copyOfRange(parts, 1, parts.length);
                 }
-                System.out.println("joinString parts: "+Arrays.asList(parts));
+                //System.out.println("joinString parts: "+Arrays.asList(parts));
                 String lastPart = root;
                 StringBuilder fullParts = new StringBuilder(root);
                 for (int i = 0; i<parts.length - 1; i++) {
@@ -106,11 +106,25 @@ public class LookupDefinition extends HashMap<String, Object> {
                     s.add(object + "." + k + " is null");
                 }
             } else {
-
-                if (parameterValueWildcard(value)) {
-                    s.add("cast(" + object + "." + k + " as string) like :" + object+"_"+k);
+                if (value instanceof List) {
+                    List list = (List) value;
+                    StringJoiner or = new StringJoiner(" OR ");
+                    for (int i=0; i<list.size(); i++) {
+                        if (parameterValueWildcard(list.get(i))) {
+                            or.add("cast(" + object + "." + k + " as string) like :" + object + "_" + k + "_" + i);
+                        } else {
+                            or.add(object + "." + k + " = :" + object + "_" + k + "_" + i);
+                        }
+                    }
+                    if (or.length() > 0) {
+                        s.add("(" + or.toString() + ")");
+                    }
                 } else {
-                    s.add(object + "." + k + " = :" + object+"_"+k);
+                    if (parameterValueWildcard(value)) {
+                        s.add("cast(" + object + "." + k + " as string) like :" + object + "_" + k);
+                    } else {
+                        s.add(object + "." + k + " = :" + object + "_" + k);
+                    }
                 }
             }
 
@@ -152,11 +166,21 @@ public class LookupDefinition extends HashMap<String, Object> {
 
             Object value = this.get(key);
             if (value != null) {
-                //map.put(object + "_" + key, value);
-                if (parameterValueWildcard(value)) {
-                    map.put(object + "_" + k, ((String) value).replace("*", "%"));
+                if (value instanceof List) {
+                    List list = (List) value;
+                    for (int i=0; i<list.size(); i++) {
+                        if (parameterValueWildcard(value)) {
+                            map.put(object + "_" + k + "_" + i, ((String) list.get(i)).replace("*", "%"));
+                        } else {
+                            map.put(object + "_" + k + "_" + i, this.castValue(object + "_" + k + "_" + i, list.get(i)));
+                        }
+                    }
                 } else {
-                    map.put(object + "_" + k, this.castValue(object + "_" + k, value));
+                    if (parameterValueWildcard(value)) {
+                        map.put(object + "_" + k, ((String) value).replace("*", "%"));
+                    } else {
+                        map.put(object + "_" + k, this.castValue(object + "_" + k, value));
+                    }
                 }
             }
 
