@@ -35,36 +35,198 @@ import java.util.concurrent.*;
 public class FtpCommunicatorTest {
 
     @Test
-    public void testDownload() throws Exception {
-        String username = "test";
-        String password = "test";
+    public void testDownloadNoNewFiles() throws Exception {
+        //TODO implement test for correct handling of no new files
+
         int port = 2101;
+        String contents = null;
+        File tempFile = File.createTempFile("ftpdownload2102",".done");
+        tempFile.createNewFile();
+
+        FileWriter fileWriter = new FileWriter(tempFile);
+        fileWriter.write("this is a test æøåÆØÅ!");
+        fileWriter.close();
+        try {
+            ftpTransferTest(port, Collections.singletonList(tempFile), "", contents);
+        }catch (ExecutionException e){
+
+        }
+        tempFile.delete();
+    }
+
+    @Test
+    public void testDownloadSingleFile() throws Exception {
+
+        int port = 2102;
         String contents = "this is a test æøåÆØÅ!";
-        File tempFile = File.createTempFile("ftpdownload","test");
+        File tempFile = File.createTempFile("ftpdownload2102",".test");
         tempFile.createNewFile();
 
         FileWriter fileWriter = new FileWriter(tempFile);
         fileWriter.write(contents);
         fileWriter.close();
 
+        ftpTransferTest(port, Collections.singletonList(tempFile), "", contents);
+
+        tempFile.delete();
+    }
+
+
+    @Test
+    public void testDownloadIgnoreDoneFiles() throws Exception {
+
+        int port = 2103;
+
+        //Create file which should be read
+        String contents = "this is a test æøåÆØÅ!";
+        File tempFile1 = File.createTempFile("ftpdownload2103",".test");
+        tempFile1.createNewFile();
+
+        FileWriter fileWriter1 = new FileWriter(tempFile1);
+        fileWriter1.write(contents);
+        fileWriter1.close();
+
+        //Create another file, which should not be read
+        File tempFile2 = File.createTempFile("ftpdownload21032",".done");
+        tempFile2.createNewFile();
+
+        FileWriter fileWriter2 = new FileWriter(tempFile2);
+        fileWriter2.write("text that should not be read");
+        fileWriter2.close();
+
+        //Make list of files
+        List<File> tempFiles = new ArrayList<>();
+        tempFiles.add(tempFile1);
+        tempFiles.add(tempFile2);
+
+        //Setup server and use ftpCommunicator
+        ftpTransferTest(port, tempFiles, "", contents);
+
+
+        tempFile1.delete();
+        tempFile2.delete();
+
+    }
+
+    @Test
+    public void testDownloadTwoFiles() throws Exception {
+
+        int port = 2104;
+
+        //Create file which should be read
+        String contents = "this is a test æøåÆØÅ!";
+        File tempFile1 = File.createTempFile("ftpdownload21041",".test");
+        tempFile1.createNewFile();
+
+        FileWriter fileWriter1 = new FileWriter(tempFile1);
+        //The substring is splitting the contents into 2 files, it should then be concatenated
+        fileWriter1.write(contents.substring(0,7));
+        fileWriter1.close();
+
+        //Create another file
+        File tempFile2 = File.createTempFile("ftpdownload21042",".test");
+        tempFile2.createNewFile();
+
+        FileWriter fileWriter2 = new FileWriter(tempFile2);
+        fileWriter2.write(contents.substring(7));
+        fileWriter2.close();
+
+        //Make list of files
+        List<File> tempFiles = new ArrayList<>();
+        tempFiles.add(tempFile1);
+        tempFiles.add(tempFile2);
+
+        //Setup server and use ftpCommunicator
+        ftpTransferTest(port, tempFiles, "", contents);
+
+
+        tempFile1.delete();
+        tempFile2.delete();
+
+    }
+
+    @Test
+    public void testDownloadMultipleFiles() throws Exception {
+
+        int port = 2104;
+
+        //Create file which should be read
+        String contents = "this is a test æøåÆØÅ!";
+        File tempFile1 = File.createTempFile("ftpdownload21041",".test");
+        tempFile1.createNewFile();
+
+        FileWriter fileWriter1 = new FileWriter(tempFile1);
+        //The substring is splitting the contents into 2 files, it should then be concatenated
+        fileWriter1.write(contents.substring(0,3));
+        fileWriter1.close();
+
+        //Create another file
+        File tempFile2 = File.createTempFile("ftpdownload21042",".test");
+        tempFile2.createNewFile();
+
+        FileWriter fileWriter2 = new FileWriter(tempFile2);
+        fileWriter2.write(contents.substring(3,8));
+        fileWriter2.close();
+
+        //Create another file
+        File tempFile3 = File.createTempFile("ftpdownload21043",".test");
+        tempFile3.createNewFile();
+
+        FileWriter fileWriter3 = new FileWriter(tempFile3);
+        fileWriter3.write(contents.substring(8));
+        fileWriter3.close();
+
+        //Make list of files
+        List<File> tempFiles = new ArrayList<>();
+        tempFiles.add(tempFile1);
+        tempFiles.add(tempFile2);
+        tempFiles.add(tempFile3);
+
+
+        //Setup server and use ftpCommunicator
+        ftpTransferTest(port, tempFiles, "", contents);
+
+
+        tempFile1.delete();
+        tempFile2.delete();
+        tempFile3.delete();
+
+    }
+
+
+    private void ftpTransferTest(int port, List<File> tempFiles, String path, String contents) throws Exception{
+        String username = "test";
+        String password = "test";
+
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Future<Boolean> future = executorService.submit(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                FtpCommunicatorTest.this.startServer(username, password, port, Collections.singletonList(tempFile));
+                FtpCommunicatorTest.this.startServer(username, password, port, tempFiles);
                 FtpCommunicator ftpCommunicator = new FtpCommunicator(username, password, true);
-                InputStream inputStream = ftpCommunicator.fetch(new URI("ftp://localhost:"+port+"/" + tempFile.getName()));
+                InputStream inputStream = ftpCommunicator.fetch(new URI("ftp://localhost:"+port+"/"+path));
                 String data = new Scanner(inputStream,"UTF-8").useDelimiter("\\A").next();
                 inputStream.close();
                 Assert.assertEquals(contents, data);
+                Assert.assertTrue(allFilesEndsWithDone());
                 return true;
             }
         });
         future.get(10, TimeUnit.SECONDS);
         executorService.shutdownNow();
         this.stopServer();
-        tempFile.delete();
     }
+
+    private boolean allFilesEndsWithDone(){
+        String[] fileNames = tempDir.list();
+        for (int i = 0; i < fileNames.length; i++) {
+            if(!fileNames[i].endsWith(".done")){
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     private FtpServer server = null;
     private File usersFile = null;

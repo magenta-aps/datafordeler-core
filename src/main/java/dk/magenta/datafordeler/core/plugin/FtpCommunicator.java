@@ -12,17 +12,22 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.net.URI;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Created by lars on 08-06-17.
+ *
+ * En klasse til at hente filer vha. FTP
+ * Efter filer er hentet markeres de også med en filendelse, så de ikke hentes næste gang.
  */
 public class FtpCommunicator implements Communicator {
 
     private String username;
     private String password;
     private boolean useFtps;
+    private String DONE_FILE_ENDING = ".done";
 
     public FtpCommunicator(String username, String password) {
         this(username, password, false);
@@ -45,13 +50,40 @@ public class FtpCommunicator implements Communicator {
             this.checkServerReply(ftpClient, "FTP server "+host+":"+port+" rejected connection");
             ftpClient.login(this.username, this.password);
             this.checkServerReply(ftpClient, "FTP server "+host+":"+port+" rejected login for user " + this.username);
-            InputStream inputStream = ftpClient.retrieveFileStream(uri.getPath());
+
+            List<String> fileNamesUnfiltered = Arrays.asList(ftpClient.listNames(uri.getPath()));
+            List<String> fileNames = filter(fileNamesUnfiltered, DONE_FILE_ENDING);
+
+            fileNames.sort(Comparator.naturalOrder());
+
+            InputStream inputStream = null;
+
+            if(fileNames.size() < 1){
+                //TODO handle no files
+            } else if (fileNames.size() == 1){
+                inputStream = ftpClient.retrieveFileStream(uri.getPath()+fileNames.get(0));
+                ftpClient.completePendingCommand();
+            } else if (fileNames.size() > 1) {
+
+                //To initialize the SequenceInputStream, 2 InputStreams are needed
+                InputStream firstFile  = ftpClient.retrieveFileStream(uri.getPath()+fileNames.get(0));
+                ftpClient.completePendingCommand();
+
+                InputStream secondFile = ftpClient.retrieveFileStream(uri.getPath()+fileNames.get(1));
+                ftpClient.completePendingCommand();
+
+                inputStream = new SequenceInputStream(firstFile,secondFile);
+                for (int i = 2; i < fileNames.size(); i++) {
+                    inputStream = new SequenceInputStream(inputStream, ftpClient.retrieveFileStream(uri.getPath() + fileNames.get(i)));
+                    ftpClient.completePendingCommand();
+                }
+            }
             data = new CloseDetectInputStream(inputStream);
             data.addAfterCloseListener(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        ftpClient.completePendingCommand();
+                        markFilesAsDone(ftpClient,uri,fileNames, DONE_FILE_ENDING);
                         ftpClient.disconnect();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -67,6 +99,38 @@ public class FtpCommunicator implements Communicator {
     @Override
     public StatusLine send(URI endpoint, String payload) throws IOException {
         throw new NotImplementedException();
+    }
+
+    /**
+     * Laver en ArrayList<String> med alle de filnavne, der ikke har ending i slutningen af filnavnet
+     * @param list En liste af filnavne i String[] form
+     * @param ending Filnavnets endelse, på de filer der ikke skal bruges
+     * @return
+     */
+    private List<String> filter(List<String> list, String ending){
+        List<String> returnValue = new ArrayList<>();
+        for (int i = list.size()-1; i >= 0; i--) {
+            if(!list.get(i).endsWith(ending)){
+                returnValue.add(list.get(i));
+            }
+        }
+        return returnValue;
+    }
+
+    /**
+     * Omdøber filer, der er hentet og parset korrekt.
+     * @param ftpClient
+     * @param uri
+     * @param files
+     * @param ending
+     * @throws IOException
+     */
+    private void markFilesAsDone(FTPClient ftpClient, URI uri, List<String> files, String ending) throws IOException {
+
+        ftpClient.changeWorkingDirectory(uri.getPath());
+        for (String file : files){
+            ftpClient.rename(file,file+ending);
+        }
     }
 
     private void checkServerReply(FTPClient ftpClient, String errorMessage) throws DataStreamException {
