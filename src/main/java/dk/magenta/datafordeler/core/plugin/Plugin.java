@@ -67,4 +67,9 @@ public abstract class Plugin {
     public List<AreaRestrictionType> getAreaRestrictionTypes() {
         return areaRestrictionTypes;
     }
+
+    public String getServiceOwner() {
+        return this.getName().toLowerCase();
+    }
+
 }

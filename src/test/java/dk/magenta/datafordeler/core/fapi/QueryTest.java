@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.database.DataItem;
 import dk.magenta.datafordeler.core.database.Entity;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,6 +45,11 @@ public class QueryTest {
         @Override
         public Class<Entity> getEntityClass() {
             return Entity.class;
+        }
+
+        @Override
+        public Class getDataClass() {
+            return DataItem.class;
         }
     }
 

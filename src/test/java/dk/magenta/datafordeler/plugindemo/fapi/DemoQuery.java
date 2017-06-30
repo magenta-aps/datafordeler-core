@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.plugindemo.fapi;
 import dk.magenta.datafordeler.core.fapi.ParameterMap;
 import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.fapi.QueryField;
+import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 
 import java.util.HashMap;
@@ -75,5 +76,10 @@ public class DemoQuery extends Query<DemoEntity> {
     @Override
     public Class<DemoEntity> getEntityClass() {
         return DemoEntity.class;
+    }
+
+    @Override
+    public Class getDataClass() {
+        return DemoData.class;
     }
 }

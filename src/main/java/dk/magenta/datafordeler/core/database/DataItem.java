@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.Session;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
@@ -22,10 +23,12 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
 
     public void addEffect(V effect) {
         effect.dataItems.add(this);
+        this.effects.add(effect);
     }
 
     public void removeEffect(V effect) {
         effect.dataItems.remove(this);
+        this.effects.remove(effect);
     }
 
     public static String getTableName(Class<? extends DataItem> cls) {
@@ -35,6 +38,10 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
     @ManyToMany(mappedBy = "dataItems")
     private Set<V> effects = new HashSet<V>();
 
+
+    public Set<V> getEffects() {
+        return effects;
+    }
 
     /**
      * Compares this object with another DataItem
@@ -98,6 +105,9 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
 
     public LookupDefinition getLookupDefinition() {
         return new LookupDefinition(this.databaseFields());
+    }
+
+    public void forceLoad(Session session) {
     }
 
 }

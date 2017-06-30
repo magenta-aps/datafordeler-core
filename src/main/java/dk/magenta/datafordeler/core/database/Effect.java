@@ -2,9 +2,12 @@ package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
+import org.hibernate.Session;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
@@ -12,7 +15,10 @@ import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
@@ -37,7 +43,7 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     protected Set<D> dataItems;
 
-    @Column(nullable = false, insertable = true, updatable = false)
+    @Column(nullable = true, insertable = true, updatable = false)
     private OffsetDateTime effectFrom;
 
     @Column(nullable = true, insertable = true, updatable = false)
@@ -49,8 +55,7 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public Effect(R registration, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         this();
-        this.registration = registration;
-        registration.effects.add(this);
+        this.setRegistration(registration);
         this.effectFrom = effectFrom;
         this.effectTo = effectTo;
     }
@@ -60,6 +65,14 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
                 registration,
                 effectFrom != null ? OffsetDateTime.from(effectFrom) : null,
                 effectTo != null ? OffsetDateTime.from(effectTo) : null
+        );
+    }
+
+    public Effect(R registration, LocalDate effectFrom, LocalDate effectTo) {
+        this(
+                registration,
+                effectFrom != null ? OffsetDateTime.of(effectFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                effectTo != null ? OffsetDateTime.of(effectTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null
         );
     }
 
@@ -80,6 +93,13 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return this.registration;
     }
 
+    protected void setRegistration(R registration) {
+        if (registration != null) {
+            this.registration = registration;
+            registration.effects.add(this);
+        }
+    }
+
     @JsonProperty
     @XmlElement
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
@@ -95,12 +115,26 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return this.effectTo;
     }
 
-
-    @JsonProperty(value = "dataItems", access = JsonProperty.Access.WRITE_ONLY)
-    @JacksonXmlProperty(localName = "dataItem")
-    @JacksonXmlElementWrapper(useWrapping = false)
+    @JsonIgnore
     public List<D> getDataItems() {
         return new ArrayList(this.dataItems);
+    }
+
+    @JsonProperty(value = "dataItems")
+    @XmlElementWrapper(name = "dataItems")
+    public Map<String, Object> getData() {
+        HashMap<String, Object> data = new HashMap<>();
+        for (DataItem d : this.dataItems) {
+            data.putAll(d.asMap());
+        }
+        return data;
+    }
+
+    @JsonProperty(value = "dataItems"/*, access = JsonProperty.Access.READ_ONLY*/)
+    @JacksonXmlProperty(localName = "dataItem")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    public void setDataItems(Collection<D> items) {
+        this.dataItems.addAll(items);
     }
 
     public boolean equalData(V other) {
@@ -112,16 +146,6 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public static String getTableName(Class<? extends Effect> cls) {
         return cls.getAnnotation(Table.class).name();
-    }
-
-    @JsonProperty(value = "data")
-    @XmlElementWrapper(name = "data")
-    public Map<String, Object> getData() {
-        HashMap<String, Object> data = new HashMap<>();
-        for (DataItem d : this.dataItems) {
-            data.putAll(d.asMap());
-        }
-        return data;
     }
 
     /**
@@ -151,6 +175,12 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         s.add(subIndentString + "]");
         s.add(indentString + "}");
         return s.toString();
+    }
+
+    public void forceLoad(Session session) {
+        for (D dataItem : this.dataItems) {
+            dataItem.forceLoad(session);
+        }
     }
 
 }

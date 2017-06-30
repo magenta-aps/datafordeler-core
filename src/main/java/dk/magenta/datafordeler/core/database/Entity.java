@@ -5,12 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.fapi.Query;
+import org.hibernate.Session;
 import org.hibernate.annotations.*;
 import javax.persistence.*;
 import javax.persistence.CascadeType;
 import javax.persistence.OrderBy;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -29,14 +31,15 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
     @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null")
     @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO)
-    protected Set<R> registrations;
+    @OrderBy("sequenceNumber")
+    protected List<R> registrations;
 
     @Transient
     @JsonIgnore
     private Query filter = null;
 
     public Entity() {
-        this.registrations = new HashSet<R>();
+        this.registrations = new ArrayList<R>();
         this.identification = new Identification();
     }
 
@@ -59,6 +62,10 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.identification.getUuid();
     }
 
+    public void setIdentification(Identification identification) {
+        this.identification = identification;
+    }
+
     @JsonProperty("uuid")
     public void setUUID(UUID uuid) {
         this.identification.setUuid(uuid);
@@ -78,16 +85,39 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @XmlElement(name="registration")
     @JacksonXmlProperty(localName = "registration")
     @JacksonXmlElementWrapper(useWrapping = false)
-    public Set<R> getRegistrations() {
+    public List<R> getRegistrations() {
         return this.registrations;
     }
 
     public void addRegistration(R registration) {
-        this.registrations.add(registration);
+        if (!this.registrations.contains(registration)) {
+            this.registrations.add(registration);
+        }
     }
 
-    public void setIdentification(Identification identification) {
-        this.identification = identification;
+    public R getRegistration(OffsetDateTime registrationFrom) {
+        for (R registration : this.registrations) {
+            if (registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) {
+                return registration;
+            }
+        }
+        return null;
+    }
+
+    public R getRegistration(OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
+        for (R registration : this.registrations) {
+            if ((registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) &&
+                    (registration.getRegistrationTo() == null ? registrationTo == null : registration.getRegistrationTo().equals(registrationTo))) {
+                return registration;
+            }
+        }
+        return null;
+    }
+
+    public void forceLoad(Session session) {
+        for (R registration : this.registrations) {
+            registration.forceLoad(session);
+        }
     }
 
 }

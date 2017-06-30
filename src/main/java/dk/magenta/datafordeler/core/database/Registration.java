@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
+import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
@@ -13,7 +14,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
@@ -41,6 +42,14 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.registrationFrom = registrationFrom;
         this.registrationTo = registrationTo;
         this.sequenceNumber = sequenceNumber;
+    }
+
+    public Registration(LocalDate registrationFrom, LocalDate registrationTo, int sequenceNumber) {
+        this(
+                registrationFrom != null ? OffsetDateTime.of(registrationFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                registrationTo != null ? OffsetDateTime.of(registrationTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                sequenceNumber
+        );
     }
 
     public Registration(TemporalAccessor registrationFrom, TemporalAccessor registrationTo, int sequenceNumber) {
@@ -102,12 +111,28 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
     public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         for (V effect : this.effects) {
-            if (effect.getEffectFrom().equals(effectFrom) && effect.getEffectTo().equals(effectTo)) {
+            if ((effect.getEffectFrom() == null ? effectFrom == null : effect.getEffectFrom().equals(effectFrom)) &&
+                (effect.getEffectTo() == null ? effectTo == null : effect.getEffectTo().equals(effectTo))) {
                 return effect;
             }
         }
         return null;
     }
+
+    public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
+        return this.getEffect(
+                effectFrom != null ? OffsetDateTime.of(effectFrom, ZoneOffset.UTC) : null,
+                effectTo != null ? OffsetDateTime.of(effectTo, ZoneOffset.UTC) : null
+        );
+    }
+
+    public V getEffect(LocalDate effectFrom, LocalDate effectTo) {
+        return this.getEffect(
+                effectFrom != null ? OffsetDateTime.of(effectFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                effectTo != null ? OffsetDateTime.of(effectTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null
+        );
+    }
+
 
     public void removeEffect(V effect) {
         // Be sure to also delete the effect yourself, since it still points to the Registration
@@ -221,6 +246,12 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         s.add(subIndentString + "]");
         s.add(indentString+"}");
         return s.toString();
+    }
+
+    public void forceLoad(Session session) {
+        for (V effect : this.effects) {
+            effect.forceLoad(session);
+        }
     }
 
 }

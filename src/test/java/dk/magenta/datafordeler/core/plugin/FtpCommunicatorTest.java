@@ -22,6 +22,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -52,7 +53,7 @@ public class FtpCommunicatorTest {
             public Boolean call() throws Exception {
                 FtpCommunicatorTest.this.startServer(username, password, port, Collections.singletonList(tempFile));
                 FtpCommunicator ftpCommunicator = new FtpCommunicator(username, password, true);
-                CloseDetectInputStream inputStream = ftpCommunicator.fetch(new URI("ftp://localhost:"+port+"/" + tempFile.getName()));
+                InputStream inputStream = ftpCommunicator.fetch(new URI("ftp://localhost:"+port+"/" + tempFile.getName()));
                 String data = new Scanner(inputStream,"UTF-8").useDelimiter("\\A").next();
                 inputStream.close();
                 Assert.assertEquals(contents, data);
@@ -69,7 +70,7 @@ public class FtpCommunicatorTest {
     private File usersFile = null;
     private File tempDir = null;
 
-    public void startServer(String username, String password, int port, List<File> files) throws Exception {
+    private void startServer(String username, String password, int port, List<File> files) throws Exception {
         /**
          * Cribbed from https://stackoverflow.com/questions/8969097/writing-a-java-ftp-server#8970126
          */

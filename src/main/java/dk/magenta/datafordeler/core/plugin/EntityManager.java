@@ -105,10 +105,13 @@ public abstract class EntityManager {
     public int sendReceipt(Receipt receipt) throws IOException {
         ObjectMapper objectMapper = this.getObjectMapper();
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
-        String payload = objectMapper.writeValueAsString(receipt);
-        StatusLine statusLine = this.getReceiptSender().send(receiptEndpoint, payload);
-        this.getLog().info("Receipt sent to "+receiptEndpoint+", response was: HTTP "+statusLine.getStatusCode()+" "+statusLine.getReasonPhrase());
-        return statusLine.getStatusCode();
+        if (receiptEndpoint != null) {
+            String payload = objectMapper.writeValueAsString(receipt);
+            StatusLine statusLine = this.getReceiptSender().send(receiptEndpoint, payload);
+            this.getLog().info("Receipt sent to " + receiptEndpoint + ", response was: HTTP " + statusLine.getStatusCode() + " " + statusLine.getReasonPhrase());
+            return statusLine.getStatusCode();
+        }
+        return 0;
     }
 
     /**
@@ -187,7 +190,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public Registration parseRegistration(InputStream registrationData) throws ParseException, IOException {
+    public List<? extends Registration> parseRegistration(InputStream registrationData) throws ParseException, IOException {
         String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
         return this.parseRegistration(data);
     }
@@ -198,23 +201,25 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public Registration parseRegistration(String registrationData) throws ParseException, IOException {
+    public List<? extends Registration> parseRegistration(String registrationData) throws ParseException, IOException {
         return this.parseRegistration(this.getObjectMapper().readTree(registrationData));
     }
 
-    public abstract Registration parseRegistration(JsonNode registrationData) throws ParseException;
+    public List<? extends Registration> parseRegistration(JsonNode registrationData) throws ParseException {
+        return null;
+    }
 
 
 
-    public Map<String, Registration> parseRegistrationList(JsonNode registrationData) throws ParseException {
-        HashMap<String, Registration> registrations = new HashMap<>();
+    public Map<String, List<? extends Registration>> parseRegistrationList(JsonNode registrationData) throws ParseException {
+        HashMap<String, List<? extends Registration>> registrationMap = new HashMap<>();
         Iterator<String> keyIterator = registrationData.fieldNames();
         while (keyIterator.hasNext()) {
             String key = keyIterator.next();
-            Registration registration = this.parseRegistration(registrationData.get(key));
-            registrations.put(key, registration);
+            List<? extends Registration> registrations = this.parseRegistration(registrationData.get(key));
+            registrationMap.put(key, registrations);
         }
-        return registrations;
+        return registrationMap;
     }
 
     /** Registration fetching **/
@@ -235,7 +240,7 @@ public abstract class EntityManager {
      * @throws IOException
      * @throws FailedReferenceException
      */
-    public Registration fetchRegistration(RegistrationReference reference) throws IOException, ParseException, WrongSubclassException, DataStreamException, FailedReferenceException {
+    public List<? extends Registration> fetchRegistration(RegistrationReference reference) throws IOException, ParseException, WrongSubclassException, DataStreamException, FailedReferenceException {
         this.getLog().info("Fetching registration from reference "+reference.getURI());
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);

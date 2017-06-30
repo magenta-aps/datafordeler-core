@@ -53,4 +53,12 @@ public class ListHashMap<K, V> extends HashMap<K, ArrayList<V>> {
     public V getFirst(K key) {
         return this.get(key, 0);
     }
+
+    public Map<K, List<V>> readonly() {
+        HashMap<K, List<V>> map = new HashMap<K, List<V>>();
+        for (K key : this.keySet()) {
+            map.put(key, this.get(key));
+        }
+        return map;
+    }
 }
