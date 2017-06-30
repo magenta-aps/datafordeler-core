@@ -1,9 +1,11 @@
 package dk.magenta.datafordeler.core.database;
 
+import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -16,14 +18,13 @@ import java.util.Set;
  * A bean to obtain Sessions with. Autowire this in, and obtain sessions with
  * sessionManager.getSessionFactory().openSession();
  */
-@Component
 public class SessionManager {
 
     private SessionFactory sessionFactory;
 
     private Logger log = LogManager.getLogger("SessionManager");
 
-    public SessionManager() {
+    public SessionManager(SessionManagerConfiguration smConfig) {
         try {
             this.log.info("Initialize SessionManager");
             // Create the SessionFactory from hibernate.cfg.xml
@@ -32,7 +33,8 @@ public class SessionManager {
             Configuration configuration = new Configuration();
 
             this.log.info("Loading configuration from hibernate.cfg.xml");
-            configuration.configure();
+            Properties props = System.getProperties();
+            configuration.configure(smConfig.getHibernateConfigurationFile());
 
             Set<Class> managedClasses = new HashSet<>();
             managedClasses.add(dk.magenta.datafordeler.core.database.Identification.class);
