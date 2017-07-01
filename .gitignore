@@ -17,3 +17,7 @@ hs_err_pid*
 
 # compile results
 /target/
+
+# Local settings
+/local_settings.bat
+
