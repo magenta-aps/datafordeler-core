@@ -188,15 +188,15 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param requestParams Request Parameters from spring boot
      * @return Found Entities
      */
-    //@GET
-    //@Path("search")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
     @RequestMapping("search")
-    public Collection<E> searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
-        this.log.info("Incoming REST request, searching for parameters "+requestParams.toString()); // TODO: add user from request
+    public Collection<E> searchRest(@RequestParam MultiValueMap<String,
+        String> requestParams, HttpServletRequest request) throws DataFordelerException {
+        // TODO: add user from request
+        this.log.info("Incoming REST request, searching for parameters "+requestParams.toString());
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
-        // this.checkAccess(user);
+        this.checkAccess(user);
         Set<E> results = this.searchByQuery(this.getQuery(requestParams, false));
         this.log.info(results.size() + " items found, returning");
         return results;
