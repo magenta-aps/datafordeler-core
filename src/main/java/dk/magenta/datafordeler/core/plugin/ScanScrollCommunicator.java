@@ -12,6 +12,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.URI;
@@ -57,13 +59,14 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
     private Pattern scrollIdPattern;
 
+    private Logger log = LogManager.getLogger(ScanScrollCommunicator.class);
+
     public void setScrollIdJsonKey(String scrollIdJsonKey) {
         this.scrollIdJsonKey = scrollIdJsonKey;
         this.recompilePattern();
     }
 
     private void recompilePattern() {
-        System.out.println("RECOMPILE");
         this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
     }
 
@@ -76,7 +79,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
             PipedInputStream inputStream = new PipedInputStream(); // Return this one
             final BufferedOutputStream outputStream = new BufferedOutputStream(new PipedOutputStream(inputStream));
 
-            System.out.println("Streams created");
+            log.info("Streams created");
             Thread fetcher = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -84,20 +87,20 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         HttpPost initialPost = new HttpPost(startUri);
                         initialPost.setEntity(new StringEntity(body, "utf-8"));
                         CloseableHttpResponse response;
-                        System.out.println("Sending initial post");
+                        log.info("Sending initial post");
                         try {
                             response = httpclient.execute(initialPost);
                         } catch (IOException e) {
                             e.printStackTrace();
                             throw new DataStreamException(e);
                         }
-                        System.out.println("Initial post sent");
+                        log.info("Initial post sent");
 
                         JsonNode responseNode = objectMapper.readTree(response.getEntity().getContent());
                         String scrollId = responseNode.get("_scroll_id").asText();
 
                         while (scrollId != null) {
-                            System.out.println("scrollId: "+scrollId);
+                            log.info("scrollId: "+scrollId);
                             URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=1m", null);
                             HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
                             partialGet.setEntity(new StringEntity(scrollId));
@@ -115,10 +118,10 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                 Matcher m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
                                 if (m.find()) {
                                     scrollId = m.group(1);
-                                    System.out.println("found next scrollId");
+                                    log.info("found next scrollId");
                                 } else {
                                     scrollId = null;
-                                    System.out.println("next scrollId not found");
+                                    log.info("next scrollId not found");
                                 }
                                 IOUtils.copy(data, outputStream);
                                 if (scrollId != null) {
@@ -140,13 +143,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                 throw new DataStreamException(e);
                             }
                         }
-                    } catch (DataStreamException e) {
-                        e.printStackTrace();
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (URISyntaxException e) {
+                    } catch (DataStreamException | IOException | URISyntaxException e) {
                         e.printStackTrace();
                     }
                 }
@@ -157,9 +154,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
             return inputStream;
 
 
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (URISyntaxException | IOException e) {
             e.printStackTrace();
         }
 

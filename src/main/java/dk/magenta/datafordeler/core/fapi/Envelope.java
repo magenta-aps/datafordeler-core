@@ -21,7 +21,7 @@ public class Envelope<E extends Entity> {
 
     public Envelope() {
         try {
-            this.terms = new URL("http://doc.data.gl/terms");
+            this.terms = new URL("https://doc.test.data.gl/terms");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
