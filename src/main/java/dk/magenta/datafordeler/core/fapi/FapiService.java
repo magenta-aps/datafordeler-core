@@ -9,8 +9,9 @@ import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
+
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.hibernate.Filter;
@@ -28,6 +29,8 @@ import javax.jws.WebParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.ws.WebServiceContext;
+import javax.xml.ws.handler.MessageContext;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.OffsetDateTime;
@@ -58,8 +61,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Autowired
     private DafoUserManager dafoUserManager;
 
-    @Context
-    private MessageContext context;
+    @Resource(name="wsContext")
+    WebServiceContext context;
 
     private Logger log = LogManager.getLogger("FapiService");
 
@@ -164,11 +167,13 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         throws InvalidClientInputException {
         this.log.info("Incoming SOAP request for item "+id); // TODO: add user from request
         Envelope<E> envelope = new Envelope<E>();
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
+        MessageContext messageContext = context.getMessageContext();
+        HttpServletRequest request = (HttpServletRequest)messageContext.get(MessageContext.SERVLET_REQUEST);
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         Q query = this.getQuery(registerFrom, registerTo);
         envelope.addQueryData(query);
         envelope.addUserData(user);
-        envelope.addRequestData(context.getHttpServletRequest());
+        envelope.addRequestData(request);
         try {
             E entity = this.searchById(id, query);
             envelope.setResult(entity);
@@ -231,10 +236,12 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public Envelope<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
         this.log.info("Incoming SOAP request, searching for query "+query.toString()); // TODO: add user from request
         Envelope<E> envelope = new Envelope<E>();
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
+        MessageContext messageContext = context.getMessageContext();
+        HttpServletRequest request = (HttpServletRequest)messageContext.get(MessageContext.SERVLET_REQUEST);
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         envelope.addQueryData(query);
         envelope.addUserData(user);
-        envelope.addRequestData(context.getHttpServletRequest());
+        envelope.addRequestData(request);
         Set<E> results = this.searchByQuery(query);
         envelope.setResults(results);
         this.log.info(results.size() + " items found, returning");

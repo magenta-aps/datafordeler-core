@@ -173,7 +173,7 @@
         <!-- Apache CXF (fapi) -->
         <dependency>
             <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-spring-boot-starter-jaxrs</artifactId>
+            <artifactId>cxf-spring-boot-starter-jaxws</artifactId>
             <version>RELEASE</version>
             <exclusions>
                 <exclusion>
@@ -181,11 +181,6 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-spring-boot-starter-jaxws</artifactId>
-            <version>RELEASE</version>
         </dependency>
 
         <!-- Unit testing -->
