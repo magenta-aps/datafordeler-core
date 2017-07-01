@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core.fapi;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
@@ -8,38 +7,35 @@ import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
-import dk.magenta.datafordeler.core.stereotypes.DafoUser;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
-import dk.magenta.datafordeler.core.util.ListHashMap;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.hibernate.Filter;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.*;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Created by lars on 19-04-17.
  */
 @Component
+@RestController
 public abstract class FapiService<E extends Entity, Q extends Query> {
 
     public static final String PARAM_PAGE = "page";
@@ -122,20 +118,20 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     /**
      * Handle a lookup-by-UUID request in REST. This method is called by the Servlet
      * @param id Identifier coming from the client
-     * @param uriInfo Request context, holding all info about the request
+     * @param requestParams url parameters
      * @return Found Entity, or null if none found.
      */
-    @GET
-    @Path("{id}")
+    //@GET
+    //@Path("{id}")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    public E getRest(@PathParam(value = "id") String id, @Context UriInfo uriInfo)
-        throws AccessDeniedException, AccessRequiredException, InvalidTokenException {
+    @RequestMapping("{id}")
+    public E getRest(@PathVariable("id") String id, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
+        throws AccessDeniedException, AccessRequiredException, InvalidTokenException, InvalidClientInputException {
         this.log.info("Incoming REST request for item "+id); // TODO: add user from request
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         this.checkAccess(user);
-        MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
-        Q query = this.getQuery(parameters, true);
+        Q query = this.getQuery(requestParams, true);
         try {
             E entity = this.searchById(id, query);
             this.log.debug("Item found, returning");
@@ -158,7 +154,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(operationName = "get")
     public E getSoap(@WebParam(name="id") @XmlElement(required=true) String id,
                      @WebParam(name="registerFrom") @XmlElement(required = false) String registerFrom,
-                     @WebParam(name="registerTo") @XmlElement(required = false) String registerTo) {
+                     @WebParam(name="registerTo") @XmlElement(required = false) String registerTo)
+        throws InvalidClientInputException {
         this.log.info("Incoming SOAP request for item "+id); // TODO: add user from request
         Q query = this.getQuery(registerFrom, registerTo);
         try {
@@ -188,19 +185,19 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     /**
      * Handle a lookup-by-parameters request in REST. This method is called by the Servlet
-     * @param uriInfo Request context, holding all info about the request
+     * @param requestParams Request Parameters from spring boot
      * @return Found Entities
      */
-    @GET
-    @Path("search")
+    //@GET
+    //@Path("search")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    public Collection<E> searchRest(@Context UriInfo uriInfo) throws DataFordelerException {
-        MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
-        this.log.info("Incoming REST request, searching for parameters "+parameters.toString()); // TODO: add user from request
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
+    @RequestMapping("search")
+    public Collection<E> searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
+        this.log.info("Incoming REST request, searching for parameters "+requestParams.toString()); // TODO: add user from request
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         // this.checkAccess(user);
-        Set<E> results = this.searchByQuery(this.getQuery(parameters, false));
+        Set<E> results = this.searchByQuery(this.getQuery(requestParams, false));
         this.log.info(results.size() + " items found, returning");
         return results;
     }
@@ -233,7 +230,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param parameters URL parameters received in a request
      * @return Query subclass instance
      */
-    protected Q getQuery(MultivaluedMap<String, String> parameters, boolean limitsOnly) {
+    protected Q getQuery(MultiValueMap<String, String> parameters, boolean limitsOnly) {
         Q query = this.getEmptyQuery();
         if (!limitsOnly) {
             query.setFromParameters(new ParameterMap(parameters));
