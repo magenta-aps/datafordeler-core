@@ -28,6 +28,9 @@ import javax.jws.WebParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.xml.bind.annotation.XmlElement;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.time.OffsetDateTime;
 import java.util.*;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -115,6 +118,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected abstract void checkAccess(DafoUserDetails user)
         throws AccessDeniedException, AccessRequiredException;
 
+
     /**
      * Handle a lookup-by-UUID request in REST. This method is called by the Servlet
      * @param id Identifier coming from the client
@@ -129,12 +133,18 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public E getRest(@PathVariable("id") String id, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
         throws AccessDeniedException, AccessRequiredException, InvalidTokenException, InvalidClientInputException {
         this.log.info("Incoming REST request for item "+id); // TODO: add user from request
+        Envelope<E> envelope = new Envelope<E>();
+        envelope.setPath(request.getServletPath());
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         this.checkAccess(user);
         Q query = this.getQuery(requestParams, true);
+        envelope.addQueryData(query);
+        envelope.addUserData(user);
         try {
             E entity = this.searchById(id, query);
+            envelope.setResult(entity);
             this.log.debug("Item found, returning");
+            envelope.close();
             return entity;
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -154,14 +164,21 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(operationName = "get")
     public E getSoap(@WebParam(name="id") @XmlElement(required=true) String id,
                      @WebParam(name="registerFrom") @XmlElement(required = false) String registerFrom,
-                     @WebParam(name="registerTo") @XmlElement(required = false) String registerTo)
+                     @WebParam(name="registerTo") @XmlElement(required = false) String registerTo,
+                     HttpServletRequest request)
         throws InvalidClientInputException {
         this.log.info("Incoming SOAP request for item "+id); // TODO: add user from request
+        Envelope<E> envelope = new Envelope<E>();
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         Q query = this.getQuery(registerFrom, registerTo);
+        envelope.addQueryData(query);
+        envelope.addUserData(user);
         try {
             E entity = this.searchById(id, query);
+            envelope.setResult(entity);
             this.log.debug("Item found, returning");
             this.log.info("registrations: "+entity.getRegistrations());
+            envelope.close();
             return entity;
         } catch (IllegalArgumentException e) {
             throw new InvalidClientInputException(e.getMessage());
@@ -193,13 +210,20 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
     @RequestMapping("search")
-    public Collection<E> searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
+    public Envelope<E> searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
         this.log.info("Incoming REST request, searching for parameters "+requestParams.toString()); // TODO: add user from request
+        Envelope<E> envelope = new Envelope<E>();
+        envelope.setPath(request.getServletPath());
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+        Q query = this.getQuery(requestParams, false);
         // this.checkAccess(user);
-        Set<E> results = this.searchByQuery(this.getQuery(requestParams, false));
+        envelope.addQueryData(query);
+        envelope.addUserData(user);
+        Set<E> results = this.searchByQuery(query);
+        envelope.setResults(results);
         this.log.info(results.size() + " items found, returning");
-        return results;
+        envelope.close();
+        return envelope;
     }
 
 
@@ -210,10 +234,16 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      */
     // TODO: How to use DafoUserDetails with SOAP requests?
     @WebMethod(operationName = "search")
-    public List<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
+    public List<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query, HttpServletRequest request) throws DataFordelerException {
         this.log.info("Incoming SOAP request, searching for query "+query.toString()); // TODO: add user from request
+        Envelope<E> envelope = new Envelope<E>();
+        envelope.addQueryData(query);
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+        envelope.addUserData(user);
         Set<E> results = this.searchByQuery(query);
+        envelope.setResults(results);
         this.log.info(results.size() + " items found, returning");
+        envelope.close();
         return new ArrayList<>(results);
     }
 
