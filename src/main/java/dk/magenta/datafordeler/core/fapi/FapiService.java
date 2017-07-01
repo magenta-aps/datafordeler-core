@@ -37,8 +37,6 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Created by lars on 19-04-17.
  */
-@Component
-@RestController
 public abstract class FapiService<E extends Entity, Q extends Query> {
 
     public static final String PARAM_PAGE = "page";
@@ -125,8 +123,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param requestParams url parameters
      * @return Found Entity, or null if none found.
      */
-    //@GET
-    //@Path("{id}")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
     @RequestMapping("{id}")
@@ -164,16 +160,15 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(operationName = "get")
     public Envelope<E> getSoap(@WebParam(name="id") @XmlElement(required=true) String id,
                      @WebParam(name="registerFrom") @XmlElement(required = false) String registerFrom,
-                     @WebParam(name="registerTo") @XmlElement(required = false) String registerTo,
-                     HttpServletRequest request)
+                     @WebParam(name="registerTo") @XmlElement(required = false) String registerTo)
         throws InvalidClientInputException {
         this.log.info("Incoming SOAP request for item "+id); // TODO: add user from request
         Envelope<E> envelope = new Envelope<E>();
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
         Q query = this.getQuery(registerFrom, registerTo);
         envelope.addQueryData(query);
         envelope.addUserData(user);
-        envelope.addRequestData(request);
+        envelope.addRequestData(context.getHttpServletRequest());
         try {
             E entity = this.searchById(id, query);
             envelope.setResult(entity);
@@ -233,13 +228,13 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      */
     // TODO: How to use DafoUserDetails with SOAP requests?
     @WebMethod(operationName = "search")
-    public Envelope<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query, HttpServletRequest request) throws DataFordelerException {
+    public Envelope<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
         this.log.info("Incoming SOAP request, searching for query "+query.toString()); // TODO: add user from request
         Envelope<E> envelope = new Envelope<E>();
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(context.getHttpServletRequest());
         envelope.addQueryData(query);
         envelope.addUserData(user);
-        envelope.addRequestData(request);
+        envelope.addRequestData(context.getHttpServletRequest());
         Set<E> results = this.searchByQuery(query);
         envelope.setResults(results);
         this.log.info(results.size() + " items found, returning");
