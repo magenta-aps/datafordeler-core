@@ -133,6 +133,11 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         );
     }
 
+    public void addEffect(V effect) {
+        if (!this.effects.contains(effect)) {
+            this.effects.add(effect);
+        }
+    }
 
     public void removeEffect(V effect) {
         // Be sure to also delete the effect yourself, since it still points to the Registration

@@ -82,7 +82,6 @@
             <scope>test</scope>
         </dependency>
 
-
         <!-- Jackson (JSON) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -109,8 +108,6 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>RELEASE</version>
         </dependency>
-
-
         <dependency>
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
             <artifactId>jackson-jaxrs-json-provider</artifactId>
