@@ -9,20 +9,17 @@ import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
 import dk.magenta.datafordeler.plugindemo.fapi.DemoQuery;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import org.hibernate.Session;
-import org.springframework.stereotype.Component;
 
 import javax.jws.WebMethod;
-import javax.jws.WebService;
-import javax.ws.rs.Path;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Created by lars on 19-04-17.
  */
-@Controller
+@RestController
 @RequestMapping("/demo/postnummer/1/rest")
 public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
 
