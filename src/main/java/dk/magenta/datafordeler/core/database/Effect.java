@@ -96,7 +96,7 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     protected void setRegistration(R registration) {
         if (registration != null) {
             this.registration = registration;
-            registration.effects.add(this);
+            registration.addEffect(this);
         }
     }
 
