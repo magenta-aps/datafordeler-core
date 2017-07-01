@@ -18,7 +18,6 @@ import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,20 +25,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.time.OffsetDateTime;
 import java.util.*;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Created by lars on 19-04-17.
  */
+@RequestMapping("/fapi_service_with_no_requestmapping")
 public abstract class FapiService<E extends Entity, Q extends Query> {
 
     public static final String PARAM_PAGE = "page";
@@ -126,9 +120,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param requestParams url parameters
      * @return Found Entity, or null if none found.
      */
-    @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    @RequestMapping("{id}")
+    @RequestMapping(path="/{id}",produces = {"application/json", "application/xml"})
     public Envelope<E> getRest(@PathVariable("id") String id, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
         throws AccessDeniedException, AccessRequiredException, InvalidTokenException, InvalidClientInputException {
         this.log.info("Incoming REST request for item "+id); // TODO: add user from request
@@ -206,9 +199,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param requestParams Request Parameters from spring boot
      * @return Found Entities
      */
-    @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
-    @RequestMapping("search")
+    @RequestMapping(path="/search", produces = {"application/json", "application/xml"})
     public Envelope<E> searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
         this.log.info("Incoming REST request, searching for parameters "+requestParams.toString()); // TODO: add user from request
         Envelope<E> envelope = new Envelope<E>();
