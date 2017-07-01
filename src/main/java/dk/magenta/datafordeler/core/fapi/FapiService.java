@@ -205,8 +205,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param requestParams Request Parameters from spring boot
      * @return Found Entities
      */
-    //@GET
-    //@Path("search")
     @Produces("application/xml,application/json")
     @WebMethod(exclude = true)
     @RequestMapping("search")
@@ -216,7 +214,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         envelope.setPath(request.getServletPath());
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         Q query = this.getQuery(requestParams, false);
-        // this.checkAccess(user);
+        this.checkAccess(user);
         envelope.addQueryData(query);
         envelope.addUserData(user);
         Set<E> results = this.searchByQuery(query);

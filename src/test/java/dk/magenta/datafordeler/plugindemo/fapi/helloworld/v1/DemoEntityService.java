@@ -16,13 +16,14 @@ import javax.jws.WebService;
 import javax.ws.rs.Path;
 import java.util.HashSet;
 import java.util.Set;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * Created by lars on 19-04-17.
  */
-@Path("")
-@Component
-@WebService
+@Controller
+@RequestMapping("/demo/postnummer/1/rest")
 public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
 
     @Override
