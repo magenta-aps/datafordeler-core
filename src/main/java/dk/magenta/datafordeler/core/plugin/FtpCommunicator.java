@@ -78,18 +78,20 @@ public class FtpCommunicator implements Communicator {
                     ftpClient.completePendingCommand();
                 }
             }
-            data = new CloseDetectInputStream(inputStream);
-            data.addAfterCloseListener(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        markFilesAsDone(ftpClient,uri,fileNames, DONE_FILE_ENDING);
-                        ftpClient.disconnect();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            if (inputStream != null) {
+                data = new CloseDetectInputStream(inputStream);
+                data.addAfterCloseListener(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            markFilesAsDone(ftpClient, uri, fileNames, DONE_FILE_ENDING);
+                            ftpClient.disconnect();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            });
+                });
+            }
         } catch (IOException e) {
             throw new DataStreamException(e);
         }
