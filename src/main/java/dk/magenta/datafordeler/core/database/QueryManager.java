@@ -31,7 +31,7 @@ public class QueryManager {
      * @return
      */
     public Identification getIdentification(Session session, UUID uuid) {
-        this.log.info("Get Identification from UUID " + uuid);
+        this.log.trace("Get Identification from UUID " + uuid);
         org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
         databaseQuery.setParameter("uuid", uuid);
         this.logQuery(databaseQuery);
@@ -49,7 +49,7 @@ public class QueryManager {
      * @return
      */
     public <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
-        this.log.info("Get all Entities of class " + eClass.getCanonicalName());
+        this.log.trace("Get all Entities of class " + eClass.getCanonicalName());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
         this.logQuery(databaseQuery);
         List<E> results = databaseQuery.getResultList();
@@ -72,7 +72,7 @@ public class QueryManager {
      * @return
      */
     public <E extends Entity> List<E> getAllEntities(Session session, Query query, Class<E> eClass) throws DataFordelerException {
-        this.log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
+        this.log.trace("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
         StringJoiner queryString = new StringJoiner(" and ");
         Map<String, Object> parameters = query.getSearchParameters();
         for (String key : parameters.keySet()) {
@@ -123,7 +123,7 @@ public class QueryManager {
      * @return
      */
     public <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
-        this.log.info("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid);
+        this.log.trace("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid);
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid = :uuid", eClass);
         databaseQuery.setParameter("uuid", uuid);
         this.logQuery(databaseQuery);
@@ -166,7 +166,7 @@ public class QueryManager {
      */
     public <V extends Effect> List<V> getEffects(Session session, Entity entity, OffsetDateTime effectFrom, OffsetDateTime effectTo, Class<V> vClass) {
         // AFAIK, this method is only ever used for testing
-        this.log.info("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        this.log.trace("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         org.hibernate.query.Query<V> databaseQuery = session.createQuery("select v from " + entity.getClass().getName() + " " + ENTITY +" join "+ENTITY+".registrations r join r.effects v where "+ENTITY+".id = :id and v.effectFrom = :from and v.effectTo = :to", vClass);
         databaseQuery.setParameter("id", entity.getId());
         databaseQuery.setParameter("from", effectFrom);
@@ -184,7 +184,7 @@ public class QueryManager {
      * @return
      */
     public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) throws PluginImplementationException {
-        this.log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
+        this.log.trace("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         LookupDefinition lookupDefinition = similar.getLookupDefinition();
         String root = "d";
         String extraJoin = lookupDefinition.getHqlJoinString(root);
@@ -211,7 +211,7 @@ public class QueryManager {
      * @param registration Registration to dedup
      */
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void dedupEffects(Session session, R registration) {
-        this.log.info("Remove duplicate Effects in Registration " + registration.getId() + " ("+registration.getRegisterChecksum()+")");
+        this.log.trace("Remove duplicate Effects in Registration " + registration.getId() + " ("+registration.getRegisterChecksum()+")");
         DoubleHashMap<OffsetDateTime, OffsetDateTime, V> authoritative = new DoubleHashMap<>();
         ListHashMap<V, V> duplicates = new ListHashMap<>();
         for (V effect : registration.getEffects()) {
@@ -253,7 +253,7 @@ public class QueryManager {
          * @param registration Registration to be saved
          */
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects) throws DataFordelerException {
-        this.log.info("Saving registration of type "+registration.getClass().getCanonicalName()+" with checksum "+registration.getRegisterChecksum()+" and sequence number "+registration.getSequenceNumber());
+        this.log.trace("Saving registration of type "+registration.getClass().getCanonicalName()+" with checksum "+registration.getRegisterChecksum()+" and sequence number "+registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
         }
