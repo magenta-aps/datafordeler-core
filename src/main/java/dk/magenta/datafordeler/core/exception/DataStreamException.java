@@ -15,6 +15,10 @@ public class DataStreamException extends DataFordelerException {
         super(message);
     }
 
+    public DataStreamException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     @Override
     public String getCode() {
         return "datafordeler.ioexception";

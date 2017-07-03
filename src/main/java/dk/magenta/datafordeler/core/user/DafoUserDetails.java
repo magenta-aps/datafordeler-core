@@ -13,6 +13,7 @@ public abstract class DafoUserDetails {
 
   public abstract String getNameQualifier();
   public abstract String getIdentity();
+  public abstract String getOnBehalfOf();
 
   public abstract boolean hasSystemRole(String role);
 
@@ -36,7 +37,7 @@ public abstract class DafoUserDetails {
 
   public abstract boolean hasUserProfile(String userProfileName);
 
-  public void checkHasUserProfile(String userProfileName) {
+  public void checkHasUserProfile(String userProfileName) throws AccessDeniedException {
     if(!hasUserProfile(userProfileName)) {
       throw new AccessDeniedException(
           "User " + this.toString() + " does not have the UserProfile " + userProfileName
@@ -68,6 +69,11 @@ public abstract class DafoUserDetails {
 
   @Override
   public String toString() {
-    return "[" + getIdentity() + "]@[" + getNameQualifier() + "]";
+    if(getOnBehalfOf() != null) {
+      return "[" + getIdentity() + "<" + getOnBehalfOf() + ">]@[" + getNameQualifier() + "]";
+
+    } else {
+      return "[" + getIdentity() + "]@[" + getNameQualifier() + "]";
+    }
   }
 }

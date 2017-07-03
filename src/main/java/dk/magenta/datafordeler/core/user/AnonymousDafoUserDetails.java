@@ -19,6 +19,11 @@ public class AnonymousDafoUserDetails extends DafoUserDetails {
   }
 
   @Override
+  public String getOnBehalfOf() {
+    return null;
+  }
+
+  @Override
   public boolean isAnonymous() {
     return true;
   }

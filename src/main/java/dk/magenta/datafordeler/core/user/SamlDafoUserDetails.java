@@ -18,6 +18,7 @@ import org.opensaml.xml.schema.XSString;
 public class SamlDafoUserDetails extends DafoUserDetails {
 
   public static String USERPROFILE_CLAIM_URL = "https://data.gl/claims/userprofile";
+  public static String ON_BEHALF_OF_CLAIM_URL = "https://data.gl/claims/on-behalf-of";
 
   private HashMap<String, UserProfile> userProfiles = new HashMap<>();
   private HashMap<String, Collection<UserProfile>> systemRoles = new HashMap<>();
@@ -26,6 +27,7 @@ public class SamlDafoUserDetails extends DafoUserDetails {
 
   private String nameQualifier;
   private String identity;
+  private String onBehalfOf;
 
   public SamlDafoUserDetails(Assertion assertion) {
     super();
@@ -34,6 +36,7 @@ public class SamlDafoUserDetails extends DafoUserDetails {
 
     this.nameQualifier = assertion.getSubject().getNameID().getNameQualifier();
     this.identity = assertion.getSubject().getNameID().getValue();
+    this.onBehalfOf = this.lookupOnBehalfOf();
   }
 
   public void addUserProfile(UserProfile userprofile) {
@@ -61,6 +64,24 @@ public class SamlDafoUserDetails extends DafoUserDetails {
     return result;
   }
 
+  private String lookupOnBehalfOf() {
+    for(AttributeStatement attributeStatement : sourceAssertion.getAttributeStatements()) {
+      for(Attribute attribute : attributeStatement.getAttributes()) {
+        if(attribute.getName().equals(ON_BEHALF_OF_CLAIM_URL)) {
+          for(XMLObject value : attribute.getAttributeValues()) {
+            return getString(value);
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  public String getIssueInstant() {
+    return sourceAssertion.getIssueInstant().toString();
+  }
+
   private String getString(XMLObject xmlValue) {
     if (xmlValue instanceof XSString) {
       return ((XSString) xmlValue).getValue();
@@ -80,6 +101,11 @@ public class SamlDafoUserDetails extends DafoUserDetails {
   @Override
   public String getIdentity() {
     return this.identity;
+  }
+
+  @Override
+  public String getOnBehalfOf() {
+    return this.onBehalfOf;
   }
 
   @Override

@@ -1,8 +1,11 @@
 package dk.magenta.datafordeler.core.user;
 
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
+import dk.magenta.datafordeler.core.util.LoggerHelper;
 import javax.servlet.http.HttpServletRequest;
 import org.opensaml.saml2.core.Assertion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +16,8 @@ import org.springframework.context.annotation.Bean;
  * from a users associanted UserProfiles.
  */
 public class DafoUserManager {
+
+  Logger logger = LoggerFactory.getLogger(DafoUserManager.class);
 
   @Autowired
   private TokenParser tokenParser;
@@ -47,7 +52,26 @@ public class DafoUserManager {
     // SAML token based user.
     String authHeader = request.getHeader("Authorization");
     if(authHeader != null && authHeader.indexOf("SAML ") == 0) {
-      return getSamlUserDetailsFromToken(authHeader.substring(5));
+      LoggerHelper loggerHelper = new LoggerHelper(logger, request);
+      loggerHelper.info("Authorizing with SAML token");
+
+      SamlDafoUserDetails userDetails;
+      try {
+         userDetails = getSamlUserDetailsFromToken(authHeader.substring(5));
+      }
+      catch(InvalidTokenException e) {
+        loggerHelper.info("Token verification failed: " + e.getMessage());
+        throw(e);
+      }
+
+      loggerHelper.setUser(userDetails);
+      loggerHelper.info(String.format(
+          "User authorized with SAML token %s issued at %s",
+          userDetails.getIdentity(),
+          userDetails.getIssueInstant()
+      ));
+
+      return userDetails;
     }
     // Fall back to an anonymous user
     return new AnonymousDafoUserDetails();

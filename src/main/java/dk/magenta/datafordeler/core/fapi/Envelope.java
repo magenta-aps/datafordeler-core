@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 
+import java.time.format.DateTimeFormatter;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.annotation.XmlElement;
 import java.net.MalformedURLException;
@@ -112,4 +113,25 @@ public class Envelope<E extends Entity> {
     public void close() {
         this.setResponseTimestamp(OffsetDateTime.now());
     }
+
+    public String toLogString(String queryString) {
+        return String.format(
+            "Path: %s, query: %s, results: %s, request timestamp: %s, "
+            + "response timestamp: %s, page: %s, pagesize: %s",
+            path,
+            queryString == null ? "<empty>" : queryString,
+            results.size(),
+            requestTimestamp.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            responseTimestamp == null ?
+                "<null>" :
+                responseTimestamp.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            page,
+            pageSize
+        );
+    }
+
+    public String toLogString() {
+        return toLogString(null);
+    }
+
 }

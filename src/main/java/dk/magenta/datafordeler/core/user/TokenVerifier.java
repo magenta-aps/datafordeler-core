@@ -143,7 +143,7 @@ public class TokenVerifier {
 
   }
 
-  public void verifyTokenAge(DateTime issueInstant) {
+  public void verifyTokenAge(DateTime issueInstant) throws InvalidTokenException {
     if(!isDateTimeSkewValid(
         config.getTimeSkewInSeconds(),
         config.getMaxAssertionTimeInSeconds(),
@@ -163,7 +163,7 @@ public class TokenVerifier {
     return !time.plusSeconds(config.getTimeSkewInSeconds()).isBeforeNow();
   }
 
-  public void verifySubject(Subject subject) {
+  public void verifySubject(Subject subject) throws InvalidTokenException {
     // TODO: Full BEARER validation? Would require recipient in the token
     if(subject == null) {
       throw new InvalidTokenException("No subject specified in token");
@@ -200,7 +200,7 @@ public class TokenVerifier {
   }
 
 
-  public void verifyConditions(Conditions conditions) {
+  public void verifyConditions(Conditions conditions) throws InvalidTokenException {
     DateTime notBefore = conditions.getNotBefore();
     if(notBefore == null) {
       throw new InvalidTokenException("NotBefore not defined on Conditions");

@@ -7,14 +7,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * An exception class that represents an error in processing an incoming SAML token.
  */
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
-public class InvalidTokenException extends HttpStatusResponseException {
+public class InvalidTokenException extends DataFordelerException {
 
   public InvalidTokenException(String message) {
-    super(message, HttpStatus.UNAUTHORIZED);
+    super(message);
   }
 
   public InvalidTokenException(String message, Throwable cause) {
-    super(message, cause, HttpStatus.UNAUTHORIZED);
+    super(message, cause);
   }
 
   public String getCode() {

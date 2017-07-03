@@ -8,10 +8,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * to missing permissions.
  */
 @ResponseStatus(HttpStatus.FORBIDDEN)
-public class AccessDeniedException extends HttpStatusResponseException {
+public class AccessDeniedException extends DataFordelerException {
 
   public AccessDeniedException(String message) {
-    super(message, HttpStatus.FORBIDDEN);
+    super(message);
+  }
+
+  public AccessDeniedException(String message, Throwable cause) {
+    super(message, cause);
   }
 
   public String getCode() {
