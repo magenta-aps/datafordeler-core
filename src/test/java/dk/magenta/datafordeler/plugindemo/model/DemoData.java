@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.Map;
+import org.hibernate.Session;
 
 /**
  * Created by lars on 21-02-17.
@@ -89,5 +90,9 @@ public class DemoData extends DataItem<DemoEffect, DemoData> {
 
     public void setReference(Identification reference) {
         this.reference = reference;
+    }
+
+    @Override
+    public void forceLoad(Session session) {
     }
 }

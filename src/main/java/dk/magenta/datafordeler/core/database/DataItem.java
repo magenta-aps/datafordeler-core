@@ -107,7 +107,6 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
         return new LookupDefinition(this.databaseFields());
     }
 
-    public void forceLoad(Session session) {
-    }
+    public abstract void forceLoad(Session session);
 
 }
