@@ -20,13 +20,13 @@ public class DemoQuery extends Query<DemoEntity> {
 
     public DemoQuery(){}
 
-    @QueryField(type = QueryField.FieldType.INT)
+    @QueryField(type = QueryField.FieldType.INT, queryName = POSTNR)
     private String postnr;
 
-    @QueryField(type = QueryField.FieldType.STRING)
+    @QueryField(type = QueryField.FieldType.STRING, queryName = BYNAVN)
     private String bynavn;
 
-    @QueryField(type = QueryField.FieldType.BOOLEAN)
+    @QueryField(type = QueryField.FieldType.BOOLEAN, queryName = AKTIV)
     private String aktiv;
 
     public String getPostnr() {
