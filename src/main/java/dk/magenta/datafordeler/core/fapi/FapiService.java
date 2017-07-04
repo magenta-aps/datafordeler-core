@@ -135,9 +135,11 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public String index(HttpServletRequest request) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode root = objectMapper.createObjectNode();
-        root.put("url", request.getServletPath());
+        root.put("metadata_url", request.getServletPath());
+        root.put("fetch_url", request.getServletPath() + "/{UUID}");
+        root.put("search_url", request.getServletPath() + "/search");
         ArrayNode fields = objectMapper.createArrayNode();
-        root.set("queryfields", fields);
+        root.set("search_queryfields", fields);
         Class<? extends Query> clazz = this.getEmptyQuery().getClass();
         for(Field field : clazz.getDeclaredFields()) {
             if(field.isAnnotationPresent(QueryField.class)) {
