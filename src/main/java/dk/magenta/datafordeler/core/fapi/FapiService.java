@@ -1,6 +1,8 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
@@ -129,22 +131,24 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         }
     }
 
-    @RequestMapping(path="", produces="text/plain")
+    @RequestMapping(path="", produces="application/json")
     public String index(HttpServletRequest request) {
-        StringBuilder output = new StringBuilder();
-        output.append("URL: " + request.getServletPath() + "\n");
-        output.append("Fields:\n");
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode root = objectMapper.createObjectNode();
+        root.put("url", request.getServletPath());
+        ArrayNode fields = objectMapper.createArrayNode();
+        root.set("queryfields", fields);
         Class<? extends Query> clazz = this.getEmptyQuery().getClass();
         for(Field field : clazz.getDeclaredFields()) {
             if(field.isAnnotationPresent(QueryField.class)) {
                 QueryField qf = field.getAnnotation(QueryField.class);
-                output.append(
-                    "  " + qf.queryName() + " (" + qf.type().name().toLowerCase()+ ")\n"
-                );
+                ObjectNode jsonField = objectMapper.createObjectNode();
+                jsonField.put("name", qf.queryName());
+                jsonField.put("type", qf.type().name().toLowerCase());
+                fields.add(jsonField);
             }
         }
-        output.append("\n");
-        return output.toString();
+        return root.toString();
     }
 
 
