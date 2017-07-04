@@ -15,4 +15,10 @@ public @interface QueryField {
         STRING, INT, BOOLEAN
     }
     FieldType type() default FieldType.STRING;
+
+    /**
+     * The querystring name used when querying this field.
+     * @return
+     */
+    public String queryName();
 }

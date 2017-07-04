@@ -11,6 +11,9 @@ import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 
 import dk.magenta.datafordeler.core.util.LoggerHelper;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import org.hibernate.Filter;
@@ -125,6 +128,25 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             throw(e);
         }
     }
+
+    @RequestMapping(path="", produces="text/plain")
+    public String index(HttpServletRequest request) {
+        StringBuilder output = new StringBuilder();
+        output.append("URL: " + request.getServletPath() + "\n");
+        output.append("Fields:\n");
+        Class<? extends Query> clazz = this.getEmptyQuery().getClass();
+        for(Field field : clazz.getDeclaredFields()) {
+            if(field.isAnnotationPresent(QueryField.class)) {
+                QueryField qf = field.getAnnotation(QueryField.class);
+                output.append(
+                    "  " + qf.queryName() + " (" + qf.type().name().toLowerCase()+ ")\n"
+                );
+            }
+        }
+        output.append("\n");
+        return output.toString();
+    }
+
 
     /**
      * Handle a lookup-by-UUID request in REST. This method is called by the Servlet
