@@ -3,17 +3,14 @@ package dk.magenta.datafordeler.core.plugin;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
-import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Proxy.Type;
 import org.apache.commons.net.PrintCommandListener;
-import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 import org.apache.http.StatusLine;
-import org.springframework.beans.factory.annotation.Value;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 
@@ -36,7 +33,7 @@ public class FtpCommunicator implements Communicator {
     private boolean useFtps;
     private String DONE_FILE_ENDING = ".done";
 
-    String ftpHttpConnectProxy = "http://localhost:8888";
+    String ftpHttpConnectProxy = "http://10.240.82.10:80";
 
     public FtpCommunicator(String username, String password) {
         this(username, password, false);
