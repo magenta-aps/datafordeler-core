@@ -3,14 +3,17 @@ package dk.magenta.datafordeler.core.plugin;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
+import java.io.ByteArrayInputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Proxy.Type;
 import org.apache.commons.net.PrintCommandListener;
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 import org.apache.http.StatusLine;
+import org.apache.logging.log4j.util.Strings;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 
@@ -28,30 +31,33 @@ import java.util.*;
  */
 public class FtpCommunicator implements Communicator {
 
-    private String username;
-    private String password;
-    private boolean useFtps;
-    private String DONE_FILE_ENDING = ".done";
+    protected static final String DONE_FILE_ENDING = ".done";
 
-    String ftpHttpConnectProxy = "http://10.240.82.10:80";
+    protected String username;
+    protected String password;
+    protected boolean useFtps;
+    protected String proxyString;
 
     public FtpCommunicator(String username, String password) {
         this(username, password, false);
     }
 
     public FtpCommunicator(String username, String password, boolean useFtps) {
+        this(username, password, useFtps, null);
+    }
+
+    public FtpCommunicator(String username, String password, boolean useFtps,
+        String proxyString) {
         this.username = username;
         this.password = password;
         this.useFtps = useFtps;
+        this.proxyString = proxyString;
     }
 
-    @Override
-    public InputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
-        FTPClient ftpClient = this.useFtps ? new FTPSClient(true) : new FTPClient();
-        String host = uri.getHost();
-        if(ftpHttpConnectProxy != null && ftpHttpConnectProxy != "") {
+    protected void setupProxy(FTPClient ftpClient) throws DataStreamException {
+        if(!Strings.isEmpty(proxyString)) {
             try {
-                URI proxyURI = new URI(ftpHttpConnectProxy);
+                URI proxyURI = new URI(proxyString);
                 Proxy proxy = new Proxy(
                     Type.HTTP,
                     new InetSocketAddress(proxyURI.getHost(), proxyURI.getPort())
@@ -62,31 +68,44 @@ public class FtpCommunicator implements Communicator {
                 throw new DataStreamException("Could not add proxy to FTP connection", e);
             }
         }
+
+    }
+
+    protected FTPClient performConnect(URI uri) throws IOException, DataStreamException {
+        FTPClient ftpClient = this.useFtps ? new FTPSClient(true) : new FTPClient();
+        String host = uri.getHost();
         int port = uri.getPort() != -1 ? uri.getPort() : (this.useFtps ? 990 : 21);
+        setupProxy(ftpClient);
+        ftpClient.connect(host, port);
+        this.checkServerReply(ftpClient, "FTP server "+host+":"+port+" rejected connection");
+        ftpClient.login(this.username, this.password);
+        this.checkServerReply(ftpClient, "FTP server "+host+":"+port+" rejected login for user " + this.username);
+        ftpClient.enterLocalPassiveMode();
+
+        // Print out FTP communication
+        // TODO: Make this log to the logging system instead. PrintLoggerWriter?
+        ftpClient.addProtocolCommandListener(new PrintCommandListener(
+            System.out, true
+        ));
+
+        return ftpClient;
+    }
+
+    @Override
+    public InputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
         CloseDetectInputStream data = null;
         try {
-            // Print out FTP communication
-            ftpClient.addProtocolCommandListener(new PrintCommandListener(
-                System.out, true
-            ));
-            ftpClient.connect(host, port);
-            this.checkServerReply(ftpClient, "FTP server "+host+":"+port+" rejected connection");
-            ftpClient.login(this.username, this.password);
-            this.checkServerReply(ftpClient, "FTP server "+host+":"+port+" rejected login for user " + this.username);
-            ftpClient.enterLocalPassiveMode();
-            //ftpClient.setFileTransferMode(FTP.BINARY_FILE_TYPE);
+            FTPClient ftpClient = performConnect(uri);
 
             String path = uri.getPath();
-
             List<String> fileNamesUnfiltered = Arrays.asList(ftpClient.listNames(uri.getPath()));
             List<String> fileNames = filter(fileNamesUnfiltered, DONE_FILE_ENDING);
-
             fileNames.sort(Comparator.naturalOrder());
 
             InputStream inputStream = null;
 
             if(fileNames.size() < 1){
-                //TODO handle no files
+                inputStream = new ByteArrayInputStream("".getBytes());
             } else if (fileNames.size() == 1){
                 inputStream = ftpClient.retrieveFileStream(fileNames.get(0));
                 ftpClient.completePendingCommand();
