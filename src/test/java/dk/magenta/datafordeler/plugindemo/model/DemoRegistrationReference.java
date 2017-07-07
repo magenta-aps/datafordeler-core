@@ -25,11 +25,11 @@ public class DemoRegistrationReference implements RegistrationReference {
         return this.checksum;
     }
 
-    @JsonProperty("sekvensNummer")
-    public int sequenceNumber;
+    @JsonProperty("sekvensnummer")
+    public int sekvensnummer;
 
-    public int getSequenceNumber() {
-        return sequenceNumber;
+    public int getSekvensnummer() {
+        return sekvensnummer;
     }
 
     public DemoRegistrationReference() {
@@ -39,9 +39,9 @@ public class DemoRegistrationReference implements RegistrationReference {
         this.uri = uri;
     }
 
-    public DemoRegistrationReference(String checksum, int sequenceNumber) {
+    public DemoRegistrationReference(String checksum, int sekvensnummer) {
         this.checksum = checksum;
-        this.sequenceNumber = sequenceNumber;
+        this.sekvensnummer = sekvensnummer;
     }
 
 }

@@ -28,19 +28,19 @@ public class DemoRegistration extends Registration<DemoEntity, DemoRegistration,
     }
 
     // Should match the field names on the register; change as required
-    @JsonProperty(value = "registerFrom")
-    public void setRegistrationFrom(OffsetDateTime from) {
-        this.registrationFrom = from;
+    @JsonProperty(value = "registerFra")
+    public void setRegistreringFra(OffsetDateTime from) {
+        this.registreringFra = from;
     }
 
-    @JsonProperty(value = "registerTo")
-    public void setRegistrationTo(OffsetDateTime to) {
-        this.registrationTo = to;
+    @JsonProperty(value = "registerTil")
+    public void setRegistreringTil(OffsetDateTime to) {
+        this.registreringTil = to;
     }
 
     @JsonProperty(value = "virkninger")
-    public void setEffects(Collection<DemoEffect> effects) {
-        super.setEffects(effects);
+    public void setVirkninger(Collection<DemoEffect> virkninger) {
+        super.setVirkninger(virkninger);
     }
 
 }

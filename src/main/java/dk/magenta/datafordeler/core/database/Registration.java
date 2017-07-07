@@ -34,42 +34,42 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     public static final String FILTERPARAM_REGISTRATION_TO = "registrationToDate";
 
     public Registration() {
-        this.effects = new ArrayList<V>();
+        this.virkninger = new ArrayList<V>();
     }
 
-    public Registration(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, int sequenceNumber) {
+    public Registration(OffsetDateTime registreringFra, OffsetDateTime registreringTil, int sekvensnummer) {
         this();
-        this.registrationFrom = registrationFrom;
-        this.registrationTo = registrationTo;
-        this.sequenceNumber = sequenceNumber;
+        this.registreringFra = registreringFra;
+        this.registreringTil = registreringTil;
+        this.sekvensnummer = sekvensnummer;
     }
 
-    public Registration(LocalDate registrationFrom, LocalDate registrationTo, int sequenceNumber) {
+    public Registration(LocalDate registreringFra, LocalDate registreringTil, int sekvensnummer) {
         this(
-                registrationFrom != null ? OffsetDateTime.of(registrationFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
-                registrationTo != null ? OffsetDateTime.of(registrationTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
-                sequenceNumber
+                registreringFra != null ? OffsetDateTime.of(registreringFra, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                registreringTil != null ? OffsetDateTime.of(registreringTil, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+            sekvensnummer
         );
     }
 
-    public Registration(TemporalAccessor registrationFrom, TemporalAccessor registrationTo, int sequenceNumber) {
+    public Registration(TemporalAccessor registreringFra, TemporalAccessor registreringTil, int sekvensnummer) {
         this(
-                registrationFrom != null ? OffsetDateTime.from(registrationFrom) : null,
-                registrationTo != null ? OffsetDateTime.from(registrationTo) : null,
-                sequenceNumber
+                registreringFra != null ? OffsetDateTime.from(registreringFra) : null,
+                registreringTil != null ? OffsetDateTime.from(registreringTil) : null,
+            sekvensnummer
         );
     }
 
     /**
-     * @param registrationFrom A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
-     * @param registrationTo A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
+     * @param registreringFra A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
+     * @param registreringTil A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * If you want other date formats, consider using java.time.OffsetDateTime.parse() to generate an OffsetDateTime object and pass it
      */
-    public Registration(String registrationFrom, String registrationTo, int sequenceNumber) {
+    public Registration(String registreringFra, String registreringTil, int sekvensnummer) {
         this(
-                registrationFrom != null ? OffsetDateTime.parse(registrationFrom) : null,
-                registrationTo != null ? OffsetDateTime.parse(registrationTo) : null,
-                sequenceNumber
+                registreringFra != null ? OffsetDateTime.parse(registreringFra) : null,
+                registreringTil != null ? OffsetDateTime.parse(registreringTil) : null,
+            sekvensnummer
         );
     }
 
@@ -96,109 +96,109 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @Filter(name = Effect.FILTER_EFFECT_FROM, condition="(effectTo >= :"+Effect.FILTERPARAM_EFFECT_FROM+" OR effectTo is null)")
-    @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+")")
-    protected List<V> effects;
+    @Filter(name = Effect.FILTER_EFFECT_FROM, condition="(virkningTil >= :"+Effect.FILTERPARAM_EFFECT_FROM+" OR virkningTil is null)")
+    @Filter(name = Effect.FILTER_EFFECT_TO, condition="(virkningFra < :"+Effect.FILTERPARAM_EFFECT_TO+")")
+    protected List<V> virkninger;
 
-    @JsonProperty(value = "effects")
-    @XmlElement(name = "effect")
-    @JacksonXmlProperty(localName = "effect")
+    @JsonProperty(value = "virkninger")
+    @XmlElement(name = "virkninger")
+    @JacksonXmlProperty(localName = "virkninger")
     @JacksonXmlElementWrapper(useWrapping = false)
-    public List<V> getEffects() {
-        return this.effects;
+    public List<V> getVirkninger() {
+        return this.virkninger;
     }
 
 
-    public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
-        for (V effect : this.effects) {
-            if ((effect.getEffectFrom() == null ? effectFrom == null : effect.getEffectFrom().equals(effectFrom)) &&
-                (effect.getEffectTo() == null ? effectTo == null : effect.getEffectTo().equals(effectTo))) {
+    public V getEffect(OffsetDateTime virkningFra, OffsetDateTime virkningTil) {
+        for (V effect : this.virkninger) {
+            if ((effect.getVirkningFra() == null ? virkningFra == null : effect.getVirkningFra().equals(virkningFra)) &&
+                (effect.getVirkningTil() == null ? virkningTil == null : effect.getVirkningTil().equals(virkningTil))) {
                 return effect;
             }
         }
         return null;
     }
 
-    public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
+    public V getEffect(LocalDateTime virkningFra, LocalDateTime virkningTil) {
         return this.getEffect(
-                effectFrom != null ? OffsetDateTime.of(effectFrom, ZoneOffset.UTC) : null,
-                effectTo != null ? OffsetDateTime.of(effectTo, ZoneOffset.UTC) : null
+                virkningFra != null ? OffsetDateTime.of(virkningFra, ZoneOffset.UTC) : null,
+                virkningTil != null ? OffsetDateTime.of(virkningTil, ZoneOffset.UTC) : null
         );
     }
 
-    public V getEffect(LocalDate effectFrom, LocalDate effectTo) {
+    public V getEffect(LocalDate virkningFra, LocalDate virkningTil) {
         return this.getEffect(
-                effectFrom != null ? OffsetDateTime.of(effectFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
-                effectTo != null ? OffsetDateTime.of(effectTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null
+                virkningFra != null ? OffsetDateTime.of(virkningFra, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                virkningTil != null ? OffsetDateTime.of(virkningTil, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null
         );
     }
 
     public void addEffect(V effect) {
-        if (!this.effects.contains(effect)) {
-            this.effects.add(effect);
+        if (!this.virkninger.contains(effect)) {
+            this.virkninger.add(effect);
         }
     }
 
     public void removeEffect(V effect) {
         // Be sure to also delete the effect yourself, since it still points to the Registration
-        this.effects.remove(effect);
+        this.virkninger.remove(effect);
     }
 
     @JsonProperty
-    public void setEffects(Collection<V> effects) {
-        this.effects = new ArrayList<V>(effects);
+    public void setVirkninger(Collection<V> virkninger) {
+        this.virkninger = new ArrayList<V>(virkninger);
     }
 
 
 
 
     @Column(nullable = false, insertable = true, updatable = false)
-    protected OffsetDateTime registrationFrom;
+    protected OffsetDateTime registreringFra;
 
-    @JsonProperty(value = "registrationFrom")
+    @JsonProperty(value = "registreringFra")
     @XmlElement
     @XmlJavaTypeAdapter(type = OffsetDateTime.class, value = OffsetDateTimeAdapter.class)
-    public OffsetDateTime getRegistrationFrom() {
-        return this.registrationFrom;
+    public OffsetDateTime getRegistreringFra() {
+        return this.registreringFra;
     }
 
-    @JsonProperty(value = "registrationFrom")
-    public void setRegistrationFrom(OffsetDateTime registrationFrom) {
-        this.registrationFrom = registrationFrom;
+    @JsonProperty(value = "registreringFra")
+    public void setRegistreringFra(OffsetDateTime registreringFra) {
+        this.registreringFra = registreringFra;
     }
 
 
 
 
     @Column(nullable = true, insertable = true, updatable = false)
-    protected OffsetDateTime registrationTo;
+    protected OffsetDateTime registreringTil;
 
-    @JsonProperty(value = "registrationTo")
+    @JsonProperty(value = "registreringTil")
     @XmlElement
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
-    public OffsetDateTime getRegistrationTo() {
-        return this.registrationTo;
+    public OffsetDateTime getRegistreringTil() {
+        return this.registreringTil;
     }
 
-    @JsonProperty(value = "registrationTo")
-    public void setRegistrationTo(OffsetDateTime registrationTo) {
-        this.registrationTo = registrationTo;
+    @JsonProperty(value = "registreringTil")
+    public void setRegistreringTil(OffsetDateTime registreringTil) {
+        this.registreringTil = registreringTil;
     }
 
 
 
     @Column(nullable = false, insertable = true, updatable = false)
-    protected int sequenceNumber;
+    protected int sekvensnummer;
 
-    @JsonProperty(value = "sequenceNumber")
+    @JsonProperty(value = "sekvensnummer")
     @XmlElement
-    public int getSequenceNumber() {
-        return this.sequenceNumber;
+    public int getSekvensnummer() {
+        return this.sekvensnummer;
     }
 
-    @JsonProperty(value = "sequenceNumber")
-    public void setSequenceNumber(int sequenceNumber) {
-        this.sequenceNumber = sequenceNumber;
+    @JsonProperty(value = "sekvensnummer")
+    public void setSekvensnummer(int sekvensnummer) {
+        this.sekvensnummer = sekvensnummer;
     }
 
 
@@ -236,16 +236,16 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         StringJoiner s = new StringJoiner("\n");
         s.add(indentString + this.getClass().getSimpleName()+"["+this.hashCode()+"] {");
         if (this.entity != null) {
-            Identification identification = this.entity.getIdentification();
-            s.add(subIndentString + "entity: " + identification.getUuid()+" @ "+identification.getDomain());
+            Identification identification = this.entity.getIdentifikation();
+            s.add(subIndentString + "entity: " + identification.getUuid()+" @ "+identification.getDomaene());
         } else {
             s.add(subIndentString + "entity: NULL");
         }
         s.add(subIndentString + "checksum: "+this.registerChecksum);
-        s.add(subIndentString + "from: "+this.registrationFrom);
-        s.add(subIndentString + "to: "+this.registrationTo);
-        s.add(subIndentString + "effects: [");
-        for (V effect : this.effects) {
+        s.add(subIndentString + "from: "+this.registreringFra);
+        s.add(subIndentString + "to: "+this.registreringTil);
+        s.add(subIndentString + "virkninger: [");
+        for (V effect : this.virkninger) {
             s.add(effect.toString(indent + 2));
         }
         s.add(subIndentString + "]");
@@ -254,7 +254,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
     public void forceLoad(Session session) {
-        for (V effect : this.effects) {
+        for (V effect : this.virkninger) {
             effect.forceLoad(session);
         }
     }

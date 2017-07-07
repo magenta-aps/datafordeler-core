@@ -33,7 +33,7 @@ public class DatabaseTest {
     @Autowired
     QueryManager queryManager;
 
-    private static final String domain = "test";
+    private static final String domaene = "test";
 
 
     @Test
@@ -42,13 +42,13 @@ public class DatabaseTest {
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         DemoEntity demoEntity = new DemoEntity();
-        Identification demoIdentification = new Identification(uuid, domain);
-        demoEntity.setIdentification(demoIdentification);
+        Identification demoIdentification = new Identification(uuid, domaene);
+        demoEntity.setIdentifikation(demoIdentification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
-        queryManager.saveRegistration(session, demoEntity, demoRegistration);
+        queryManager.saveRegistrering(session, demoEntity, demoRegistration);
         session.flush();
         transaction.commit();
-        Assert.assertTrue(demoEntity.getRegistrations().contains(demoRegistration));
+        Assert.assertTrue(demoEntity.getRegistreringer().contains(demoRegistration));
         session.close();
         session = sessionManager.getSessionFactory().openSession();
         demoRegistration = (DemoRegistration) session.merge(demoRegistration);
@@ -56,12 +56,12 @@ public class DatabaseTest {
         demoEntity = queryManager.getEntity(session, uuid, DemoEntity.class);
         Assert.assertNotNull(demoEntity);
         Assert.assertEquals(uuid, demoEntity.getUUID());
-        Assert.assertEquals(domain, demoEntity.getDomain());
+        Assert.assertEquals(domaene, demoEntity.getDomain());
         Identification identification = queryManager.getIdentification(session, uuid);
         Assert.assertNotNull(identification);
         Assert.assertEquals(uuid, identification.getUuid());
-        Assert.assertEquals(domain, identification.getDomain());
-        Assert.assertTrue(demoEntity.getRegistrations().contains(demoRegistration));
+        Assert.assertEquals(domaene, identification.getDomaene());
+        Assert.assertTrue(demoEntity.getRegistreringer().contains(demoRegistration));
         transaction.commit();
         session.close();
     }
@@ -72,11 +72,11 @@ public class DatabaseTest {
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         DemoEntity demoEntity = new DemoEntity();
-        Identification demoIdentification = new Identification(uuid, domain);
-        demoEntity.setIdentification(demoIdentification);
+        Identification demoIdentification = new Identification(uuid, domaene);
+        demoEntity.setIdentifikation(demoIdentification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
         DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        queryManager.saveRegistration(session, demoEntity, demoRegistration);
+        queryManager.saveRegistrering(session, demoEntity, demoRegistration);
         transaction.commit();
         session.close();
 
@@ -88,8 +88,8 @@ public class DatabaseTest {
         demoEffect = (DemoEffect) session.merge(demoEffect);
         demoEntity = queryManager.getEntity(session, uuid, DemoEntity.class);
         boolean found = false;
-        for (DemoRegistration registration : demoEntity.getRegistrations()) {
-            for (DemoEffect effect : registration.getEffects()) {
+        for (DemoRegistration registration : demoEntity.getRegistreringer()) {
+            for (DemoEffect effect : registration.getVirkninger()) {
                 if (effect == demoEffect) {
                     found = true;
                 }
@@ -105,7 +105,7 @@ public class DatabaseTest {
 
         found = false;
         for (DemoEffect effect : effects) {
-            if (effect.getEffectFrom().equals(demoEffect.getEffectFrom()) && effect.getEffectTo().equals(demoEffect.getEffectTo())) {
+            if (effect.getVirkningFra().equals(demoEffect.getVirkningFra()) && effect.getVirkningTil().equals(demoEffect.getVirkningTil())) {
                 found = true;
             }
         }
@@ -120,17 +120,17 @@ public class DatabaseTest {
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         DemoEntity demoEntity = new DemoEntity();
-        Identification demoIdentification = new Identification(uuid, domain);
-        demoEntity.setIdentification(demoIdentification);
+        Identification demoIdentification = new Identification(uuid, domaene);
+        demoEntity.setIdentifikation(demoIdentification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
         DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
         DemoData demoDataItem = new DemoData(8000, "Århus");
-        demoDataItem.addEffect(demoEffect);
+        demoDataItem.addVirkning(demoEffect);
         Assert.assertTrue(demoEffect.getDataItems().contains(demoDataItem));
         demoDataItem.removeEffect(demoEffect);
         Assert.assertFalse(demoEffect.getDataItems().contains(demoDataItem));
-        demoDataItem.addEffect(demoEffect);
-        queryManager.saveRegistration(session, demoEntity, demoRegistration);
+        demoDataItem.addVirkning(demoEffect);
+        queryManager.saveRegistrering(session, demoEntity, demoRegistration);
         session.flush();
         transaction.commit();
         //session.close();
@@ -143,8 +143,8 @@ public class DatabaseTest {
         DemoEntity demoEntity1 = queryManager.getEntity(session, uuid, DemoEntity.class);
         Assert.assertNotNull(demoEntity1);
         boolean found = false;
-        for (DemoRegistration registration : demoEntity1.getRegistrations()) {
-            for (DemoEffect effect : registration.getEffects()) {
+        for (DemoRegistration registration : demoEntity1.getRegistreringer()) {
+            for (DemoEffect effect : registration.getVirkninger()) {
                 for (DemoData data : effect.getDataItems()) {
                     if (data.getPostnr() == 8000 && data.getBynavn().equals("Århus")) {
                         found = true;
@@ -174,8 +174,8 @@ public class DatabaseTest {
         Transaction transaction = session.beginTransaction();
 
         DemoEntity demoEntity = new DemoEntity();
-        Identification demoIdentification = new Identification(uuid, domain);
-        demoEntity.setIdentification(demoIdentification);
+        Identification demoIdentification = new Identification(uuid, domaene);
+        demoEntity.setIdentifikation(demoIdentification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
         DemoEffect demoEffect1 = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
         DemoEffect demoEffect2 = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
@@ -183,7 +183,7 @@ public class DatabaseTest {
         DemoEffect demoEffect4 = new DemoEffect(demoRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
         DemoEffect demoEffect5 = new DemoEffect(demoRegistration, "2017-12-31T23:59:59+01:00", "2018-12-31T23:59:59+01:00");
 
-        queryManager.saveRegistration(session, demoEntity, demoRegistration);
+        queryManager.saveRegistrering(session, demoEntity, demoRegistration);
 
         transaction.commit();
         session.close();
@@ -194,7 +194,7 @@ public class DatabaseTest {
         demoRegistration = (DemoRegistration) session.merge(demoRegistration);
 
         queryManager.dedupEffects(session, demoRegistration);
-        List<DemoEffect> demoEffects = demoRegistration.getEffects();
+        List<DemoEffect> demoEffects = demoRegistration.getVirkninger();
 
         Assert.assertEquals(2, demoEffects.size());
         for (DemoEffect e1 : demoEffects) {
@@ -217,15 +217,15 @@ public class DatabaseTest {
         Transaction transaction = session.beginTransaction();
         UUID uuid = UUID.randomUUID();
 
-        Identification identification = new Identification(uuid, domain);
+        Identification identification = new Identification(uuid, domaene);
         DemoEntity demoEntity = new DemoEntity();
-        demoEntity.setIdentification(identification);
+        demoEntity.setIdentifikation(identification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
         demoRegistration.setEntity(demoEntity);
         DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
         DemoData demoData = new DemoData(1455, "København K");
-        demoData.addEffect(demoEffect);
-        queryManager.saveRegistration(session, demoEntity, demoRegistration);
+        demoData.addVirkning(demoEffect);
+        queryManager.saveRegistrering(session, demoEntity, demoRegistration);
 
         transaction.commit();
 

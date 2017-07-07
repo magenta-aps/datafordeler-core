@@ -26,26 +26,26 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonIgnore
     @XmlTransient
-    protected Identification identification;
+    protected Identification identifikation;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
-    @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null")
-    @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO)
-    @OrderBy("sequenceNumber")
-    protected List<R> registrations;
+    @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registreringTil >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registreringTil is null")
+    @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="registreringFra < :"+Registration.FILTERPARAM_REGISTRATION_TO)
+    @OrderBy("sekvensnummer") // Refers to sekvensnummer in Registration class
+    protected List<R> registreringer;
 
     @Transient
     @JsonIgnore
     private Query filter = null;
 
     public Entity() {
-        this.registrations = new ArrayList<R>();
-        this.identification = new Identification();
+        this.registreringer = new ArrayList<R>();
+        this.identifikation = new Identification();
     }
 
-    public Entity(Identification identification) {
+    public Entity(Identification identifikation) {
         this();
-        this.identification = identification;
+        this.identifikation = identifikation;
     }
 
     public Entity(UUID uuid, String domain) {
@@ -53,51 +53,53 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     @JsonIgnore
-    public Identification getIdentification() {
-        return this.identification;
+    public Identification getIdentifikation() {
+        return this.identifikation;
     }
 
     @JsonProperty("uuid")
     public UUID getUUID() {
-        return this.identification.getUuid();
+        return this.identifikation.getUuid();
     }
 
-    public void setIdentification(Identification identification) {
-        this.identification = identification;
+    public void setIdentifikation(Identification identification) {
+        this.identifikation = identification;
     }
 
     @JsonProperty("uuid")
     public void setUUID(UUID uuid) {
-        this.identification.setUuid(uuid);
+        this.identifikation.setUuid(uuid);
     }
 
+    @JsonProperty("domaene")
     public String getDomain() {
-        return this.identification.getDomain();
+        return this.identifikation.getDomaene();
     }
 
-    @JsonProperty
+
+    @JsonProperty("domaene")
     public void setDomain(String domain) {
-        this.identification.setDomain(domain);
+        this.identifikation.setDomaene(domain);
     }
 
-    @OrderBy("registrationFrom")
+    @OrderBy("registrationFra")
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @XmlElement(name="registration")
-    @JacksonXmlProperty(localName = "registration")
+    @XmlElement(name="registreringer")
+    @JacksonXmlProperty(localName = "registreringer")
     @JacksonXmlElementWrapper(useWrapping = false)
-    public List<R> getRegistrations() {
-        return this.registrations;
+    public List<R> getRegistreringer() {
+        return this.registreringer;
     }
 
     public void addRegistration(R registration) {
-        if (!this.registrations.contains(registration)) {
-            this.registrations.add(registration);
+        if (!this.registreringer.contains(registration)) {
+            this.registreringer.add(registration);
         }
     }
 
     public R getRegistration(OffsetDateTime registrationFrom) {
-        for (R registration : this.registrations) {
-            if (registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) {
+        for (R registration : this.registreringer) {
+            if (registration.getRegistreringFra() == null ? registrationFrom == null : registration.getRegistreringFra().equals(registrationFrom)) {
                 return registration;
             }
         }
@@ -105,9 +107,9 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     public R getRegistration(OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
-        for (R registration : this.registrations) {
-            if ((registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) &&
-                    (registration.getRegistrationTo() == null ? registrationTo == null : registration.getRegistrationTo().equals(registrationTo))) {
+        for (R registration : this.registreringer) {
+            if ((registration.getRegistreringFra() == null ? registrationFrom == null : registration.getRegistreringFra().equals(registrationFrom)) &&
+                    (registration.getRegistreringTil() == null ? registrationTo == null : registration.getRegistreringTil().equals(registrationTo))) {
                 return registration;
             }
         }
@@ -115,7 +117,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     public void forceLoad(Session session) {
-        for (R registration : this.registrations) {
+        for (R registration : this.registreringer) {
             registration.forceLoad(session);
         }
     }

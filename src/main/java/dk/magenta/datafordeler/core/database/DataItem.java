@@ -21,7 +21,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
     public DataItem() {
     }
 
-    public void addEffect(V effect) {
+    public void addVirkning(V effect) {
         effect.dataItems.add(this);
         this.effects.add(effect);
     }

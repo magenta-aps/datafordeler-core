@@ -11,7 +11,7 @@ public class DuplicateSequenceNumberException extends InvalidDataInputException 
     private Registration newRegistration;
 
     public DuplicateSequenceNumberException(Registration newRegistration, Registration existingRegistration) {
-        super("Duplicate sequencenumber " + newRegistration.getSequenceNumber() + ", shared between existing registration "+existingRegistration.getRegisterChecksum()+" and new registration "+newRegistration.getRegisterChecksum());
+        super("Duplicate sequencenumber " + newRegistration.getSekvensnummer() + ", shared between existing registrering "+existingRegistration.getRegisterChecksum()+" and new registrering "+newRegistration.getRegisterChecksum());
         this.newRegistration = newRegistration;
         this.existingRegistration = existingRegistration;
     }

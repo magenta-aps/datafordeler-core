@@ -17,13 +17,13 @@ public class DemoEffect extends Effect<DemoRegistration, DemoEffect, DemoData> {
         super();
     }
 
-    public DemoEffect(DemoRegistration testRegistration, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
-        super(testRegistration, effectFrom, effectTo);
+    public DemoEffect(DemoRegistration testRegistration, OffsetDateTime virkingFra, OffsetDateTime virkingTil) {
+        super(testRegistration, virkingFra, virkingTil);
     }
-    public DemoEffect(DemoRegistration testRegistration, TemporalAccessor effectFrom, TemporalAccessor effectTo) {
-        super(testRegistration, effectFrom, effectTo);
+    public DemoEffect(DemoRegistration testRegistration, TemporalAccessor virkingFra, TemporalAccessor virkingTil) {
+        super(testRegistration, virkingFra, virkingTil);
     }
-    public DemoEffect(DemoRegistration testRegistration, String effectFrom, String effectTo) {
-        super(testRegistration, effectFrom, effectTo);
+    public DemoEffect(DemoRegistration testRegistration, String virkingFra, String virkingTil) {
+        super(testRegistration, virkingFra, virkingTil);
     }
 }

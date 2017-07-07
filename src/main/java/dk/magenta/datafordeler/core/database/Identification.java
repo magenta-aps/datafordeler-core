@@ -7,21 +7,21 @@ import java.util.UUID;
  * Created by lars on 20-02-17.
  */
 @javax.persistence.Entity
-@Table(name = "identifikation", indexes = {@Index(name="uuid", columnList = "uuid"), @Index(name="id", columnList = "uuid, domain")})
+@Table(name = "identifikation", indexes = {@Index(name="uuid", columnList = "uuid"), @Index(name="id", columnList = "uuid, domaene")})
 public class Identification extends DatabaseEntry {
 
     @Column(unique = true, nullable = false, insertable = true, updatable = false)
     private UUID uuid;
 
     @Column(nullable = false, insertable = true, updatable = false)
-    private String domain;
+    private String domaene;
 
     public Identification() {
     }
 
-    public Identification(UUID uuid, String domain) {
+    public Identification(UUID uuid, String domaene) {
         this.uuid = uuid;
-        this.domain = domain;
+        this.domaene = domaene;
     }
 
     public UUID getUuid() {
@@ -32,12 +32,12 @@ public class Identification extends DatabaseEntry {
         this.uuid = uuid;
     }
 
-    public String getDomain() {
-        return domain;
+    public String getDomaene() {
+        return domaene;
     }
 
-    public void setDomain(String domain) {
-        this.domain = domain;
+    public void setDomaene(String domaene) {
+        this.domaene = domaene;
     }
 
     public static String getTableName() {

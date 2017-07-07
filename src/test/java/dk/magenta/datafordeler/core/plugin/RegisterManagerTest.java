@@ -106,14 +106,14 @@ public class RegisterManagerTest extends PluginTestBase {
             Assert.assertEquals("Postnummer", firstReference.getType());
             Assert.assertEquals(UUID.fromString("2eed5323-f94f-5a9f-9607-39739c3585b5"), firstReference.getObjectId());
             Assert.assertEquals(1, firstReference.getRegistrationReferences().size());
-            Assert.assertEquals(1, firstReference.getRegistrationReferences().get(0).getSequenceNumber());
+            Assert.assertEquals(1, firstReference.getRegistrationReferences().get(0).getSekvensnummer());
             Assert.assertEquals("2a2ef17de084b10fe30ca726e2168c2e", firstReference.getRegistrationReferences().get(0).getChecksum());
 
             DemoEntityReference secondReference = (DemoEntityReference) allReferences.get(1);
             Assert.assertEquals("Postnummer", secondReference.getType());
             Assert.assertEquals(UUID.fromString("2eed5323-f94f-5a9f-9607-39739c3585b6"), secondReference.getObjectId());
             Assert.assertEquals(1, secondReference.getRegistrationReferences().size());
-            Assert.assertEquals(2, secondReference.getRegistrationReferences().get(0).getSequenceNumber());
+            Assert.assertEquals(2, secondReference.getRegistrationReferences().get(0).getSekvensnummer());
             Assert.assertEquals("2a2ef17de084b10fe30ca726e2168c2f", secondReference.getRegistrationReferences().get(0).getChecksum());
         }
         this.callbackController.removeCallback("/test/listChecksums");
@@ -145,14 +145,14 @@ public class RegisterManagerTest extends PluginTestBase {
                 Assert.assertEquals("Postnummer", firstReference.getType());
                 Assert.assertEquals(UUID.fromString("2eed5323-f94f-5a9f-9607-39739c3585b5"), firstReference.getObjectId());
                 Assert.assertEquals(1, firstReference.getRegistrationReferences().size());
-                Assert.assertEquals(1, firstReference.getRegistrationReferences().get(0).getSequenceNumber());
+                Assert.assertEquals(1, firstReference.getRegistrationReferences().get(0).getSekvensnummer());
                 Assert.assertEquals("2a2ef17de084b10fe30ca726e2168c2e", firstReference.getRegistrationReferences().get(0).getChecksum());
 
                 DemoEntityReference secondReference = (DemoEntityReference) allReferences.get(1);
                 Assert.assertEquals("Postnummer", secondReference.getType());
                 Assert.assertEquals(UUID.fromString("2eed5323-f94f-5a9f-9607-39739c3585b6"), secondReference.getObjectId());
                 Assert.assertEquals(1, secondReference.getRegistrationReferences().size());
-                Assert.assertEquals(2, secondReference.getRegistrationReferences().get(0).getSequenceNumber());
+                Assert.assertEquals(2, secondReference.getRegistrationReferences().get(0).getSekvensnummer());
                 Assert.assertEquals("2a2ef17de084b10fe30ca726e2168c2f", secondReference.getRegistrationReferences().get(0).getChecksum());
             }
         }

@@ -32,13 +32,13 @@ public class ModelTest {
 
         DemoEntity demoEntity1 = new DemoEntity();
         Identification identification1 = new Identification(UUID.randomUUID(), "test");
-        demoEntity1.setIdentification(identification1);
+        demoEntity1.setIdentifikation(identification1);
 
         // Test getIdentification
-        Assert.assertEquals(identification1, demoEntity1.getIdentification());
+        Assert.assertEquals(identification1, demoEntity1.getIdentifikation());
 
-        // Test getDomain
-        Assert.assertEquals(identification1.getDomain(), demoEntity1.getDomain());
+        // Test getDomaene
+        Assert.assertEquals(identification1.getDomaene(), demoEntity1.getDomain());
 
         // Test getUUID
         Assert.assertEquals(identification1.getUuid(), demoEntity1.getUUID());
@@ -48,10 +48,10 @@ public class ModelTest {
         DemoEntity demoEntity2 = new DemoEntity(identification2);
 
         // Test getIdentification
-        Assert.assertEquals(identification2, demoEntity2.getIdentification());
+        Assert.assertEquals(identification2, demoEntity2.getIdentifikation());
 
-        // Test getDomain
-        Assert.assertEquals(identification2.getDomain(), demoEntity2.getDomain());
+        // Test getDomaene
+        Assert.assertEquals(identification2.getDomaene(), demoEntity2.getDomain());
 
         // Test getUUID
         Assert.assertEquals(identification2.getUuid(), demoEntity2.getUUID());
@@ -61,7 +61,7 @@ public class ModelTest {
         String domain3 = "test";
         DemoEntity demoEntity3 = new DemoEntity(uuid3, domain3);
 
-        // Test getDomain
+        // Test getDomaene
         Assert.assertEquals(domain3, demoEntity3.getDomain());
 
         // Test getUUID
@@ -73,7 +73,7 @@ public class ModelTest {
         demoEntity4.setDomain(domain4);
         demoEntity4.setUUID(uuid4);
 
-        // Test getDomain
+        // Test getDomaene
         Assert.assertEquals(domain4, demoEntity4.getDomain());
 
         // Test getUUID
@@ -82,8 +82,8 @@ public class ModelTest {
         // Test getRegistrations
         DemoRegistration demoRegistration = new DemoRegistration();
         demoEntity1.addRegistration(demoRegistration);
-        Assert.assertEquals(1, demoEntity1.getRegistrations().size());
-        Assert.assertEquals(demoRegistration, demoEntity1.getRegistrations().iterator().next());
+        Assert.assertEquals(1, demoEntity1.getRegistreringer().size());
+        Assert.assertEquals(demoRegistration, demoEntity1.getRegistreringer().iterator().next());
     }
 
     @Test
@@ -95,11 +95,11 @@ public class ModelTest {
         demoRegistration1.setRegisterChecksum(registerChecksum);
         DemoEffect demoEffect1 = new DemoEffect(demoRegistration1, OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00"));
         DemoData demoData1 = new DemoData(8000, "Århus C");
-        demoData1.addEffect(demoEffect1);
+        demoData1.addVirkning(demoEffect1);
 
-        // Test getEffects
-        Assert.assertEquals(1, demoRegistration1.getEffects().size());
-        Assert.assertTrue(demoRegistration1.getEffects().contains(demoEffect1));
+        // Test getVirkninger
+        Assert.assertEquals(1, demoRegistration1.getVirkninger().size());
+        Assert.assertTrue(demoRegistration1.getVirkninger().contains(demoEffect1));
 
         // Test getEffect
         Assert.assertEquals(demoEffect1, demoRegistration1.getEffect(OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), OffsetDateTime.parse("2017-06-05T08:00:16+02:00")));
@@ -108,19 +108,19 @@ public class ModelTest {
 
         // Test getEntity
         Assert.assertEquals(demoEntity, demoRegistration1.getEntity());
-        Assert.assertTrue(demoEntity.getRegistrations().contains(demoRegistration1));
+        Assert.assertTrue(demoEntity.getRegistreringer().contains(demoRegistration1));
 
-        // Test getSequenceNumber
-        Assert.assertEquals(0, demoRegistration1.getSequenceNumber());
+        // Test getSekvensnummer
+        Assert.assertEquals(0, demoRegistration1.getSekvensnummer());
 
         // Test getRegisterChecksum
         Assert.assertEquals(registerChecksum, demoRegistration1.getRegisterChecksum());
 
-        // Test getRegistrationFrom
-        Assert.assertEquals(OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), demoRegistration1.getRegistrationFrom());
+        // Test getRegistreringFra
+        Assert.assertEquals(OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), demoRegistration1.getRegistreringFra());
 
-        // Test getRegistrationTo
-        Assert.assertEquals(OffsetDateTime.parse("2017-06-05T08:00:16+02:00"), demoRegistration1.getRegistrationTo());
+        // Test getRegistreringTil
+        Assert.assertEquals(OffsetDateTime.parse("2017-06-05T08:00:16+02:00"), demoRegistration1.getRegistreringTil());
 
         // Test toString
         Assert.assertEquals("DemoRegistration["+demoRegistration1.hashCode()+"] {\n" +
@@ -128,7 +128,7 @@ public class ModelTest {
                 "    checksum: 7A07CD32F33B66B468C1E1FEA19B35EBF13406E0B4A21BD7A5CFEF323D3E7BD0\n" +
                 "    from: 2017-06-02T17:00+02:00\n" +
                 "    to: 2017-06-05T08:00:16+02:00\n" +
-                "    effects: [\n" +
+                "    virkninger: [\n" +
                 "        DemoEffect["+demoEffect1.hashCode()+"] {\n" +
                 "            from: 2017-06-02T17:00+02:00\n" +
                 "            to: 2017-06-05T08:00:16+02:00\n" +
@@ -148,7 +148,7 @@ public class ModelTest {
                 "            checksum: 7A07CD32F33B66B468C1E1FEA19B35EBF13406E0B4A21BD7A5CFEF323D3E7BD0\n" +
                 "            from: 2017-06-02T17:00+02:00\n" +
                 "            to: 2017-06-05T08:00:16+02:00\n" +
-                "            effects: [\n" +
+                "            virkninger: [\n" +
                 "                DemoEffect["+demoEffect1.hashCode()+"] {\n" +
                 "                    from: 2017-06-02T17:00+02:00\n" +
                 "                    to: 2017-06-05T08:00:16+02:00\n" +
@@ -200,16 +200,16 @@ public class ModelTest {
         Assert.assertFalse(demoEffect3.equalData(new DemoEffect(demoRegistration3, OffsetDateTime.parse("2017-06-02T15:39:16+02:00"), null)));
         Assert.assertTrue(demoEffect3.equalData(new DemoEffect()));
 
-        // Test getRegistration
-        Assert.assertEquals(demoRegistration1, demoEffect1.getRegistration());
-        Assert.assertNotEquals(demoRegistration2, demoEffect1.getRegistration());
+        // Test getRegistrering
+        Assert.assertEquals(demoRegistration1, demoEffect1.getRegistrering());
+        Assert.assertNotEquals(demoRegistration2, demoEffect1.getRegistrering());
 
         // Test getTableName
         Assert.assertEquals("demo_effect", Effect.getTableName(DemoEffect.class));
 
         // Test toString
         DemoData demoData1 = new DemoData(8000, "Århus C");
-        demoData1.addEffect(demoEffect1);
+        demoData1.addVirkning(demoEffect1);
         Assert.assertEquals("DemoEffect["+demoEffect1.hashCode()+"] {\n" +
                 "    from: 2017-06-02T15:39:16+02:00\n" +
                 "    to: 2017-06-05T08:00:16+02:00\n" +

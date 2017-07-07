@@ -13,15 +13,12 @@ import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 
 import dk.magenta.datafordeler.core.util.LoggerHelper;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.jpa.internal.util.LogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,12 +40,12 @@ import java.util.*;
 @RequestMapping("/fapi_service_with_no_requestmapping")
 public abstract class FapiService<E extends Entity, Q extends Query> {
 
-    public static final String PARAM_PAGE = "page";
-    public static final String PARAM_PAGESIZE = "pageSize";
-    public static final String PARAM_REGISTERFROM = "registerFrom";
-    public static final String PARAM_REGISTERTO = "registerTo";
-    public static final String PARAM_EFFECTFROM = "effectFrom";
-    public static final String PARAM_EFFECTTO = "effectTo";
+    public static final String PARAM_SIDE = "side";
+    public static final String PARAM_SIDESTOERRELSE = "sidestoerrelse";
+    public static final String PARAM_REGISTRERING_FRA = "registreringFra";
+    public static final String PARAM_REGISTRERING_TIL = "registreringTil";
+    public static final String PARAM_VIRKNING_FRA = "virkningFra";
+    public static final String PARAM_VIRKNING_TIL = "virkningTil";
 
     @Autowired
     protected ObjectMapper objectMapper;
@@ -194,15 +191,15 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     /**
      * Handle a lookup-by-UUID request in SOAP. This method is called by the Servlet
      * @param id Identifier coming from the client
-     * @param registerFrom Low boundary for registration inclusion
-     * @param registerTo High boundary for registration inclusion
+     * @param registeringFra Low boundary for registrering inclusion
+     * @param registeringTil High boundary for registrering inclusion
      * @return Found Entity, or null if none found.
      */
     // TODO: How to use DafoUserDetails with SOAP requests?
     @WebMethod(operationName = "get")
     public Envelope<E> getSoap(@WebParam(name="id") @XmlElement(required=true) String id,
-                     @WebParam(name="registerFrom") @XmlElement(required = false) String registerFrom,
-                     @WebParam(name="registerTo") @XmlElement(required = false) String registerTo)
+                     @WebParam(name="registeringFra") @XmlElement(required = false) String registeringFra,
+                     @WebParam(name="registeringTil") @XmlElement(required = false) String registeringTil)
         throws InvalidClientInputException, AccessRequiredException, InvalidTokenException, AccessDeniedException {
         Envelope<E> envelope = new Envelope<E>();
         MessageContext messageContext = context.getMessageContext();
@@ -213,7 +210,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             "Incoming SOAP request for " + this.getServiceName() + " with id " + id
         );
         this.checkAndLogAccess(loggerHelper);
-        Q query = this.getQuery(registerFrom, registerTo);
+        Q query = this.getQuery(registeringFra, registeringTil);
         envelope.addQueryData(query);
         envelope.addUserData(user);
         envelope.addRequestData(request);
@@ -221,7 +218,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             E entity = this.searchById(id, query);
             envelope.setResult(entity);
             this.log.debug("Item found, returning");
-            this.log.info("registrations: "+entity.getRegistrations());
+            this.log.info("registrations: "+entity.getRegistreringer());
             envelope.close();
             loggerHelper.logResult(envelope);
             return envelope;
@@ -232,9 +229,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
 
     /**
-     * Parse a registration boundary into a Query object of the correct subclass
-     * @param registrationFrom Low boundary for registration inclusion
-     * @param registrationTo High boundary for registration inclusion
+     * Parse a registrering boundary into a Query object of the correct subclass
+     * @param registrationFrom Low boundary for registrering inclusion
+     * @param registrationTo High boundary for registrering inclusion
      * @return Query subclass instance
      */
     protected Q getQuery(String registrationFrom, String registrationTo) {
@@ -317,12 +314,12 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         if (!limitsOnly) {
             query.setFromParameters(new ParameterMap(parameters));
         }
-        query.setPage(parameters.getFirst(PARAM_PAGE));
-        query.setPageSize(parameters.getFirst(PARAM_PAGESIZE));
-        query.setRegistrationFrom(parameters.getFirst(PARAM_REGISTERFROM));
-        query.setRegistrationTo(parameters.getFirst(PARAM_REGISTERTO));
-        query.setEffectFrom(parameters.getFirst(PARAM_EFFECTFROM));
-        query.setEffectTo(parameters.getFirst(PARAM_EFFECTTO));
+        query.setPage(parameters.getFirst(PARAM_SIDE));
+        query.setPageSize(parameters.getFirst(PARAM_SIDESTOERRELSE));
+        query.setRegistrationFrom(parameters.getFirst(PARAM_REGISTRERING_FRA));
+        query.setRegistrationTo(parameters.getFirst(PARAM_REGISTRERING_TIL));
+        query.setEffectFrom(parameters.getFirst(PARAM_VIRKNING_FRA));
+        query.setEffectTo(parameters.getFirst(PARAM_VIRKNING_TIL));
         return query;
     }
 

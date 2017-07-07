@@ -11,7 +11,7 @@ public class SkippedSequenceNumberException extends InvalidDataInputException {
     private int highestSequenceNumber;
 
     public SkippedSequenceNumberException(Registration newRegistration, int highestSequenceNumber) {
-        super("Sequencenumber "+newRegistration.getSequenceNumber()+" not matching existing highest sequencenumber "+highestSequenceNumber+"; must be exactly one higher");
+        super("Sequencenumber "+newRegistration.getSekvensnummer()+" not matching existing highest sequencenumber "+highestSequenceNumber+"; must be exactly one higher");
         this.registration = newRegistration;
         this.highestSequenceNumber = highestSequenceNumber;
     }

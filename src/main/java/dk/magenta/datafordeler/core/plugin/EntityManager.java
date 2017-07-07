@@ -241,7 +241,7 @@ public abstract class EntityManager {
      * @throws FailedReferenceException
      */
     public List<? extends Registration> fetchRegistration(RegistrationReference reference) throws IOException, ParseException, WrongSubclassException, DataStreamException, FailedReferenceException {
-        this.getLog().info("Fetching registration from reference "+reference.getURI());
+        this.getLog().info("Fetching registrering from reference "+reference.getURI());
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
         }

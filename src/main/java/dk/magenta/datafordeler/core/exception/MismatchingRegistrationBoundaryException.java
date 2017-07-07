@@ -13,10 +13,10 @@ public class MismatchingRegistrationBoundaryException extends InvalidDataInputEx
     private Registration existingRegistration;
 
     public MismatchingRegistrationBoundaryException(Registration newRegistration, Registration existingRegistration) {
-        super("Mismatching timestamps; incoming registration "+newRegistration.getRegisterChecksum()+
-                " with registrationFrom "+newRegistration.getRegistrationFrom().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)+
-                " does not match existing registration "+existingRegistration.getRegisterChecksum()+" with registerTo "+
-                existingRegistration.getRegistrationTo().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        super("Mismatching timestamps; incoming registrering "+newRegistration.getRegisterChecksum()+
+                " with registreringFra "+newRegistration.getRegistreringFra().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)+
+                " does not match existing registrering "+existingRegistration.getRegisterChecksum()+" with registreringTil "+
+                existingRegistration.getRegistreringTil().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         this.newRegistration = newRegistration;
         this.existingRegistration = existingRegistration;
     }

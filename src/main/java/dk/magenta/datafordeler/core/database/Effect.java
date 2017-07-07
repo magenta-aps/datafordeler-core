@@ -2,8 +2,6 @@ package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
@@ -38,81 +36,81 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JsonIgnore
-    protected R registration;
+    protected R registrering;
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     protected Set<D> dataItems;
 
     @Column(nullable = true, insertable = true, updatable = false)
-    private OffsetDateTime effectFrom;
+    private OffsetDateTime virkningFra;
 
     @Column(nullable = true, insertable = true, updatable = false)
-    private OffsetDateTime effectTo;
+    private OffsetDateTime virkningTil;
 
     public Effect() {
         this.dataItems = new HashSet<D>();
     }
 
-    public Effect(R registration, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
+    public Effect(R registrering, OffsetDateTime virkningFra, OffsetDateTime virkningTil) {
         this();
-        this.setRegistration(registration);
-        this.effectFrom = effectFrom;
-        this.effectTo = effectTo;
+        this.setRegistrering(registrering);
+        this.virkningFra = virkningFra;
+        this.virkningTil = virkningTil;
     }
 
-    public Effect(R registration, TemporalAccessor effectFrom, TemporalAccessor effectTo) {
+    public Effect(R registrering, TemporalAccessor virkningFra, TemporalAccessor virkningTil) {
         this(
-                registration,
-                effectFrom != null ? OffsetDateTime.from(effectFrom) : null,
-                effectTo != null ? OffsetDateTime.from(effectTo) : null
+            registrering,
+                virkningFra != null ? OffsetDateTime.from(virkningFra) : null,
+                virkningTil != null ? OffsetDateTime.from(virkningTil) : null
         );
     }
 
-    public Effect(R registration, LocalDate effectFrom, LocalDate effectTo) {
+    public Effect(R registrering, LocalDate virkningFra, LocalDate virkningTil) {
         this(
-                registration,
-                effectFrom != null ? OffsetDateTime.of(effectFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
-                effectTo != null ? OffsetDateTime.of(effectTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null
+            registrering,
+                virkningFra != null ? OffsetDateTime.of(virkningFra, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                virkningTil != null ? OffsetDateTime.of(virkningTil, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null
         );
     }
 
     /**
-     * @param effectFrom A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
-     * @param effectTo A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
+     * @param virkningFra A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
+     * @param virkningTil A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * If you want other date formats, consider using java.time.OffsetDateTime.parse() to generate an OffsetDateTime object and pass it
      */
-    public Effect(R registration, String effectFrom, String effectTo) {
+    public Effect(R registrering, String virkningFra, String virkningTil) {
         this(
-                registration,
-                effectFrom != null ? OffsetDateTime.parse(effectFrom) : null,
-                effectTo != null ? OffsetDateTime.parse(effectTo) : null
+            registrering,
+                virkningFra != null ? OffsetDateTime.parse(virkningFra) : null,
+                virkningTil != null ? OffsetDateTime.parse(virkningTil) : null
         );
     }
 
-    public R getRegistration() {
-        return this.registration;
+    public R getRegistrering() {
+        return this.registrering;
     }
 
-    protected void setRegistration(R registration) {
-        if (registration != null) {
-            this.registration = registration;
-            registration.addEffect(this);
+    protected void setRegistrering(R registrering) {
+        if (registrering != null) {
+            this.registrering = registrering;
+            registrering.addEffect(this);
         }
     }
 
-    @JsonProperty
-    @XmlElement
+    @JsonProperty(value = "virkningFra")
+    @XmlElement(name = "virkningFra")
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
-    public OffsetDateTime getEffectFrom() {
-        return this.effectFrom;
+    public OffsetDateTime getVirkningFra() {
+        return this.virkningFra;
     }
 
 
-    @JsonProperty
-    @XmlElement
+    @JsonProperty(value = "virkningTil")
+    @XmlElement(name = "virkningTil")
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
-    public OffsetDateTime getEffectTo() {
-        return this.effectTo;
+    public OffsetDateTime getVirkningTil() {
+        return this.virkningTil;
     }
 
     @JsonIgnore
@@ -120,8 +118,8 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return new ArrayList(this.dataItems);
     }
 
-    @JsonProperty(value = "dataItems")
-    @XmlElementWrapper(name = "dataItems")
+    @JsonProperty(value = "data")
+    @XmlElementWrapper(name = "data")
     public Map<String, Object> getData() {
         HashMap<String, Object> data = new HashMap<>();
         for (DataItem d : this.dataItems) {
@@ -130,8 +128,8 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return data;
     }
 
-    @JsonProperty(value = "dataItems"/*, access = JsonProperty.Access.READ_ONLY*/)
-    @JacksonXmlProperty(localName = "dataItem")
+    @JsonProperty(value = "data"/*, access = JsonProperty.Access.READ_ONLY*/)
+    @JacksonXmlProperty(localName = "data")
     @JacksonXmlElementWrapper(useWrapping = false)
     public void setDataItems(Collection<D> items) {
         this.dataItems.addAll(items);
@@ -139,8 +137,10 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public boolean equalData(V other) {
         return (
-                (this.effectFrom == null ? other.getEffectFrom() == null : this.effectFrom.equals(other.getEffectFrom())) &&
-                (this.effectTo == null ? other.getEffectTo() == null : this.effectTo.equals(other.getEffectTo()))
+                (this.virkningFra == null ? other.getVirkningFra() == null : this.virkningFra
+                    .equals(other.getVirkningFra())) &&
+                (this.virkningTil == null ? other.getVirkningTil() == null : this.virkningTil
+                    .equals(other.getVirkningTil()))
         );
     }
 
@@ -166,8 +166,8 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         String subIndentString = new String(new char[4 * (indent + 1)]).replace("\0", " ");
         StringJoiner s = new StringJoiner("\n");
         s.add(indentString + this.getClass().getSimpleName() + "["+this.hashCode()+"] {");
-        s.add(subIndentString + "from: "+this.effectFrom);
-        s.add(subIndentString + "to: "+this.effectTo);
+        s.add(subIndentString + "from: "+this.virkningFra);
+        s.add(subIndentString + "to: "+this.virkningTil);
         s.add(subIndentString + "data: [");
         for (D dataItem : this.getDataItems()) {
             s.add(dataItem.toString(indent + 2));

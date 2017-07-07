@@ -159,7 +159,7 @@ public class DemoEntityManager extends EntityManager {
     }
 
     public List<Registration> parseRegistration(String registrationData, String charsetName) throws IOException {
-        this.getLog().info("Parsing registration data");
+        this.getLog().info("Parsing registrering data");
         return Collections.singletonList(this.objectMapper.readValue(registrationData.getBytes(charsetName), this.managedRegistrationClass));
     }
 

@@ -148,7 +148,7 @@ public class FtpCommunicatorTest {
     @Test
     public void testDownloadMultipleFiles() throws Exception {
 
-        int port = 2104;
+        int port = 2105;
 
         //Create file which should be read
         String contents = "this is a test æøåÆØÅ!";
