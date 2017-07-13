@@ -11,21 +11,19 @@ import javax.persistence.NoResultException;
  */
 public abstract class ConfigurationManager<C extends Configuration> {
 
-    private C configuration;
-
     public void init() {
-        Session session = this.getSessionManager().getSessionFactory().openSession();
-        try {
-            Class<C> configurationClass = this.getConfigurationClass();
-            this.configuration = session.createQuery("select c from "+configurationClass.getSimpleName()+" c", configurationClass).getSingleResult();
+        C configuration = getConfiguration();
+        if(configuration != null) {
             this.getLog().info("Loaded configuration object");
-        } catch (NoResultException e) {
+        } else {
             this.getLog().info("No configuration object exists, create one.");
-            C defaultConfiguration = this.createConfiguration();
-            session.save(defaultConfiguration);
-            this.configuration = defaultConfiguration;
+            Session session = this.getSessionManager().getSessionFactory().openSession();
+            configuration = this.createConfiguration();
+            session.beginTransaction();
+            session.persist(configuration);
+            session.flush();
+            session.close();
         }
-        session.close();
     }
 
     protected abstract Class<C> getConfigurationClass();
@@ -35,7 +33,21 @@ public abstract class ConfigurationManager<C extends Configuration> {
     protected abstract SessionManager getSessionManager();
 
     public C getConfiguration() {
-        return this.configuration;
+        // This should always fetch fresh data from the database as that data might have been
+        // changed.
+        Session session = this.getSessionManager().getSessionFactory().openSession();
+        C configuration;
+        try {
+            Class<C> configurationClass = this.getConfigurationClass();
+            configuration = session.createQuery(
+                "select c from " +configurationClass.getSimpleName() + " c",
+                configurationClass
+            ).getSingleResult();
+        } catch (NoResultException e) {
+            configuration = null;
+        }
+        session.close();
+        return configuration;
     }
 
     protected abstract Logger getLog();
