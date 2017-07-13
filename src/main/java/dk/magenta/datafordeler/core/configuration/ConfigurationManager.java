@@ -43,6 +43,7 @@ public abstract class ConfigurationManager<C extends Configuration> {
                 "select c from " +configurationClass.getSimpleName() + " c",
                 configurationClass
             ).getSingleResult();
+            session.refresh(configuration);
         } catch (NoResultException e) {
             configuration = null;
         }
