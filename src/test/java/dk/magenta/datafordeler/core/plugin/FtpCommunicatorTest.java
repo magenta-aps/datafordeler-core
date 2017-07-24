@@ -52,7 +52,7 @@ public class FtpCommunicatorTest {
         fileWriter.close();
         try {
             ftpTransferTest(port, Collections.singletonList(tempFile), "", contents);
-        }catch (ExecutionException e){
+        }catch (ExecutionException e) {
 
         }
         tempFile.delete();
@@ -219,7 +219,7 @@ public class FtpCommunicatorTest {
         this.stopServer();
     }
 
-    private boolean allFilesEndsWithDone(){
+    private boolean allFilesEndsWithDone() {
         String[] fileNames = tempDir.list();
 
         for (int i = 0; i < fileNames.length; i++) {
@@ -227,7 +227,7 @@ public class FtpCommunicatorTest {
         }
 
         for (int i = 0; i < fileNames.length; i++) {
-            if(!fileNames[i].endsWith(FtpCommunicator.DONE_FILE_ENDING)){
+            if (!fileNames[i].endsWith(FtpCommunicator.DONE_FILE_ENDING)) {
                 return false;
             }
         }
@@ -275,7 +275,7 @@ public class FtpCommunicatorTest {
         user.setName(username);
         user.setPassword(password);
 
-        if(FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+        if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
             this.tempDir = Files.createTempDirectory(
                 null,
                 PosixFilePermissions.asFileAttribute(
@@ -297,17 +297,10 @@ public class FtpCommunicatorTest {
         authorities.add(new WritePermission());
         user.setAuthorities(authorities);
         UserManager um = userManagerFactory.createUserManager();
-        try {
-            um.save(user);//Save the user to the user list on the filesystem
-        } catch (FtpException e1) {
-            //Deal with exception as you need
-        }
+        um.save(user);//Save the user to the user list on the filesystem
         serverFactory.setUserManager(um);
         this.server = serverFactory.createServer();
-        try {
-            this.server.start();//Your FTP server starts listening for incoming FTP-connections, using the configuration options previously set
-        } catch (FtpException ex) {
-        }
+        this.server.start();
     }
 
     private void stopServer() {
