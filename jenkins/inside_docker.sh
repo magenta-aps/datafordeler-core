@@ -28,7 +28,7 @@ title "Inside docker"
 
 # Test the project (and collect coverage)
     title "Running tests"
-    mvn test cobertura:cobertura -Dcobertura.report.format=xml
+    mvn clean test cobertura:cobertura -Dcobertura.report.format=xml
     mkdir -p reports/test/
     cp target/surefire-reports/* reports/test/
     cp target/site/cobertura/coverage.xml reports/
