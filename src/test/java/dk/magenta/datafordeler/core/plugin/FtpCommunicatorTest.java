@@ -221,11 +221,6 @@ public class FtpCommunicatorTest {
 
     private boolean allFilesEndsWithDone() {
         String[] fileNames = tempDir.list();
-
-        for (int i = 0; i < fileNames.length; i++) {
-            System.out.println("fileNames[" + i + "]: " + fileNames[i]);
-        }
-
         for (int i = 0; i < fileNames.length; i++) {
             if (!fileNames[i].endsWith(FtpCommunicator.DONE_FILE_ENDING)) {
                 return false;
