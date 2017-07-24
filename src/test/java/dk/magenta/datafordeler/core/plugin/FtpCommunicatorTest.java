@@ -2,6 +2,8 @@ package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
+
+import java.io.*;
 import java.nio.file.FileSystems;
 import org.apache.commons.io.FileUtils;
 import org.apache.ftpserver.FtpServer;
@@ -20,9 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -47,12 +46,13 @@ public class FtpCommunicatorTest {
         File tempFile = File.createTempFile("ftpdownload2102", FtpCommunicator.DONE_FILE_ENDING);
         tempFile.createNewFile();
 
-        FileWriter fileWriter = new FileWriter(tempFile);
+        Writer fileWriter = this.getFileWriter(tempFile);
+
         fileWriter.write("this is a test æøåÆØÅ!");
         fileWriter.close();
         try {
             ftpTransferTest(port, Collections.singletonList(tempFile), "", contents);
-        }catch (ExecutionException e) {
+        } catch (ExecutionException e) {
 
         }
         tempFile.delete();
@@ -84,7 +84,7 @@ public class FtpCommunicatorTest {
         File tempFile1 = File.createTempFile("ftpdownload2103", TEST_FILE_ENDING);
         tempFile1.createNewFile();
 
-        FileWriter fileWriter1 = new FileWriter(tempFile1);
+        Writer fileWriter1 = this.getFileWriter(tempFile1);
         fileWriter1.write(contents);
         fileWriter1.close();
 
@@ -92,7 +92,7 @@ public class FtpCommunicatorTest {
         File tempFile2 = File.createTempFile("ftpdownload21032", FtpCommunicator.DONE_FILE_ENDING);
         tempFile2.createNewFile();
 
-        FileWriter fileWriter2 = new FileWriter(tempFile2);
+        Writer fileWriter2 = this.getFileWriter(tempFile2);
         fileWriter2.write("text that should not be read");
         fileWriter2.close();
 
@@ -120,16 +120,16 @@ public class FtpCommunicatorTest {
         File tempFile1 = File.createTempFile("ftpdownload21041", TEST_FILE_ENDING);
         tempFile1.createNewFile();
 
-        FileWriter fileWriter1 = new FileWriter(tempFile1);
+        Writer fileWriter1 = this.getFileWriter(tempFile1);
         //The substring is splitting the contents into 2 files, it should then be concatenated
-        fileWriter1.write(contents.substring(0,7));
+        fileWriter1.write(contents.substring(0, 7));
         fileWriter1.close();
 
         //Create another file
         File tempFile2 = File.createTempFile("ftpdownload21042", TEST_FILE_ENDING);
         tempFile2.createNewFile();
 
-        FileWriter fileWriter2 = new FileWriter(tempFile2);
+        Writer fileWriter2 = this.getFileWriter(tempFile2);
         fileWriter2.write(contents.substring(7));
         fileWriter2.close();
 
@@ -157,24 +157,24 @@ public class FtpCommunicatorTest {
         File tempFile1 = File.createTempFile("ftpdownload21041", TEST_FILE_ENDING);
         tempFile1.createNewFile();
 
-        FileWriter fileWriter1 = new FileWriter(tempFile1);
+        Writer fileWriter1 = this.getFileWriter(tempFile1);
         //The substring is splitting the contents into 2 files, it should then be concatenated
-        fileWriter1.write(contents.substring(0,3));
+        fileWriter1.write(contents.substring(0, 3));
         fileWriter1.close();
 
         //Create another file
         File tempFile2 = File.createTempFile("ftpdownload21042", TEST_FILE_ENDING);
         tempFile2.createNewFile();
 
-        FileWriter fileWriter2 = new FileWriter(tempFile2);
-        fileWriter2.write(contents.substring(3,8));
+        Writer fileWriter2 = this.getFileWriter(tempFile2);
+        fileWriter2.write(contents.substring(3, 8));
         fileWriter2.close();
 
         //Create another file
         File tempFile3 = File.createTempFile("ftpdownload21043", TEST_FILE_ENDING);
         tempFile3.createNewFile();
 
-        FileWriter fileWriter3 = new FileWriter(tempFile3);
+        Writer fileWriter3 = this.getFileWriter(tempFile3);
         fileWriter3.write(contents.substring(8));
         fileWriter3.close();
 
@@ -196,7 +196,7 @@ public class FtpCommunicatorTest {
     }
 
 
-    private void ftpTransferTest(int port, List<File> tempFiles, String path, String contents) throws Exception{
+    private void ftpTransferTest(int port, List<File> tempFiles, String path, String contents) throws Exception {
         String username = "test";
         String password = "test";
 
@@ -206,8 +206,8 @@ public class FtpCommunicatorTest {
             public Boolean call() throws Exception {
                 FtpCommunicatorTest.this.startServer(username, password, port, tempFiles);
                 FtpCommunicator ftpCommunicator = new FtpCommunicator(username, password, true);
-                InputStream inputStream = ftpCommunicator.fetch(new URI("ftp://localhost:"+port+"/"+path));
-                String data = new Scanner(inputStream,"UTF-8").useDelimiter("\\A").next();
+                InputStream inputStream = ftpCommunicator.fetch(new URI("ftp://localhost:" + port + "/" + path));
+                String data = new Scanner(inputStream, "UTF-8").useDelimiter("\\A").next();
                 inputStream.close();
                 Assert.assertEquals(contents, data);
                 Assert.assertTrue(allFilesEndsWithDone());
@@ -223,7 +223,7 @@ public class FtpCommunicatorTest {
         String[] fileNames = tempDir.list();
 
         for (int i = 0; i < fileNames.length; i++) {
-            System.out.println("fileNames["+i+"]: "+fileNames[i]);
+            System.out.println("fileNames[" + i + "]: " + fileNames[i]);
         }
 
         for (int i = 0; i < fileNames.length; i++) {
@@ -265,6 +265,7 @@ public class FtpCommunicatorTest {
             public String encrypt(String password) {
                 return password;
             }
+
             @Override
             public boolean matches(String passwordToCheck, String storedPassword) {
                 return passwordToCheck.equals(storedPassword);
@@ -277,10 +278,10 @@ public class FtpCommunicatorTest {
 
         if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
             this.tempDir = Files.createTempDirectory(
-                null,
-                PosixFilePermissions.asFileAttribute(
-                    PosixFilePermissions.fromString("rwxrwxrwx")
-                )
+                    null,
+                    PosixFilePermissions.asFileAttribute(
+                            PosixFilePermissions.fromString("rwxrwxrwx")
+                    )
             ).toFile();
         } else {
             this.tempDir = Files.createTempDirectory(null).toFile();
@@ -315,4 +316,15 @@ public class FtpCommunicatorTest {
             this.tempDir.delete();
         }
     }
+
+    private Writer getFileWriter(File outputFile) throws FileNotFoundException {
+        try {
+            return new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(outputFile), "UTF-8"
+            ));
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
+    }
+
 }
