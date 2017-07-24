@@ -2,8 +2,8 @@ package dk.magenta.datafordeler.core.configuration;
 
 import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.database.SessionManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import dk.magenta.datafordeler.plugindemo.configuration.DemoConfiguration;
+import dk.magenta.datafordeler.plugindemo.configuration.DemoConfigurationManager;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,41 +19,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class ConfigurationTest {
 
     @Autowired
-    private SessionManager sessionManager;
+    DemoConfigurationManager configurationManager;
 
-
-    private class ConfigurationImpl implements Configuration {
-    }
-
-    private class ConfigurationManagerImpl extends ConfigurationManager<ConfigurationImpl> {
-
-        private Logger log = LogManager.getLogger("ConfigurationManagerImpl");
-
-        @Override
-        protected Class<ConfigurationImpl> getConfigurationClass() {
-            return ConfigurationImpl.class;
-        }
-
-        @Override
-        protected ConfigurationImpl createConfiguration() {
-            return new ConfigurationImpl();
-        }
-
-        @Override
-        protected SessionManager getSessionManager() {
-            return ConfigurationTest.this.sessionManager;
-        }
-
-        @Override
-        protected Logger getLog() {
-            return this.log;
-        }
-    }
     @Test
     public void testConfiguration() throws Exception {
-        ConfigurationManagerImpl configurationManager = new ConfigurationManagerImpl();
-        ConfigurationImpl configuration = configurationManager.createConfiguration();
+        DemoConfiguration configuration = configurationManager.getConfiguration();
         Assert.assertNotNull(configuration);
-        Assert.assertEquals(ConfigurationImpl.class, configurationManager.getConfigurationClass());
+        configurationManager.init();
+        Assert.assertEquals(configuration.getPullCronSchedule(), configurationManager.getConfiguration().getPullCronSchedule());
     }
 }

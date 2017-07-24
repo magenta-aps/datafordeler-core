@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.configuration;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 
 import javax.persistence.NoResultException;
 
@@ -15,6 +16,7 @@ public abstract class ConfigurationManager<C extends Configuration> {
 
     public void init() {
         Session session = this.getSessionManager().getSessionFactory().openSession();
+        Transaction transaction = session.beginTransaction();
         try {
             Class<C> configurationClass = this.getConfigurationClass();
             this.configuration = session.createQuery("select c from "+configurationClass.getSimpleName()+" c", configurationClass).getSingleResult();
@@ -25,6 +27,7 @@ public abstract class ConfigurationManager<C extends Configuration> {
             session.save(defaultConfiguration);
             this.configuration = defaultConfiguration;
         }
+        transaction.commit();
         session.close();
     }
 
