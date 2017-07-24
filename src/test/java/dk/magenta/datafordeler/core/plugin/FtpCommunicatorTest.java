@@ -36,13 +36,15 @@ import java.util.concurrent.*;
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, classes = TestConfig.class)
 public class FtpCommunicatorTest {
 
+    private static final String TEST_FILE_ENDING = ".test";
+
     @Test
     public void testDownloadNoNewFiles() throws Exception {
         //TODO implement test for correct handling of no new files
 
         int port = 2101;
         String contents = null;
-        File tempFile = File.createTempFile("ftpdownload2102",".done");
+        File tempFile = File.createTempFile("ftpdownload2102", FtpCommunicator.DONE_FILE_ENDING);
         tempFile.createNewFile();
 
         FileWriter fileWriter = new FileWriter(tempFile);
@@ -61,7 +63,7 @@ public class FtpCommunicatorTest {
 
         int port = 2102;
         String contents = "this is a test æøåÆØÅ!";
-        File tempFile = File.createTempFile("ftpdownload2102",".test");
+        File tempFile = File.createTempFile("ftpdownload2102", TEST_FILE_ENDING);
         tempFile.createNewFile();
 
         FileUtils.writeByteArrayToFile(tempFile, contents.getBytes("UTF-8"));
@@ -79,7 +81,7 @@ public class FtpCommunicatorTest {
 
         //Create file which should be read
         String contents = "this is a test æøåÆØÅ!";
-        File tempFile1 = File.createTempFile("ftpdownload2103",".test");
+        File tempFile1 = File.createTempFile("ftpdownload2103", TEST_FILE_ENDING);
         tempFile1.createNewFile();
 
         FileWriter fileWriter1 = new FileWriter(tempFile1);
@@ -87,7 +89,7 @@ public class FtpCommunicatorTest {
         fileWriter1.close();
 
         //Create another file, which should not be read
-        File tempFile2 = File.createTempFile("ftpdownload21032",".done");
+        File tempFile2 = File.createTempFile("ftpdownload21032", FtpCommunicator.DONE_FILE_ENDING);
         tempFile2.createNewFile();
 
         FileWriter fileWriter2 = new FileWriter(tempFile2);
@@ -115,7 +117,7 @@ public class FtpCommunicatorTest {
 
         //Create file which should be read
         String contents = "this is a test æøåÆØÅ!";
-        File tempFile1 = File.createTempFile("ftpdownload21041",".test");
+        File tempFile1 = File.createTempFile("ftpdownload21041", TEST_FILE_ENDING);
         tempFile1.createNewFile();
 
         FileWriter fileWriter1 = new FileWriter(tempFile1);
@@ -124,7 +126,7 @@ public class FtpCommunicatorTest {
         fileWriter1.close();
 
         //Create another file
-        File tempFile2 = File.createTempFile("ftpdownload21042",".test");
+        File tempFile2 = File.createTempFile("ftpdownload21042", TEST_FILE_ENDING);
         tempFile2.createNewFile();
 
         FileWriter fileWriter2 = new FileWriter(tempFile2);
@@ -152,7 +154,7 @@ public class FtpCommunicatorTest {
 
         //Create file which should be read
         String contents = "this is a test æøåÆØÅ!";
-        File tempFile1 = File.createTempFile("ftpdownload21041",".test");
+        File tempFile1 = File.createTempFile("ftpdownload21041", TEST_FILE_ENDING);
         tempFile1.createNewFile();
 
         FileWriter fileWriter1 = new FileWriter(tempFile1);
@@ -161,7 +163,7 @@ public class FtpCommunicatorTest {
         fileWriter1.close();
 
         //Create another file
-        File tempFile2 = File.createTempFile("ftpdownload21042",".test");
+        File tempFile2 = File.createTempFile("ftpdownload21042", TEST_FILE_ENDING);
         tempFile2.createNewFile();
 
         FileWriter fileWriter2 = new FileWriter(tempFile2);
@@ -169,7 +171,7 @@ public class FtpCommunicatorTest {
         fileWriter2.close();
 
         //Create another file
-        File tempFile3 = File.createTempFile("ftpdownload21043",".test");
+        File tempFile3 = File.createTempFile("ftpdownload21043", TEST_FILE_ENDING);
         tempFile3.createNewFile();
 
         FileWriter fileWriter3 = new FileWriter(tempFile3);
@@ -219,8 +221,13 @@ public class FtpCommunicatorTest {
 
     private boolean allFilesEndsWithDone(){
         String[] fileNames = tempDir.list();
+
         for (int i = 0; i < fileNames.length; i++) {
-            if(!fileNames[i].endsWith(".done")){
+            System.out.println("fileNames["+i+"]: "+fileNames[i]);
+        }
+
+        for (int i = 0; i < fileNames.length; i++) {
+            if(!fileNames[i].endsWith(FtpCommunicator.DONE_FILE_ENDING)){
                 return false;
             }
         }

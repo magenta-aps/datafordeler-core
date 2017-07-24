@@ -31,7 +31,7 @@ import java.util.*;
  */
 public class FtpCommunicator implements Communicator {
 
-    protected static final String DONE_FILE_ENDING = ".done";
+    public static final String DONE_FILE_ENDING = ".done";
 
     protected String username;
     protected String password;
@@ -97,14 +97,13 @@ public class FtpCommunicator implements Communicator {
         try {
             FTPClient ftpClient = performConnect(uri);
 
-            String path = uri.getPath();
             List<String> fileNamesUnfiltered = Arrays.asList(ftpClient.listNames(uri.getPath()));
             List<String> fileNames = filter(fileNamesUnfiltered, DONE_FILE_ENDING);
             fileNames.sort(Comparator.naturalOrder());
 
             InputStream inputStream = null;
 
-            if(fileNames.size() < 1){
+            if (fileNames.size() < 1){
                 inputStream = new ByteArrayInputStream("".getBytes());
             } else if (fileNames.size() == 1){
                 inputStream = ftpClient.retrieveFileStream(fileNames.get(0));
@@ -130,7 +129,7 @@ public class FtpCommunicator implements Communicator {
                     @Override
                     public void run() {
                         try {
-                            //markFilesAsDone(ftpClient, uri, fileNames, DONE_FILE_ENDING);
+                            markFilesAsDone(ftpClient, uri, fileNames, DONE_FILE_ENDING);
                             ftpClient.disconnect();
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -174,7 +173,6 @@ public class FtpCommunicator implements Communicator {
      * @throws IOException
      */
     private void markFilesAsDone(FTPClient ftpClient, URI uri, List<String> files, String ending) throws IOException {
-
         ftpClient.changeWorkingDirectory(uri.getPath());
         for (String file : files){
             ftpClient.rename(file,file+ending);
