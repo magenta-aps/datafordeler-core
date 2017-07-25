@@ -5,6 +5,7 @@ import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.io.Event;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.testutil.CallbackController;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.KeyExpectorCallback;
@@ -185,11 +186,11 @@ public class RegisterManagerTest extends PluginTestBase {
         ExpectorCallback eventCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/getNewEvents", body, eventCallback);
 
-        ItemInputStream<Event> eventStream = this.plugin.getRegisterManager().pullEvents();
+        ItemInputStream<? extends PluginSourceData> eventStream = this.plugin.getRegisterManager().pullEvents();
 
         Event event;
         int eventCounter = 0;
-        while ((event = eventStream.next()) != null) {
+        while ((event = (Event) eventStream.next()) != null) {
             eventCounter++;
             Assert.assertEquals("1.0", event.getBeskedVersion());
             Assert.assertEquals("msgid", event.getEventID());

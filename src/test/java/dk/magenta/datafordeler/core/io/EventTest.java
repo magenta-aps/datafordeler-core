@@ -31,14 +31,14 @@ public class EventTest {
     @Test
     public void testDataSkema() {
         Event event = new Event();
-        event.setDataskema("testskema");
-        Assert.assertEquals("testskema", event.getDataskema());
+        event.setSchema("testskema");
+        Assert.assertEquals("testskema", event.getSchema());
     }
     @Test
     public void testObjectData() {
         Event event = new Event();
-        event.setObjektData("{\"test\":42}");
-        Assert.assertEquals("{\"test\":42}", event.getObjektData());
+        event.setData("{\"test\":42}");
+        Assert.assertEquals("{\"test\":42}", event.getData());
     }
     @Test
     public void testObjektReference() {

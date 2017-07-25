@@ -5,6 +5,7 @@ import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.io.Event;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.plugin.*;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import dk.magenta.datafordeler.core.util.ListHashMap;
@@ -86,8 +87,8 @@ public class DemoRegisterManager extends RegisterManager {
     }
 
     @Override
-    protected ItemInputStream<Event> parseEventResponse(InputStream responseContent) throws DataFordelerException {
-        return super.parseEventResponse(responseContent);
+    protected ItemInputStream<? extends PluginSourceData> parseEventResponse(InputStream responseContent) throws DataFordelerException {
+        return ItemInputStream.parseJsonStream(responseContent, Event.class, "events", this.getObjectMapper());
     }
 
     public String getPullCronSchedule() {

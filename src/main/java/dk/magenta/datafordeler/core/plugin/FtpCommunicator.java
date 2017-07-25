@@ -94,6 +94,9 @@ public class FtpCommunicator implements Communicator {
     @Override
     public InputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
         CloseDetectInputStream data = null;
+
+        System.out.println("ftp fetch from "+uri);
+        /*
         try {
             FTPClient ftpClient = performConnect(uri);
 
@@ -139,7 +142,7 @@ public class FtpCommunicator implements Communicator {
             }
         } catch (IOException e) {
             throw new DataStreamException(e);
-        }
+        }*/
         return data;
     }
 

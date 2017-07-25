@@ -11,7 +11,7 @@ import java.util.StringJoiner;
  *
  * A generic envelope for an io, containing the payload in parseable strings
  */
-public class Event implements Serializable {
+public class Event implements PluginSourceData {
 
     public class MessageData implements Serializable {
 
@@ -145,26 +145,26 @@ public class Event implements Serializable {
         return this.beskedData;
     }
 
-    public String getDataskema() {
+    public String getSchema() {
         if (this.beskedData != null) {
             return this.beskedData.getDataskema();
         }
         return null;
     }
 
-    @JsonProperty(required=false)
-    public void setDataskema(String dataskema) {
+    @JsonProperty(required=false, value = "dataskema")
+    public void setSchema(String dataskema) {
         this.ensureMessageData().setDataskema(dataskema);
     }
 
-    public String getObjektData() {
+    public String getData() {
         if (this.beskedData != null) {
             return this.beskedData.getObjektData();
         }
         return null;
     }
 
-    public void setObjektData(String objektData) {
+    public void setData(String objektData) {
         this.ensureMessageData().setObjektData(objektData);
     }
 
@@ -185,8 +185,8 @@ public class Event implements Serializable {
         StringJoiner joiner = new StringJoiner(", ");
         joiner.add("eventID: "+this.getEventID());
         joiner.add("beskedVersion: "+this.getBeskedVersion());
-        joiner.add("dataskema: "+this.getDataskema());
-        joiner.add("objektData: "+this.getObjektData());
+        joiner.add("dataskema: "+this.getSchema());
+        joiner.add("objektData: "+this.getData());
         joiner.add("objektReference: "+this.getObjektReference());
         sb.append(joiner.toString());
         sb.append(")");

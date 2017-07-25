@@ -1,11 +1,13 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.exception.DataStreamException;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
-import dk.magenta.datafordeler.core.io.Event;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
+import dk.magenta.datafordeler.core.util.ItemSequenceInputStream;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.util.UriUtils;
@@ -109,22 +111,30 @@ public abstract class RegisterManager {
 
     /** Event fetching **/
 
-    protected abstract URI getEventInterface();
+    protected abstract URI getEventInterface(EntityManager entityManager);
 
-    public ItemInputStream<Event> pullEvents() throws DataFordelerException {
-        return this.pullEvents(this.getEventInterface());
+    public ItemInputStream<? extends PluginSourceData> pullEvents() throws DataFordelerException {
+        ArrayList<ItemInputStream<? extends PluginSourceData>> itemStreams = new ArrayList<>();
+        for (EntityManager entityManager : this.entityManagers) {
+            itemStreams.add(
+                    this.pullEvents(this.getEventInterface(entityManager), entityManager)
+            );
+        }
+        try {
+            return ItemSequenceInputStream.from(itemStreams).flatten();
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
     }
 
-    public ItemInputStream<Event> pullEvents(URI eventInterface) throws DataFordelerException {
-        this.getLog().info("Pulling events from "+eventInterface);
+    public ItemInputStream<? extends PluginSourceData> pullEvents(URI eventInterface, EntityManager entityManager) throws DataFordelerException {
+        this.getLog().info("Pulling events from "+eventInterface+", for entityManager "+entityManager);
         Communicator eventCommunicator = this.getEventFetcher();
         InputStream responseBody = eventCommunicator.fetch(eventInterface);
-        return this.parseEventResponse(responseBody);
+        return this.parseEventResponse(responseBody, entityManager);
     }
 
-    protected ItemInputStream<Event> parseEventResponse(InputStream responseContent) throws DataFordelerException {
-        return ItemInputStream.parseJsonStream(responseContent, Event.class, "events", this.getObjectMapper());
-    }
+    protected abstract ItemInputStream<? extends PluginSourceData> parseEventResponse(InputStream responseContent, EntityManager entityManager) throws DataFordelerException;
 
     /**
      * Return a Cron expression telling when to perform a pull from the register
