@@ -14,9 +14,15 @@ public class AccessDeniedExceptionTest {
     @Test
     public void testAccessDeniedException() {
       String message = "You need the red key to open this door";
-      AccessDeniedException exception = new AccessDeniedException(message);
-      Assert.assertEquals(message, exception.getMessage());
-      Assert.assertEquals("datafordeler.accessdenied", exception.getCode());
+      AccessDeniedException exception1 = new AccessDeniedException(message);
+      Assert.assertEquals(message, exception1.getMessage());
+      Assert.assertEquals("datafordeler.accessdenied", exception1.getCode());
+
+      NullPointerException cause = new NullPointerException();
+      AccessDeniedException exception2 = new AccessDeniedException(message, cause);
+      Assert.assertEquals(message, exception2.getMessage());
+      Assert.assertEquals(cause, exception2.getCause());
+      Assert.assertEquals("datafordeler.accessdenied", exception2.getCode());
   }
 
 }
