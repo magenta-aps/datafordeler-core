@@ -16,4 +16,7 @@ public class InvalidReferenceException extends DataFordelerException {
         return "datafordeler.import.reference_invalid";
     }
 
+    public String getReference() {
+        return this.reference;
+    }
 }

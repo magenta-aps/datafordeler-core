@@ -20,4 +20,12 @@ public class FailedReferenceException extends HttpStatusException {
         this.reference = reference;
         this.initCause(cause);
     }
+
+    public RegistrationReference getReference() {
+        return this.reference;
+    }
+
+    public String getCode() {
+        return "datafordeler.import.reference_failed";
+    }
 }

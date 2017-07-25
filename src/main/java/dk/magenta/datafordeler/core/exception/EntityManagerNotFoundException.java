@@ -24,12 +24,10 @@ public class EntityManagerNotFoundException extends DataFordelerException {
 
     @Override
     public String getMessage() {
-        if (this.schema != null) {
-            return "EntityManager that handles schema " + this.schema + " was not found";
-        } else if (this.uri != null) {
+        if (this.uri != null) {
             return "EntityManager that handles URI " + this.uri.toString() + " was not found";
         } else {
-            return "EntityManager lookup on null";
+            return "EntityManager that handles schema " + this.schema + " was not found";
         }
     }
 }
