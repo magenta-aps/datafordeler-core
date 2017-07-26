@@ -1,18 +1,15 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
-import dk.magenta.datafordeler.core.util.ItemSequenceInputStream;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.util.UriUtils;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -116,7 +113,7 @@ public abstract class RegisterManager {
      * @param entityManager
      * @return
      */
-    protected abstract URI getEventInterface(EntityManager entityManager);
+    public abstract URI getEventInterface(EntityManager entityManager);
 
     /**
      * General data pull. Will perform a pull for all EntityManagers registered under the RegisterManager.
@@ -125,18 +122,8 @@ public abstract class RegisterManager {
      * @return
      * @throws DataFordelerException
      */
-    public ItemInputStream<? extends PluginSourceData> pullEvents() throws DataFordelerException {
-        ArrayList<ItemInputStream<? extends PluginSourceData>> itemStreams = new ArrayList<>();
-        for (EntityManager entityManager : this.entityManagers) {
-            itemStreams.add(
-                    this.pullEvents(this.getEventInterface(entityManager), entityManager)
-            );
-        }
-        try {
-            return ItemSequenceInputStream.from(itemStreams).flatten();
-        } catch (IOException e) {
-            throw new DataStreamException(e);
-        }
+    public ItemInputStream<? extends PluginSourceData> pullEvents(EntityManager entityManager) throws DataFordelerException {
+        return this.pullEvents(this.getEventInterface(entityManager), entityManager);
     }
 
     /**

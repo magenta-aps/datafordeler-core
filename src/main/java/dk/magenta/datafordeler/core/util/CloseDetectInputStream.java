@@ -51,7 +51,6 @@ public class CloseDetectInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
-        System.out.println("closing stream");
         this.runListeners(this.beforeCloseListeners);
         this.in.close();
         this.runListeners(this.afterCloseListeners);
