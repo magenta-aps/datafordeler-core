@@ -111,8 +111,20 @@ public abstract class RegisterManager {
 
     /** Event fetching **/
 
+    /**
+     * Obtain remote URI from which data can be pulled, given an EntityManager
+     * @param entityManager
+     * @return
+     */
     protected abstract URI getEventInterface(EntityManager entityManager);
 
+    /**
+     * General data pull. Will perform a pull for all EntityManagers registered under the RegisterManager.
+     * Subclasses may override this, but should endeavour to avoid doing so, instead overriding
+     * pullEvents(URI eventInterface, EntityManager entityManager) and/or parseEventResponse(InputStream responseContent, EntityManager entityManager)
+     * @return
+     * @throws DataFordelerException
+     */
     public ItemInputStream<? extends PluginSourceData> pullEvents() throws DataFordelerException {
         ArrayList<ItemInputStream<? extends PluginSourceData>> itemStreams = new ArrayList<>();
         for (EntityManager entityManager : this.entityManagers) {
@@ -127,6 +139,17 @@ public abstract class RegisterManager {
         }
     }
 
+    /**
+     * Specific data pull. Performs a pull from the given URI, for the given EntityManager.
+     * Subclasses are free to override this if needed; at present it simply fetches the URI with the
+     * Communicator returned by this.getEventFetcher(), and parses the raw data through
+     * parseEventResponse(InputStream responseContent, EntityManager entityManager)
+     * which must be implemented in subclasses.
+     * @param eventInterface
+     * @param entityManager
+     * @return
+     * @throws DataFordelerException
+     */
     public ItemInputStream<? extends PluginSourceData> pullEvents(URI eventInterface, EntityManager entityManager) throws DataFordelerException {
         this.getLog().info("Pulling events from "+eventInterface+", for entityManager "+entityManager);
         Communicator eventCommunicator = this.getEventFetcher();
@@ -134,6 +157,14 @@ public abstract class RegisterManager {
         return this.parseEventResponse(responseBody, entityManager);
     }
 
+    /**
+     * Parses the raw inputstream from a data source into a stream of PluginSourceData objects, usually by wrapping the important parts.
+     * The resultant objects should be consumable by
+     * @param responseContent
+     * @param entityManager
+     * @return
+     * @throws DataFordelerException
+     */
     protected abstract ItemInputStream<? extends PluginSourceData> parseEventResponse(InputStream responseContent, EntityManager entityManager) throws DataFordelerException;
 
     /**

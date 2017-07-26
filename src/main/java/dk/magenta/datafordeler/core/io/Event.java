@@ -115,27 +115,30 @@ public class Event implements PluginSourceData {
         }
     }
 
+    @JsonProperty
     private String eventID;
+
+    @JsonProperty
     private String beskedVersion;
 
     @JsonProperty
     private MessageData beskedData;
 
-
-    public String getEventID() {
+    @Override
+    public String getId() {
         return eventID;
     }
 
-    public void setEventID(String eventID) {
+    public void setId(String eventID) {
         this.eventID = eventID;
     }
 
-    public String getBeskedVersion() {
+    public String getVersion() {
         return beskedVersion;
     }
 
-    public void setBeskedVersion(String beskedVersion) {
-        this.beskedVersion = beskedVersion;
+    public void setVersion(String version) {
+        this.beskedVersion = version;
     }
 
     private MessageData ensureMessageData() {
@@ -168,14 +171,15 @@ public class Event implements PluginSourceData {
         this.ensureMessageData().setObjektData(objektData);
     }
 
-    public String getObjektReference() {
+    @Override
+    public String getReference() {
         if (this.beskedData != null) {
             return this.beskedData.getObjektReference();
         }
         return null;
     }
 
-    public void setObjektReference(String objektReference) {
+    public void setReference(String objektReference) {
         this.ensureMessageData().setObjektReference(objektReference);
     }
 
@@ -183,11 +187,11 @@ public class Event implements PluginSourceData {
         StringBuilder sb = new StringBuilder();
         sb.append("Event(");
         StringJoiner joiner = new StringJoiner(", ");
-        joiner.add("eventID: "+this.getEventID());
-        joiner.add("beskedVersion: "+this.getBeskedVersion());
+        joiner.add("eventID: "+this.getId());
+        joiner.add("beskedVersion: "+this.getVersion());
         joiner.add("dataskema: "+this.getSchema());
         joiner.add("objektData: "+this.getData());
-        joiner.add("objektReference: "+this.getObjektReference());
+        joiner.add("objektReference: "+this.getReference());
         sb.append(joiner.toString());
         sb.append(")");
         return sb.toString();

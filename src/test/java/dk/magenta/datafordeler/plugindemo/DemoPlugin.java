@@ -1,10 +1,10 @@
 package dk.magenta.datafordeler.plugindemo;
 
+import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.plugindemo.configuration.DemoConfigurationManager;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +27,15 @@ public class DemoPlugin extends Plugin {
 
     public DemoPlugin() {
         this.rolesDefinition = new DemoRolesDefinition();
+        AreaRestrictionType cardinalDirections = this.addAreaRestrictionType(
+            "Cardinal directions",
+            "The four cardinal directions"
+        );
+
+        cardinalDirections.addChoice("North", "The north quarter", null);
+        cardinalDirections.addChoice("East", "The east quarter", null);
+        cardinalDirections.addChoice("West", "The west quarter", null);
+        cardinalDirections.addChoice("South", "The south quarter", null);
     }
 
     @Override

@@ -82,12 +82,12 @@ public class DemoRegisterManager extends RegisterManager {
     /** Event fetching **/
 
     @Override
-    protected URI getEventInterface() {
+    protected URI getEventInterface(EntityManager entityManager) {
         return expandBaseURI(this.getBaseEndpoint(), "/getNewEvents");
     }
 
     @Override
-    protected ItemInputStream<? extends PluginSourceData> parseEventResponse(InputStream responseContent) throws DataFordelerException {
+    protected ItemInputStream<? extends PluginSourceData> parseEventResponse(InputStream responseContent, EntityManager entityManager) throws DataFordelerException {
         return ItemInputStream.parseJsonStream(responseContent, Event.class, "events", this.getObjectMapper());
     }
 
