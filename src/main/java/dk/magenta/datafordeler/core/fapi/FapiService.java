@@ -13,15 +13,12 @@ import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 
 import dk.magenta.datafordeler.core.util.LoggerHelper;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.jpa.internal.util.LogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,11 +114,10 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * Implementing this method as a noop will make the service publicly accessible.
      */
     protected abstract void checkAccess(DafoUserDetails user)
-        throws AccessDeniedException, AccessRequiredException;
-
-
+            throws AccessDeniedException, AccessRequiredException;
+    
     protected void checkAndLogAccess(LoggerHelper loggerHelper)
-        throws AccessDeniedException, AccessRequiredException {
+            throws AccessDeniedException, AccessRequiredException {
         try {
             this.checkAccess(loggerHelper.getUser());
         }
@@ -130,6 +126,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             throw(e);
         }
     }
+
 
     @RequestMapping(path="", produces="application/json")
     public String index(HttpServletRequest request) {

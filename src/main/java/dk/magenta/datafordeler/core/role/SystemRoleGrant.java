@@ -7,5 +7,6 @@ public enum SystemRoleGrant {
   Read, // Read objects
   Write, // Write, create or delete objects
   Grant, // Grant other users access to objects
-  Custom
+  Custom,
+  Execute // Execute commands
 }

@@ -14,8 +14,6 @@ public abstract class Plugin {
 
     protected long version = 1L;
 
-    protected RolesDefinition rolesDefinition;
-
     protected List<AreaRestrictionType> areaRestrictionTypes = new ArrayList<>();
 
     public Plugin() {
@@ -47,9 +45,7 @@ public abstract class Plugin {
         return this.getRegisterManager().getHandledURISubstrings();
     }
 
-    public RolesDefinition getRolesDefinition() {
-        return this.rolesDefinition;
-    }
+    public abstract RolesDefinition getRolesDefinition();
 
     public boolean isDemo() {
         return false;

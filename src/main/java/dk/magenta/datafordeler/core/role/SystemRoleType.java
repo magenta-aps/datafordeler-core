@@ -11,8 +11,13 @@ public enum SystemRoleType {
   EntityRole(2),
   /* A role that gives access to a specific attribute on an entity, eg. the Cpr-nr on a Person */
   AttributeRole(3),
+
   /* A custom role type used non-data specific access */
-  CustomRole(4);
+  CustomRole(4),
+
+  /* A role that gives access to execute, read status of, and stop a specific command, e.g. PULL */
+  CommandRole(5);
+
 
   private int numericValue;
 
