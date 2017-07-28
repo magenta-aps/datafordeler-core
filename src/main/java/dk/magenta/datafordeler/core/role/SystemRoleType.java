@@ -15,8 +15,12 @@ public enum SystemRoleType {
   /* A custom role type used non-data specific access */
   CustomRole(4),
 
-  /* A role that gives access to execute, read status of, and stop a specific command, e.g. PULL */
-  CommandRole(5);
+  /* A role that gives access to execute a specific command, e.g. PULL */
+  ExecuteCommandRole(5),
+  /* A role that gives access to stop a specific command, e.g. PULL */
+  StopCommandRole(6),
+  /* A role that gives access to read status of a specific command, e.g. PULL */
+  ReadCommandRole(7);
 
 
   private int numericValue;
