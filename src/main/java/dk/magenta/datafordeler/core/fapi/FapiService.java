@@ -135,11 +135,15 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public String index(HttpServletRequest request) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode root = objectMapper.createObjectNode();
-        root.put("metadata_url", request.getServletPath());
-        root.put("fetch_url", request.getServletPath() + "/{UUID}");
-        root.put("search_url", request.getServletPath() + "/search");
+        String servletPath = request.getServletPath();
+        if (servletPath.endsWith("/")) {
+            servletPath = servletPath.substring(0, servletPath.length() - 1);
+        }
+        root.put("metadata_url", servletPath);
+        root.put("fetch_url", servletPath + "/{UUID}");
+        root.put("search_url", servletPath + "/search");
         root.put("declaration_url",
-            "https://redmine.magenta-aps.dk/projects/dafodoc/wiki/API");
+                "https://redmine.magenta-aps.dk/projects/dafodoc/wiki/API");
         ArrayNode fields = objectMapper.createArrayNode();
         root.set("search_queryfields", fields);
         Class<? extends Query> clazz = this.getEmptyQuery().getClass();
