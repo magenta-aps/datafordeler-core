@@ -134,25 +134,47 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @RequestMapping(path="", produces="application/json")
     public String index(HttpServletRequest request) {
         ObjectMapper objectMapper = new ObjectMapper();
+        String servletPath = request.getServletPath();
+        ObjectNode root = this.rawIndex(servletPath);
+        return root.toString();
+    }
+
+    public ObjectNode rawIndex(String servletPath) {
         ObjectNode root = objectMapper.createObjectNode();
-        root.put("metadata_url", request.getServletPath());
-        root.put("fetch_url", request.getServletPath() + "/{UUID}");
-        root.put("search_url", request.getServletPath() + "/search");
+        if (servletPath.endsWith("/")) {
+            servletPath = servletPath.substring(0, servletPath.length() - 1);
+        }
+        root.put("metadata_url", servletPath);
+        root.put("fetch_url", servletPath + "/{UUID}");
+        root.put("search_url", servletPath + "/search");
         root.put("declaration_url",
             "https://redmine.magenta-aps.dk/projects/dafodoc/wiki/API");
         ArrayNode fields = objectMapper.createArrayNode();
         root.set("search_queryfields", fields);
-        Class<? extends Query> clazz = this.getEmptyQuery().getClass();
-        for(Field field : clazz.getDeclaredFields()) {
-            if(field.isAnnotationPresent(QueryField.class)) {
-                QueryField qf = field.getAnnotation(QueryField.class);
-                ObjectNode jsonField = objectMapper.createObjectNode();
-                jsonField.put("name", qf.queryName());
-                jsonField.put("type", qf.type().name().toLowerCase());
-                fields.add(jsonField);
+        Class<? extends Query> queryClass = this.getEmptyQuery().getClass();
+        for (Field field : getAllFields(queryClass)) {
+            QueryField qf = field.getAnnotation(QueryField.class);
+            ObjectNode jsonField = objectMapper.createObjectNode();
+            jsonField.put("name", qf.queryName());
+            jsonField.put("type", qf.type().name().toLowerCase());
+            fields.add(jsonField);
+        }
+        return root;
+    }
+
+    private static Set<Field> getAllFields(Class queryClass) {
+        HashSet<Field> fields = new HashSet<>();
+        if (queryClass != null) {
+            if (queryClass != Query.class) {
+                fields.addAll(getAllFields(queryClass.getSuperclass()));
+            }
+            for (Field field : queryClass.getDeclaredFields()) {
+                if (field.isAnnotationPresent(QueryField.class)) {
+                    fields.add(field);
+                }
             }
         }
-        return root.toString();
+        return fields;
     }
 
 
