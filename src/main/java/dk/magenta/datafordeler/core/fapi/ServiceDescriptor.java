@@ -39,8 +39,12 @@ public abstract class ServiceDescriptor {
         if (includeServiceName) {
             sb.append("<h1>" + this.serviceName + "</h1>");
         }
-        sb.append("<h2>" + this.serviceAddress + "</h2>");
+        sb.append("<h3>" + this.serviceAddress + "</h3>");
         return sb.toString();
+    }
+
+    protected String link(String address) {
+        return "<a href=\""+address+"\">"+address+"</a>";
     }
 
 }
