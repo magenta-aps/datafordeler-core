@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -131,57 +132,26 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         }
     }
 
+    public String[] getServicePaths() {
+        RequestMapping requestMapping = this.getClass().getAnnotation(RequestMapping.class);
+        if (requestMapping != null) {
+            return requestMapping.value();
+        }
+        return null;
+    }
+
     @RequestMapping(path="", produces="application/json")
-    public String index(HttpServletRequest request) {
-        ObjectMapper objectMapper = new ObjectMapper();
+    public String index(HttpServletRequest request) throws JsonProcessingException {
         String servletPath = request.getServletPath();
-        ObjectNode root = this.rawIndex(servletPath, false);
-        return root.toString();
+        return this.objectMapper.writeValueAsString(this.getServiceDescriptor(servletPath, false));
     }
 
-    public ObjectNode rawIndex(String servletPath, boolean isSoap) {
-        ObjectNode root = objectMapper.createObjectNode();
-        if (servletPath.endsWith("/")) {
-            servletPath = servletPath.substring(0, servletPath.length() - 1);
-        }
-        root.put("metadata_url", servletPath);
+    public ServiceDescriptor getServiceDescriptor(String servletPath, boolean isSoap) {
         if (isSoap) {
-            root.put("type", "soap");
-            root.put("wsdl_url", servletPath + "/?wsdl");
+            return new SoapServiceDescriptor(this.getServiceName(), servletPath);
         } else {
-            root.put("type", "rest");
-            root.put("fetch_url", servletPath + "/{UUID}");
-            root.put("search_url", servletPath + "/search");
-
-            root.put("declaration_url",
-                    "https://redmine.magenta-aps.dk/projects/dafodoc/wiki/API");
-            ArrayNode fields = objectMapper.createArrayNode();
-            root.set("search_queryfields", fields);
-            Class<? extends Query> queryClass = this.getEmptyQuery().getClass();
-            for (Field field : getAllFields(queryClass)) {
-                QueryField qf = field.getAnnotation(QueryField.class);
-                ObjectNode jsonField = objectMapper.createObjectNode();
-                jsonField.put("name", qf.queryName());
-                jsonField.put("type", qf.type().name().toLowerCase());
-                fields.add(jsonField);
-            }
+            return new RestServiceDescriptor(this.getServiceName(), servletPath, this.getEmptyQuery().getClass());
         }
-        return root;
-    }
-
-    private static Set<Field> getAllFields(Class queryClass) {
-        HashSet<Field> fields = new HashSet<>();
-        if (queryClass != null) {
-            if (queryClass != Query.class) {
-                fields.addAll(getAllFields(queryClass.getSuperclass()));
-            }
-            for (Field field : queryClass.getDeclaredFields()) {
-                if (field.isAnnotationPresent(QueryField.class)) {
-                    fields.add(field);
-                }
-            }
-        }
-        return fields;
     }
 
 
