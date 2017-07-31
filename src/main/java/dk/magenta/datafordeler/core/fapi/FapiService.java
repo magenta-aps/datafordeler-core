@@ -2,8 +2,6 @@ package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
@@ -14,15 +12,11 @@ import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 
 import dk.magenta.datafordeler.core.util.LoggerHelper;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.jpa.internal.util.LogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

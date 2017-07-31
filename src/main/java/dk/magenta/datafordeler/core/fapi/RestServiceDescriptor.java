@@ -7,7 +7,6 @@ import java.util.*;
 
 public class RestServiceDescriptor extends ServiceDescriptor {
 
-    private HashMap<String, String> searchFields;
     private Class<? extends Query> queryClass;
 
     public class RestServiceQueryField {
@@ -17,7 +16,6 @@ public class RestServiceDescriptor extends ServiceDescriptor {
 
     public RestServiceDescriptor(String serviceName, String metaAddress, Class<? extends Query> queryClass) {
         super(serviceName, metaAddress);
-        this.searchFields = new HashMap<>();
         this.queryClass = queryClass;
     }
 
