@@ -3,7 +3,6 @@ package dk.magenta.datafordeler.core.plugin;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 
-import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import java.net.URI;
 import java.util.*;
 
