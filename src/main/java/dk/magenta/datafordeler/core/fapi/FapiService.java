@@ -31,6 +31,7 @@ import javax.jws.WebParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -150,6 +151,22 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             return new RestServiceDescriptor(this.getPlugin(), this.getServiceName(), servletPath, this.getEmptyQuery().getClass());
         }
     }
+
+    private static Set<Field> getAllFields(Class queryClass) {
+        HashSet<Field> fields = new HashSet<>();
+        if (queryClass != null) {
+            if (queryClass != Query.class) {
+                fields.addAll(getAllFields(queryClass.getSuperclass()));
+            }
+            for (Field field : queryClass.getDeclaredFields()) {
+                if (field.isAnnotationPresent(QueryField.class)) {
+                    fields.add(field);
+                }
+            }
+        }
+        return fields;
+    }
+
 
 
     /**

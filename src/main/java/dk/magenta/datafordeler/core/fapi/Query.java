@@ -20,11 +20,22 @@ import java.util.StringJoiner;
  */
 public abstract class Query<E extends Entity> {
 
+    @QueryField(queryName = "page", type = QueryField.FieldType.INT)
     protected int page = 1;
+
+    @QueryField(queryName = "pageSize", type = QueryField.FieldType.INT)
     protected int pageSize = 10;
+
+    @QueryField(queryName = "registrationFrom", type = QueryField.FieldType.STRING)
     protected OffsetDateTime registrationFrom = null;
+
+    @QueryField(queryName = "registrationTo", type = QueryField.FieldType.STRING)
     protected OffsetDateTime registrationTo = null;
+
+    @QueryField(queryName = "effectFrom", type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectFrom = null;
+
+    @QueryField(queryName = "effectTo", type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectTo = null;
 
     public Query() {
