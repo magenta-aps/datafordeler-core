@@ -2,18 +2,26 @@ package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dk.magenta.datafordeler.core.plugin.Plugin;
 
 public abstract class ServiceDescriptor {
 
+    private Plugin plugin;
     private String serviceName;
     private String serviceAddress;
 
-    public ServiceDescriptor(String serviceName, String serviceAddress) {
+    public ServiceDescriptor(Plugin plugin, String serviceName, String serviceAddress) {
+        this.plugin = plugin;
         this.serviceName = serviceName;
         if (serviceAddress.endsWith("/")) {
             serviceAddress = serviceAddress.substring(0, serviceAddress.length() - 1);
         }
         this.serviceAddress = serviceAddress;
+    }
+
+    @JsonIgnore
+    public Plugin getPlugin() {
+        return this.plugin;
     }
 
     @JsonProperty(value = "service_name")
@@ -27,24 +35,11 @@ public abstract class ServiceDescriptor {
     }
 
     @JsonIgnore
-    protected String getServiceAddress() {
+    public String getServiceAddress() {
         return this.serviceAddress;
     }
 
     @JsonProperty(value = "type")
     public abstract String getType();
-
-    public String toHTML(boolean includeServiceName) {
-        StringBuilder sb = new StringBuilder();
-        if (includeServiceName) {
-            sb.append("<h1>" + this.serviceName + "</h1>");
-        }
-        sb.append("<h3>" + this.serviceAddress + "</h3>");
-        return sb.toString();
-    }
-
-    protected String link(String address) {
-        return "<a href=\""+address+"\">"+address+"</a>";
-    }
 
 }

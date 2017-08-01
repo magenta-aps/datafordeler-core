@@ -8,6 +8,7 @@ import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
+import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 
@@ -86,6 +87,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected abstract Class<E> getEntityClass();
 
 
+    public abstract Plugin getPlugin();
+
     /**
      * Obtains the autowired SessionManager
      * @return SessionManager instance
@@ -142,9 +145,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     public ServiceDescriptor getServiceDescriptor(String servletPath, boolean isSoap) {
         if (isSoap) {
-            return new SoapServiceDescriptor(this.getServiceName(), servletPath);
+            return new SoapServiceDescriptor(this.getPlugin(), this.getServiceName(), servletPath);
         } else {
-            return new RestServiceDescriptor(this.getServiceName(), servletPath, this.getEmptyQuery().getClass());
+            return new RestServiceDescriptor(this.getPlugin(), this.getServiceName(), servletPath, this.getEmptyQuery().getClass());
         }
     }
 

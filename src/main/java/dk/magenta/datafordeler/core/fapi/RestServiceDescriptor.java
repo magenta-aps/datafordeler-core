@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dk.magenta.datafordeler.core.plugin.Plugin;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -14,8 +15,8 @@ public class RestServiceDescriptor extends ServiceDescriptor {
         public String type;
     }
 
-    public RestServiceDescriptor(String serviceName, String metaAddress, Class<? extends Query> queryClass) {
-        super(serviceName, metaAddress);
+    public RestServiceDescriptor(Plugin plugin, String serviceName, String metaAddress, Class<? extends Query> queryClass) {
+        super(plugin, serviceName, metaAddress);
         this.queryClass = queryClass;
     }
 
@@ -51,31 +52,6 @@ public class RestServiceDescriptor extends ServiceDescriptor {
             fields.add(queryField);
         }
         return fields;
-    }
-
-    @Override
-    public String toHTML(boolean includeServiceName) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(super.toHTML(includeServiceName));
-        sb.append("<dl class=\"dl-horizontal\">");
-        sb.append("<dt>" + "Type:" + "</dt>");
-        sb.append("<dd>" + this.getType() + "</dd>");
-        sb.append("<dt>" + "Fetch address:" + "</dt>");
-        sb.append("<dd>" + this.getFetchAddress() + "</dd>");
-        sb.append("<dt>" + "Search address:" + "</dt>");
-        sb.append("<dd>" + this.getSearchAddress() + "</dd>");
-        sb.append("<dt>" + "Declaration address:" + "</dt>");
-        sb.append("<dd>" + this.link(this.getDeclarationAddress()) + "</dd>");
-        sb.append("<dt>" + "Query fields:" + "</dt>");
-        sb.append("<dd><ul class=\"list-unstyled\">");
-
-        for (RestServiceQueryField queryField : this.getFields()) {
-            sb.append("<li>" + queryField.type + " " + queryField.name + "</li>");
-        }
-
-        sb.append("</ul></dd>");
-        sb.append("</dl>");
-        return sb.toString();
     }
 
     private static Set<Field> getAllFields(Class queryClass) {

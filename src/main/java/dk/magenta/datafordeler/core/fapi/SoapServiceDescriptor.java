@@ -1,11 +1,12 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dk.magenta.datafordeler.core.plugin.Plugin;
 
 public class SoapServiceDescriptor extends ServiceDescriptor {
 
-    public SoapServiceDescriptor(String serviceName, String metaAddress) {
-        super(serviceName, metaAddress);
+    public SoapServiceDescriptor(Plugin plugin, String serviceName, String metaAddress) {
+        super(plugin, serviceName, metaAddress);
     }
 
     @JsonProperty(value = "wsdl_url")
@@ -19,16 +20,4 @@ public class SoapServiceDescriptor extends ServiceDescriptor {
         return "soap";
     }
 
-    @Override
-    public String toHTML(boolean includeServiceName) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(super.toHTML(includeServiceName));
-        sb.append("<dl class=\"dl-horizontal\">");
-        sb.append("<dt>" + "Type:" + "</dt>");
-        sb.append("<dd>" + this.getType() + "</dd>");
-        sb.append("<dt>" + "Wsdl Address:" + "</dt>");
-        sb.append("<dd>" + this.link(this.getWsdlAddress()) + "</dd>");
-        sb.append("</dl>");
-        return sb.toString();
-    }
 }
