@@ -145,7 +145,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     public ServiceDescriptor getServiceDescriptor(String servletPath, boolean isSoap) {
         if (isSoap) {
-            return new SoapServiceDescriptor(this.getPlugin(), this.getServiceName(), servletPath);
+            return new SoapServiceDescriptor(this.getPlugin(), this.getServiceName(), servletPath, this.getEmptyQuery().getClass());
         } else {
             return new RestServiceDescriptor(this.getPlugin(), this.getServiceName(), servletPath, this.getEmptyQuery().getClass());
         }
