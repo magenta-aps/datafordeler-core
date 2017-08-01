@@ -152,21 +152,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         }
     }
 
-    private static Set<Field> getAllFields(Class queryClass) {
-        HashSet<Field> fields = new HashSet<>();
-        if (queryClass != null) {
-            if (queryClass != Query.class) {
-                fields.addAll(getAllFields(queryClass.getSuperclass()));
-            }
-            for (Field field : queryClass.getDeclaredFields()) {
-                if (field.isAnnotationPresent(QueryField.class)) {
-                    fields.add(field);
-                }
-            }
-        }
-        return fields;
-    }
-
 
 
     /**
