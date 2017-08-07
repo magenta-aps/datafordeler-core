@@ -35,6 +35,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -68,35 +70,14 @@ public class Application {
     SessionManager sessionManager;
 
 
+
+
     public static final int servicePort = 8445;
 
-    /*private static LarsURLClassLoader classLoader = new LarsURLClassLoader(
-            getPluginJars(new File("/home/lars/Projekt/datafordeler/plugins/jar/")).toArray(new URL[0]),
-            Thread.currentThread().getContextClassLoader()
-            //Plugin.class.getClassLoader()
-    );*/
-
     public static void main(final String[] args) throws Exception {
-        /*URLClassLoader urlClassLoader = URLClassLoader.newInstance(
-                new URL[]{
-                        new File("/home/lars/Projekt/datafordeler/plugins/jar/datafordeler-plugin-cpr-1.0-SNAPSHOT.jar").toURI().toURL()
-                },
-                Thread.currentThread().getContextClassLoader()
-                //Plugin.class.getClassLoader()
-        );*/
 
-        //Thread.currentThread().setContextClassLoader(classLoader);
+        extendClassLoader(Thread.currentThread().getContextClassLoader());
 
-System.out.println(System.getProperty("java.system.class.loader"));
-
-        if (!(Thread.currentThread().getContextClassLoader() instanceof LarsURLClassLoader)) {
-            Thread.currentThread().setContextClassLoader(new LarsURLClassLoader(Thread.currentThread().getContextClassLoader()));
-        }
-
-        System.out.println("getSystemClassLoader(): " + ClassLoader.getSystemClassLoader());
-
-        ClassLoader cl_of_fapiservice = FapiService.class.getClassLoader();
-        System.out.println("Classloader of FapiService: " + cl_of_fapiservice);
         try {
             SpringApplication.run(Application.class, args);
         } catch (Throwable e) {
@@ -109,35 +90,16 @@ System.out.println(System.getProperty("java.system.class.loader"));
         }
     }
 
-    private static List<URL> getPluginJars(File folder) {
-        ArrayList<URL> jars = new ArrayList<>();
-        File[] files = folder.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".jar");
-            }
-        });
-        if (files != null) {
-            for (File file : files) {
-                try {
-                    jars.add(file.toURI().toURL());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return jars;
-    }
-
     /* For testing the servlet in a throwaway Tomcat container */
     @Bean
     public EmbeddedServletContainerFactory servletContainer() {
         return new TomcatEmbeddedServletContainerFactory(servicePort);
     }
 
-    private Logger log = LogManager.getLogger(Application.class);
+    private static Logger log = LogManager.getLogger(Application.class);
 
     private final Pattern ownerValidation = Pattern.compile("^[a-zA-Z0-9_]+$");
+
 
     @Bean
     protected ServletRegistrationBean fapiDispatcherServlet()
@@ -168,7 +130,6 @@ System.out.println(System.getProperty("java.system.class.loader"));
                 throw new InvalidServiceOwnerDefinitionException(plugin, serviceOwner, this.ownerValidation);
             }
 
-
             for (EntityManager entityManager : registerManager.getEntityManagers()) {
                 FapiService service = entityManager.getEntityService();
                 String base = "/" + serviceOwner + "/" + service.getServiceName() + "/" + service.getVersion();
@@ -182,9 +143,7 @@ System.out.println(System.getProperty("java.system.class.loader"));
                 serviceOwnerMatchers.add(base + "/soap");
                 serverFactoryBean.setServiceBean(service);
                 serverFactoryBean.addHandlers(Collections.singletonList(new SoapHandler()));
-System.out.println("------"+Thread.currentThread().getContextClassLoader());
                 serverFactoryBean.create();
-System.out.println("SURVIVOR: "+base);
             }
         }
 
@@ -197,6 +156,29 @@ System.out.println("SURVIVOR: "+base);
         this.log.info("ServletRegistrationBean \"" + servletRegistrationBean.getServletName() + "\" created");
 
         return servletRegistrationBean;
+    }
+
+    // Seriously unholy reflection magic, to force our URLs into the existing classloader
+    private static void extendClassLoader(ClassLoader classLoader) {
+        URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
+        try {
+            Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+            method.setAccessible(true);
+
+            File pluginFolder = new File("../plugins/jar/");
+            File[] files = pluginFolder.listFiles((dir, name) -> name.endsWith(".jar"));
+            if (files != null) {
+                for (File file : files) {
+                    try {
+                        method.invoke(urlClassLoader, file.toURI().toURL());
+                    } catch (MalformedURLException e) {
+                        log.error("Invalid URL for Jar file", e);
+                    }
+                }
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            log.error(e);
+        }
     }
 
 }
