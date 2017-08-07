@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -10,7 +10,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * Created by lars on 08-05-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
 public class RolesDefintionTest extends PluginTestBase {
 
     @Test

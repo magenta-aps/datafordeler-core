@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.database;
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.plugindemo.fapi.DemoQuery;
 import dk.magenta.datafordeler.plugindemo.model.DemoData;
@@ -24,7 +24,7 @@ import java.util.UUID;
  * Created by lars on 21-02-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
 public class DatabaseTest {
 
     @Autowired

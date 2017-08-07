@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
 
 import java.io.*;
@@ -32,7 +32,7 @@ import java.util.concurrent.*;
  * Created by lars on 08-06-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, classes = TestConfig.class)
+@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, classes = Application.class)
 public class FtpCommunicatorTest {
 
     private static final String TEST_FILE_ENDING = ".test";

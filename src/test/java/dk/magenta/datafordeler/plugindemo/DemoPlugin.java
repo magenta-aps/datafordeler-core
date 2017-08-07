@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.plugindemo;
 
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
@@ -36,6 +37,7 @@ public class DemoPlugin extends Plugin {
 
     @Override
     public RegisterManager getRegisterManager() {
+        System.out.println("===== DemoPlugin " + DemoPlugin.class.getClassLoader());
         return this.demoRegisterManager;
     }
 
