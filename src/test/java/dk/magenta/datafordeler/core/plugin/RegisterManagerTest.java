@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.plugin;
 import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
+import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.io.Event;
 import dk.magenta.datafordeler.core.testutil.CallbackController;
@@ -51,6 +52,10 @@ public class RegisterManagerTest extends PluginTestBase {
 
     private class OtherEntity extends Entity {
 
+        @Override
+        protected Registration createEmptyRegistration() {
+            return null;
+        }
     }
 
     @Test

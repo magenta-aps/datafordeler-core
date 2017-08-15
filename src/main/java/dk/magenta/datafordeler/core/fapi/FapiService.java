@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -13,6 +14,9 @@ import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 
 import dk.magenta.datafordeler.core.util.LoggerHelper;
+
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -122,13 +126,13 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     protected void checkAndLogAccess(LoggerHelper loggerHelper)
         throws AccessDeniedException, AccessRequiredException {
-        try {
+        /*try {
             this.checkAccess(loggerHelper.getUser());
         }
         catch(AccessDeniedException|AccessRequiredException e) {
             loggerHelper.info("Access denied: " + e.getMessage());
             throw(e);
-        }
+        }*/
     }
 
     @RequestMapping(path="", produces="application/json")
@@ -343,10 +347,15 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         try {
             entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
             for (E entity : entities) {
-                entity.forceLoad(session);
+                try {
+                    objectMapper.writeValueAsString(entity);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                //entity.forceLoad(session);
             }
         } finally {
-            transaction.commit();
+            transaction.rollback();
             session.close();
         }
         return entities;
