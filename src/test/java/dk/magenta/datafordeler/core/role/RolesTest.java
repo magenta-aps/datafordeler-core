@@ -5,6 +5,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.HashMap;
+
 /**
  * Created by jubk on 16-03-2017.
  */
@@ -12,6 +14,7 @@ public class RolesTest {
   private static ReadServiceRole serviceRole;
   private static ReadEntityRole entityRole;
   private static ReadAttributeRole attributeRole;
+  private static ExecuteCommandRole executeCommandRole;
 
   @BeforeClass
   public static void setUp() {
@@ -27,6 +30,13 @@ public class RolesTest {
     attributeRole = new ReadAttributeRole(
         "MyAttribute", entityRole,
         new ReadAttributeRoleVersion(0.1f, "First version of MyAttribute role")
+    );
+    executeCommandRole = new ExecuteCommandRole(
+            "BogusCommand",
+            new HashMap<String, Object>() {{
+              put("foo", 42);
+            }},
+            new ExecuteCommandRoleVersion(0.1f, "First version of BogusCommand role")
     );
   }
 
@@ -51,6 +61,14 @@ public class RolesTest {
     Assert.assertTrue(
         "Name of attribute role should be ReadMyServiceMyEntityMyAttribute",
         attributeRole.getRoleName().equals("ReadMyServiceMyEntityMyAttribute")
+    );
+  }
+
+  @Test
+  public void testNameOfExecuteCommandRole() {
+    Assert.assertTrue(
+            "Name of execute role should be ExecuteBogusCommand{foo=42}",
+            executeCommandRole.getRoleName().equals("ExecuteBogusCommand{foo=42}")
     );
   }
 }

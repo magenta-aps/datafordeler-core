@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.plugindemo;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
+import dk.magenta.datafordeler.core.plugin.RolesDefinition;
 import dk.magenta.datafordeler.plugindemo.configuration.DemoConfigurationManager;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,10 @@ public class DemoPlugin extends Plugin {
     @Autowired
     private DemoConfigurationManager demoConfigurationManager;
 
+    private DemoRolesDefinition rolesDefinition = new DemoRolesDefinition();
+
     public DemoPlugin() {
-        this.rolesDefinition = new DemoRolesDefinition();
+
     }
 
     @Override
@@ -57,4 +60,8 @@ public class DemoPlugin extends Plugin {
         return true;
     }
 
+    @Override
+    public RolesDefinition getRolesDefinition() {
+        return this.rolesDefinition;
+    }
 }
