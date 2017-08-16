@@ -76,4 +76,8 @@ public class LoggerHelper {
     logger.error(prefix + msg);
   }
 
+  public void error(String msg, Throwable exception) {
+    logger.error(prefix + msg, exception);
+  }
+
 }

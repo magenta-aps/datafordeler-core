@@ -4,7 +4,9 @@ import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
+import dk.magenta.datafordeler.plugindemo.DemoPlugin;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
 import dk.magenta.datafordeler.plugindemo.fapi.DemoQuery;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
@@ -13,6 +15,8 @@ import org.hibernate.Session;
 import javax.jws.WebMethod;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,6 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/demo/postnummer/1/rest")
 public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
+
+    @Autowired
+    private DemoPlugin demoPlugin;
 
     @Override
     @WebMethod(exclude = true) // Non-soap methods must have this
@@ -38,6 +45,11 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
     @Override
     protected Class<DemoEntity> getEntityClass() {
         return DemoEntity.class;
+    }
+
+    @Override
+    public Plugin getPlugin() {
+        return this.demoPlugin;
     }
 
     @Override
