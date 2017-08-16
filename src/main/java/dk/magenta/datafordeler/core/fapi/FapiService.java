@@ -132,7 +132,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public String index(HttpServletRequest request) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode root = objectMapper.createObjectNode();
-        String servletPath = request.getServletPath();
         root.put("metadata_url", request.getServletPath());
         root.put("fetch_url", request.getServletPath() + "/{UUID}");
         root.put("search_url", request.getServletPath() + "/search");
