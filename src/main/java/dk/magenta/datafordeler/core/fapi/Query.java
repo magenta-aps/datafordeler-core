@@ -8,7 +8,6 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -21,11 +20,22 @@ import java.util.StringJoiner;
  */
 public abstract class Query<E extends Entity> {
 
+    @QueryField(queryName = "page", type = QueryField.FieldType.INT)
     protected int page = 1;
+
+    @QueryField(queryName = "pageSize", type = QueryField.FieldType.INT)
     protected int pageSize = 10;
+
+    @QueryField(queryName = "registrationFrom", type = QueryField.FieldType.STRING)
     protected OffsetDateTime registrationFrom = null;
+
+    @QueryField(queryName = "registrationTo", type = QueryField.FieldType.STRING)
     protected OffsetDateTime registrationTo = null;
+
+    @QueryField(queryName = "effectFrom", type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectFrom = null;
+
+    @QueryField(queryName = "effectTo", type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectTo = null;
 
     public Query() {

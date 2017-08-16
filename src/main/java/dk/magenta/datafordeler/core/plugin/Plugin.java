@@ -3,7 +3,6 @@ package dk.magenta.datafordeler.core.plugin;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 
-import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import java.net.URI;
 import java.util.*;
 
@@ -13,8 +12,6 @@ import java.util.*;
 public abstract class Plugin {
 
     protected long version = 1L;
-
-    protected RolesDefinition rolesDefinition;
 
     protected List<AreaRestrictionType> areaRestrictionTypes = new ArrayList<>();
 
@@ -47,9 +44,7 @@ public abstract class Plugin {
         return this.getRegisterManager().getHandledURISubstrings();
     }
 
-    public RolesDefinition getRolesDefinition() {
-        return this.rolesDefinition;
-    }
+    public abstract RolesDefinition getRolesDefinition();
 
     public boolean isDemo() {
         return false;
