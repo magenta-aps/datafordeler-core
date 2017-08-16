@@ -47,6 +47,7 @@ public class DafoUserManager {
    */
   public DafoUserDetails getUserFromRequest(HttpServletRequest request)
       throws InvalidTokenException {
+    System.out.println("getUserFromRequest");
 
     // If an authorization header starting with "SAML " is provided, use it to create a
     // SAML token based user.
@@ -74,6 +75,11 @@ public class DafoUserManager {
       return userDetails;
     }
     // Fall back to an anonymous user
+    System.out.println("returning fallback user");
+    return this.getFallbackUser();
+  }
+
+  public DafoUserDetails getFallbackUser() {
     return new AnonymousDafoUserDetails();
   }
 

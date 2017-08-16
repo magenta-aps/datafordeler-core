@@ -2,28 +2,10 @@ package dk.magenta.datafordeler.core.role;
 
 import java.util.Map;
 
-public class ExecuteCommandRole extends SystemRole {
-
-    private String commandName;
-    private Map<String, Object> details;
-    // TODO: store and check command body
+public class ExecuteCommandRole extends CommandRole {
 
     public ExecuteCommandRole(String commandName, Map<String, Object> details, SystemRoleVersion... versions) {
-        super(SystemRoleType.ExecuteCommandRole, SystemRoleGrant.Execute, null, versions);
-        this.commandName = commandName;
-        this.details = details;
+        super(SystemRoleType.ExecuteCommandRole, SystemRoleGrant.Execute, commandName, details, null, versions);
     }
 
-    @Override
-    public String getTargetName() {
-        return commandName + this.details;
-    }
-
-    public String getCommandName() {
-        return this.commandName;
-    }
-
-    public Map<String, Object> getDetails() {
-        return this.details;
-    }
 }
