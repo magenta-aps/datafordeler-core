@@ -45,8 +45,8 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
     private int throttle = 1000;
 
-    public void setThrottle(int throttle) {
-        this.throttle = throttle;
+    public void setThrottle(int throttleMillis) {
+        this.throttle = throttleMillis;
     }
 
     public byte[] getDelimiter() {
@@ -87,24 +87,24 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         HttpPost initialPost = new HttpPost(startUri);
                         initialPost.setEntity(new StringEntity(body, "utf-8"));
                         CloseableHttpResponse response;
-                        log.info("Sending initial post");
+                        log.info("Sending initial POST to "+startUri);
                         try {
                             response = httpclient.execute(initialPost);
                         } catch (IOException e) {
                             e.printStackTrace();
                             throw new DataStreamException(e);
                         }
-                        log.info("Initial post sent");
+                        log.info("Initial POST sent");
 
                         JsonNode responseNode = objectMapper.readTree(response.getEntity().getContent());
-                        String scrollId = responseNode.get("_scroll_id").asText();
+                        String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
 
                         while (scrollId != null) {
-                            log.info("scrollId: "+scrollId);
                             URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=1m", null);
                             HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
                             partialGet.setEntity(new StringEntity(scrollId));
                             try {
+                                log.info("Sending chunk GET to "+fetchUri);
                                 response = httpclient.execute(partialGet);
                                 BufferedInputStream data = new BufferedInputStream(response.getEntity().getContent(), 8192);
 
@@ -127,17 +127,20 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                 if (scrollId != null) {
                                     // There is more data
                                     outputStream.write(delimiter);
+                                    if (throttle > 0) {
+                                        try {
+                                            log.info("Waiting "+throttle+" milliseconds before next request");
+                                            Thread.sleep(throttle);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
                                 } else {
                                     // Reached the end
+                                    log.info("Closing outputstream");
                                     outputStream.close();
                                 }
-                                if (throttle > 0) {
-                                    try {
-                                        Thread.sleep(throttle);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
+
                             } catch (IOException e) {
                                 e.printStackTrace();
                                 throw new DataStreamException(e);

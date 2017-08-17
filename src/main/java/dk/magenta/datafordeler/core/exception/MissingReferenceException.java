@@ -1,20 +1,20 @@
 package dk.magenta.datafordeler.core.exception;
 
-import dk.magenta.datafordeler.core.io.Event;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 
 /**
  * Created by lars on 07-03-17.
  */
 public class MissingReferenceException extends DataFordelerException {
 
-    private Event event;
+    private PluginSourceData event;
 
-    public MissingReferenceException(Event event) {
+    public MissingReferenceException(PluginSourceData event) {
         super();
         this.event = event;
     }
 
-    public Event getEvent() {
+    public PluginSourceData getEvent() {
         return event;
     }
 
