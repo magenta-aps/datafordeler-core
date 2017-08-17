@@ -43,4 +43,9 @@ public class DemoRegistration extends Registration<DemoEntity, DemoRegistration,
         super.setEffects(effects);
     }
 
+    @Override
+    protected DemoEffect createEmptyEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
+        return new DemoEffect();
+    }
+
 }

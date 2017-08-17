@@ -340,10 +340,15 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         try {
             entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
             for (E entity : entities) {
-                entity.forceLoad(session);
+                try {
+                    objectMapper.writeValueAsString(entity);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                //entity.forceLoad(session);
             }
         } finally {
-            transaction.commit();
+            transaction.rollback();
             session.close();
         }
         return entities;

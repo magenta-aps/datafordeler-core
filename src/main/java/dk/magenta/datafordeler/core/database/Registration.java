@@ -1,6 +1,8 @@
 package dk.magenta.datafordeler.core.database;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
@@ -26,7 +28,8 @@ import java.util.*;
 @FilterDef(name=Registration.FILTER_REGISTRATION_FROM, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_FROM, type="java.time.OffsetDateTime"))
 @FilterDef(name=Registration.FILTER_REGISTRATION_TO, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_TO, type="java.time.OffsetDateTime"))
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
-public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry {
+@JsonPropertyOrder({"sequenceNumber", "registrationFrom", "registrationTo", "checksum", "effects"})
+public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry implements Comparable<Registration> {
 
     public static final String FILTER_REGISTRATION_FROM = "registrationFromFilter";
     public static final String FILTERPARAM_REGISTRATION_FROM = "registrationFromDate";
@@ -100,23 +103,37 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+")")
     protected List<V> effects;
 
-    @JsonProperty(value = "effects")
-    @XmlElement(name = "effect")
-    @JacksonXmlProperty(localName = "effect")
-    @JacksonXmlElementWrapper(useWrapping = false)
+    @JsonIgnore
     public List<V> getEffects() {
         return this.effects;
     }
 
 
+
+    @JsonProperty(value = "effects", access = JsonProperty.Access.READ_ONLY)
+    @XmlElement(name = "effect")
+    @JacksonXmlProperty(localName = "effect")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    public ArrayList<V> getSortedEffects() {
+        ArrayList<V> sortedEffects = new ArrayList<V>(this.effects);
+        Collections.sort(sortedEffects);
+        return sortedEffects;
+    }
+
     public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         for (V effect : this.effects) {
-            if ((effect.getEffectFrom() == null ? effectFrom == null : effect.getEffectFrom().equals(effectFrom)) &&
-                (effect.getEffectTo() == null ? effectTo == null : effect.getEffectTo().equals(effectTo))) {
+            if (equalOffsetDateTime(effect.getEffectFrom(), effectFrom) &&
+                equalOffsetDateTime(effect.getEffectTo(), effectTo)) {
                 return effect;
             }
         }
         return null;
+    }
+
+    private static boolean equalOffsetDateTime(OffsetDateTime dateTime1, OffsetDateTime dateTime2) {
+        if (dateTime1 == null && dateTime2 == null) return true;
+        if (dateTime1 == null || dateTime2 == null) return false;
+        return dateTime1.isEqual(dateTime2);
     }
 
     public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
@@ -144,15 +161,29 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.effects.remove(effect);
     }
 
-    @JsonProperty
+    @JsonProperty(value = "effects", access = JsonProperty.Access.WRITE_ONLY)
     public void setEffects(Collection<V> effects) {
         this.effects = new ArrayList<V>(effects);
+    }
+
+    protected abstract V createEmptyEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo);
+
+    public final V createEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
+        V effect = this.createEmptyEffect(effectFrom, effectTo);
+        effect.setRegistration(this);
+        return effect;
+    }
+    public final V createEffect(TemporalAccessor effectFrom, TemporalAccessor effectTo) {
+        return this.createEffect(Effect.convertTime(effectFrom), Effect.convertTime(effectTo));
+    }
+    public final V createEffect(LocalDate effectFrom, LocalDate effectTo) {
+        return this.createEffect(Effect.convertTime(effectFrom), Effect.convertTime(effectTo));
     }
 
 
 
 
-    @Column(nullable = false, insertable = true, updatable = false)
+    @Column(nullable = true, insertable = true, updatable = false)
     protected OffsetDateTime registrationFrom;
 
     @JsonProperty(value = "registrationFrom")
@@ -259,4 +290,11 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         }
     }
 
+
+    @Override
+    public int compareTo(Registration o) {
+        OffsetDateTime oDateTime = o == null ? null : o.registrationFrom;
+        if (oDateTime == null) return 1;
+        return this.registrationFrom.compareTo(oDateTime);
+    }
 }
