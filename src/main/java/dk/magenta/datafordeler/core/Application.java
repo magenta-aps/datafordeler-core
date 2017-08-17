@@ -34,6 +34,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -41,10 +42,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -76,8 +74,15 @@ public class Application {
 
     public static void main(final String[] args) throws Exception {
 
-        extendClassLoader(Thread.currentThread().getContextClassLoader());
+        // We need the jarFolderPath before starting Spring, so load it from properties the old-fashioned way
+        Properties properties = new Properties();
+        properties.load(Application.class.getResourceAsStream("/application.properties"));
+        String jarFolderPath = properties.getProperty("dafo.plugins.folder");
 
+        // Jam the jar files on the given path into the classloader
+        extendClassLoader(Thread.currentThread().getContextClassLoader(), jarFolderPath);
+
+        // Run Spring
         try {
             SpringApplication.run(Application.class, args);
         } catch (Throwable e) {
@@ -97,12 +102,12 @@ public class Application {
     }
 
     // Seriously unholy reflection magic, to force our URLs into the existing classloader
-    private static void extendClassLoader(ClassLoader classLoader) {
+    private static void extendClassLoader(ClassLoader classLoader, String jarFolderPath) {
         URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
         try {
             Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
             method.setAccessible(true);
-            File pluginFolder = new File("../plugins/jar/");
+            File pluginFolder = new File(jarFolderPath);
             File[] files = pluginFolder.listFiles((dir, name) -> name.endsWith(".jar"));
             if (files != null) {
                 for (File file : files) {
