@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.exception;
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistrationReference;
 import org.apache.http.HttpVersion;
@@ -15,7 +15,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.net.URI;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
 public class FailedReferenceExceptionTest {
 
     @Test

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.Worker;
+import dk.magenta.datafordeler.core.exception.DataStreamException;
+import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -61,4 +63,7 @@ public abstract class CommandHandler {
         transaction.commit();
         session.close();
     }
+
+    public abstract CommandData getCommandData(Command command)
+            throws DataStreamException, InvalidClientInputException;
 }

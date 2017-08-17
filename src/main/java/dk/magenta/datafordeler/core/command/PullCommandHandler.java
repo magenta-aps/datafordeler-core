@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Created by lars on 29-05-17.
@@ -24,13 +26,31 @@ import java.io.IOException;
 @Component
 public class PullCommandHandler extends CommandHandler {
 
-    public static class PullCommandData {
+    public static class PullCommandData extends CommandData {
 
         public PullCommandData() {
         }
 
-        @JsonProperty
+        @JsonProperty(required = true)
         public String plugin;
+
+        @Override
+        public boolean containsAll(Map<String, Object> data) {
+            for (String key : data.keySet()) {
+                if (key.equals("plugin") && this.plugin != null && this.plugin.equals(data.get("plugin"))) {
+                    // Ok for now
+                } else {
+                    // This must not happen. It means there is an important difference between the incoming map and this object
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public Map<String, Object> contents() {
+            return Collections.singletonMap("plugin", this.plugin);
+        }
     }
 
     @Autowired
@@ -72,7 +92,7 @@ public class PullCommandHandler extends CommandHandler {
         return pull;
     }
 
-    private PullCommandData getCommandData(Command command)
+    public PullCommandData getCommandData(Command command)
         throws DataStreamException, InvalidClientInputException {
         PullCommandData commandData = null;
         try {

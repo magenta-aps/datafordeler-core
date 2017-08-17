@@ -37,19 +37,6 @@ public class PluginManager {
     private boolean afterPostContruct = false;
 
     public PluginManager() {
-        /*try {
-            URLClassLoader urlClassLoader = URLClassLoader.newInstance(
-                    new URL[]{
-                            new File("/home/lars/Projekt/datafordeler/plugins/jar/datafordeler-plugin-cpr-1.0-SNAPSHOT.jar").toURI().toURL()
-                    },
-                    Plugin.class.getClassLoader()
-            );
-            Class cprPlugin = urlClassLoader.loadClass("dk.magenta.datafordeler.cpr.CprPlugin");
-            System.out.println("SUCCESS");
-        } catch (Throwable e) {
-            System.out.println("fail");
-            e.printStackTrace();
-        }*/
     }
 
     /**

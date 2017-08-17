@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.exception;
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.plugindemo.DemoPlugin;
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,7 +12,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.regex.Pattern;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
 public class InvalidServiceOwnerDefinitionExceptionTest extends InvalidPluginDefinitionExceptionTest {
 
     @Autowired

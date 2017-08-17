@@ -96,75 +96,12 @@ public class Application {
         return new TomcatEmbeddedServletContainerFactory(servicePort);
     }
 
-    private static Logger log = LogManager.getLogger(Application.class);
-
-    private final Pattern ownerValidation = Pattern.compile("^[a-zA-Z0-9_]+$");
-
-
-    @Bean
-    protected ServletRegistrationBean fapiDispatcherServlet()
-        throws InvalidServiceOwnerDefinitionException {
-        // this.log.info("Initialize ServletRegistrationBean for Plugin "+this.getPlugin().getClass().getCanonicalName());
-
-        RootMatchingCXFServlet cxfServlet = new RootMatchingCXFServlet();
-        SpringBus bus = new SpringBus();
-        //bus.setExtension(classLoader, ClassLoader.class);
-        cxfServlet.setBus(bus);
-
-
-        this.log.info("Known plugins;");
-        for (Plugin plugin : pluginManager.getPlugins()) {
-            this.log.info(plugin.getName());
-        }
-
-        List<String> serviceOwnerMatchers = new ArrayList<>();
-        //Thread.currentThread().setContextClassLoader(classLoader);
-
-        for (Plugin plugin : pluginManager.getPlugins()) {
-            RegisterManager registerManager = plugin.getRegisterManager();
-            this.log.info("Handling plugin "+plugin.getName()+" with "+registerManager.getEntityManagers().size()+" EntityManagers");
-            String serviceOwner = plugin.getServiceOwner();
-            this.log.info("Service owner for " + plugin.getClass().getCanonicalName() + " is " + serviceOwner);
-            if (!ownerValidation.matcher(serviceOwner).matches()) {
-                this.log.error("Invalid service owner: " + serviceOwner);
-                throw new InvalidServiceOwnerDefinitionException(plugin, serviceOwner, this.ownerValidation);
-            }
-
-            for (EntityManager entityManager : registerManager.getEntityManagers()) {
-                FapiService service = entityManager.getEntityService();
-                String base = "/" + serviceOwner + "/" + service.getServiceName() + "/" + service.getVersion();
-
-                // SOAP
-                this.log.info("Setting up SOAP handler on " + base + "/soap");
-                JaxWsServerFactoryBean serverFactoryBean = new JaxWsServerFactoryBean();
-
-                serverFactoryBean.setBus(bus);
-                serverFactoryBean.setAddress(base + "/soap");
-                serviceOwnerMatchers.add(base + "/soap");
-                serverFactoryBean.setServiceBean(service);
-                serverFactoryBean.addHandlers(Collections.singletonList(new SoapHandler()));
-                serverFactoryBean.create();
-            }
-        }
-
-        ServletRegistrationBean servletRegistrationBean = new ServletRegistrationBean(
-            cxfServlet,
-            //"/*"
-            serviceOwnerMatchers.toArray(new String[serviceOwnerMatchers.size()])
-        );
-        servletRegistrationBean.setName("FapiServlet");
-        this.log.info("ServletRegistrationBean \"" + servletRegistrationBean.getServletName() + "\" created");
-
-        return servletRegistrationBean;
-    }
-
     // Seriously unholy reflection magic, to force our URLs into the existing classloader
     private static void extendClassLoader(ClassLoader classLoader) {
         URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
         try {
             Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
             method.setAccessible(true);
-
             File pluginFolder = new File("../plugins/jar/");
             File[] files = pluginFolder.listFiles((dir, name) -> name.endsWith(".jar"));
             if (files != null) {
@@ -180,5 +117,7 @@ public class Application {
             log.error(e);
         }
     }
+
+    private static Logger log = LogManager.getLogger(Application.class);
 
 }
