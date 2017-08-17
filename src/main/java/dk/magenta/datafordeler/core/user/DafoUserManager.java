@@ -74,6 +74,10 @@ public class DafoUserManager {
       return userDetails;
     }
     // Fall back to an anonymous user
+    return this.getFallbackUser();
+  }
+
+  public DafoUserDetails getFallbackUser() {
     return new AnonymousDafoUserDetails();
   }
 

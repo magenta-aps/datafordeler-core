@@ -5,7 +5,7 @@ import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
-import dk.magenta.datafordeler.core.io.Event;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.testutil.CallbackController;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.KeyExpectorCallback;
@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -190,22 +191,21 @@ public class RegisterManagerTest extends PluginTestBase {
         ExpectorCallback eventCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/getNewEvents", body, eventCallback);
 
-        ItemInputStream<Event> eventStream = this.plugin.getRegisterManager().pullEvents();
+        ItemInputStream<? extends PluginSourceData> dataStream = this.plugin.getRegisterManager().pullEvents(this.plugin.getRegisterManager().getEntityManagers().get(0));
 
-        Event event;
+        PluginSourceData data;
         int eventCounter = 0;
-        while ((event = eventStream.next()) != null) {
+        while ((data = (PluginSourceData) dataStream.next()) != null) {
             eventCounter++;
-            Assert.assertEquals("1.0", event.getBeskedVersion());
-            Assert.assertEquals("msgid", event.getEventID());
-            Assert.assertEquals(reference, event.getObjektReference());
+            Assert.assertEquals("msgid", data.getId());
+            Assert.assertEquals(reference, data.getReference());
         }
         Assert.assertEquals(1, eventCounter);
+
 
         this.callbackController.removeCallback("/test/get/" + checksum);
         this.callbackController.removeCallback("/test/getNewEvents");
         this.callbackController.removeCallback("/test/receipt");
     }
-
 
 }
