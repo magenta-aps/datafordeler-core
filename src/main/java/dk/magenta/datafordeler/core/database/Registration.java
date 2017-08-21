@@ -130,7 +130,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return null;
     }
 
-    private static boolean equalOffsetDateTime(OffsetDateTime dateTime1, OffsetDateTime dateTime2) {
+    protected static boolean equalOffsetDateTime(OffsetDateTime dateTime1, OffsetDateTime dateTime2) {
         if (dateTime1 == null && dateTime2 == null) return true;
         if (dateTime1 == null || dateTime2 == null) return false;
         return dateTime1.isEqual(dateTime2);
