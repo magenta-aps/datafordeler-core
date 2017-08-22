@@ -9,6 +9,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 import javax.persistence.NoResultException;
+import javax.persistence.Parameter;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -402,6 +404,16 @@ public class QueryManager {
         }
 
 
+    }
+
+    private void logQuery(org.hibernate.query.Query query) {
+        if (this.log.isDebugEnabled()) {
+            StringJoiner sj = new StringJoiner(", ");
+            for (Parameter parameter : query.getParameters()) {
+                sj.add(parameter.getName() + ": " + query.getParameterValue(parameter));
+            }
+            this.log.debug(query.getQueryString() + " [" + sj.toString() + "]");
+        }
     }
 
 }
