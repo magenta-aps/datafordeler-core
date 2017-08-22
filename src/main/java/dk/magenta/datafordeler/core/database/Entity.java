@@ -120,4 +120,12 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         }
     }
 
+    protected abstract R createEmptyRegistration();
+
+    public final R createRegistration() {
+        R registration = this.createEmptyRegistration();
+        registration.setEntity(this);
+        return registration;
+    }
+
 }

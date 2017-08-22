@@ -10,6 +10,7 @@ import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -155,6 +156,24 @@ public class QueryManager {
         }
     }
 
+    public <T extends DatabaseEntry> long count(Session session, Class<T> tClass, Map<String, Object> filter) {
+        String where = "";
+        if (filter != null && !filter.isEmpty()) {
+            StringJoiner whereJoiner = new StringJoiner(" and ");
+            for (String key : filter.keySet()) {
+                whereJoiner.add("t." + key + " = :" + key);
+            }
+            where = " where " + whereJoiner.toString();
+        }
+        org.hibernate.query.Query databaseQuery = session.createQuery("select count(t) from " + tClass.getName() + " t " + where);
+        if (filter != null && !filter.isEmpty()) {
+            for (String key : filter.keySet()) {
+                databaseQuery.setParameter(key, filter.get(key));
+            }
+        }
+        return (long) databaseQuery.uniqueResult();
+    }
+
     /**
      * Get Effects for a specific class, matching a start and end time
      * @param session Database session to work from
@@ -245,14 +264,14 @@ public class QueryManager {
     }
 
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration) throws DataFordelerException {
-        this.saveRegistration(session, entity, registration, true);
+        this.saveRegistration(session, entity, registration, true, true);
     }
         /**
          * Save registration to database, re-pointing the entity reference to a persistent entity if one exists, merging effects with identical timestamps, and saving all associated effects and dataitems.
          * @param session A database session to work on
          * @param registration Registration to be saved
          */
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects) throws DataFordelerException {
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems) throws DataFordelerException {
         this.log.trace("Saving registration of type "+registration.getClass().getCanonicalName()+" with checksum "+registration.getRegisterChecksum()+" and sequence number "+registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
@@ -260,6 +279,7 @@ public class QueryManager {
         if (entity == null) {
             throw new MissingEntityException(registration);
         }
+
         E existingEntity = this.getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
         if (existingEntity != null) {
             this.log.debug("There is an existing entity with uuid "+existingEntity.getUUID().toString());
@@ -267,7 +287,6 @@ public class QueryManager {
         }
         registration.setEntity(entity);
         entity.addRegistration(registration);
-
 
 
         // Validate registration:
@@ -326,26 +345,32 @@ public class QueryManager {
             }
         }
 
-        for (V effect : registration.getEffects()) {
-            HashSet<D> obsolete = new HashSet<D>();
-            for (D dataItem : effect.getDataItems()) {
-                // Find existing DataItems on the Entity that hold the same data
-                List<D> existing = this.getDataItems(session, entity, dataItem, (Class<D>) dataItem.getClass());
-                // If found, use that DataItem instead
-                if (existing != null && !existing.isEmpty() && dataItem != existing.get(0)) {
-                    obsolete.add(dataItem);
-                    dataItem = existing.get(0);
+
+        if (dedupItems) {
+            // Dedup dataitems
+            // Find existing DataItems on the Entity that hold the same data
+            for (V effect : registration.getEffects()) {
+                HashSet<D> obsolete = new HashSet<D>();
+                for (D dataItem : effect.getDataItems()) {
+                    List<D> existing = this.getDataItems(session, entity, dataItem, (Class<D>) dataItem.getClass());
+                    // If found, use that DataItem instead
+                    if (existing != null && !existing.isEmpty() && dataItem != existing.get(0)) {
+                        obsolete.add(dataItem);
+                        dataItem = existing.get(0);
+                    }
+                    // Couple it with the Effect
+                    dataItem.addEffect(effect);
                 }
-                // Couple it with the Effect
-                dataItem.addEffect(effect);
-            }
-            for (D dataItem : obsolete) {
-                Set<V> effects = dataItem.getEffects();
-                for (V e : effects) {
-                    e.dataItems.remove(dataItem);
-                    session.saveOrUpdate(e);
+
+                System.out.println("Found " + obsolete.size() + " obsoletes!");
+                for (D dataItem : obsolete) {
+                    Set<V> effects = dataItem.getEffects();
+                    for (V e : effects) {
+                        e.dataItems.remove(dataItem);
+                        session.saveOrUpdate(e);
+                    }
+                    session.delete(dataItem);
                 }
-                session.delete(dataItem);
             }
         }
 
@@ -357,6 +382,7 @@ public class QueryManager {
         }
         session.saveOrUpdate(entity);
 
+
         if (dedupEffects) {
             this.dedupEffects(session, registration);
         }
@@ -365,6 +391,7 @@ public class QueryManager {
         if (lastExistingRegistration != null) {
             session.update(lastExistingRegistration);
         }
+
         for (V effect : registration.getEffects()) {
             session.saveOrUpdate(effect);
             for (D dataItem : effect.getDataItems()) {
@@ -375,6 +402,8 @@ public class QueryManager {
                 }*/
             }
         }
+
+
     }
 
     private void logQuery(org.hibernate.query.Query query) {
@@ -386,4 +415,5 @@ public class QueryManager {
             this.log.debug(query.getQueryString() + " [" + sj.toString() + "]");
         }
     }
+
 }
