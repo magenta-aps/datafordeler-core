@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.util;
 
+import javax.lang.model.type.NullType;
 import java.time.OffsetDateTime;
 
 /**
@@ -8,9 +9,8 @@ import java.time.OffsetDateTime;
 public abstract class Equality {
 
     public static boolean equal(String a, String b) {
-        if (a == null) {
-            return b == null;
-        }
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
         return a.equals(b);
     }
 
@@ -19,6 +19,12 @@ public abstract class Equality {
         if (o1 == null) return -1;
         if (o2 == null) return 1;
         return o1.compareTo(o2);
+    }
+
+    public static boolean equal(OffsetDateTime a, OffsetDateTime b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return a.isEqual(b);
     }
 
 }
