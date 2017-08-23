@@ -95,6 +95,10 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             throw new DataStreamException(e);
                         }
                         log.info("Initial POST sent");
+                        log.info("HTTP status: "+response.getStatusLine().getStatusCode());
+                        if (response.getStatusLine().getStatusCode() != 200) {
+                            log.info(response.getEntity().getContent());
+                        }
 
                         JsonNode responseNode = objectMapper.readTree(response.getEntity().getContent());
                         String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
