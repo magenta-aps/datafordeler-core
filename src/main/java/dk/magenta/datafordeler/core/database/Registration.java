@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import dk.magenta.datafordeler.core.util.Equality;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
@@ -122,18 +123,12 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
     public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         for (V effect : this.effects) {
-            if (equalOffsetDateTime(effect.getEffectFrom(), effectFrom) &&
-                equalOffsetDateTime(effect.getEffectTo(), effectTo)) {
+            if (Equality.equal(effect.getEffectFrom(), effectFrom) &&
+                    Equality.equal(effect.getEffectTo(), effectTo)) {
                 return effect;
             }
         }
         return null;
-    }
-
-    protected static boolean equalOffsetDateTime(OffsetDateTime dateTime1, OffsetDateTime dateTime2) {
-        if (dateTime1 == null && dateTime2 == null) return true;
-        if (dateTime1 == null || dateTime2 == null) return false;
-        return dateTime1.isEqual(dateTime2);
     }
 
     public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
