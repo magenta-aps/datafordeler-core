@@ -1,19 +1,18 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
+import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 
 import dk.magenta.datafordeler.core.util.LoggerHelper;
-import java.lang.reflect.Field;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import org.hibernate.Filter;
@@ -88,6 +87,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected abstract Class<E> getEntityClass();
 
 
+    public abstract Plugin getPlugin();
+
     /**
      * Obtains the autowired SessionManager
      * @return SessionManager instance
@@ -114,11 +115,10 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * Implementing this method as a noop will make the service publicly accessible.
      */
     protected abstract void checkAccess(DafoUserDetails user)
-        throws AccessDeniedException, AccessRequiredException;
-
+            throws AccessDeniedException, AccessRequiredException;
 
     protected void checkAndLogAccess(LoggerHelper loggerHelper)
-        throws AccessDeniedException, AccessRequiredException {
+            throws AccessDeniedException, AccessRequiredException {
         try {
             this.checkAccess(loggerHelper.getUser());
         }
@@ -128,29 +128,28 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         }
     }
 
-    @RequestMapping(path="", produces="application/json")
-    public String index(HttpServletRequest request) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ObjectNode root = objectMapper.createObjectNode();
-        root.put("metadata_url", request.getServletPath());
-        root.put("fetch_url", request.getServletPath() + "/{UUID}");
-        root.put("search_url", request.getServletPath() + "/search");
-        root.put("declaration_url",
-            "https://redmine.magenta-aps.dk/projects/dafodoc/wiki/API");
-        ArrayNode fields = objectMapper.createArrayNode();
-        root.set("search_queryfields", fields);
-        Class<? extends Query> clazz = this.getEmptyQuery().getClass();
-        for(Field field : clazz.getDeclaredFields()) {
-            if(field.isAnnotationPresent(QueryField.class)) {
-                QueryField qf = field.getAnnotation(QueryField.class);
-                ObjectNode jsonField = objectMapper.createObjectNode();
-                jsonField.put("name", qf.queryName());
-                jsonField.put("type", qf.type().name().toLowerCase());
-                fields.add(jsonField);
-            }
+    public String[] getServicePaths() {
+        RequestMapping requestMapping = this.getClass().getAnnotation(RequestMapping.class);
+        if (requestMapping != null) {
+            return requestMapping.value();
         }
-        return root.toString();
+        return null;
     }
+
+    @RequestMapping(path="", produces="application/json")
+    public String index(HttpServletRequest request) throws JsonProcessingException {
+        String servletPath = request.getServletPath();
+        return this.objectMapper.writeValueAsString(this.getServiceDescriptor(servletPath, false));
+    }
+
+    public ServiceDescriptor getServiceDescriptor(String servletPath, boolean isSoap) {
+        if (isSoap) {
+            return new SoapServiceDescriptor(this.getPlugin(), this.getServiceName(), servletPath, this.getEmptyQuery().getClass());
+        } else {
+            return new RestServiceDescriptor(this.getPlugin(), this.getServiceName(), servletPath, this.getEmptyQuery().getClass());
+        }
+    }
+
 
 
     /**
@@ -340,10 +339,15 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         try {
             entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
             for (E entity : entities) {
-                entity.forceLoad(session);
+                try {
+                    objectMapper.writeValueAsString(entity);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                //entity.forceLoad(session);
             }
         } finally {
-            transaction.commit();
+            transaction.rollback();
             session.close();
         }
         return entities;

@@ -35,7 +35,6 @@ public class EqualityTest {
         Assert.assertTrue(Equality.equal("ø", "ø"));
         Assert.assertTrue(Equality.equal("abc", "abc"));
         Assert.assertTrue(Equality.equal("æøå", "æøå"));
-        Assert.assertTrue(Equality.equal(null, null));
     }
 
 }

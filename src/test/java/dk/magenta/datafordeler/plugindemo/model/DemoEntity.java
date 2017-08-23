@@ -25,6 +25,11 @@ public class DemoEntity extends Entity<DemoEntity, DemoRegistration> {
         super(uuid, domain);
     }
 
+    @Override
+    protected DemoRegistration createEmptyRegistration() {
+        return new DemoRegistration();
+    }
+
     @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include= JsonTypeInfo.As.PROPERTY, property="type")
     public static final String schema = "Postnummer";
 }
