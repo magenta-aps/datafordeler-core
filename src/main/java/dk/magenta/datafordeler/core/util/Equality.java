@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core.util;
 
-import javax.lang.model.type.NullType;
 import java.time.OffsetDateTime;
 
 /**
