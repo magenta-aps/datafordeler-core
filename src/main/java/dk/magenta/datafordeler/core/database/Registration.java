@@ -294,7 +294,24 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @Override
     public int compareTo(Registration o) {
         OffsetDateTime oDateTime = o == null ? null : o.registrationFrom;
+        if (this.registrationFrom == null && oDateTime == null) return 0;
         if (oDateTime == null) return 1;
+        if (this.registrationFrom == null) return -1;
         return this.registrationFrom.compareTo(oDateTime);
+    }
+
+
+
+    public R split(OffsetDateTime splitTime) {
+        //Registration newReg = this.entity.createRegistration();
+        R newReg = (R) this.entity.createRegistration();
+        newReg.setRegistrationFrom(splitTime);
+        newReg.setRegistrationTo(this.registrationTo);
+        this.registrationTo = splitTime;
+        for (V effect : new ArrayList<V>(this.effects)) {
+            V newEffect = (V) effect.createClone();
+            newEffect.setRegistration(newReg);
+        }
+        return newReg;
     }
 }

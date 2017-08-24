@@ -102,6 +102,9 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     protected void setRegistration(R registration) {
         if (registration != null) {
+            if (this.registration != null) {
+                this.registration.removeEffect(this);
+            }
             this.registration = registration;
             registration.addEffect(this);
         }
@@ -214,5 +217,12 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     }
 
 
+    public V createClone() {
+        V other = (V) this.registration.createEffect(this.getEffectFrom(), this.getEffectTo());
+        for (D data : this.dataItems) {
+            data.addEffect(other);
+        }
+        return other;
+    }
 
 }

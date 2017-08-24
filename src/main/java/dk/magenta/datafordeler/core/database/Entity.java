@@ -114,6 +114,17 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return null;
     }
 
+    public List<R> getRegistrationsStartingBetween(OffsetDateTime start, OffsetDateTime end) {
+        ArrayList<R> registrations = new ArrayList<R>();
+        for (R registration : this.getRegistrations()) {
+            OffsetDateTime from = registration.getRegistrationFrom();
+            if (from != null && (from.isEqual(start) || from.isAfter(start)) && (end == null || from.isBefore(end))) {
+                registrations.add(registration);
+            }
+        }
+        return registrations;
+    }
+
     public void forceLoad(Session session) {
         for (R registration : this.registrations) {
             registration.forceLoad(session);
