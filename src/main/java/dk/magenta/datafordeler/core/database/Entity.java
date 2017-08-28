@@ -171,6 +171,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
 
             // There is a gap, or a missing registration at the start
             if (
+                    latestEnd != null &&
                     latestEnd.isBefore(nFrom(registration.getRegistrationFrom())) &&
                             (latestEnd.isAfter(nFrom(registrationFrom)) || nFrom(registrationFrom).isBefore(nFrom(registration.getRegistrationFrom())))
                     ) {
