@@ -22,6 +22,11 @@ import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
+ * A Registration defines the time range in which a piece of data is “registered”,
+ * that is, when did it enter into the records of our data source, and when was it 
+ * supplanted by more recent data.
+ * A Registration points to exactly one Entity, and may have any number of Effects
+ * associated. Generally, there should not be stored other data in the object.
  */
 @MappedSuperclass
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -109,7 +114,10 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
 
-
+    /**
+     * Get the Effects of the Registration, sorted by the comparison method of the
+     * Effect class (usually by startDate)
+     */
     @JsonProperty(value = "effects", access = JsonProperty.Access.READ_ONLY)
     @XmlElement(name = "effect")
     @JacksonXmlProperty(localName = "effect")
@@ -120,6 +128,10 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return sortedEffects;
     }
 
+    /**
+     * Looks for an effect on this Registration, that matches the given range 
+     * exactly.
+     */
     public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         for (V effect : this.effects) {
             if (equalOffsetDateTime(effect.getEffectFrom(), effectFrom) &&
@@ -150,12 +162,18 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         );
     }
 
+    /**
+     * Add an effect to this registration
+     */
     public void addEffect(V effect) {
         if (!this.effects.contains(effect)) {
             this.effects.add(effect);
         }
     }
 
+    /**
+     * Removed an Effect from this Registration
+     */
     public void removeEffect(V effect) {
         // Be sure to also delete the effect yourself, since it still points to the Registration
         this.effects.remove(effect);
@@ -290,7 +308,9 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         }
     }
 
-
+    /**
+     * Comparison method for the Comparable interface; results in Registrations being sorted by registrationFrom date, nulls first?
+     */
     @Override
     public int compareTo(Registration o) {
         OffsetDateTime oDateTime = o == null ? null : o.registrationFrom;

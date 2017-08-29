@@ -12,6 +12,9 @@ import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
+ * Superclass for bitemporal data, pointing to Effects objects.
+ * Pieces of data sharing exact bitemporality may be stored in one DataItem, pointing
+ * to all the Effects and Registrations applicable.
  */
 @MappedSuperclass
 @Embeddable
