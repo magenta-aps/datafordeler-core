@@ -159,11 +159,11 @@ public class GapiEdmProvider extends CsdlAbstractEdmProvider {
 
     public static Event convertEvent(Entity entity) {
         Event event = new Event();
-        event.setEventID(getPrimitiveFromEntity(entity, "eventID"));
-        event.setBeskedVersion(getPrimitiveFromEntity(entity, "beskedVersion"));
-        event.setObjektReference(getPrimitiveFromEntity(entity, "beskedData", "Objektreference", "objektreference"));
-        event.setDataskema(getPrimitiveFromEntity(entity, "beskedData", "Objektdata", "dataskema"));
-        event.setObjektData(getPrimitiveFromEntity(entity, "beskedData", "Objektdata", "objektdata"));
+        event.setId(getPrimitiveFromEntity(entity, "eventID"));
+        event.setVersion(getPrimitiveFromEntity(entity, "beskedVersion"));
+        event.setReference(getPrimitiveFromEntity(entity, "beskedData", "Objektreference", "objektreference"));
+        event.setSchema(getPrimitiveFromEntity(entity, "beskedData", "Objektdata", "dataskema"));
+        event.setData(getPrimitiveFromEntity(entity, "beskedData", "Objektdata", "objektdata"));
         return event;
     }
 
