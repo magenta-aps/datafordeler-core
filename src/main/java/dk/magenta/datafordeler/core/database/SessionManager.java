@@ -72,6 +72,9 @@ public class SessionManager {
         }
     }
 
+    /**
+     * Get the session factory, used for obtaining Sessions
+     */
     public SessionFactory getSessionFactory() {
         return this.sessionFactory;
     }
