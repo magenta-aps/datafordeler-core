@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Created by lars on 04-05-17.
+ * Jackson Adapter for serializing and deserializing OffsetDatetime objects
  */
 public class OffsetDateTimeAdapter extends XmlAdapter<String, OffsetDateTime> {
     @Override
