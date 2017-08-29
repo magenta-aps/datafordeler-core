@@ -17,6 +17,11 @@ import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
+ * An Entity represents a top-level item in the database as well as in service 
+ * output, such as a Person or a Company (to be implemented as subclasses in plugins)
+ * Entities usually hold very little data on their own, but links to a series of 
+ * bitemporality objects (Registrations, and further down Effects), that in turn 
+ * hold leaf nodes (DataItems) containing the bulk of the associated data.
  */
 @MappedSuperclass
 @Embeddable
@@ -89,12 +94,19 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.registrations;
     }
 
+    /**
+     * Add a registration to the list of registrations in this entity
+     */
     public void addRegistration(R registration) {
         if (!this.registrations.contains(registration)) {
             this.registrations.add(registration);
         }
     }
 
+    /**
+     * Finds a registration under this entity that starts at the given OffsetDateTime
+     * Returns null if none are found
+     */
     public R getRegistration(OffsetDateTime registrationFrom) {
         for (R registration : this.registrations) {
             if (registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) {
@@ -104,6 +116,11 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return null;
     }
 
+    /**
+     * Finds a registration under this entity that starts and ends at the given
+     * OffsetDateTime pair
+     * Returns null if none are found
+     */
     public R getRegistration(OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
         for (R registration : this.registrations) {
             if ((registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) &&
@@ -118,6 +135,18 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         for (R registration : this.registrations) {
             registration.forceLoad(session);
         }
+    }
+
+    protected abstract R createEmptyRegistration();
+
+    /**
+     * For import purposes, creates an empty Registration of the associated class, 
+     * pointing to this Entity
+     */
+    public final R createRegistration() {
+        R registration = this.createEmptyRegistration();
+        registration.setEntity(this);
+        return registration;
     }
 
 }

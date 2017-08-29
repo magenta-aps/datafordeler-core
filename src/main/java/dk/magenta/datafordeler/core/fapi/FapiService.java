@@ -31,11 +31,11 @@ import javax.jws.WebParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
-import java.lang.reflect.Field;
 import java.util.*;
 
 /**
  * Created by lars on 19-04-17.
+ * Service container to be subclassed for each Entity class, serving REST and SOAP
  */
 @RequestMapping("/fapi_service_with_no_requestmapping")
 public abstract class FapiService<E extends Entity, Q extends Query> {
@@ -340,10 +340,15 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         try {
             entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
             for (E entity : entities) {
-                entity.forceLoad(session);
+                try {
+                    objectMapper.writeValueAsString(entity);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                //entity.forceLoad(session);
             }
         } finally {
-            transaction.commit();
+            transaction.rollback();
             session.close();
         }
         return entities;

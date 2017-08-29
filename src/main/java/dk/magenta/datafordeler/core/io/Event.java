@@ -9,9 +9,10 @@ import java.util.StringJoiner;
 /**
  * Created by lars on 15-02-17.
  *
- * A generic envelope for an io, containing the payload in parseable strings
+ * A generic envelope for an io, containing the payload in parseable strings,
+ * as well as metadata on the type of payload (schema)
  */
-public class Event implements Serializable {
+public class Event implements PluginSourceData {
 
     public class MessageData implements Serializable {
 
@@ -115,27 +116,30 @@ public class Event implements Serializable {
         }
     }
 
+    @JsonProperty
     private String eventID;
+
+    @JsonProperty
     private String beskedVersion;
 
     @JsonProperty
     private MessageData beskedData;
 
-
-    public String getEventID() {
+    @Override
+    public String getId() {
         return eventID;
     }
 
-    public void setEventID(String eventID) {
+    public void setId(String eventID) {
         this.eventID = eventID;
     }
 
-    public String getBeskedVersion() {
+    public String getVersion() {
         return beskedVersion;
     }
 
-    public void setBeskedVersion(String beskedVersion) {
-        this.beskedVersion = beskedVersion;
+    public void setVersion(String version) {
+        this.beskedVersion = version;
     }
 
     private MessageData ensureMessageData() {
@@ -145,37 +149,38 @@ public class Event implements Serializable {
         return this.beskedData;
     }
 
-    public String getDataskema() {
+    public String getSchema() {
         if (this.beskedData != null) {
             return this.beskedData.getDataskema();
         }
         return null;
     }
 
-    @JsonProperty(required=false)
-    public void setDataskema(String dataskema) {
+    @JsonProperty(required=false, value = "dataskema")
+    public void setSchema(String dataskema) {
         this.ensureMessageData().setDataskema(dataskema);
     }
 
-    public String getObjektData() {
+    public String getData() {
         if (this.beskedData != null) {
             return this.beskedData.getObjektData();
         }
         return null;
     }
 
-    public void setObjektData(String objektData) {
+    public void setData(String objektData) {
         this.ensureMessageData().setObjektData(objektData);
     }
 
-    public String getObjektReference() {
+    @Override
+    public String getReference() {
         if (this.beskedData != null) {
             return this.beskedData.getObjektReference();
         }
         return null;
     }
 
-    public void setObjektReference(String objektReference) {
+    public void setReference(String objektReference) {
         this.ensureMessageData().setObjektReference(objektReference);
     }
 
@@ -183,11 +188,11 @@ public class Event implements Serializable {
         StringBuilder sb = new StringBuilder();
         sb.append("Event(");
         StringJoiner joiner = new StringJoiner(", ");
-        joiner.add("eventID: "+this.getEventID());
-        joiner.add("beskedVersion: "+this.getBeskedVersion());
-        joiner.add("dataskema: "+this.getDataskema());
-        joiner.add("objektData: "+this.getObjektData());
-        joiner.add("objektReference: "+this.getObjektReference());
+        joiner.add("eventID: "+this.getId());
+        joiner.add("beskedVersion: "+this.getVersion());
+        joiner.add("dataskema: "+this.getSchema());
+        joiner.add("objektData: "+this.getData());
+        joiner.add("objektReference: "+this.getReference());
         sb.append(joiner.toString());
         sb.append(")");
         return sb.toString();

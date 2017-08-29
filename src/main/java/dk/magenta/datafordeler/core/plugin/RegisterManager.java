@@ -1,8 +1,8 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
-import dk.magenta.datafordeler.core.io.Event;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
@@ -108,22 +108,51 @@ public abstract class RegisterManager {
 
     /** Event fetching **/
 
-    protected abstract URI getEventInterface();
+    /**
+     * Obtain remote URI from which data can be pulled, given an EntityManager
+     * @param entityManager
+     * @return
+     */
+    public abstract URI getEventInterface(EntityManager entityManager);
 
-    public ItemInputStream<Event> pullEvents() throws DataFordelerException {
-        return this.pullEvents(this.getEventInterface());
+    /**
+     * General data pull. Will perform a pull for all EntityManagers registered under the RegisterManager.
+     * Subclasses may override this, but should endeavour to avoid doing so, instead overriding
+     * pullEvents(URI eventInterface, EntityManager entityManager) and/or parseEventResponse(InputStream responseContent, EntityManager entityManager)
+     * @return
+     * @throws DataFordelerException
+     */
+    public ItemInputStream<? extends PluginSourceData> pullEvents(EntityManager entityManager) throws DataFordelerException {
+        return this.pullEvents(this.getEventInterface(entityManager), entityManager);
     }
 
-    public ItemInputStream<Event> pullEvents(URI eventInterface) throws DataFordelerException {
-        this.getLog().info("Pulling events from "+eventInterface);
+    /**
+     * Specific data pull. Performs a pull from the given URI, for the given EntityManager.
+     * Subclasses are free to override this if needed; at present it simply fetches the URI with the
+     * Communicator returned by this.getEventFetcher(), and parses the raw data through
+     * parseEventResponse(InputStream responseContent, EntityManager entityManager)
+     * which must be implemented in subclasses.
+     * @param eventInterface
+     * @param entityManager
+     * @return
+     * @throws DataFordelerException
+     */
+    public ItemInputStream<? extends PluginSourceData> pullEvents(URI eventInterface, EntityManager entityManager) throws DataFordelerException {
+        this.getLog().info("Pulling events from "+eventInterface+", for entityManager "+entityManager);
         Communicator eventCommunicator = this.getEventFetcher();
         InputStream responseBody = eventCommunicator.fetch(eventInterface);
-        return this.parseEventResponse(responseBody);
+        return this.parseEventResponse(responseBody, entityManager);
     }
 
-    protected ItemInputStream<Event> parseEventResponse(InputStream responseContent) throws DataFordelerException {
-        return ItemInputStream.parseJsonStream(responseContent, Event.class, "events", this.getObjectMapper());
-    }
+    /**
+     * Parses the raw inputstream from a data source into a stream of PluginSourceData objects, usually by wrapping the important parts.
+     * The resultant objects should be consumable by
+     * @param responseContent
+     * @param entityManager
+     * @return
+     * @throws DataFordelerException
+     */
+    protected abstract ItemInputStream<? extends PluginSourceData> parseEventResponse(InputStream responseContent, EntityManager entityManager) throws DataFordelerException;
 
     /**
      * Return a Cron expression telling when to perform a pull from the register

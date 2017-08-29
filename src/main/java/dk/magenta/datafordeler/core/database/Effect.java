@@ -1,11 +1,9 @@
 package dk.magenta.datafordeler.core.database;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import dk.magenta.datafordeler.core.util.Equality;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.Session;
 import org.hibernate.annotations.FilterDef;
@@ -24,12 +22,16 @@ import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
+ * An Effect defines the time range in which a piece of data has effect.
+ * An Effect points to exactly one Registration, but may have any number of DataItems
+ * associated.
  */
 @MappedSuperclass
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @FilterDef(name=Effect.FILTER_EFFECT_FROM, parameters=@ParamDef(name=Effect.FILTERPARAM_EFFECT_FROM, type="java.time.OffsetDateTime"))
 @FilterDef(name=Effect.FILTER_EFFECT_TO, parameters=@ParamDef(name=Effect.FILTERPARAM_EFFECT_TO, type="java.time.OffsetDateTime"))
-public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> extends DatabaseEntry {
+@JsonPropertyOrder({"effectFrom", "effectTo", "dataItems"})
+public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> extends DatabaseEntry implements Comparable<Effect> {
 
     public static final String FILTER_EFFECT_FROM = "effectFromFilter";
     public static final String FILTERPARAM_EFFECT_FROM = "effectFromDate";
@@ -63,17 +65,25 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     public Effect(R registration, TemporalAccessor effectFrom, TemporalAccessor effectTo) {
         this(
                 registration,
-                effectFrom != null ? OffsetDateTime.from(effectFrom) : null,
-                effectTo != null ? OffsetDateTime.from(effectTo) : null
+                convertTime(effectFrom),
+                convertTime(effectTo)
         );
     }
 
     public Effect(R registration, LocalDate effectFrom, LocalDate effectTo) {
         this(
                 registration,
-                effectFrom != null ? OffsetDateTime.of(effectFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
-                effectTo != null ? OffsetDateTime.of(effectTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null
+                convertTime(effectFrom),
+                convertTime(effectTo)
         );
+    }
+
+    public static OffsetDateTime convertTime(TemporalAccessor time) {
+        return time != null ? OffsetDateTime.from(time) : null;
+    }
+
+    public static OffsetDateTime convertTime(LocalDate time) {
+        return time != null ? OffsetDateTime.of(time, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null;
     }
 
     /**
@@ -120,14 +130,33 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return new ArrayList(this.dataItems);
     }
 
+    /**
+     * Merges the associated DataItems into one Map for output. Each DataItem may
+     * point to several Effects, in order to avoid duplicate data, meaning that the
+     * data that are effecting under this Effect is spread over several objects, and
+     * needs merging.
+     */
     @JsonProperty(value = "dataItems")
     @XmlElementWrapper(name = "dataItems")
     public Map<String, Object> getData() {
-        HashMap<String, Object> data = new HashMap<>();
-        for (DataItem d : this.dataItems) {
-            data.putAll(d.asMap());
+        HashMap<String, Object> outMap = new HashMap<>();
+        for (D d : this.dataItems) {
+            Map<String, Object> inMap = d.asMap();
+            for (String key : inMap.keySet()) {
+                Object value = inMap.get(key);
+                if (value instanceof Collection) {
+                    ArrayList<Object> outList = (ArrayList<Object>) outMap.get(key);
+                    if (outList == null) {
+                        outList = new ArrayList<>();
+                        outMap.put(key, outList);
+                    }
+                    outList.addAll((Collection)value);
+                } else {
+                    outMap.put(key, value);
+                }
+            }
         }
-        return data;
+        return outMap;
     }
 
     @JsonProperty(value = "dataItems"/*, access = JsonProperty.Access.READ_ONLY*/)
@@ -182,5 +211,19 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
             dataItem.forceLoad(session);
         }
     }
+
+    /**
+     * Comparison method for the Comparable interface; results in Effects being sorted by effectFrom date, nulls first?
+     */
+    @Override
+    public int compareTo(Effect o) {
+        int comparison = Equality.compare(this.effectFrom, o == null ? null : o.effectFrom, OffsetDateTime.class);
+        if (comparison != 0) {
+            return comparison;
+        }
+        return Equality.compare(this.effectTo, o == null ? null : o.effectTo, OffsetDateTime.class);
+    }
+
+
 
 }

@@ -205,12 +205,16 @@ public class FtpCommunicatorTest {
             @Override
             public Boolean call() throws Exception {
                 FtpCommunicatorTest.this.startServer(username, password, port, tempFiles);
-                FtpCommunicator ftpCommunicator = new FtpCommunicator(username, password, true);
-                InputStream inputStream = ftpCommunicator.fetch(new URI("ftp://localhost:" + port + "/" + path));
-                String data = new Scanner(inputStream, "UTF-8").useDelimiter("\\A").next();
-                inputStream.close();
-                Assert.assertEquals(contents, data);
-                Assert.assertTrue(allFilesEndsWithDone());
+                try {
+                    FtpCommunicator ftpCommunicator = new FtpCommunicator(username, password, true);
+                    InputStream inputStream = ftpCommunicator.fetch(new URI("ftp://localhost:" + port + "/" + path));
+                    String data = new Scanner(inputStream, "UTF-8").useDelimiter("\\A").next();
+                    inputStream.close();
+                    Assert.assertEquals(contents, data);
+                    Assert.assertTrue(allFilesEndsWithDone());
+                } finally {
+                    FtpCommunicatorTest.this.stopServer();
+                }
                 return true;
             }
         });

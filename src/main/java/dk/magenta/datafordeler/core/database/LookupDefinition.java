@@ -56,11 +56,11 @@ public class LookupDefinition extends HashMap<String, Object> {
         for (String key : this.keySet()) {
             if (key.contains(separator)) {
                 String[] parts = key.split(quotedSeparator);
+                String lastPart = root;
                 if (parts[0].equals(entityref)) {
-                    root = QueryManager.ENTITY;
+                    lastPart = QueryManager.ENTITY;
                     parts = Arrays.copyOfRange(parts, 1, parts.length);
                 }
-                String lastPart = root;
                 StringBuilder fullParts = new StringBuilder(root);
                 for (int i = 0; i<parts.length - 1; i++) {
                     String part = parts[i];

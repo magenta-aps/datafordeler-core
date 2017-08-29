@@ -25,6 +25,10 @@ import java.util.regex.Pattern;
 
 /**
  * Created by lars on 27-06-17.
+ * A special Communicator that fetches data over a HTTP connection by the 
+ * scan-scroll pattern: We specify the query in a POST, then get a handle back 
+ * that we can use in a series of subsequent GET requests to get all the data 
+ * (which tends to be a lot).
  */
 public class ScanScrollCommunicator extends HttpCommunicator {
 
@@ -45,8 +49,8 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
     private int throttle = 1000;
 
-    public void setThrottle(int throttle) {
-        this.throttle = throttle;
+    public void setThrottle(int throttleMillis) {
+        this.throttle = throttleMillis;
     }
 
     public byte[] getDelimiter() {
@@ -70,6 +74,17 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
     }
 
+    /**
+     * Fetch data from the external source; sends a POST to the initialUri, 
+     * with the body, and waits for a response.
+     * If all goes well, this response contains a scrollId somewhere in the 
+     * JSON, which is the handle we use on subsequent requests.
+     * For the purposes of this project, we assume the response is JSON-encoded.
+     * We then send further requests using the handle, expecting a handle in 
+     * each response until we are done. The full payload of all GET responses 
+     * is sent into the InputStream that we return.
+     * This all happens in a thread, so you should get an InputStream returned immediately.
+     */
     public InputStream fetch(URI initialUri, URI scrollUri, final String body) throws HttpStatusException, DataStreamException {
         CloseableHttpClient httpclient = this.buildClient();
 
@@ -87,24 +102,28 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         HttpPost initialPost = new HttpPost(startUri);
                         initialPost.setEntity(new StringEntity(body, "utf-8"));
                         CloseableHttpResponse response;
-                        log.info("Sending initial post");
+                        log.info("Sending initial POST to "+startUri);
                         try {
                             response = httpclient.execute(initialPost);
                         } catch (IOException e) {
                             e.printStackTrace();
                             throw new DataStreamException(e);
                         }
-                        log.info("Initial post sent");
+                        log.info("Initial POST sent");
+                        log.info("HTTP status: "+response.getStatusLine().getStatusCode());
+                        if (response.getStatusLine().getStatusCode() != 200) {
+                            log.info(response.getEntity().getContent());
+                        }
 
                         JsonNode responseNode = objectMapper.readTree(response.getEntity().getContent());
-                        String scrollId = responseNode.get("_scroll_id").asText();
+                        String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
 
                         while (scrollId != null) {
-                            log.info("scrollId: "+scrollId);
                             URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=1m", null);
                             HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
                             partialGet.setEntity(new StringEntity(scrollId));
                             try {
+                                log.info("Sending chunk GET to "+fetchUri);
                                 response = httpclient.execute(partialGet);
                                 BufferedInputStream data = new BufferedInputStream(response.getEntity().getContent(), 8192);
 
@@ -127,17 +146,20 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                 if (scrollId != null) {
                                     // There is more data
                                     outputStream.write(delimiter);
+                                    if (throttle > 0) {
+                                        try {
+                                            log.info("Waiting "+throttle+" milliseconds before next request");
+                                            Thread.sleep(throttle);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
                                 } else {
                                     // Reached the end
+                                    log.info("Closing outputstream");
                                     outputStream.close();
                                 }
-                                if (throttle > 0) {
-                                    try {
-                                        Thread.sleep(throttle);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
+
                             } catch (IOException e) {
                                 e.printStackTrace();
                                 throw new DataStreamException(e);

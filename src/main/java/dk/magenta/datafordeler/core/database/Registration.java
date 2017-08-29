@@ -1,8 +1,11 @@
 package dk.magenta.datafordeler.core.database;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import dk.magenta.datafordeler.core.util.Equality;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
@@ -20,13 +23,19 @@ import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
+ * A Registration defines the time range in which a piece of data is “registered”,
+ * that is, when did it enter into the records of our data source, and when was it 
+ * supplanted by more recent data.
+ * A Registration points to exactly one Entity, and may have any number of Effects
+ * associated. Generally, there should not be stored other data in the object.
  */
 @MappedSuperclass
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @FilterDef(name=Registration.FILTER_REGISTRATION_FROM, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_FROM, type="java.time.OffsetDateTime"))
 @FilterDef(name=Registration.FILTER_REGISTRATION_TO, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_TO, type="java.time.OffsetDateTime"))
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
-public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry {
+@JsonPropertyOrder({"sequenceNumber", "registrationFrom", "registrationTo", "checksum", "effects"})
+public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry implements Comparable<Registration> {
 
     public static final String FILTER_REGISTRATION_FROM = "registrationFromFilter";
     public static final String FILTERPARAM_REGISTRATION_FROM = "registrationFromDate";
@@ -100,19 +109,34 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+")")
     protected List<V> effects;
 
-    @JsonProperty(value = "effects")
-    @XmlElement(name = "effect")
-    @JacksonXmlProperty(localName = "effect")
-    @JacksonXmlElementWrapper(useWrapping = false)
+    @JsonIgnore
     public List<V> getEffects() {
         return this.effects;
     }
 
 
+    /**
+     * Get the Effects of the Registration, sorted by the comparison method of the
+     * Effect class (usually by startDate)
+     */
+    @JsonProperty(value = "effects", access = JsonProperty.Access.READ_ONLY)
+    @XmlElement(name = "effect")
+    @JacksonXmlProperty(localName = "effect")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    public ArrayList<V> getSortedEffects() {
+        ArrayList<V> sortedEffects = new ArrayList<V>(this.effects);
+        Collections.sort(sortedEffects);
+        return sortedEffects;
+    }
+
+    /**
+     * Looks for an effect on this Registration, that matches the given range 
+     * exactly.
+     */
     public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         for (V effect : this.effects) {
-            if ((effect.getEffectFrom() == null ? effectFrom == null : effect.getEffectFrom().equals(effectFrom)) &&
-                (effect.getEffectTo() == null ? effectTo == null : effect.getEffectTo().equals(effectTo))) {
+            if (Equality.equal(effect.getEffectFrom(), effectFrom) &&
+                    Equality.equal(effect.getEffectTo(), effectTo)) {
                 return effect;
             }
         }
@@ -133,26 +157,46 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         );
     }
 
+    /**
+     * Add an effect to this registration
+     */
     public void addEffect(V effect) {
         if (!this.effects.contains(effect)) {
             this.effects.add(effect);
         }
     }
 
+    /**
+     * Removed an Effect from this Registration
+     */
     public void removeEffect(V effect) {
         // Be sure to also delete the effect yourself, since it still points to the Registration
         this.effects.remove(effect);
     }
 
-    @JsonProperty
+    @JsonProperty(value = "effects", access = JsonProperty.Access.WRITE_ONLY)
     public void setEffects(Collection<V> effects) {
         this.effects = new ArrayList<V>(effects);
+    }
+
+    protected abstract V createEmptyEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo);
+
+    public final V createEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
+        V effect = this.createEmptyEffect(effectFrom, effectTo);
+        effect.setRegistration(this);
+        return effect;
+    }
+    public final V createEffect(TemporalAccessor effectFrom, TemporalAccessor effectTo) {
+        return this.createEffect(Effect.convertTime(effectFrom), Effect.convertTime(effectTo));
+    }
+    public final V createEffect(LocalDate effectFrom, LocalDate effectTo) {
+        return this.createEffect(Effect.convertTime(effectFrom), Effect.convertTime(effectTo));
     }
 
 
 
 
-    @Column(nullable = false, insertable = true, updatable = false)
+    @Column(nullable = true, insertable = true, updatable = false)
     protected OffsetDateTime registrationFrom;
 
     @JsonProperty(value = "registrationFrom")
@@ -259,4 +303,13 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         }
     }
 
+    /**
+     * Comparison method for the Comparable interface; results in Registrations being sorted by registrationFrom date, nulls first?
+     */
+    @Override
+    public int compareTo(Registration o) {
+        OffsetDateTime oDateTime = o == null ? null : o.registrationFrom;
+        if (oDateTime == null) return 1;
+        return this.registrationFrom.compareTo(oDateTime);
+    }
 }
