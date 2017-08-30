@@ -18,9 +18,13 @@ public abstract class Equality {
     }
 
     public static <C extends Comparable> int compare(C o1, C o2, Class<C> cClass) {
+        return compare(o1, o2, cClass, false);
+    }
+
+    public static <C extends Comparable> int compare(C o1, C o2, Class<C> cClass, boolean nullsLast) {
         if (o1 == null && o2 == null) return 0;
-        if (o1 == null) return -1;
-        if (o2 == null) return 1;
+        if (o1 == null) return nullsLast ? 1 : -1;
+        if (o2 == null) return nullsLast ? -1 : 1;
         return o1.compareTo(o2);
     }
 

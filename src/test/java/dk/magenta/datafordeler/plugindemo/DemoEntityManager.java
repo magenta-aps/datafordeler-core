@@ -7,6 +7,7 @@ import dk.magenta.datafordeler.core.TestConfig;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
+import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.ParseException;
 import dk.magenta.datafordeler.core.exception.WrongSubclassException;
 import dk.magenta.datafordeler.core.fapi.FapiService;
@@ -143,7 +144,7 @@ public class DemoEntityManager extends EntityManager {
 
     /** Registration parsing **/
 
-    public List<Registration> parseRegistration(InputStream registrationData) throws IOException {
+    public List<Registration> parseRegistration(InputStream registrationData) throws DataFordelerException {
         String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
         return this.parseRegistration(data, "utf-8");
         // return this.objectMapper.readValue(registrationData, this.managedRegistrationClass);
@@ -158,9 +159,13 @@ public class DemoEntityManager extends EntityManager {
         }
     }
 
-    public List<Registration> parseRegistration(String registrationData, String charsetName) throws IOException {
+    public List<Registration> parseRegistration(String registrationData, String charsetName) throws DataFordelerException {
         this.getLog().info("Parsing registration data");
-        return Collections.singletonList(this.objectMapper.readValue(registrationData.getBytes(charsetName), this.managedRegistrationClass));
+        try {
+            return Collections.singletonList(this.objectMapper.readValue(registrationData.getBytes(charsetName), this.managedRegistrationClass));
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
     }
 
     /** Registration fetching **/
