@@ -42,11 +42,8 @@ pushd %COREDIR%
 call mvnw.cmd clean package
 popd
 
-
 rem Copy compiled WAR so running will not hold a lock on the compiled file destination
-if not exist "%RUN_JAR%" (
-    copy "%DIR%target\%COREJAR%" "%RUN_JAR%"
-)
+copy "%DIR%\target\%COREJAR%" "%RUN_JAR%"
 
 rem Run the JAR file
 call "%JAVA_HOME%\bin\java.exe" -jar "%RUN_JAR%" %RUN_ARGS%

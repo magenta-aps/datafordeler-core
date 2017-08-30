@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.regex.Matcher;
 
 /**
  * Created by lars on 12-01-17.
@@ -130,7 +131,7 @@ public class Application {
             String value = path.substring(typeSepIndex + 1);
             switch (type) {
                 case "file":
-                    value = value.replaceAll("\\\\+", File.separator);
+                    value = value.replaceAll("\\\\+", Matcher.quoteReplacement(File.separator));
                     try {
                         System.out.println("value: "+value);
                         return new FileInputStream(value);
