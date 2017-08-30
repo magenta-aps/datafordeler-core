@@ -119,7 +119,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
 
                         while (scrollId != null) {
-                            URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=1m", null);
+                            URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
                             HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
                             partialGet.setEntity(new StringEntity(scrollId));
                             try {
