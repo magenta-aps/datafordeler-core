@@ -157,11 +157,7 @@ public class Engine {
                 if (entityManager == null) {
                     throw new EntityManagerNotFoundException(schema);
                 }
-                try {
-                    registrations = entityManager.parseRegistration(event.getData());
-                } catch (IOException e) {
-                    throw new DataStreamException(e);
-                }
+                registrations = entityManager.parseRegistration(event.getData());
             }
 
             /*

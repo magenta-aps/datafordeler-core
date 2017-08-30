@@ -55,6 +55,13 @@ public class CommandService {
     @Autowired
     private DafoUserManager dafoUserManager;
 
+    // For debugging purposes - make sure this is set to false when running in production
+    private static boolean DEBUG_DISABLE_SECURITY = false;
+
+    public static boolean getDebugDisableSecurity() {
+        return DEBUG_DISABLE_SECURITY;
+    }
+
     protected void checkAndLogAccess(LoggerHelper loggerHelper, SystemRole requiredRole)
             throws AccessDeniedException, AccessRequiredException {
         try {
@@ -76,6 +83,9 @@ public class CommandService {
      */
     protected void checkAccess(DafoUserDetails dafoUserDetails, SystemRole requiredRole)
             throws AccessDeniedException, AccessRequiredException {
+        if (DEBUG_DISABLE_SECURITY) {
+            return;
+        }
         dafoUserDetails.checkHasSystemRole(requiredRole);
     }
 
