@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A utility class for storing values by two keys (like a table)
+ * A utility class for storing values by two keys (like a two-dimensional table)
  */
 public class DoubleHashMap<K, S, V> extends HashMap<K, HashMap<S, V>> {
 

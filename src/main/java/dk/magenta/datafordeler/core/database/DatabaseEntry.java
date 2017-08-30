@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 
 /**
- * Abstract superclass for all object classes
+ * Abstract superclass for all object classes, making sure they have an ID
  */
 @MappedSuperclass
 @Embeddable

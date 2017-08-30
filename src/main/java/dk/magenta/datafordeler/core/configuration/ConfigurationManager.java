@@ -9,11 +9,18 @@ import javax.persistence.NoResultException;
 
 /**
  * Created by lars on 06-04-17.
+ * Plugin configurations are stored in separate database tables, each with only one
+ * row. On loading the program, the Configuration is retrieved from the database, or
+ * if one doesn’t exist (such as on the first run), created and saved.
  */
 public abstract class ConfigurationManager<C extends Configuration> {
 
     private C configuration;
 
+    /**
+     * Locate Configuration object, or create one if none found.
+     * Subclasses MUST call this in their initialization routines
+     */
     public void init() {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();

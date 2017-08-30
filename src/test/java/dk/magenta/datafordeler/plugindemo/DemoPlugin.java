@@ -26,9 +26,10 @@ public class DemoPlugin extends Plugin {
     @Autowired
     private DemoConfigurationManager demoConfigurationManager;
 
-    private DemoRolesDefinition rolesDefinition = new DemoRolesDefinition();
+    private DemoRolesDefinition rolesDefinition;
 
     public DemoPlugin() {
+        this.rolesDefinition = new DemoRolesDefinition();
         AreaRestrictionType cardinalDirections = this.addAreaRestrictionType(
             "Cardinal directions",
             "The four cardinal directions"

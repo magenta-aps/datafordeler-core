@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.io.Event;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -88,7 +89,7 @@ public class Engine {
 
     /** Push **/
 
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(Event event) {
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event) {
         return this.handleEvent(event, null);
     }
 
@@ -98,8 +99,8 @@ public class Engine {
      * When a registration is at hand, it is saved and a receipt is sent to the entitymanager that handles the registration
      * @param event Event to be handled
      * */
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(Event event, Plugin plugin) {
-        log.info("Handling event '" + event.getEventID() + "'");
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event, Plugin plugin) {
+        log.info("Handling event '" + event.getId() + "'");
         OffsetDateTime eventReceived = OffsetDateTime.now();
         Receipt receipt;
         EntityManager entityManager = null;
@@ -108,8 +109,8 @@ public class Engine {
         try {
             List<? extends Registration> registrations;
 
-            if (event.getObjektData() == null) {
-                String referenceData = event.getObjektReference();
+            if (event.getData() == null) {
+                String referenceData = event.getReference();
                 if (referenceData == null) {
                     throw new MissingReferenceException(event);
                 }
@@ -144,7 +145,7 @@ public class Engine {
                 }
             } else {
                 log.info("Event contains a full registration");
-                String schema = event.getDataskema();
+                String schema = event.getSchema();
                 if (plugin == null) {
                     plugin = pluginManager.getPluginForSchema(schema);
                 }
@@ -157,7 +158,7 @@ public class Engine {
                     throw new EntityManagerNotFoundException(schema);
                 }
                 try {
-                    registrations = entityManager.parseRegistration(event.getObjektData());
+                    registrations = entityManager.parseRegistration(event.getData());
                 } catch (IOException e) {
                     throw new DataStreamException(e);
                 }
@@ -171,11 +172,11 @@ public class Engine {
             session.close();
             */
 
-            receipt = new Receipt(event.getEventID(), eventReceived);
+            receipt = new Receipt(event.getId(), eventReceived);
             success = true;
         } catch (DataFordelerException e) {
             log.error("Error handling event", e);
-            receipt = new Receipt(event.getEventID(), eventReceived, e);
+            receipt = new Receipt(event.getId(), eventReceived, e);
             success = false;
             if (session != null) {
                 session.close();

@@ -95,15 +95,6 @@ public class DemoRegisterManager extends RegisterManager {
         return this.configurationManager.getConfiguration().getPullCronSchedule();
     }
 
-    public ItemInputStream<Event> pullEvents() throws DataFordelerException {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return super.pullEvents();
-    }
-
     /* listChecksums */
 
     @Override
