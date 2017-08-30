@@ -52,7 +52,6 @@ public class RegisterManagerTest extends PluginTestBase {
     public ExpectedException exception = ExpectedException.none();
 
     private class OtherEntity extends Entity {
-
         @Override
         protected Registration createEmptyRegistration() {
             return null;

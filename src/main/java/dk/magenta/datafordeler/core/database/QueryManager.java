@@ -10,7 +10,6 @@ import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -225,7 +224,7 @@ public class QueryManager {
     }
 
     /**
-     * Identify and remove duplicate Effects in a Registration, so the REgistration will only have unique Effects
+     * Identify and remove duplicate Effects in a Registration, so the Registration will only have unique Effects
      * @param session Database session to work from
      * @param registration Registration to dedup
      */
@@ -243,14 +242,14 @@ public class QueryManager {
             }
         }
         if (duplicates.isEmpty()) {
-            this.log.debug("No duplicates found");
+            this.log.info("No duplicate effects found");
         } else {
             for (V master : duplicates.keySet()) {
                 List<V> dups = duplicates.get(master);
-                this.log.debug("There are " + dups.size() + " duplicates of Effect " + master.getEffectFrom() + " - " + master.getEffectTo());
+                this.log.info("There are " + dups.size() + " duplicates of Effect " + master.getEffectFrom() + " - " + master.getEffectTo());
                 int i = 0;
                 for (V dup : dups) {
-                    this.log.debug("    Duplicate " + i + " contains " + dup.getDataItems().size() + " DataItems");
+                    this.log.info("    Duplicate " + i + " contains " + dup.getDataItems().size() + " DataItems");
                     for (D dataItem : dup.getDataItems()) {
                         dataItem.addEffect(master);
                         dataItem.removeEffect(dup);
@@ -353,31 +352,7 @@ public class QueryManager {
 
 
         if (dedupItems) {
-            // Dedup dataitems
-            // Find existing DataItems on the Entity that hold the same data
-            for (V effect : registration.getEffects()) {
-                HashSet<D> obsolete = new HashSet<D>();
-                for (D dataItem : effect.getDataItems()) {
-                    List<D> existing = this.getDataItems(session, entity, dataItem, (Class<D>) dataItem.getClass());
-                    // If found, use that DataItem instead
-                    if (existing != null && !existing.isEmpty() && dataItem != existing.get(0)) {
-                        obsolete.add(dataItem);
-                        dataItem = existing.get(0);
-                    }
-                    // Couple it with the Effect
-                    dataItem.addEffect(effect);
-                }
-
-                System.out.println("Found " + obsolete.size() + " obsoletes!");
-                for (D dataItem : obsolete) {
-                    Set<V> effects = dataItem.getEffects();
-                    for (V e : effects) {
-                        e.dataItems.remove(dataItem);
-                        session.saveOrUpdate(e);
-                    }
-                    session.delete(dataItem);
-                }
-            }
+            dedupItems(session, entity, registration);
         }
 
         Identification existing = this.getIdentification(session, entity.getUUID());
@@ -410,6 +385,34 @@ public class QueryManager {
         }
 
 
+    }
+
+    private <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void dedupItems(Session session, E entity, R registration) throws PluginImplementationException {
+        // Dedup dataitems
+        // Find existing DataItems on the Entity that hold the same data
+        for (V effect : registration.getEffects()) {
+            HashSet<D> obsolete = new HashSet<D>();
+            for (D dataItem : effect.getDataItems()) {
+                List<D> existing = this.getDataItems(session, entity, dataItem, (Class<D>) dataItem.getClass());
+                // If found, use that DataItem instead
+                if (existing != null && !existing.isEmpty() && dataItem != existing.get(0)) {
+                    obsolete.add(dataItem);
+                    dataItem = existing.get(0);
+                }
+                // Couple it with the Effect
+                dataItem.addEffect(effect);
+            }
+
+            System.out.println("Found " + obsolete.size() + " obsolete items!");
+            for (D dataItem : obsolete) {
+                Set<V> effects = dataItem.getEffects();
+                for (V e : effects) {
+                    e.dataItems.remove(dataItem);
+                    session.saveOrUpdate(e);
+                }
+                session.delete(dataItem);
+            }
+        }
     }
 
     private void logQuery(org.hibernate.query.Query query) {

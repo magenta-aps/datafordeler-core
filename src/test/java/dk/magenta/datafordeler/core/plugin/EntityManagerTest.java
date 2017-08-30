@@ -95,7 +95,7 @@ public class EntityManagerTest extends PluginTestBase {
 
 
     @Test
-    public void testFetchRegistration() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException, ParseException {
+    public void testFetchRegistration() throws IOException, DataFordelerException, URISyntaxException {
         DemoEntityManager entityManager = (DemoEntityManager) this.plugin.getEntityManager(DemoEntity.schema);
 
         String checksum = this.hash(UUID.randomUUID().toString());
@@ -122,7 +122,7 @@ public class EntityManagerTest extends PluginTestBase {
 
 
     @Test
-    public void testFetchRegistrationFail1() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException, ParseException {
+    public void testFetchRegistrationFail1() throws IOException, DataFordelerException, URISyntaxException {
         DemoEntityManager entityManager = (DemoEntityManager) this.plugin.getEntityManager(DemoEntity.schema);
 
         String checksum = this.hash(UUID.randomUUID().toString());
@@ -167,7 +167,7 @@ public class EntityManagerTest extends PluginTestBase {
     }
 
     @Test
-    public void testFetchRegistrationFail2() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException, ParseException {
+    public void testFetchRegistrationFail2() throws IOException, DataFordelerException, URISyntaxException {
         DemoEntityManager entityManager = (DemoEntityManager) this.plugin.getEntityManager(DemoEntity.schema);
 
         String checksum = this.hash(UUID.randomUUID().toString());

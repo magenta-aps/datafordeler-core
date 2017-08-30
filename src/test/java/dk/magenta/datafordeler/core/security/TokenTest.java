@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.security;
 
 
 import dk.magenta.datafordeler.core.Application;
+import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.user.TokenVerifier;
 import java.io.IOException;
 import java.util.Collections;
@@ -93,6 +94,9 @@ public class TokenTest {
   @Test
   public void testParseValidToken() throws Exception {
     // Skip checks for token age
+    if (FapiService.getDebugDisableSecurity()) {
+      return;
+    }
     doNothing().when(tokenVerifier).verifyTokenAge(anyObject());
     doReturn(true).when(tokenVerifier).checkNotOnOrafter(anyObject());
 

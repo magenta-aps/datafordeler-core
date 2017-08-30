@@ -192,7 +192,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(InputStream registrationData) throws ParseException, IOException {
+    public List<? extends Registration> parseRegistration(InputStream registrationData) throws DataFordelerException {
         String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
         return this.parseRegistration(data);
     }
@@ -203,17 +203,21 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(String registrationData) throws ParseException, IOException {
-        return this.parseRegistration(this.getObjectMapper().readTree(registrationData));
+    public List<? extends Registration> parseRegistration(String registrationData) throws DataFordelerException {
+        try {
+            return this.parseRegistration(this.getObjectMapper().readTree(registrationData));
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
     }
 
-    public List<? extends Registration> parseRegistration(JsonNode registrationData) throws ParseException {
+    public List<? extends Registration> parseRegistration(JsonNode registrationData) throws DataFordelerException {
         return null;
     }
 
 
 
-    public Map<String, List<? extends Registration>> parseRegistrationList(JsonNode registrationData) throws ParseException {
+    public Map<String, List<? extends Registration>> parseRegistrationList(JsonNode registrationData) throws DataFordelerException {
         HashMap<String, List<? extends Registration>> registrationMap = new HashMap<>();
         Iterator<String> keyIterator = registrationData.fieldNames();
         while (keyIterator.hasNext()) {
@@ -242,7 +246,7 @@ public abstract class EntityManager {
      * @throws IOException
      * @throws FailedReferenceException
      */
-    public List<? extends Registration> fetchRegistration(RegistrationReference reference) throws IOException, ParseException, WrongSubclassException, DataStreamException, FailedReferenceException {
+    public List<? extends Registration> fetchRegistration(RegistrationReference reference) throws IOException, DataFordelerException {
         this.getLog().info("Fetching registration from reference "+reference.getURI());
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);

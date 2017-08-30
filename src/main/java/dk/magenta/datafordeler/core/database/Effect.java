@@ -105,6 +105,9 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     protected void setRegistration(R registration) {
         if (registration != null) {
+            if (this.registration != null) {
+                this.registration.removeEffect(this);
+            }
             this.registration = registration;
             registration.addEffect(this);
         }
@@ -217,13 +220,23 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
      */
     @Override
     public int compareTo(Effect o) {
-        int comparison = Equality.compare(this.effectFrom, o == null ? null : o.effectFrom, OffsetDateTime.class);
+        OffsetDateTime otherFrom = o == null ? null : o.effectFrom;
+        int comparison = Equality.compare(this.effectFrom, otherFrom, OffsetDateTime.class, false);
         if (comparison != 0) {
+            System.out.println("compare "+this.effectFrom+" to "+otherFrom+" => "+comparison);
             return comparison;
         }
-        return Equality.compare(this.effectTo, o == null ? null : o.effectTo, OffsetDateTime.class);
+        OffsetDateTime otherTo = o == null ? null : o.effectTo;
+        return Equality.compare(this.effectTo, otherTo, OffsetDateTime.class, true);
     }
 
 
+    public V createClone() {
+        V other = (V) this.registration.createEffect(this.getEffectFrom(), this.getEffectTo());
+        for (D data : this.dataItems) {
+            data.addEffect(other);
+        }
+        return other;
+    }
 
 }
