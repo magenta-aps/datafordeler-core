@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import dk.magenta.datafordeler.core.util.Equality;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
@@ -22,6 +23,11 @@ import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
+ * A Registration defines the time range in which a piece of data is “registered”,
+ * that is, when did it enter into the records of our data source, and when was it 
+ * supplanted by more recent data.
+ * A Registration points to exactly one Entity, and may have any number of Effects
+ * associated. Generally, there should not be stored other data in the object.
  */
 @MappedSuperclass
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -109,7 +115,10 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
 
-
+    /**
+     * Get the Effects of the Registration, sorted by the comparison method of the
+     * Effect class (usually by startDate)
+     */
     @JsonProperty(value = "effects", access = JsonProperty.Access.READ_ONLY)
     @XmlElement(name = "effect")
     @JacksonXmlProperty(localName = "effect")
@@ -120,20 +129,18 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return sortedEffects;
     }
 
+    /**
+     * Looks for an effect on this Registration, that matches the given range 
+     * exactly.
+     */
     public V getEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         for (V effect : this.effects) {
-            if (equalOffsetDateTime(effect.getEffectFrom(), effectFrom) &&
-                equalOffsetDateTime(effect.getEffectTo(), effectTo)) {
+            if (Equality.equal(effect.getEffectFrom(), effectFrom) &&
+                    Equality.equal(effect.getEffectTo(), effectTo)) {
                 return effect;
             }
         }
         return null;
-    }
-
-    protected static boolean equalOffsetDateTime(OffsetDateTime dateTime1, OffsetDateTime dateTime2) {
-        if (dateTime1 == null && dateTime2 == null) return true;
-        if (dateTime1 == null || dateTime2 == null) return false;
-        return dateTime1.isEqual(dateTime2);
     }
 
     public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
@@ -150,12 +157,18 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         );
     }
 
+    /**
+     * Add an effect to this registration
+     */
     public void addEffect(V effect) {
         if (!this.effects.contains(effect)) {
             this.effects.add(effect);
         }
     }
 
+    /**
+     * Removed an Effect from this Registration
+     */
     public void removeEffect(V effect) {
         // Be sure to also delete the effect yourself, since it still points to the Registration
         this.effects.remove(effect);
@@ -290,7 +303,9 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         }
     }
 
-
+    /**
+     * Comparison method for the Comparable interface; results in Registrations being sorted by registrationFrom date, nulls first?
+     */
     @Override
     public int compareTo(Registration o) {
         OffsetDateTime oDateTime = o == null ? null : o.registrationFrom;

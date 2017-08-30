@@ -91,6 +91,10 @@ public class FtpCommunicator implements Communicator {
         return ftpClient;
     }
 
+    /**
+     * Fetches all yet-unfetched files from the folder denoted by the uri,
+     * and marks the fetched files as fetched when the returned InputStream is closed.
+     */
     @Override
     public InputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
         CloseDetectInputStream data = null;

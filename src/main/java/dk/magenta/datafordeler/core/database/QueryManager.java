@@ -262,14 +262,20 @@ public class QueryManager {
         }
     }
 
+    /**
+     * Save registration to database, re-pointing the entity reference to a persistent entity if one exists, merging effects with identical timestamps, and saving all associated effects and dataitems.
+     * @param session A database session to work on
+     * @param registration Registration to be saved
+     */
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration) throws DataFordelerException {
         this.saveRegistration(session, entity, registration, true, true);
     }
-        /**
-         * Save registration to database, re-pointing the entity reference to a persistent entity if one exists, merging effects with identical timestamps, and saving all associated effects and dataitems.
-         * @param session A database session to work on
-         * @param registration Registration to be saved
-         */
+
+    /**
+     * Save registration to database, re-pointing the entity reference to a persistent entity if one exists, merging effects with identical timestamps, and saving all associated effects and dataitems.
+     * @param session A database session to work on
+     * @param registration Registration to be saved
+     */
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems) throws DataFordelerException {
         this.log.trace("Saving registration of type "+registration.getClass().getCanonicalName()+" with checksum "+registration.getRegisterChecksum()+" and sequence number "+registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {

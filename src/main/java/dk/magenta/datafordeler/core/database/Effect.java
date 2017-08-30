@@ -22,6 +22,9 @@ import java.util.*;
 
 /**
  * Created by lars on 20-02-17.
+ * An Effect defines the time range in which a piece of data has effect.
+ * An Effect points to exactly one Registration, but may have any number of DataItems
+ * associated.
  */
 @MappedSuperclass
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
@@ -130,6 +133,12 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return new ArrayList(this.dataItems);
     }
 
+    /**
+     * Merges the associated DataItems into one Map for output. Each DataItem may
+     * point to several Effects, in order to avoid duplicate data, meaning that the
+     * data that are effecting under this Effect is spread over several objects, and
+     * needs merging.
+     */
     @JsonProperty(value = "dataItems")
     @XmlElementWrapper(name = "dataItems")
     public Map<String, Object> getData() {
@@ -206,14 +215,19 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         }
     }
 
-
+    /**
+     * Comparison method for the Comparable interface; results in Effects being sorted by effectFrom date, nulls first?
+     */
     @Override
     public int compareTo(Effect o) {
-        int comparison = Equality.compare(this.effectFrom, o == null ? null : o.effectFrom, OffsetDateTime.class);
+        OffsetDateTime otherFrom = o == null ? null : o.effectFrom;
+        int comparison = Equality.compare(this.effectFrom, otherFrom, OffsetDateTime.class, false);
         if (comparison != 0) {
+            System.out.println("compare "+this.effectFrom+" to "+otherFrom+" => "+comparison);
             return comparison;
         }
-        return Equality.compare(this.effectTo, o == null ? null : o.effectTo, OffsetDateTime.class);
+        OffsetDateTime otherTo = o == null ? null : o.effectTo;
+        return Equality.compare(this.effectTo, otherTo, OffsetDateTime.class, true);
     }
 
 

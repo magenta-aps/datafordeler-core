@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Created by jubk on 30-06-2017.
+ * Configuration class for creating the Session Manager based on an external file
  */
 @Component
 public class SessionManagerConfiguration {
