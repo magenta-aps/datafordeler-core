@@ -21,6 +21,7 @@ import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -170,7 +171,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @return Found Entity, or null if none found.
      */
     @WebMethod(exclude = true)
-    @RequestMapping(path="/{id}",produces = {"application/json", "application/xml"})
+    @RequestMapping(path="/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public Envelope<E> getRest(@PathVariable("id") String id, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
         throws AccessDeniedException, AccessRequiredException, InvalidTokenException, InvalidClientInputException {
         Envelope<E> envelope = new Envelope<E>();
@@ -187,7 +188,11 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         try {
             E entity = this.searchById(id, query);
             envelope.setResult(entity);
-            this.log.debug("Item found, returning");
+            if (entity == null) {
+                this.log.debug("Item not found, returning");
+            } else {
+                this.log.debug("Item found, returning");
+            }
             envelope.close();
             loggerHelper.logResult(envelope);
             return envelope;
@@ -258,7 +263,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @return Found Entities
      */
     @WebMethod(exclude = true)
-    @RequestMapping(path="/search", produces = {"application/json", "application/xml"})
+    @RequestMapping(path="/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public Envelope<E> searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
         Envelope<E> envelope = new Envelope<E>();
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
@@ -387,7 +392,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         this.applyQuery(session, query);
         E entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
-        entity.forceLoad(session);
+        if (entity != null) {
+            entity.forceLoad(session);
+        }
         session.close();
         return entity;
     }
