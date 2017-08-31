@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import dk.magenta.datafordeler.core.database.SessionManager;
+import dk.magenta.datafordeler.core.exception.ConfigurationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,7 +102,7 @@ public class Application {
     }
 
     // Seriously unholy reflection magic, to force our URLs into the existing classloader
-    private static void extendClassLoader(ClassLoader classLoader, String jarFolderPath) {
+    private static void extendClassLoader(ClassLoader classLoader, String jarFolderPath) throws ConfigurationException {
         URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
         try {
             Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
@@ -118,6 +119,13 @@ public class Application {
                         }
                     }
                 }
+            } else {
+                String pathDescription = jarFolderPath;
+                try {
+                     pathDescription += " => " + pluginFolder.getCanonicalPath();
+                } catch (IOException e) {
+                }
+                throw new ConfigurationException("Configured plugin folder path "+pathDescription+" is not a folder");
             }
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             log.error(e);
@@ -133,7 +141,6 @@ public class Application {
                 case "file":
                     value = value.replaceAll("\\\\+", Matcher.quoteReplacement(File.separator));
                     try {
-                        System.out.println("value: "+value);
                         return new FileInputStream(value);
                     } catch (FileNotFoundException e) {
                         log.warn("Config file not found: "+value);
