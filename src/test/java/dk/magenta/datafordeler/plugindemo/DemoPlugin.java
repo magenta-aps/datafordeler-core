@@ -26,7 +26,7 @@ public class DemoPlugin extends Plugin {
     @Autowired
     private DemoConfigurationManager demoConfigurationManager;
 
-    private DemoRolesDefinition rolesDefinition = new DemoRolesDefinition();
+    private DemoRolesDefinition rolesDefinition;
 
     public DemoPlugin() {
         this.rolesDefinition = new DemoRolesDefinition();
@@ -48,6 +48,7 @@ public class DemoPlugin extends Plugin {
 
     @Override
     public RegisterManager getRegisterManager() {
+        System.out.println("===== DemoPlugin " + DemoPlugin.class.getClassLoader());
         return this.demoRegisterManager;
     }
 

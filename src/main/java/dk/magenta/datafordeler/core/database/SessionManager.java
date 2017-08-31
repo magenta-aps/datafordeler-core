@@ -51,8 +51,9 @@ public class SessionManager {
             componentProvider.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));
 
             Set<BeanDefinition> components = componentProvider.findCandidateComponents("dk.magenta.datafordeler");
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
             for (BeanDefinition component : components) {
-                Class cls = Class.forName(component.getBeanClassName());
+                Class cls = Class.forName(component.getBeanClassName(), true, cl);
                 this.log.info("Located autodetected data class "+cls.getCanonicalName());
                 managedClasses.add(cls);
             }

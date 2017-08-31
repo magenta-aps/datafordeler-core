@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import org.junit.Assert;
@@ -16,7 +16,7 @@ import java.net.URISyntaxException;
  * Created by lars on 15-05-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = TestConfig.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT, classes = Application.class)
 public class PluginTest extends PluginTestBase {
 
     @Test
@@ -26,7 +26,7 @@ public class PluginTest extends PluginTestBase {
 
     @Test
     public void testGetEntityManager() throws URISyntaxException {
-        URI uri = new URI("http://localhost:" + TestConfig.servicePort);
+        URI uri = new URI("http://localhost:" + Application.servicePort);
         Assert.assertTrue(this.plugin.getRegisterManager() instanceof RegisterManager);
         Assert.assertEquals(this.plugin.getEntityManager(DemoEntity.schema), this.plugin.getRegisterManager().getEntityManager(DemoEntity.class));
         Assert.assertEquals(this.plugin.getEntityManager(uri), this.plugin.getEntityManager(DemoEntity.schema));

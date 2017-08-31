@@ -3,7 +3,7 @@ package dk.magenta.datafordeler.plugindemo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
@@ -50,7 +50,7 @@ public class DemoEntityManager extends EntityManager {
     private HttpCommunicator commonFetcher;
 
     private String[] URISubstrings = {
-            "http://localhost:" + TestConfig.servicePort
+            "http://localhost:" + Application.servicePort
     };
 
     private URI baseEndpoint = null;
@@ -62,7 +62,7 @@ public class DemoEntityManager extends EntityManager {
         this.managedRegistrationClass = DemoRegistration.class;
         this.commonFetcher = new HttpCommunicator();
         try {
-            this.baseEndpoint = new URI("http", null, "localhost", TestConfig.servicePort, "/test", null, null);
+            this.baseEndpoint = new URI("http", null, "localhost", Application.servicePort, "/test", null, null);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
