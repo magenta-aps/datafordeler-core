@@ -3,10 +3,11 @@ package dk.magenta.datafordeler.plugindemo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
+import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.ParseException;
 import dk.magenta.datafordeler.core.exception.WrongSubclassException;
 import dk.magenta.datafordeler.core.fapi.FapiService;
@@ -49,7 +50,7 @@ public class DemoEntityManager extends EntityManager {
     private HttpCommunicator commonFetcher;
 
     private String[] URISubstrings = {
-            "http://localhost:" + TestConfig.servicePort
+            "http://localhost:" + Application.servicePort
     };
 
     private URI baseEndpoint = null;
@@ -61,11 +62,22 @@ public class DemoEntityManager extends EntityManager {
         this.managedRegistrationClass = DemoRegistration.class;
         this.commonFetcher = new HttpCommunicator();
         try {
-            this.baseEndpoint = new URI("http", null, "localhost", TestConfig.servicePort, "/test", null, null);
+            this.baseEndpoint = new URI("http", null, "localhost", Application.servicePort, "/test", null, null);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
+    }
 
+    public void setPort(int port) {
+        System.out.println("Setting port to "+port);
+        this.URISubstrings = new String[] {
+                "http://localhost:" + port
+        };
+        try {
+            this.baseEndpoint = new URI("http", null, "localhost", port, "/test", null, null);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -143,7 +155,7 @@ public class DemoEntityManager extends EntityManager {
 
     /** Registration parsing **/
 
-    public List<Registration> parseRegistration(InputStream registrationData) throws IOException {
+    public List<Registration> parseRegistration(InputStream registrationData) throws DataFordelerException {
         String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
         return this.parseRegistration(data, "utf-8");
         // return this.objectMapper.readValue(registrationData, this.managedRegistrationClass);
@@ -158,9 +170,13 @@ public class DemoEntityManager extends EntityManager {
         }
     }
 
-    public List<Registration> parseRegistration(String registrationData, String charsetName) throws IOException {
+    public List<Registration> parseRegistration(String registrationData, String charsetName) throws DataFordelerException {
         this.getLog().info("Parsing registration data");
-        return Collections.singletonList(this.objectMapper.readValue(registrationData.getBytes(charsetName), this.managedRegistrationClass));
+        try {
+            return Collections.singletonList(this.objectMapper.readValue(registrationData.getBytes(charsetName), this.managedRegistrationClass));
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
     }
 
     /** Registration fetching **/

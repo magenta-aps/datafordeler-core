@@ -25,6 +25,10 @@ import java.util.regex.Pattern;
 
 /**
  * Created by lars on 27-06-17.
+ * A special Communicator that fetches data over a HTTP connection by the 
+ * scan-scroll pattern: We specify the query in a POST, then get a handle back 
+ * that we can use in a series of subsequent GET requests to get all the data 
+ * (which tends to be a lot).
  */
 public class ScanScrollCommunicator extends HttpCommunicator {
 
@@ -70,6 +74,17 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
     }
 
+    /**
+     * Fetch data from the external source; sends a POST to the initialUri, 
+     * with the body, and waits for a response.
+     * If all goes well, this response contains a scrollId somewhere in the 
+     * JSON, which is the handle we use on subsequent requests.
+     * For the purposes of this project, we assume the response is JSON-encoded.
+     * We then send further requests using the handle, expecting a handle in 
+     * each response until we are done. The full payload of all GET responses 
+     * is sent into the InputStream that we return.
+     * This all happens in a thread, so you should get an InputStream returned immediately.
+     */
     public InputStream fetch(URI initialUri, URI scrollUri, final String body) throws HttpStatusException, DataStreamException {
         CloseableHttpClient httpclient = this.buildClient();
 
@@ -95,12 +110,16 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             throw new DataStreamException(e);
                         }
                         log.info("Initial POST sent");
+                        log.info("HTTP status: "+response.getStatusLine().getStatusCode());
+                        if (response.getStatusLine().getStatusCode() != 200) {
+                            log.info(response.getEntity().getContent());
+                        }
 
                         JsonNode responseNode = objectMapper.readTree(response.getEntity().getContent());
                         String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
 
                         while (scrollId != null) {
-                            URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=1m", null);
+                            URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
                             HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
                             partialGet.setEntity(new StringEntity(scrollId));
                             try {

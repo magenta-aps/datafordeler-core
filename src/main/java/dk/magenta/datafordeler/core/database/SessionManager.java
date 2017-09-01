@@ -42,6 +42,7 @@ public class SessionManager {
             managedClasses.add(dk.magenta.datafordeler.core.database.Registration.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.Effect.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.DataItem.class);
+            managedClasses.add(dk.magenta.datafordeler.core.command.Command.class);
 
             for (Class cls : managedClasses) {
                 this.log.info("Located hardcoded data class "+cls.getCanonicalName());
@@ -51,8 +52,9 @@ public class SessionManager {
             componentProvider.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));
 
             Set<BeanDefinition> components = componentProvider.findCandidateComponents("dk.magenta.datafordeler");
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
             for (BeanDefinition component : components) {
-                Class cls = Class.forName(component.getBeanClassName());
+                Class cls = Class.forName(component.getBeanClassName(), true, cl);
                 this.log.info("Located autodetected data class "+cls.getCanonicalName());
                 managedClasses.add(cls);
             }
@@ -72,6 +74,9 @@ public class SessionManager {
         }
     }
 
+    /**
+     * Get the session factory, used for obtaining Sessions
+     */
     public SessionFactory getSessionFactory() {
         return this.sessionFactory;
     }

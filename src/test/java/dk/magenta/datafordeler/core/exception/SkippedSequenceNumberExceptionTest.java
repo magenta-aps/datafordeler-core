@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.exception;
 
-import dk.magenta.datafordeler.core.TestConfig;
-import dk.magenta.datafordeler.core.database.Registration;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,7 +11,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.time.OffsetDateTime;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
 public class SkippedSequenceNumberExceptionTest {
 
     @Test

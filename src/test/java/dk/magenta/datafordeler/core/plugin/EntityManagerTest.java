@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
@@ -22,6 +22,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.LocalServerPort;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,7 +44,8 @@ import java.util.UUID;
  * Created by lars on 15-05-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class EntityManagerTest extends PluginTestBase {
 
     @Autowired
@@ -53,6 +56,9 @@ public class EntityManagerTest extends PluginTestBase {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
+
+    @LocalServerPort
+    private int port;
 
     @Test
     public void testLinks() {
@@ -79,7 +85,7 @@ public class EntityManagerTest extends PluginTestBase {
         ExpectorCallback receiptResponder = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/receipt", "response body", receiptResponder);
         try {
-            entityManager.setBaseEndpoint(new URI("http", null, "localhost", TestConfig.servicePort, "/test", null, null));
+            entityManager.setBaseEndpoint(new URI("http", null, "localhost", this.port, "/test", null, null));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -95,18 +101,18 @@ public class EntityManagerTest extends PluginTestBase {
 
 
     @Test
-    public void testFetchRegistration() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException, ParseException {
+    public void testFetchRegistration() throws IOException, DataFordelerException, URISyntaxException {
         DemoEntityManager entityManager = (DemoEntityManager) this.plugin.getEntityManager(DemoEntity.schema);
 
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
-        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", TestConfig.servicePort, "/test/get/"+checksum, null, null));
+        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", this.port, "/test/get/"+checksum, null, null));
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
                 .replace("%{checksum}", checksum)
                 .replace("%{entityid}", uuid)
-                .replace("%{sequencenumber}", "1");
+                .replace("%{sequenceNumber}", "1");
 
         ExpectorCallback lookupCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/get/" + checksum, full, lookupCallback);
@@ -122,18 +128,18 @@ public class EntityManagerTest extends PluginTestBase {
 
 
     @Test
-    public void testFetchRegistrationFail1() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException, ParseException {
+    public void testFetchRegistrationFail1() throws IOException, DataFordelerException, URISyntaxException {
         DemoEntityManager entityManager = (DemoEntityManager) this.plugin.getEntityManager(DemoEntity.schema);
 
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
-        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", TestConfig.servicePort, "/test/get/"+checksum, null, null));
+        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", Application.servicePort, "/test/get/"+checksum, null, null));
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
                 .replace("%{checksum}", checksum)
                 .replace("%{entityid}", uuid)
-                .replace("%{sequencenumber}", "1");
+                .replace("%{sequenceNumber}", "1");
 
         String otherEndpoint = "/test/get/" + UUID.randomUUID().toString();
         ExpectorCallback lookupCallback = new ExpectorCallback();
@@ -167,18 +173,18 @@ public class EntityManagerTest extends PluginTestBase {
     }
 
     @Test
-    public void testFetchRegistrationFail2() throws IOException, FailedReferenceException, WrongSubclassException, DataStreamException, URISyntaxException, ParseException {
+    public void testFetchRegistrationFail2() throws IOException, DataFordelerException, URISyntaxException {
         DemoEntityManager entityManager = (DemoEntityManager) this.plugin.getEntityManager(DemoEntity.schema);
 
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
-        RegistrationReference reference = new OtherRegistrationReference(new URI("http",null, "localhost", TestConfig.servicePort, "/test/get/"+checksum, null, null));
+        RegistrationReference reference = new OtherRegistrationReference(new URI("http",null, "localhost", Application.servicePort, "/test/get/"+checksum, null, null));
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
                 .replace("%{checksum}", checksum)
                 .replace("%{entityid}", uuid)
-                .replace("%{sequencenumber}", "1");
+                .replace("%{sequenceNumber}", "1");
 
         ExpectorCallback lookupCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/get/" + UUID.randomUUID().toString(), full, lookupCallback);

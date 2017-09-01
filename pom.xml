@@ -19,6 +19,7 @@
         <spring.version>4.3.6.RELEASE</spring.version>
         <spring.boot.version>1.5.2.RELEASE</spring.boot.version>
         <quartz.version>2.2.3</quartz.version>
+        <odata.version>4.3.0</odata.version>
     </properties>
 
     <repositories>
@@ -29,6 +30,27 @@
     </repositories>
 
     <dependencies>
+
+        <!--
+        <dependency>
+            <groupId>dk.magenta.datafordeler</groupId>
+            <artifactId>datafordeler-plugin-gladdrreg</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>dk.magenta.datafordeler</groupId>
+            <artifactId>datafordeler-plugin-cvr</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>dk.magenta.datafordeler</groupId>
+            <artifactId>datafordeler-plugin-cpr</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>runtime</scope>
+        </dependency>
+        -->
 
         <!-- Hibernate (DB) -->
         <dependency>
@@ -46,7 +68,6 @@
             <artifactId>hibernate-jpa-2.1-api</artifactId>
             <version>1.0.0.Final</version>
         </dependency>
-
         <dependency>
             <groupId>postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -65,8 +86,19 @@
             <artifactId>spring-test</artifactId>
             <version>${spring.version}</version>
         </dependency>
-
+        
         <!-- Spring Boot -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <version>${spring.boot.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web-services</artifactId>
@@ -151,20 +183,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Spring without default logging -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-            <version>${spring.boot.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-
         <!-- Apache commons (logging) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -183,6 +201,30 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- olingo (OData) -->
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-api</artifactId>
+            <version>${odata.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-core</artifactId>
+            <version>${odata.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-server-api</artifactId>
+            <version>${odata.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-server-core</artifactId>
+            <version>${odata.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Unit testing -->
@@ -226,6 +268,7 @@
             <version>RELEASE</version>
             <scope>test</scope>
             <exclusions>
+                <!-- Avoid logging framework collision -->
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>*</artifactId>
@@ -233,7 +276,42 @@
             </exclusions>
         </dependency>
 
+        <!-- Thymeleaf -->
+        <dependency>
+            <groupId>org.thymeleaf</groupId>
+            <artifactId>thymeleaf-spring4</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.thymeleaf</groupId>
+            <artifactId>thymeleaf</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+
     </dependencies>
+
+
+
+    <profiles>
+        <profile>
+            <id>no-repackage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring.boot.version}</version>
+                        <executions>
+                            <execution>
+                                <id>spring-repackaging</id> <!-- here there must be the same identifier as defined in <build><plugins> section -->
+                                <phase>none</phase> <!-- this disables plugin -->
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <finalName>datafordeler-core</finalName>
@@ -243,15 +321,37 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.6</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>dk.magenta.datafordeler.core.Application</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <executions>
+                    <execution>
+                        <id>spring-repackaging</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 

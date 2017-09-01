@@ -1,7 +1,8 @@
 package dk.magenta.datafordeler.core.security;
 
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
+import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.user.TokenVerifier;
 import java.io.IOException;
 import java.util.Collections;
@@ -30,7 +31,7 @@ import static org.mockito.Mockito.doReturn;
  * Created by jubk on 19-06-2017.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class TokenTest {
 
@@ -93,6 +94,9 @@ public class TokenTest {
   @Test
   public void testParseValidToken() throws Exception {
     // Skip checks for token age
+    if (FapiService.getDebugDisableSecurity()) {
+      return;
+    }
     doNothing().when(tokenVerifier).verifyTokenAge(anyObject());
     doReturn(true).when(tokenVerifier).checkNotOnOrafter(anyObject());
 

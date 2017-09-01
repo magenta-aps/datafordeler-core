@@ -1,8 +1,9 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
+import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.testutil.CallbackController;
@@ -17,9 +18,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.EOFException;
@@ -29,7 +32,6 @@ import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -38,8 +40,12 @@ import java.util.concurrent.TimeoutException;
  * Created by lars on 15-05-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class RegisterManagerTest extends PluginTestBase {
+
+    @LocalServerPort
+    private int port;
 
     @Autowired
     protected TestRestTemplate restTemplate;
@@ -51,19 +57,22 @@ public class RegisterManagerTest extends PluginTestBase {
     public ExpectedException exception = ExpectedException.none();
 
     private class OtherEntity extends Entity {
-
+        @Override
+        protected Registration createEmptyRegistration() {
+            return null;
+        }
     }
 
     @Test
     public void testLinks() throws URISyntaxException {
-        System.out.println("AppConfig.servicePort: "+ TestConfig.servicePort);
+        System.out.println("AppConfig.servicePort: "+ Application.servicePort);
         EntityManager entityManager = this.plugin.getEntityManager(DemoEntity.schema);
         RegisterManager registerManager = this.plugin.getRegisterManager();
         Assert.assertEquals(entityManager, registerManager.getEntityManager(DemoEntity.class));
         Assert.assertEquals(entityManager, registerManager.getEntityManager(DemoEntity.schema));
-        Assert.assertEquals(entityManager, registerManager.getEntityManager(new URI("http://localhost:" + TestConfig.servicePort)));
-        Assert.assertEquals(entityManager, registerManager.getEntityManager(new URI("http://localhost:" + TestConfig.servicePort + "/foo")));
-        Assert.assertNull(registerManager.getEntityManager(new URI("http://localhost:" + (TestConfig.servicePort + 1))));
+        Assert.assertEquals(entityManager, registerManager.getEntityManager(new URI("http://localhost:" + this.port)));
+        Assert.assertEquals(entityManager, registerManager.getEntityManager(new URI("http://localhost:" + this.port + "/foo")));
+        Assert.assertNull(registerManager.getEntityManager(new URI("http://localhost:" + (this.port + 1))));
 
         Assert.assertNotEquals(entityManager, registerManager.getEntityManager(OtherEntity.class));
     }
@@ -78,9 +87,9 @@ public class RegisterManagerTest extends PluginTestBase {
     @Test
     public void testGetHandledURISubstrings() {
         RegisterManager registerManager = this.plugin.getRegisterManager();
-        Assert.assertTrue(registerManager.getHandledURISubstrings().contains("http://localhost:" + TestConfig.servicePort));
-        Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:" + (TestConfig.servicePort + 1)));
-        Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:" + TestConfig.servicePort + "/foobar"));
+        Assert.assertTrue(registerManager.getHandledURISubstrings().contains("http://localhost:" + this.port));
+        Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:" + (this.port + 1)));
+        Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:" + this.port + "/foobar"));
     }
 
     @Test
@@ -174,12 +183,12 @@ public class RegisterManagerTest extends PluginTestBase {
     public void testPullEvents() throws DataFordelerException, IOException, InterruptedException, ExecutionException, TimeoutException {
 
         String checksum = this.hash(UUID.randomUUID().toString());
-        String reference = "http://localhost:" + TestConfig.servicePort + "/test/get/" + checksum;
+        String reference = "http://localhost:" + Application.servicePort + "/test/get/" + checksum;
         String uuid = UUID.randomUUID().toString();
         String full = this.getPayload("/referencelookuptest.json")
                 .replace("%{checksum}", checksum)
                 .replace("%{entityid}", uuid)
-                .replace("%{sequencenumber}", "1");
+                .replace("%{sequenceNumber}", "1");
 
         String event1 = this.envelopReference("Postnummer", reference);
         String body = this.jsonList(Collections.singletonList(event1), "events");

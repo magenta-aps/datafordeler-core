@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.exception;
 
-import dk.magenta.datafordeler.core.TestConfig;
-import dk.magenta.datafordeler.core.database.Registration;
+import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,7 +12,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
 public class MismatchingRegistrationBoundaryExceptionTest {
 
     @Test

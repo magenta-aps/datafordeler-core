@@ -4,6 +4,7 @@ import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
+import dk.magenta.datafordeler.core.plugin.RolesDefinition;
 import dk.magenta.datafordeler.plugindemo.configuration.DemoConfigurationManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,8 @@ public class DemoPlugin extends Plugin {
     @Autowired
     private DemoConfigurationManager demoConfigurationManager;
 
+    private DemoRolesDefinition rolesDefinition;
+
     public DemoPlugin() {
         this.rolesDefinition = new DemoRolesDefinition();
         AreaRestrictionType cardinalDirections = this.addAreaRestrictionType(
@@ -45,6 +48,7 @@ public class DemoPlugin extends Plugin {
 
     @Override
     public RegisterManager getRegisterManager() {
+        System.out.println("===== DemoPlugin " + DemoPlugin.class.getClassLoader());
         return this.demoRegisterManager;
     }
 
@@ -66,4 +70,8 @@ public class DemoPlugin extends Plugin {
         return true;
     }
 
+    @Override
+    public RolesDefinition getRolesDefinition() {
+        return this.rolesDefinition;
+    }
 }

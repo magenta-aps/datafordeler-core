@@ -21,6 +21,7 @@ import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,11 +32,11 @@ import javax.jws.WebParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
-import java.lang.reflect.Field;
 import java.util.*;
 
 /**
  * Created by lars on 19-04-17.
+ * Service container to be subclassed for each Entity class, serving REST and SOAP
  */
 @RequestMapping("/fapi_service_with_no_requestmapping")
 public abstract class FapiService<E extends Entity, Q extends Query> {
@@ -61,6 +62,13 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     @Resource(name="wsContext")
     WebServiceContext context;
+
+    // For debugging purposes - make sure this is set to false when running in production
+    private static boolean DEBUG_DISABLE_SECURITY = false;
+
+    public static boolean getDebugDisableSecurity() {
+        return DEBUG_DISABLE_SECURITY;
+    }
 
     private Logger log = LoggerFactory.getLogger("FapiService");
 
@@ -116,11 +124,13 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * Implementing this method as a noop will make the service publicly accessible.
      */
     protected abstract void checkAccess(DafoUserDetails user)
-        throws AccessDeniedException, AccessRequiredException;
-
+            throws AccessDeniedException, AccessRequiredException;
 
     protected void checkAndLogAccess(LoggerHelper loggerHelper)
-        throws AccessDeniedException, AccessRequiredException {
+            throws AccessDeniedException, AccessRequiredException {
+        if (DEBUG_DISABLE_SECURITY) {
+            return;
+        }
         try {
             this.checkAccess(loggerHelper.getUser());
         }
@@ -161,7 +171,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @return Found Entity, or null if none found.
      */
     @WebMethod(exclude = true)
-    @RequestMapping(path="/{id}",produces = {"application/json", "application/xml"})
+    @RequestMapping(path="/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public Envelope<E> getRest(@PathVariable("id") String id, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
         throws AccessDeniedException, AccessRequiredException, InvalidTokenException, InvalidClientInputException {
         Envelope<E> envelope = new Envelope<E>();
@@ -178,7 +188,11 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         try {
             E entity = this.searchById(id, query);
             envelope.setResult(entity);
-            this.log.debug("Item found, returning");
+            if (entity == null) {
+                this.log.debug("Item not found, returning");
+            } else {
+                this.log.debug("Item found, returning");
+            }
             envelope.close();
             loggerHelper.logResult(envelope);
             return envelope;
@@ -249,7 +263,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @return Found Entities
      */
     @WebMethod(exclude = true)
-    @RequestMapping(path="/search", produces = {"application/json", "application/xml"})
+    @RequestMapping(path="/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public Envelope<E> searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
         Envelope<E> envelope = new Envelope<E>();
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
@@ -341,10 +355,15 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         try {
             entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
             for (E entity : entities) {
-                entity.forceLoad(session);
+                try {
+                    objectMapper.writeValueAsString(entity);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                //entity.forceLoad(session);
             }
         } finally {
-            transaction.commit();
+            transaction.rollback();
             session.close();
         }
         return entities;
@@ -373,7 +392,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         this.applyQuery(session, query);
         E entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
-        entity.forceLoad(session);
+        if (entity != null) {
+            entity.forceLoad(session);
+        }
         session.close();
         return entity;
     }

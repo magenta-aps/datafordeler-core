@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.util;
 
-import dk.magenta.datafordeler.core.TestConfig;
+import dk.magenta.datafordeler.core.Application;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,7 +11,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * Created by lars on 05-05-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = Application.class)
 public class EqualityTest {
 
     private class EqualityImpl extends Equality {}
@@ -35,7 +35,6 @@ public class EqualityTest {
         Assert.assertTrue(Equality.equal("ø", "ø"));
         Assert.assertTrue(Equality.equal("abc", "abc"));
         Assert.assertTrue(Equality.equal("æøå", "æøå"));
-        Assert.assertTrue(Equality.equal(null, null));
     }
 
 }
