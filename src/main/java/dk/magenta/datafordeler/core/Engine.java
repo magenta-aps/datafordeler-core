@@ -2,7 +2,6 @@ package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
-import dk.magenta.datafordeler.core.io.Event;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
@@ -209,6 +208,8 @@ public class Engine {
         this.setupPullSchedule(registerManager, registerManager.getPullCronSchedule(), false);
     }
 
+
+    private Scheduler scheduler = null;
     /**
      * Sets the schedule for the registerManager, given a cron string
      * @param registerManager Registermanager to run pull jobs on
@@ -216,11 +217,12 @@ public class Engine {
      * @param dummyRun For test purposes. If false, no pull will actually be run.
      */
     public void setupPullSchedule(RegisterManager registerManager, String cronSchedule, boolean dummyRun) {
-        Scheduler scheduler;
         String registerManagerId = registerManager.getClass().getName() + registerManager.hashCode();
 
         try {
-            scheduler = StdSchedulerFactory.getDefaultScheduler();
+            if (scheduler == null) {
+                this.scheduler = StdSchedulerFactory.getDefaultScheduler();
+            }
             if (cronSchedule != null) {
                 this.log.info("Setting up cron with schedule " + cronSchedule + " to pull from "+registerManager.getClass().getCanonicalName());
                 this.pullTriggerKeys.put(registerManagerId, TriggerKey.triggerKey("pullTrigger", registerManagerId));
@@ -253,6 +255,20 @@ public class Engine {
 
         } catch (SchedulerException e) {
 
+        }
+    }
+
+    private void stopScheduler() {
+        if (this.scheduler != null) {
+            try {
+                for (String key : this.pullTriggerKeys.keySet()) {
+                    scheduler.unscheduleJob(this.pullTriggerKeys.get(key));
+                    this.scheduler.deleteJob(JobKey.jobKey(key));
+                }
+                this.scheduler.shutdown(true);
+            } catch (SchedulerException e) {
+                e.printStackTrace();
+            }
         }
     }
 

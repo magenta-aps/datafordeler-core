@@ -66,7 +66,18 @@ public class DemoEntityManager extends EntityManager {
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
+    }
 
+    public void setPort(int port) {
+        System.out.println("Setting port to "+port);
+        this.URISubstrings = new String[] {
+                "http://localhost:" + port
+        };
+        try {
+            this.baseEndpoint = new URI("http", null, "localhost", port, "/test", null, null);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

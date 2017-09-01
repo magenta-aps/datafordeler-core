@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.net.URI;
@@ -32,7 +33,8 @@ import java.util.concurrent.*;
  * Created by lars on 08-06-17.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, classes = Application.class)
+@ContextConfiguration(classes = Application.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class FtpCommunicatorTest {
 
     private static final String TEST_FILE_ENDING = ".test";

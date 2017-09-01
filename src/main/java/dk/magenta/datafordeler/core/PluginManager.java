@@ -54,6 +54,7 @@ public class PluginManager {
             for (String domain : plugin.getHandledURISubstrings()) {
                 this.pluginsByURISubstring.put(domain, plugin);
             }
+            plugin.setPluginManager(this);
         }
         for(PluginManagerCallbackHandler handler : postConstructCallbackHandlers) {
             handler.executePluginManagerCallback(this);
@@ -113,5 +114,12 @@ public class PluginManager {
      */
     public Plugin getPluginByName(String name) {
         return this.pluginsByName.get(name);
+    }
+
+    public void addPluginURISubstring(Plugin plugin, String substring) {
+        this.pluginsByURISubstring.put(substring, plugin);
+    }
+    public void removePluginURISubstring(Plugin plugin, String substring) {
+        this.pluginsByURISubstring.remove(substring, plugin);
     }
 }

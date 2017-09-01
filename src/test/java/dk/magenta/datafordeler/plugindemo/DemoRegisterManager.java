@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.plugindemo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Application;
+import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.io.Event;
@@ -24,6 +25,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 /**
@@ -45,8 +48,11 @@ public class DemoRegisterManager extends RegisterManager {
 
     protected Logger log = LogManager.getLogger("DemoRegisterManager");
 
+    private int port;
+
     public DemoRegisterManager() {
         this.commonFetcher = new HttpCommunicator();
+        this.port = Application.servicePort;
     }
 
     @Override
@@ -59,10 +65,32 @@ public class DemoRegisterManager extends RegisterManager {
         return this.plugin;
     }
 
+    public void setPort(int port) {
+        this.port = port;
+        PluginManager pluginManager = this.plugin.getPluginManager();
+
+        for (EntityManager entityManager : this.entityManagers) {
+            if (entityManager instanceof DemoEntityManager) {
+                DemoEntityManager demoEntityManager = (DemoEntityManager) entityManager;
+                Collection<String> oldSubstrings = new ArrayList<>(demoEntityManager.getHandledURISubstrings());
+                demoEntityManager.setPort(port);
+                Collection<String> newSubstrings = demoEntityManager.getHandledURISubstrings();
+                for (String oldSubstring : oldSubstrings) {
+                    this.entityManagerByURISubstring.remove(oldSubstring);
+                    pluginManager.removePluginURISubstring(this.plugin, oldSubstring);
+                }
+                for (String newSubstring : newSubstrings) {
+                    this.entityManagerByURISubstring.put(newSubstring, demoEntityManager);
+                    pluginManager.addPluginURISubstring(this.plugin, newSubstring);
+                }
+            }
+        }
+    }
+
     @Override
     public URI getBaseEndpoint() {
         try {
-            return new URI("http", null, "localhost", Application.servicePort, "/test", null, null);
+            return new URI("http", null, "localhost", this.port, "/test", null, null);
         } catch (URISyntaxException e) {
             e.printStackTrace();
             return null;

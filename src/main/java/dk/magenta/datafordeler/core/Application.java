@@ -15,7 +15,9 @@ import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletCon
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -47,9 +49,6 @@ public class Application {
 
     @Autowired
     SessionManager sessionManager;
-
-
-
 
     public static final int servicePort = 8445;
 
@@ -151,5 +150,10 @@ public class Application {
     }
 
     private static Logger log = LogManager.getLogger(Application.class);
+
+    @Bean
+    public TaskScheduler taskScheduler() {
+        return new ConcurrentTaskScheduler(); //single threaded by default
+    }
 
 }

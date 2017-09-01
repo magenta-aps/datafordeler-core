@@ -7,6 +7,7 @@ import dk.magenta.datafordeler.core.database.DatabaseEntry;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Index;
 import javax.persistence.Table;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -18,7 +19,7 @@ import java.util.Scanner;
  * For communication from an external admin interface.
  */
 @Entity
-@Table(name = "command")
+@Table(name = "command", indexes = {@Index(name="status", columnList = "status")})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Command extends DatabaseEntry {
 

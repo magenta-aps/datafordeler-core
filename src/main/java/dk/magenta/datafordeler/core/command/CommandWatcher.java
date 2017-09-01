@@ -139,10 +139,8 @@ public class CommandWatcher {
                     Future future = this.futures.get(command.getId());
                     future.get();
                     this.log.info("Command ended");
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | ExecutionException e) {
                     this.log.error(e);
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
                     e.printStackTrace();
                 }
             }

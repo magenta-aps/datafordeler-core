@@ -3,14 +3,12 @@ package dk.magenta.datafordeler.core;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.quartz.Job;
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionContext;
+import org.quartz.*;
 
 /**
  * Created by lars on 06-04-17.
  */
-public class PullTask implements Job {
+public class PullTask implements InterruptableJob {
 
     public static final String DATA_ENGINE = "engine";
     public static final String DATA_REGISTERMANAGER = "registerManager";
@@ -18,6 +16,8 @@ public class PullTask implements Job {
     public static final String DATA_SCHEDULE = "schedule";
 
     private Logger log = LogManager.getLogger("PullTask");
+
+    private Pull pull;
 
     public PullTask() {
     }
@@ -41,8 +41,18 @@ public class PullTask implements Job {
                 ex.printStackTrace();
             }
         };
-        Pull pull = new Pull(engine, registerManager);
-        pull.setUncaughtExceptionHandler(exceptionHandler);
-        pull.start();
+        this.pull = new Pull(engine, registerManager);
+        this.pull.setUncaughtExceptionHandler(exceptionHandler);
+        this.pull.start();
+    }
+
+    @Override
+    public void interrupt() throws UnableToInterruptJobException {
+        this.pull.interrupt();
+        try {
+            this.pull.join();
+        } catch (InterruptedException e) {
+            throw new UnableToInterruptJobException(e);
+        }
     }
 }

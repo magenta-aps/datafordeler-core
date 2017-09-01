@@ -1,5 +1,5 @@
 {
-  "sequenceNumber":%{sequencenumber},
+  "sequenceNumber":%{sequenceNumber},
   "checksum":"%{checksum}",
   "registerFrom":"2017-03-29T09:18:46.818+02:00",
   "registerTo":null,

@@ -125,4 +125,65 @@ public class IndexTest {
         Assert.assertEquals("int", mappedFields.get("page"));
     }
 
+
+    @Test
+    public void testJsonIndex() throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+        HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
+        ResponseEntity<String> resp = this.restTemplate.exchange("/", HttpMethod.GET, httpEntity, String.class);
+        JsonNode json = objectMapper.readTree(resp.getBody());
+        Assert.assertNotNull(json);
+        JsonNode servicesNode = json.get("services");
+        Assert.assertTrue(servicesNode instanceof ArrayNode);
+        ArrayNode servicesArray = (ArrayNode) servicesNode;
+        HashMap<String, ObjectNode> serviceMap = new HashMap<>();
+        for (JsonNode serviceNode : servicesArray) {
+            Assert.assertTrue(serviceNode instanceof ObjectNode);
+            ObjectNode serviceObject = (ObjectNode) serviceNode;
+            serviceMap.put(serviceObject.get("metadata_url").textValue(), serviceObject);
+            String type = serviceObject.get("type").textValue();
+            Assert.assertNotNull(type);
+            Assert.assertTrue(type.equals("soap") || type.equals("rest"));
+            Assert.assertNotNull(serviceObject.get("service_name").textValue());
+            if (type.equals("rest")) {
+                Assert.assertEquals("https://redmine.magenta-aps.dk/projects/dafodoc/wiki/API", serviceObject.get("declaration_url").textValue());
+                Assert.assertNotNull(serviceObject.get("fetch_url").textValue());
+                Assert.assertNotNull(serviceObject.get("search_url").textValue());
+            }
+            if (type.equals("soap")) {
+                Assert.assertNotNull(serviceObject.get("wsdl_url").textValue());
+            }
+            JsonNode queryFieldsNode = serviceObject.get("search_queryfields");
+            Assert.assertNotNull(queryFieldsNode);
+            Assert.assertTrue(queryFieldsNode instanceof ArrayNode);
+            ArrayNode queryFieldsArray = (ArrayNode) queryFieldsNode;
+            HashMap<String, String> queryFieldMap = new HashMap<>();
+            for (JsonNode queryField : queryFieldsArray) {
+                Assert.assertNotNull(queryField);
+                Assert.assertTrue(queryField instanceof ObjectNode);
+                ObjectNode queryFieldObject = (ObjectNode) queryField;
+                Assert.assertNotNull(queryFieldObject.get("name"));
+                Assert.assertNotNull(queryFieldObject.get("type"));
+                queryFieldMap.put(queryFieldObject.get("name").textValue(), queryFieldObject.get("type").textValue());
+            }
+            Assert.assertEquals("string", queryFieldMap.get("registrationFrom"));
+            Assert.assertEquals("string", queryFieldMap.get("registrationTo"));
+            Assert.assertEquals("string", queryFieldMap.get("effectFrom"));
+            Assert.assertEquals("string", queryFieldMap.get("effectTo"));
+            Assert.assertEquals("int", queryFieldMap.get("pageSize"));
+            Assert.assertEquals("int", queryFieldMap.get("page"));
+        }
+    }
+
+    @Test
+    public void testHtmlIndex() throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "text/html");
+        HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
+        ResponseEntity<String> resp = this.restTemplate.exchange("/", HttpMethod.GET, httpEntity, String.class);
+        System.out.println(resp.getBody());
+        Assert.assertNotNull(resp.getBody());
+    }
+
 }
