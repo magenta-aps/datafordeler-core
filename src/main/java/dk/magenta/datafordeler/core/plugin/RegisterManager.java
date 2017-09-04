@@ -113,7 +113,7 @@ public abstract class RegisterManager {
      * @param entityManager
      * @return
      */
-    public abstract URI getEventInterface(EntityManager entityManager);
+    public abstract URI getEventInterface(EntityManager entityManager) throws DataFordelerException;
 
     /**
      * General data pull. Will perform a pull for all EntityManagers registered under the RegisterManager.
