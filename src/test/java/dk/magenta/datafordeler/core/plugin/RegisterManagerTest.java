@@ -145,6 +145,7 @@ public class RegisterManagerTest extends PluginTestBase {
                 EntityReference entityReference;
                 try {
                     while ((entityReference = itemStream.next()) != null) {
+                        System.out.println("entityReference:" +entityReference);
                         allReferences.add(entityReference);
                     }
                 } catch (EOFException e) {

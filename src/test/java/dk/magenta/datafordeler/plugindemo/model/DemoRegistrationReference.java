@@ -25,7 +25,7 @@ public class DemoRegistrationReference implements RegistrationReference {
         return this.checksum;
     }
 
-    @JsonProperty("sekvensNummer")
+    @JsonProperty("sekvensnummer")
     public int sequenceNumber;
 
     public int getSequenceNumber() {

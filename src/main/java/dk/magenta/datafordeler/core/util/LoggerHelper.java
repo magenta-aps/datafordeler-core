@@ -48,11 +48,11 @@ public class LoggerHelper {
     );
   }
 
-  public <E extends Entity> void logResult(Envelope<E> result) {
+  public <E extends Entity> void logResult(Envelope result) {
     info("Query result - " + result.toLogString());
   }
 
-  public <E extends Entity> void logResult(Envelope<E> result, String queryString) {
+  public <E extends Entity> void logResult(Envelope result, String queryString) {
     info("Query result - " + result.toLogString(queryString));
   }
 

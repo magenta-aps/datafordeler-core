@@ -234,10 +234,12 @@ public class FapiTest {
             Assert.assertEquals(200, resp.getStatusCode().value());
             JsonNode jsonBody = objectMapper.readTree(resp.getBody());
 
+
             Assert.assertNotNull(jsonBody);
-            Assert.assertEquals("fapitest", jsonBody.findValue("domain").asText());
+
+            Assert.assertEquals("fapitest", jsonBody.findValue("domaene").asText());
             Assert.assertEquals(uuid.toString(), jsonBody.findValue("uuid").asText());
-            JsonNode registrations = jsonBody.get("results").get(0).get("registrations");
+            JsonNode registrations = jsonBody.get("results").get(0).get("registreringer");
 
             System.out.println("registrations: " + registrations);
 
@@ -247,14 +249,14 @@ public class FapiTest {
             JsonNode registration1 = registrations.get(0);
             Assert.assertNotNull(registration1);
 
-            Assert.assertEquals(1, registration1.get("sequenceNumber").asInt());
-            Assert.assertTrue(OffsetDateTime.parse("2017-02-21T16:02:50+01:00").isEqual(OffsetDateTime.parse(registration1.get("registrationFrom").asText())));
+            Assert.assertEquals(1, registration1.get("sekvensnummer").asInt());
+            Assert.assertTrue(OffsetDateTime.parse("2017-02-21T16:02:50+01:00").isEqual(OffsetDateTime.parse(registration1.get("registreringFra").asText())));
 
             JsonNode registration2 = registrations.get(1);
             Assert.assertNotNull(registration2);
-            Assert.assertEquals(2, registration2.get("sequenceNumber").asInt());
-            Assert.assertTrue(OffsetDateTime.parse("2017-05-01T16:06:22+02:00").isEqual(OffsetDateTime.parse(registration2.get("registrationFrom").asText())));
-            Assert.assertTrue(registration2.get("registrationTo").isNull());
+            Assert.assertEquals(2, registration2.get("sekvensnummer").asInt());
+            Assert.assertTrue(OffsetDateTime.parse("2017-05-01T16:06:22+02:00").isEqual(OffsetDateTime.parse(registration2.get("registreringFra").asText())));
+            Assert.assertTrue(registration2.get("registreringTil").isNull());
 
             // Restrict on registrationFrom
             this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2}}, "2017-06-01T00:00:00+00:00", null, null, null);
@@ -365,16 +367,16 @@ public class FapiTest {
             sb.append(urlBase.contains("?") ? "&" : "?");
             StringJoiner sj = new StringJoiner("&");
             if (registerFrom != null) {
-                sj.add(FapiService.PARAM_REGISTERFROM + "=" + registerFrom);
+                sj.add(FapiService.PARAM_REGISTRATION_FROM[0] + "=" + registerFrom);
             }
             if (registerTo != null) {
-                sj.add(FapiService.PARAM_REGISTERTO + "=" + registerTo);
+                sj.add(FapiService.PARAM_REGISTRATION_TO[0] + "=" + registerTo);
             }
             if (effectFrom != null) {
-                sj.add(FapiService.PARAM_EFFECTFROM + "=" + effectFrom);
+                sj.add(FapiService.PARAM_EFFECT_FROM[0] + "=" + effectFrom);
             }
             if (effectTo != null) {
-                sj.add(FapiService.PARAM_EFFECTTO + "=" + effectTo);
+                sj.add(FapiService.PARAM_EFFECT_TO[0] + "=" + effectTo);
             }
             sb.append(sj.toString());
         }
@@ -388,10 +390,11 @@ public class FapiTest {
         Assert.assertEquals(expected.length, list.size());
         int i = 0;
         for (JsonNode entity : list) {
-            JsonNode registrations = entity.get("registrations");
+            JsonNode registrations = entity.get("registreringer");
+            System.out.println(registrations);
             Assert.assertEquals(expected[i].length, registrations.size());
             for (int j = 0; j < expected[i].length; j++) {
-                Assert.assertEquals(expected[i][j], registrations.get(j).get("effects").size());
+                Assert.assertEquals(expected[i][j], registrations.get(j).get("virkninger").size());
             }
             i++;
         }

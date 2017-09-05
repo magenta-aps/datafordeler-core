@@ -1,6 +1,8 @@
 package dk.magenta.datafordeler.core.database;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.Equality;
@@ -12,6 +14,7 @@ import org.hibernate.annotations.ParamDef;
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -99,6 +102,8 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         );
     }
 
+    @JsonIgnore
+    @XmlTransient
     public R getRegistration() {
         return this.registration;
     }
@@ -113,20 +118,37 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         }
     }
 
-    @JsonProperty
-    @XmlElement
-    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
+    @JsonProperty(value = "virkningFra")
+    @XmlElement(name = "virkningFra")
+    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
     public OffsetDateTime getEffectFrom() {
         return this.effectFrom;
     }
 
+    @JsonProperty(value = "virkningFra")
+    @XmlElement(name = "virkningFra")
+    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
+    public void setEffectFrom(OffsetDateTime effectFrom) {
+        this.effectFrom = effectFrom;
+    }
 
-    @JsonProperty
-    @XmlElement
-    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
+
+
+    @JsonProperty(value = "virkningTil")
+    @XmlElement(name = "virkningTil")
+    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
     public OffsetDateTime getEffectTo() {
         return this.effectTo;
     }
+
+    @JsonProperty(value = "virkningTil")
+    @XmlElement(name = "virkningTil")
+    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
+    public void setEffectTo(OffsetDateTime effectTo) {
+        this.effectTo = effectTo;
+    }
+
+
 
     @JsonIgnore
     public List<D> getDataItems() {
@@ -139,8 +161,8 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
      * data that are effecting under this Effect is spread over several objects, and
      * needs merging.
      */
-    @JsonProperty(value = "dataItems")
-    @XmlElementWrapper(name = "dataItems")
+    @JsonProperty(value = "data")
+    @XmlElementWrapper(name = "data")
     public Map<String, Object> getData() {
         HashMap<String, Object> outMap = new HashMap<>();
         for (D d : this.dataItems) {
@@ -162,8 +184,8 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return outMap;
     }
 
-    @JsonProperty(value = "dataItems"/*, access = JsonProperty.Access.READ_ONLY*/)
-    @JacksonXmlProperty(localName = "dataItem")
+    @JsonProperty(value = "data"/*, access = JsonProperty.Access.READ_ONLY*/)
+    @JacksonXmlProperty(localName = "data")
     @JacksonXmlElementWrapper(useWrapping = false)
     public void setDataItems(Collection<D> items) {
         this.dataItems.addAll(items);
@@ -171,8 +193,10 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     public boolean equalData(V other) {
         return (
-                (this.effectFrom == null ? other.getEffectFrom() == null : this.effectFrom.equals(other.getEffectFrom())) &&
-                (this.effectTo == null ? other.getEffectTo() == null : this.effectTo.equals(other.getEffectTo()))
+                (this.effectFrom == null ? other.getEffectFrom() == null : this.effectFrom
+                    .equals(other.getEffectFrom())) &&
+                (this.effectTo == null ? other.getEffectTo() == null : this.effectTo
+                    .equals(other.getEffectTo()))
         );
     }
 

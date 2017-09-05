@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.*;
 import java.util.UUID;
 
@@ -15,7 +17,7 @@ import java.util.UUID;
  * data.
  */
 @javax.persistence.Entity
-@Table(name = "identifikation", indexes = {@Index(name="uuid", columnList = "uuid"), @Index(name="id", columnList = "uuid, domain")})
+@Table(name = "identification", indexes = {@Index(name="uuid", columnList = "uuid"), @Index(name="id", columnList = "uuid, domain")})
 public final class Identification extends DatabaseEntry implements Comparable<Identification> {
 
     @Column(unique = true, nullable = false, insertable = true, updatable = false)
@@ -40,13 +42,17 @@ public final class Identification extends DatabaseEntry implements Comparable<Id
         this.uuid = uuid;
     }
 
+    @JsonProperty(value = "domaene")
     public String getDomain() {
         return domain;
     }
 
-    public void setDomain(String domain) {
-        this.domain = domain;
+    @JsonProperty(value = "domaene")
+    public void setDomain(String domaene) {
+        this.domain = domaene;
     }
+
+
 
     public static String getTableName() {
         return Identification.class.getAnnotation(Table.class).name();

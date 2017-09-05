@@ -47,7 +47,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
     @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null")
     @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO)
-    @OrderBy("sequenceNumber")
+    @OrderBy("sequenceNumber") // Refers to sequenceNumber in Registration class
     protected List<R> registrations;
 
     @Transient
@@ -79,7 +79,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.identification.getUuid();
     }
 
-    public void setIdentification(Identification identification) {
+    public void setIdentifikation(Identification identification) {
         this.identification = identification;
     }
 
@@ -88,19 +88,21 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         this.identification.setUuid(uuid);
     }
 
+    @JsonProperty("domaene")
     public String getDomain() {
         return this.identification.getDomain();
     }
 
-    @JsonProperty
+
+    @JsonProperty("domaene")
     public void setDomain(String domain) {
         this.identification.setDomain(domain);
     }
 
     @OrderBy("registrationFrom")
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @XmlElement(name="registration")
-    @JacksonXmlProperty(localName = "registration")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY, value = "registreringer")
+    @XmlElement(name="registreringer")
+    @JacksonXmlProperty(localName = "registreringer")
     @JacksonXmlElementWrapper(useWrapping = false)
     public List<R> getRegistrations() {
         return this.registrations;

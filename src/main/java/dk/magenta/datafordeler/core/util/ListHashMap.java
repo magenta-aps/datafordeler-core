@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.util;
 
+import org.apache.commons.collections.map.MultiValueMap;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +54,15 @@ public class ListHashMap<K, V> extends HashMap<K, ArrayList<V>> {
 
     public V getFirst(K key) {
         return this.get(key, 0);
+    }
+
+    public V getFirstOf(K[] keys) {
+        for (K key : keys) {
+            if (this.containsKey(key)) {
+                return this.getFirst(key);
+            }
+        }
+        return null;
     }
 
     public Map<K, List<V>> readonly() {

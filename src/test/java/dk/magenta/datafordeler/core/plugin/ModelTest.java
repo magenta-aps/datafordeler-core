@@ -32,12 +32,12 @@ public class ModelTest {
 
         DemoEntity demoEntity1 = new DemoEntity();
         Identification identification1 = new Identification(UUID.randomUUID(), "test");
-        demoEntity1.setIdentification(identification1);
+        demoEntity1.setIdentifikation(identification1);
 
         // Test getIdentification
         Assert.assertEquals(identification1, demoEntity1.getIdentification());
 
-        // Test getDomain
+        // Test getDomaene
         Assert.assertEquals(identification1.getDomain(), demoEntity1.getDomain());
 
         // Test getUUID
@@ -50,7 +50,7 @@ public class ModelTest {
         // Test getIdentification
         Assert.assertEquals(identification2, demoEntity2.getIdentification());
 
-        // Test getDomain
+        // Test getDomaene
         Assert.assertEquals(identification2.getDomain(), demoEntity2.getDomain());
 
         // Test getUUID
@@ -61,7 +61,7 @@ public class ModelTest {
         String domain3 = "test";
         DemoEntity demoEntity3 = new DemoEntity(uuid3, domain3);
 
-        // Test getDomain
+        // Test getDomaene
         Assert.assertEquals(domain3, demoEntity3.getDomain());
 
         // Test getUUID
@@ -73,7 +73,7 @@ public class ModelTest {
         demoEntity4.setDomain(domain4);
         demoEntity4.setUUID(uuid4);
 
-        // Test getDomain
+        // Test getDomaene
         Assert.assertEquals(domain4, demoEntity4.getDomain());
 
         // Test getUUID
