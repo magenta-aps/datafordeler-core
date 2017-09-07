@@ -356,7 +356,6 @@ public class FapiTest {
 
             String xmlBody = resp.getBody();
             System.out.println(resp.getBody());
-            // I know, it's lazy as hell
             Assert.assertTrue(xmlBody.contains(uuid.toString()));
             Assert.assertTrue(xmlBody.contains("fapitest"));
         } finally {
@@ -401,7 +400,6 @@ public class FapiTest {
         int i = 0;
         for (JsonNode entity : list) {
             JsonNode registrations = entity.get("registreringer");
-            System.out.println(registrations);
             Assert.assertEquals(expected[i].length, registrations.size());
             for (int j = 0; j < expected[i].length; j++) {
                 Assert.assertEquals(expected[i][j], registrations.get(j).get("virkninger").size());
