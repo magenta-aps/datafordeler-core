@@ -133,7 +133,7 @@ public class EntityManagerTest extends PluginTestBase {
 
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
-        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", Application.servicePort, "/test/get/"+checksum, null, null));
+        RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", this.port, "/test/get/"+checksum, null, null));
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
@@ -178,7 +178,7 @@ public class EntityManagerTest extends PluginTestBase {
 
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
-        RegistrationReference reference = new OtherRegistrationReference(new URI("http",null, "localhost", Application.servicePort, "/test/get/"+checksum, null, null));
+        RegistrationReference reference = new OtherRegistrationReference(new URI("http",null, "localhost", this.port, "/test/get/"+checksum, null, null));
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
