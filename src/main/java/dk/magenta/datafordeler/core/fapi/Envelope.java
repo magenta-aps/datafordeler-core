@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Created by lars on 01-07-17.
  */
-public class Envelope<E extends Entity> {
+public class Envelope {
 
     public Envelope() {
         try {
@@ -87,13 +87,13 @@ public class Envelope<E extends Entity> {
 
     @JsonProperty
     @XmlElement
-    private List<E> results;
+    private List<?> results;
 
-    public void setResults(Collection<E> results) {
+    public void setResults(Collection<?> results) {
         this.results = new LinkedList<>(results);
     }
 
-    public void setResult(E result) {
+    public void setResult(Object result) {
         this.results = Collections.singletonList(result);
     }
 

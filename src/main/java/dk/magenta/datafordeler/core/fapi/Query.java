@@ -258,6 +258,8 @@ public abstract class Query<E extends Entity> {
             DateTimeFormatter.BASIC_ISO_DATE
     };
 
+    private static int formatterCount = zonedDateTimeFormatters.length + zonedDateFormatters.length + unzonedDateTimeFormatters.length + unzonedDateFormatters.length;
+
     /**
      * Convenience method for parsing a String as an OffsetDateTime
      * A series of parsers will attempt to parse the input string, returning on the first success.
@@ -304,7 +306,7 @@ public abstract class Query<E extends Entity> {
                 } catch (DateTimeParseException e) {
                 }
             }
-            throw new DateTimeParseException("Unable to parse date string, tried "+ zonedDateTimeFormatters.length+" parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
+            throw new DateTimeParseException("Unable to parse date string \""+dateTime+"\", tried "+ formatterCount + " parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
         }
         return null;
     }

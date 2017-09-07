@@ -8,10 +8,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.Equality;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.Session;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.*;
+
 import javax.persistence.*;
+import javax.persistence.CascadeType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -31,8 +31,10 @@ import java.util.*;
  */
 @MappedSuperclass
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-@FilterDef(name=Registration.FILTER_REGISTRATION_FROM, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_FROM, type="java.time.OffsetDateTime"))
-@FilterDef(name=Registration.FILTER_REGISTRATION_TO, parameters=@ParamDef(name=Registration.FILTERPARAM_REGISTRATION_TO, type="java.time.OffsetDateTime"))
+@FilterDefs({
+        @FilterDef(name = Registration.FILTER_REGISTRATION_FROM, parameters = @ParamDef(name = Registration.FILTERPARAM_REGISTRATION_FROM, type = "java.time.OffsetDateTime")),
+        @FilterDef(name = Registration.FILTER_REGISTRATION_TO, parameters = @ParamDef(name = Registration.FILTERPARAM_REGISTRATION_TO, type = "java.time.OffsetDateTime"))
+})
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 @JsonPropertyOrder({"sequenceNumber", "registrationFrom", "registrationTo", "checksum", "effects"})
 public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry implements Comparable<Registration> {
@@ -46,37 +48,37 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.effects = new ArrayList<V>();
     }
 
-    public Registration(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, int sequenceNumber) {
+    public Registration(OffsetDateTime registreringFra, OffsetDateTime registrationTo, int sequenceNumber) {
         this();
-        this.registrationFrom = registrationFrom;
+        this.registrationFrom = registreringFra;
         this.registrationTo = registrationTo;
         this.sequenceNumber = sequenceNumber;
     }
 
-    public Registration(LocalDate registrationFrom, LocalDate registrationTo, int sequenceNumber) {
+    public Registration(LocalDate registreringFra, LocalDate registrationTo, int sequenceNumber) {
         this(
-                registrationFrom != null ? OffsetDateTime.of(registrationFrom, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
+                registreringFra != null ? OffsetDateTime.of(registreringFra, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
                 registrationTo != null ? OffsetDateTime.of(registrationTo, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null,
                 sequenceNumber
         );
     }
 
-    public Registration(TemporalAccessor registrationFrom, TemporalAccessor registrationTo, int sequenceNumber) {
+    public Registration(TemporalAccessor registreringFra, TemporalAccessor registrationTo, int sequenceNumber) {
         this(
-                registrationFrom != null ? OffsetDateTime.from(registrationFrom) : null,
+                registreringFra != null ? OffsetDateTime.from(registreringFra) : null,
                 registrationTo != null ? OffsetDateTime.from(registrationTo) : null,
                 sequenceNumber
         );
     }
 
     /**
-     * @param registrationFrom A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
+     * @param registreringFra A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * @param registrationTo A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * If you want other date formats, consider using java.time.OffsetDateTime.parse() to generate an OffsetDateTime object and pass it
      */
-    public Registration(String registrationFrom, String registrationTo, int sequenceNumber) {
+    public Registration(String registreringFra, String registrationTo, int sequenceNumber) {
         this(
-                registrationFrom != null ? OffsetDateTime.parse(registrationFrom) : null,
+                registreringFra != null ? OffsetDateTime.parse(registreringFra) : null,
                 registrationTo != null ? OffsetDateTime.parse(registrationTo) : null,
                 sequenceNumber
         );
@@ -105,8 +107,10 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @Filter(name = Effect.FILTER_EFFECT_FROM, condition="(effectTo >= :"+Effect.FILTERPARAM_EFFECT_FROM+" OR effectTo is null)")
-    @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+")")
+    @Filters({
+            @Filter(name = Effect.FILTER_EFFECT_FROM, condition="(effectTo >= :"+Effect.FILTERPARAM_EFFECT_FROM+" OR effectTo is null)"),
+            @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+" or effectFrom is null)")
+    })
     protected List<V> effects;
 
     @JsonIgnore
@@ -119,9 +123,9 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
      * Get the Effects of the Registration, sorted by the comparison method of the
      * Effect class (usually by startDate)
      */
-    @JsonProperty(value = "effects", access = JsonProperty.Access.READ_ONLY)
-    @XmlElement(name = "effect")
-    @JacksonXmlProperty(localName = "effect")
+    @JsonProperty(value = "virkninger", access = JsonProperty.Access.READ_ONLY)
+    @XmlElement(name = "virkning")
+    @JacksonXmlProperty(localName = "virkning")
     @JacksonXmlElementWrapper(useWrapping = false)
     public ArrayList<V> getSortedEffects() {
         ArrayList<V> sortedEffects = new ArrayList<V>(this.effects);
@@ -174,7 +178,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.effects.remove(effect);
     }
 
-    @JsonProperty(value = "effects", access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty(value = "virkninger", access = JsonProperty.Access.WRITE_ONLY)
     public void setEffects(Collection<V> effects) {
         this.effects = new ArrayList<V>(effects);
     }
@@ -199,14 +203,15 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @Column(nullable = true, insertable = true, updatable = false)
     protected OffsetDateTime registrationFrom;
 
-    @JsonProperty(value = "registrationFrom")
+
+    @JsonProperty(value = "registreringFra")
     @XmlElement
     @XmlJavaTypeAdapter(type = OffsetDateTime.class, value = OffsetDateTimeAdapter.class)
     public OffsetDateTime getRegistrationFrom() {
         return this.registrationFrom;
     }
 
-    @JsonProperty(value = "registrationFrom")
+    @JsonProperty(value = "registreringFra")
     public void setRegistrationFrom(OffsetDateTime registrationFrom) {
         this.registrationFrom = registrationFrom;
     }
@@ -217,14 +222,14 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @Column(nullable = true, insertable = true, updatable = false)
     protected OffsetDateTime registrationTo;
 
-    @JsonProperty(value = "registrationTo")
+    @JsonProperty(value = "registreringTil")
     @XmlElement
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
     public OffsetDateTime getRegistrationTo() {
         return this.registrationTo;
     }
 
-    @JsonProperty(value = "registrationTo")
+    @JsonProperty(value = "registreringTil")
     public void setRegistrationTo(OffsetDateTime registrationTo) {
         this.registrationTo = registrationTo;
     }
@@ -234,13 +239,13 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @Column(nullable = false, insertable = true, updatable = false)
     protected int sequenceNumber;
 
-    @JsonProperty(value = "sequenceNumber")
+    @JsonProperty(value = "sekvensnummer")
     @XmlElement
     public int getSequenceNumber() {
         return this.sequenceNumber;
     }
 
-    @JsonProperty(value = "sequenceNumber")
+    @JsonProperty(value = "sekvensnummer")
     public void setSequenceNumber(int sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
     }

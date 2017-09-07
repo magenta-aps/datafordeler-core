@@ -209,7 +209,7 @@ public class QueryManager {
         String extraWhere = lookupDefinition.getHqlWhereString(root);
 
         String entityIdKey = "E" + UUID.randomUUID().toString().replace("-", "");
-        //System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.registration r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
+        //System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.effects r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
         org.hibernate.query.Query<D> query = session.createQuery("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.registration r join r.entity "+ENTITY+" "+extraJoin+" where "+ENTITY+".id = :"+entityIdKey+" "+ extraWhere, dClass);
         //System.out.println(query.getQueryString());
 
@@ -277,7 +277,7 @@ public class QueryManager {
      * @param registration Registration to be saved
      */
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems) throws DataFordelerException {
-        this.log.trace("Saving registration of type "+registration.getClass().getCanonicalName()+" with checksum "+registration.getRegisterChecksum()+" and sequence number "+registration.getSequenceNumber());
+        this.log.trace("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
         }
@@ -350,14 +350,13 @@ public class QueryManager {
             }
         }
 
-
         if (dedupItems) {
             dedupItems(session, entity, registration);
         }
 
         Identification existing = this.getIdentification(session, entity.getUUID());
         if (existing != null && existing != entity.getIdentification()) {
-            entity.setIdentification(existing);
+            entity.setIdentifikation(existing);
         } else {
             session.saveOrUpdate(entity.getIdentification());
         }

@@ -143,9 +143,18 @@ public class FapiTest {
         Assert.assertEquals(400, resp.getStatusCode().value());
     }
 
+    @Test
+    @Order(order=6)
+    public void restFailOnInvalidDateTest() throws IOException {
+        this.setupUser();
+        HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
+        ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/search?postnr=8000&registrationFrom=2000-02-31", HttpMethod.GET, httpEntity, String.class);
+        Assert.assertEquals(400, resp.getStatusCode().value());
+    }
+
 
     // Disabled for now, as we might not need SOAP: @Test
-    @Order(order=6)
+    @Order(order=7)
     public void soapLookupXMLByUUIDTest() throws IOException, SOAPException, DataFordelerException {
         this.setupSoap();
         UUID uuid = this.addTestObject();
@@ -221,7 +230,7 @@ public class FapiTest {
     }
 
     @Test
-    @Order(order=7)
+    @Order(order=8)
     public void restLookupJSONByUUIDTest() throws IOException, DataFordelerException {
         this.setupUser();
         UUID uuid = this.addTestObject();
@@ -234,10 +243,12 @@ public class FapiTest {
             Assert.assertEquals(200, resp.getStatusCode().value());
             JsonNode jsonBody = objectMapper.readTree(resp.getBody());
 
+
             Assert.assertNotNull(jsonBody);
-            Assert.assertEquals("fapitest", jsonBody.findValue("domain").asText());
+
+            Assert.assertEquals("fapitest", jsonBody.findValue("domaene").asText());
             Assert.assertEquals(uuid.toString(), jsonBody.findValue("uuid").asText());
-            JsonNode registrations = jsonBody.get("results").get(0).get("registrations");
+            JsonNode registrations = jsonBody.get("results").get(0).get("registreringer");
 
             System.out.println("registrations: " + registrations);
 
@@ -247,14 +258,14 @@ public class FapiTest {
             JsonNode registration1 = registrations.get(0);
             Assert.assertNotNull(registration1);
 
-            Assert.assertEquals(1, registration1.get("sequenceNumber").asInt());
-            Assert.assertTrue(OffsetDateTime.parse("2017-02-21T16:02:50+01:00").isEqual(OffsetDateTime.parse(registration1.get("registrationFrom").asText())));
+            Assert.assertEquals(1, registration1.get("sekvensnummer").asInt());
+            Assert.assertTrue(OffsetDateTime.parse("2017-02-21T16:02:50+01:00").isEqual(OffsetDateTime.parse(registration1.get("registreringFra").asText())));
 
             JsonNode registration2 = registrations.get(1);
             Assert.assertNotNull(registration2);
-            Assert.assertEquals(2, registration2.get("sequenceNumber").asInt());
-            Assert.assertTrue(OffsetDateTime.parse("2017-05-01T16:06:22+02:00").isEqual(OffsetDateTime.parse(registration2.get("registrationFrom").asText())));
-            Assert.assertTrue(registration2.get("registrationTo").isNull());
+            Assert.assertEquals(2, registration2.get("sekvensnummer").asInt());
+            Assert.assertTrue(OffsetDateTime.parse("2017-05-01T16:06:22+02:00").isEqual(OffsetDateTime.parse(registration2.get("registreringFra").asText())));
+            Assert.assertTrue(registration2.get("registreringTil").isNull());
 
             // Restrict on registrationFrom
             this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2}}, "2017-06-01T00:00:00+00:00", null, null, null);
@@ -273,7 +284,7 @@ public class FapiTest {
     }
 
     @Test
-    @Order(order=8)
+    @Order(order=9)
     public void soapLookupXMLByParametersTest() throws IOException, SOAPException, DataFordelerException {
         this.setupSoap();
         UUID uuid = this.addTestObject();
@@ -314,7 +325,7 @@ public class FapiTest {
 
 
     @Test
-    @Order(order=9)
+    @Order(order=10)
     public void restLookupJSONByParametersTest() throws IOException, DataFordelerException {
         this.setupUser();
         UUID uuid1 = this.addTestObject();
@@ -331,7 +342,7 @@ public class FapiTest {
     }
 
     @Test
-    @Order(order=10)
+    @Order(order=11)
     public void restLookupXMLByUUIDTest() throws IOException, DataFordelerException {
         this.setupUser();
         UUID uuid = this.addTestObject();
@@ -345,7 +356,6 @@ public class FapiTest {
 
             String xmlBody = resp.getBody();
             System.out.println(resp.getBody());
-            // I know, it's lazy as hell
             Assert.assertTrue(xmlBody.contains(uuid.toString()));
             Assert.assertTrue(xmlBody.contains("fapitest"));
         } finally {
@@ -362,21 +372,22 @@ public class FapiTest {
         StringBuilder sb = new StringBuilder();
         sb.append(urlBase);
         if (registerFrom != null || registerTo != null || effectFrom != null || effectTo != null) {
-            sb.append(urlBase.contains("?") ? "&" : "?");
+            ParameterMap parameters = new ParameterMap();
             StringJoiner sj = new StringJoiner("&");
             if (registerFrom != null) {
-                sj.add(FapiService.PARAM_REGISTERFROM + "=" + registerFrom);
+                parameters.add(FapiService.PARAM_REGISTRATION_FROM[0], registerFrom);
             }
             if (registerTo != null) {
-                sj.add(FapiService.PARAM_REGISTERTO + "=" + registerTo);
+                parameters.add(FapiService.PARAM_REGISTRATION_TO[0], registerTo);
             }
             if (effectFrom != null) {
-                sj.add(FapiService.PARAM_EFFECTFROM + "=" + effectFrom);
+                parameters.add(FapiService.PARAM_EFFECT_FROM[0], effectFrom);
             }
             if (effectTo != null) {
-                sj.add(FapiService.PARAM_EFFECTTO + "=" + effectTo);
+                parameters.add(FapiService.PARAM_EFFECT_TO[0], effectTo);
             }
-            sb.append(sj.toString());
+            sb.append(urlBase.contains("?") ? "&" : "?");
+            sb.append(parameters.asUrlParams());
         }
         System.out.println("\n------------------------\n"+sb.toString());
         ResponseEntity<String> resp = this.restTemplate.exchange(sb.toString(), HttpMethod.GET, httpEntity, String.class);
@@ -388,10 +399,10 @@ public class FapiTest {
         Assert.assertEquals(expected.length, list.size());
         int i = 0;
         for (JsonNode entity : list) {
-            JsonNode registrations = entity.get("registrations");
+            JsonNode registrations = entity.get("registreringer");
             Assert.assertEquals(expected[i].length, registrations.size());
             for (int j = 0; j < expected[i].length; j++) {
-                Assert.assertEquals(expected[i][j], registrations.get(j).get("effects").size());
+                Assert.assertEquals(expected[i][j], registrations.get(j).get("virkninger").size());
             }
             i++;
         }

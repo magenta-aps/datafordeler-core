@@ -3,11 +3,7 @@ package dk.magenta.datafordeler.core.fapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
-import dk.magenta.datafordeler.core.exception.AccessDeniedException;
-import dk.magenta.datafordeler.core.exception.AccessRequiredException;
-import dk.magenta.datafordeler.core.exception.DataFordelerException;
-import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
-import dk.magenta.datafordeler.core.exception.InvalidTokenException;
+import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
@@ -32,6 +28,7 @@ import javax.jws.WebParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
@@ -41,12 +38,12 @@ import java.util.*;
 @RequestMapping("/fapi_service_with_no_requestmapping")
 public abstract class FapiService<E extends Entity, Q extends Query> {
 
-    public static final String PARAM_PAGE = "page";
-    public static final String PARAM_PAGESIZE = "pageSize";
-    public static final String PARAM_REGISTERFROM = "registerFrom";
-    public static final String PARAM_REGISTERTO = "registerTo";
-    public static final String PARAM_EFFECTFROM = "effectFrom";
-    public static final String PARAM_EFFECTTO = "effectTo";
+    public static final String[] PARAM_PAGE = new String[] {"side", "page"};
+    public static final String[] PARAM_PAGESIZE = new String[] {"sidestoerrelse", "pageSize"};
+    public static final String[] PARAM_REGISTRATION_FROM = new String[] {"registreringFra", "registrationFrom"};
+    public static final String[] PARAM_REGISTRATION_TO = new String[] {"registreringTil", "registrationTo"};
+    public static final String[] PARAM_EFFECT_FROM = new String[] {"virkningFra", "effectFrom"};
+    public static final String[] PARAM_EFFECT_TO = new String[] {"virkningTil", "effectTo"};
 
     @Autowired
     protected ObjectMapper objectMapper;
@@ -69,6 +66,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public static boolean getDebugDisableSecurity() {
         return DEBUG_DISABLE_SECURITY;
     }
+
+    private OutputWrapper<E> outputWrapper;
 
     private Logger log = LoggerFactory.getLogger("FapiService");
 
@@ -115,6 +114,13 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         return this.queryManager;
     }
 
+    protected OutputWrapper<E> getOutputWrapper() {
+        return outputWrapper;
+    }
+
+    protected void setOutputWrapper(OutputWrapper<E> outputWrapper) {
+        this.outputWrapper = outputWrapper;
+    }
 
     /**
      * Checks that the user has access to the service
@@ -163,7 +169,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     }
 
 
-
     /**
      * Handle a lookup-by-UUID request in REST. This method is called by the Servlet
      * @param id Identifier coming from the client
@@ -172,9 +177,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      */
     @WebMethod(exclude = true)
     @RequestMapping(path="/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public Envelope<E> getRest(@PathVariable("id") String id, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
+    public Envelope getRest(@PathVariable("id") String id, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
         throws AccessDeniedException, AccessRequiredException, InvalidTokenException, InvalidClientInputException {
-        Envelope<E> envelope = new Envelope<E>();
+        Envelope envelope = new Envelope();
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info(
@@ -187,7 +192,11 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         envelope.addRequestData(request);
         try {
             E entity = this.searchById(id, query);
-            envelope.setResult(entity);
+            if(outputWrapper != null) {
+                envelope.setResult(outputWrapper.wrapResult(entity));
+            } else {
+                envelope.setResult(entity);
+            }
             if (entity == null) {
                 this.log.debug("Item not found, returning");
             } else {
@@ -206,17 +215,17 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     /**
      * Handle a lookup-by-UUID request in SOAP. This method is called by the Servlet
      * @param id Identifier coming from the client
-     * @param registerFrom Low boundary for registration inclusion
-     * @param registerTo High boundary for registration inclusion
+     * @param registeringFra Low boundary for registration inclusion
+     * @param registeringTil High boundary for registration inclusion
      * @return Found Entity, or null if none found.
      */
     // TODO: How to use DafoUserDetails with SOAP requests?
     @WebMethod(operationName = "get")
-    public Envelope<E> getSoap(@WebParam(name="id") @XmlElement(required=true) String id,
-                     @WebParam(name="registerFrom") @XmlElement(required = false) String registerFrom,
-                     @WebParam(name="registerTo") @XmlElement(required = false) String registerTo)
+    public Envelope getSoap(@WebParam(name="id") @XmlElement(required=true) String id,
+                     @WebParam(name="registeringFra") @XmlElement(required = false) String registeringFra,
+                     @WebParam(name="registeringTil") @XmlElement(required = false) String registeringTil)
         throws InvalidClientInputException, AccessRequiredException, InvalidTokenException, AccessDeniedException {
-        Envelope<E> envelope = new Envelope<E>();
+        Envelope envelope = new Envelope();
         MessageContext messageContext = context.getMessageContext();
         HttpServletRequest request = (HttpServletRequest)messageContext.get(MessageContext.SERVLET_REQUEST);
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
@@ -225,13 +234,17 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             "Incoming SOAP request for " + this.getServiceName() + " with id " + id
         );
         this.checkAndLogAccess(loggerHelper);
-        Q query = this.getQuery(registerFrom, registerTo);
+        Q query = this.getQuery(registeringFra, registeringTil);
         envelope.addQueryData(query);
         envelope.addUserData(user);
         envelope.addRequestData(request);
         try {
             E entity = this.searchById(id, query);
-            envelope.setResult(entity);
+            if(outputWrapper != null) {
+                envelope.setResult(outputWrapper.wrapResult(entity));
+            } else {
+                envelope.setResult(entity);
+            }
             this.log.debug("Item found, returning");
             this.log.info("registrations: "+entity.getRegistrations());
             envelope.close();
@@ -264,8 +277,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      */
     @WebMethod(exclude = true)
     @RequestMapping(path="/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public Envelope<E> searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
-        Envelope<E> envelope = new Envelope<E>();
+    public Envelope searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
+        Envelope envelope = new Envelope();
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info(
@@ -277,7 +290,11 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         envelope.addUserData(user);
         envelope.addRequestData(request);
         Set<E> results = this.searchByQuery(query);
-        envelope.setResults(results);
+        if(outputWrapper != null) {
+            envelope.setResults(outputWrapper.wrapResults(results));
+        } else {
+            envelope.setResults(results);
+        }
         envelope.close();
         loggerHelper.logResult(envelope, requestParams.toString());
         return envelope;
@@ -291,8 +308,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      */
     // TODO: How to use DafoUserDetails with SOAP requests?
     @WebMethod(operationName = "search")
-    public Envelope<E> searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
-        Envelope<E> envelope = new Envelope<E>();
+    public Envelope searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
+        Envelope envelope = new Envelope();
         MessageContext messageContext = context.getMessageContext();
         HttpServletRequest request = (HttpServletRequest)messageContext.get(MessageContext.SERVLET_REQUEST);
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
@@ -305,7 +322,11 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         envelope.addUserData(user);
         envelope.addRequestData(request);
         Set<E> results = this.searchByQuery(query);
-        envelope.setResults(results);
+        if(outputWrapper != null) {
+            envelope.setResult(outputWrapper.wrapResults(results));
+        } else {
+            envelope.setResults(results);
+        }
         envelope.close();
         loggerHelper.logResult(envelope, query.toString());
         return envelope;
@@ -324,17 +345,23 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param parameters URL parameters received in a request
      * @return Query subclass instance
      */
-    protected Q getQuery(MultiValueMap<String, String> parameters, boolean limitsOnly) {
+    protected Q getQuery(MultiValueMap<String, String> parameters, boolean limitsOnly) throws InvalidClientInputException {
         Q query = this.getEmptyQuery();
+        ParameterMap parameterMap = new ParameterMap(parameters);
         if (!limitsOnly) {
-            query.setFromParameters(new ParameterMap(parameters));
+            query.setFromParameters(parameterMap);
         }
-        query.setPage(parameters.getFirst(PARAM_PAGE));
-        query.setPageSize(parameters.getFirst(PARAM_PAGESIZE));
-        query.setRegistrationFrom(parameters.getFirst(PARAM_REGISTERFROM));
-        query.setRegistrationTo(parameters.getFirst(PARAM_REGISTERTO));
-        query.setEffectFrom(parameters.getFirst(PARAM_EFFECTFROM));
-        query.setEffectTo(parameters.getFirst(PARAM_EFFECTTO));
+
+        query.setPage(parameterMap.getFirstOf(PARAM_PAGE));
+        query.setPageSize(parameterMap.getFirstOf(PARAM_PAGESIZE));
+        try {
+            query.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM));
+            query.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO));
+            query.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM));
+            query.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO));
+        } catch (DateTimeParseException e) {
+            throw new InvalidClientInputException(e.getMessage());
+        }
         return query;
     }
 
@@ -409,18 +436,22 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected void applyQuery(Session session, Q query) {
         if (query != null) {
             if (query.getRegistrationFrom() != null) {
+                System.out.println("Applying filter "+Registration.FILTER_REGISTRATION_FROM+" with "+query.getRegistrationFrom());
                 Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
                 filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, query.getRegistrationFrom());
             }
             if (query.getRegistrationTo() != null) {
+                System.out.println("Applying filter "+Registration.FILTER_REGISTRATION_TO+" with "+query.getRegistrationTo());
                 Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
                 filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, query.getRegistrationTo());
             }
             if (query.getEffectFrom() != null) {
+                System.out.println("Applying filter "+Effect.FILTER_EFFECT_FROM+" with "+query.getEffectFrom());
                 Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
                 filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, query.getEffectFrom());
             }
             if (query.getEffectTo() != null) {
+                System.out.println("Applying filter "+Effect.FILTER_EFFECT_TO+" with "+query.getEffectTo());
                 Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
                 filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, query.getEffectTo());
             }

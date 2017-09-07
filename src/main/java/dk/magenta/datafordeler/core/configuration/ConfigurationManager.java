@@ -24,15 +24,14 @@ public abstract class ConfigurationManager<C extends Configuration> {
     public void init() {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
+        Class<C> configurationClass = this.getConfigurationClass();
         try {
-            Class<C> configurationClass = this.getConfigurationClass();
-            this.configuration = session.createQuery("select c from "+configurationClass.getSimpleName()+" c", configurationClass).getSingleResult();
+            this.configuration = session.createQuery("select c from " + configurationClass.getSimpleName() + " c", configurationClass).getSingleResult();
             this.getLog().info("Loaded configuration object");
         } catch (NoResultException e) {
             this.getLog().info("No configuration object exists, create one.");
-            C defaultConfiguration = this.createConfiguration();
-            session.save(defaultConfiguration);
-            this.configuration = defaultConfiguration;
+            this.configuration = this.createConfiguration();
+            session.persist(this.configuration);
         }
         transaction.commit();
         session.close();
@@ -45,7 +44,22 @@ public abstract class ConfigurationManager<C extends Configuration> {
     protected abstract SessionManager getSessionManager();
 
     public C getConfiguration() {
-        return this.configuration;
+        // This should always fetch fresh data from the database as that data might have been
+        // changed.
+        Session session = this.getSessionManager().getSessionFactory().openSession();
+        C configuration;
+        try {
+            Class<C> configurationClass = this.getConfigurationClass();
+            configuration = session.createQuery(
+                "select c from " +configurationClass.getSimpleName() + " c",
+                configurationClass
+            ).getSingleResult();
+            session.refresh(configuration);
+        } catch (NoResultException e) {
+            configuration = null;
+        }
+        session.close();
+        return configuration;
     }
 
     protected abstract Logger getLog();
