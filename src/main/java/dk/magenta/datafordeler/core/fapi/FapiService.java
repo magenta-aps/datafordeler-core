@@ -3,11 +3,7 @@ package dk.magenta.datafordeler.core.fapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
-import dk.magenta.datafordeler.core.exception.AccessDeniedException;
-import dk.magenta.datafordeler.core.exception.AccessRequiredException;
-import dk.magenta.datafordeler.core.exception.DataFordelerException;
-import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
-import dk.magenta.datafordeler.core.exception.InvalidTokenException;
+import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
@@ -32,6 +28,7 @@ import javax.jws.WebParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
@@ -348,7 +345,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @param parameters URL parameters received in a request
      * @return Query subclass instance
      */
-    protected Q getQuery(MultiValueMap<String, String> parameters, boolean limitsOnly) {
+    protected Q getQuery(MultiValueMap<String, String> parameters, boolean limitsOnly) throws InvalidClientInputException {
         Q query = this.getEmptyQuery();
         ParameterMap parameterMap = new ParameterMap(parameters);
         if (!limitsOnly) {
@@ -357,10 +354,14 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
         query.setPage(parameterMap.getFirstOf(PARAM_PAGE));
         query.setPageSize(parameterMap.getFirstOf(PARAM_PAGESIZE));
-        query.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM));
-        query.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO));
-        query.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM));
-        query.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO));
+        try {
+            query.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM));
+            query.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO));
+            query.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM));
+            query.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO));
+        } catch (DateTimeParseException e) {
+            throw new InvalidClientInputException(e.getMessage());
+        }
         return query;
     }
 
@@ -435,18 +436,22 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected void applyQuery(Session session, Q query) {
         if (query != null) {
             if (query.getRegistrationFrom() != null) {
+                System.out.println("Applying filter "+Registration.FILTER_REGISTRATION_FROM+" with "+query.getRegistrationFrom());
                 Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
                 filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, query.getRegistrationFrom());
             }
             if (query.getRegistrationTo() != null) {
+                System.out.println("Applying filter "+Registration.FILTER_REGISTRATION_TO+" with "+query.getRegistrationTo());
                 Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
                 filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, query.getRegistrationTo());
             }
             if (query.getEffectFrom() != null) {
+                System.out.println("Applying filter "+Effect.FILTER_EFFECT_FROM+" with "+query.getEffectFrom());
                 Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
                 filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, query.getEffectFrom());
             }
             if (query.getEffectTo() != null) {
+                System.out.println("Applying filter "+Effect.FILTER_EFFECT_TO+" with "+query.getEffectTo());
                 Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
                 filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, query.getEffectTo());
             }

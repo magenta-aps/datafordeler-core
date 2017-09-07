@@ -247,7 +247,6 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         OffsetDateTime otherFrom = o == null ? null : o.effectFrom;
         int comparison = Equality.compare(this.effectFrom, otherFrom, OffsetDateTime.class, false);
         if (comparison != 0) {
-            System.out.println("compare "+this.effectFrom+" to "+otherFrom+" => "+comparison);
             return comparison;
         }
         OffsetDateTime otherTo = o == null ? null : o.effectTo;

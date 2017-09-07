@@ -45,9 +45,11 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     protected Identification identification;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
-    @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null")
-    @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO)
     @OrderBy("sequenceNumber") // Refers to sequenceNumber in Registration class
+    @Filters({
+            @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="(registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null)"),
+            @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="(registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO+")")
+    })
     protected List<R> registrations;
 
     @Transient

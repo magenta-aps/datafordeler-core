@@ -2,10 +2,7 @@ package dk.magenta.datafordeler.core.util;
 
 import org.apache.commons.collections.map.MultiValueMap;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by lars on 23-02-17.
