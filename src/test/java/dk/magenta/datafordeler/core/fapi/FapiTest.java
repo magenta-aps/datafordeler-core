@@ -464,6 +464,15 @@ public class FapiTest {
         Transaction transaction = session.beginTransaction();
         try {
             queryManager.saveRegistration(session, demoEntity, demoRegistration);
+        } finally {
+            try {
+                transaction.commit();
+            } catch (Exception e) {}
+            session.close();
+        }
+        session = sessionManager.getSessionFactory().openSession();
+        transaction = session.beginTransaction();
+        try {
             queryManager.saveRegistration(session, demoEntity, demoRegistration2);
         } finally {
             try {

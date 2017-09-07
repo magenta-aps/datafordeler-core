@@ -132,9 +132,9 @@ public class DatabaseTest {
         demoDataItem.addEffect(demoEffect);
         queryManager.saveRegistration(session, demoEntity, demoRegistration);
         transaction.commit();
-        //session.close();
+        session.close();
 
-        //session = sessionManager.getSessionFactory().openSession();
+        session = sessionManager.getSessionFactory().openSession();
         transaction = session.beginTransaction();
 
         queryManager.getAllEntities(session, DemoEntity.class);
