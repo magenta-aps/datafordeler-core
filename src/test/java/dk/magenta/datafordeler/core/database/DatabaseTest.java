@@ -33,7 +33,7 @@ public class DatabaseTest {
     @Autowired
     QueryManager queryManager;
 
-    private static final String domaene = "test";
+    private static final String domain = "test";
 
 
     @Test
@@ -42,7 +42,7 @@ public class DatabaseTest {
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         DemoEntity demoEntity = new DemoEntity();
-        Identification demoIdentification = new Identification(uuid, domaene);
+        Identification demoIdentification = new Identification(uuid, domain);
         demoEntity.setIdentifikation(demoIdentification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
         queryManager.saveRegistration(session, demoEntity, demoRegistration);
@@ -56,11 +56,11 @@ public class DatabaseTest {
         demoEntity = queryManager.getEntity(session, uuid, DemoEntity.class);
         Assert.assertNotNull(demoEntity);
         Assert.assertEquals(uuid, demoEntity.getUUID());
-        Assert.assertEquals(domaene, demoEntity.getDomain());
+        Assert.assertEquals(domain, demoEntity.getDomain());
         Identification identification = queryManager.getIdentification(session, uuid);
         Assert.assertNotNull(identification);
         Assert.assertEquals(uuid, identification.getUuid());
-        Assert.assertEquals(domaene, identification.getDomain());
+        Assert.assertEquals(domain, identification.getDomain());
         Assert.assertTrue(demoEntity.getRegistrations().contains(demoRegistration));
         transaction.commit();
         session.close();
@@ -72,7 +72,7 @@ public class DatabaseTest {
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         DemoEntity demoEntity = new DemoEntity();
-        Identification demoIdentification = new Identification(uuid, domaene);
+        Identification demoIdentification = new Identification(uuid, domain);
         demoEntity.setIdentifikation(demoIdentification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
         DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
@@ -120,7 +120,7 @@ public class DatabaseTest {
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         DemoEntity demoEntity = new DemoEntity();
-        Identification demoIdentification = new Identification(uuid, domaene);
+        Identification demoIdentification = new Identification(uuid, domain);
         demoEntity.setIdentifikation(demoIdentification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
         DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
@@ -131,7 +131,6 @@ public class DatabaseTest {
         Assert.assertFalse(demoEffect.getDataItems().contains(demoDataItem));
         demoDataItem.addEffect(demoEffect);
         queryManager.saveRegistration(session, demoEntity, demoRegistration);
-        session.flush();
         transaction.commit();
         //session.close();
 
@@ -174,7 +173,7 @@ public class DatabaseTest {
         Transaction transaction = session.beginTransaction();
 
         DemoEntity demoEntity = new DemoEntity();
-        Identification demoIdentification = new Identification(uuid, domaene);
+        Identification demoIdentification = new Identification(uuid, domain);
         demoEntity.setIdentifikation(demoIdentification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
         DemoEffect demoEffect1 = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
@@ -217,7 +216,7 @@ public class DatabaseTest {
         Transaction transaction = session.beginTransaction();
         UUID uuid = UUID.randomUUID();
 
-        Identification identification = new Identification(uuid, domaene);
+        Identification identification = new Identification(uuid, domain);
         DemoEntity demoEntity = new DemoEntity();
         demoEntity.setIdentifikation(identification);
         DemoRegistration demoRegistration = new DemoRegistration("2017-02-21T16:02:50+01:00", null, 1);
