@@ -466,7 +466,9 @@ public class FapiTest {
             queryManager.saveRegistration(session, demoEntity, demoRegistration);
             queryManager.saveRegistration(session, demoEntity, demoRegistration2);
         } finally {
-            transaction.commit();
+            try {
+                transaction.commit();
+            } catch (Exception e) {}
             session.close();
         }
         return uuid;
