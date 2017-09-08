@@ -50,7 +50,7 @@ public class QueryManager {
      */
     public <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
         this.log.trace("Get all Entities of class " + eClass.getCanonicalName());
-        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
+        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
         this.logQuery(databaseQuery);
         List<E> results = databaseQuery.getResultList();
         return results;
@@ -92,7 +92,7 @@ public class QueryManager {
         String extraWhere = lookupDefinition.getHqlWhereString(root);
 
         // Build query
-        //org.hibernate.query.Query<E> databaseQuery = session.createQuery("select e from " + eClass.getName() + " e join e.identification i join e.registrations r join r.effects v join v.dataItems d where i.uuid != null and " + queryString.toString(), eClass);
+        //org.hibernate.query.Query<E> databaseQuery = session.createQuery("select e from " + eClass.getCanonicalName() + " e join e.identification i join e.registrations r join r.effects v join v.dataItems d where i.uuid != null and " + queryString.toString(), eClass);
         //System.out.println("select distinct "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i join "+ENTITY+".registrations r join r.effects v join v.dataItems d "+extraJoin+" where i.uuid != null "+ extraWhere);
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select distinct "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i join "+ENTITY+".registrations r join r.effects v join v.dataItems d "+extraJoin+" where i.uuid != null "+ extraWhere, eClass);
 
@@ -124,7 +124,7 @@ public class QueryManager {
      */
     public <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
         this.log.trace("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid);
-        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid = :uuid", eClass);
+        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid = :uuid", eClass);
         databaseQuery.setParameter("uuid", uuid);
         this.logQuery(databaseQuery);
         try {
@@ -139,7 +139,7 @@ public class QueryManager {
         for (String key : filter.keySet()) {
             whereJoiner.add("t."+key+" = :"+key);
         }
-        org.hibernate.query.Query<T> databaseQuery = session.createQuery("select t from " + tClass.getName() + " t where " + whereJoiner.toString(), tClass);
+        org.hibernate.query.Query<T> databaseQuery = session.createQuery("select t from " + tClass.getCanonicalName() + " t where " + whereJoiner.toString(), tClass);
         for (String key : filter.keySet()) {
             databaseQuery.setParameter(key, filter.get(key));
         }
@@ -164,7 +164,7 @@ public class QueryManager {
             }
             where = " where " + whereJoiner.toString();
         }
-        org.hibernate.query.Query databaseQuery = session.createQuery("select count(t) from " + tClass.getName() + " t " + where);
+        org.hibernate.query.Query databaseQuery = session.createQuery("select count(t) from " + tClass.getCanonicalName() + " t " + where);
         if (filter != null && !filter.isEmpty()) {
             for (String key : filter.keySet()) {
                 databaseQuery.setParameter(key, filter.get(key));
@@ -185,7 +185,7 @@ public class QueryManager {
     public <V extends Effect> List<V> getEffects(Session session, Entity entity, OffsetDateTime effectFrom, OffsetDateTime effectTo, Class<V> vClass) {
         // AFAIK, this method is only ever used for testing
         this.log.trace("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-        org.hibernate.query.Query<V> databaseQuery = session.createQuery("select v from " + entity.getClass().getName() + " " + ENTITY +" join "+ENTITY+".registrations r join r.effects v where "+ENTITY+".id = :id and v.effectFrom = :from and v.effectTo = :to", vClass);
+        org.hibernate.query.Query<V> databaseQuery = session.createQuery("select v from " + entity.getClass().getCanonicalName() + " " + ENTITY +" join "+ENTITY+".registrations r join r.effects v where "+ENTITY+".id = :id and v.effectFrom = :from and v.effectTo = :to", vClass);
         databaseQuery.setParameter("id", entity.getId());
         databaseQuery.setParameter("from", effectFrom);
         databaseQuery.setParameter("to", effectTo);
@@ -210,7 +210,7 @@ public class QueryManager {
 
         String entityIdKey = "E" + UUID.randomUUID().toString().replace("-", "");
         //System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.effects r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
-        org.hibernate.query.Query<D> query = session.createQuery("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.registration r join r.entity "+ENTITY+" "+extraJoin+" where "+ENTITY+".id = :"+entityIdKey+" "+ extraWhere, dClass);
+        org.hibernate.query.Query<D> query = session.createQuery("select "+root+" from " + dClass.getCanonicalName() + " "+root+" join "+root+".effects v join v.registration r join r.entity "+ENTITY+" "+extraJoin+" where "+ENTITY+".id = :"+entityIdKey+" "+ extraWhere, dClass);
         //System.out.println(query.getQueryString());
 
         query.setParameter(entityIdKey, entity.getId());
