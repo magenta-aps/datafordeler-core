@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.persistence.PersistenceException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -70,18 +71,23 @@ public class CommandWatcher {
     }
 
     private synchronized List<Command> getCommands() {
-        Session session = this.sessionManager.getSessionFactory().openSession();
-        Query<Command> query = session.createQuery("select c from Command c where c.status = :status", Command.class);
-        query.setParameter("status", Command.Status.QUEUED);
-        List<Command> commands = query.getResultList();
-        session.close();
-        return commands;
+        try {
+            Session session = this.sessionManager.getSessionFactory().openSession();
+            Query<Command> query = session.createQuery("select c from Command c where c.status = :status", Command.class);
+            query.setParameter("status", Command.Status.QUEUED);
+            List<Command> commands = query.getResultList();
+            session.close();
+            return commands;
+        } catch (PersistenceException e) {
+            // pass
+        }
+        return null;
     }
 
     @Scheduled(fixedRate = 2000)
     public void run() {
         List<Command> commands = this.getCommands();
-        if (!commands.isEmpty()) {
+        if (commands != null && !commands.isEmpty()) {
             this.log.info("Found " + commands.size() + " queued commands");
             for (Command command : commands) {
                 CommandHandler commandHandler = this.getHandler(command.getCommandName());

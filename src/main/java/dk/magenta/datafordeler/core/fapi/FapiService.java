@@ -417,12 +417,16 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(exclude = true)
     protected E searchById(UUID uuid, Q query) {
         Session session = this.getSessionManager().getSessionFactory().openSession();
-        this.applyQuery(session, query);
-        E entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
-        if (entity != null) {
-            entity.forceLoad(session);
+        E entity = null;
+        try {
+            this.applyQuery(session, query);
+            entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
+            if (entity != null) {
+                entity.forceLoad(session);
+            }
+        } finally {
+            session.close();
         }
-        session.close();
         return entity;
     }
 
@@ -436,22 +440,18 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected void applyQuery(Session session, Q query) {
         if (query != null) {
             if (query.getRegistrationFrom() != null) {
-                System.out.println("Applying filter "+Registration.FILTER_REGISTRATION_FROM+" with "+query.getRegistrationFrom());
                 Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
                 filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, query.getRegistrationFrom());
             }
             if (query.getRegistrationTo() != null) {
-                System.out.println("Applying filter "+Registration.FILTER_REGISTRATION_TO+" with "+query.getRegistrationTo());
                 Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
                 filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, query.getRegistrationTo());
             }
             if (query.getEffectFrom() != null) {
-                System.out.println("Applying filter "+Effect.FILTER_EFFECT_FROM+" with "+query.getEffectFrom());
                 Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
                 filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, query.getEffectFrom());
             }
             if (query.getEffectTo() != null) {
-                System.out.println("Applying filter "+Effect.FILTER_EFFECT_TO+" with "+query.getEffectTo());
                 Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
                 filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, query.getEffectTo());
             }
