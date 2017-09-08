@@ -463,17 +463,11 @@ public class FapiTest {
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         try {
+            System.out.println("Saving entity 1");
             queryManager.saveRegistration(session, demoEntity, demoRegistration);
-        } finally {
-            try {
-                transaction.commit();
-            } catch (Exception e) {}
-            session.close();
-        }
-        session = sessionManager.getSessionFactory().openSession();
-        transaction = session.beginTransaction();
-        try {
+            System.out.println("Saving entity 2");
             queryManager.saveRegistration(session, demoEntity, demoRegistration2);
+            System.out.println("Both entitites saved");
         } finally {
             try {
                 transaction.commit();
