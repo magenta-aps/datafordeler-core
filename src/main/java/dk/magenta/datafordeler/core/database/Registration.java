@@ -53,6 +53,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.registrationFrom = registreringFra;
         this.registrationTo = registrationTo;
         this.sequenceNumber = sequenceNumber;
+        this.setLastImportTime();
     }
 
     public Registration(LocalDate registreringFra, LocalDate registrationTo, int sequenceNumber) {
@@ -265,6 +266,22 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.registerChecksum = registerChecksum;
     }
 
+
+    @Column(nullable = true, insertable = true, updatable = true)
+    protected OffsetDateTime lastImportTime;
+
+    @JsonProperty("sidstImporteret")
+    public OffsetDateTime getLastImportTime() {
+        return this.lastImportTime;
+    }
+
+    public void setLastImportTime(OffsetDateTime lastImportTime) {
+        this.lastImportTime = lastImportTime;
+    }
+
+    public void setLastImportTime() {
+        this.setLastImportTime(OffsetDateTime.now());
+    }
 
     /**
      * Pretty-print contained data

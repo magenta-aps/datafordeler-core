@@ -122,7 +122,7 @@ public class CommandService {
         CommandData commandData = handler.getCommandData(command);
         SystemRole requiredRole = this.findMatchingRole(roleType, command.getCommandName(), commandData);
         if (requiredRole == null) {
-            loggerHelper.info("No Command Role exists for [SystemRoleType:"+roleType.name()+", Command: "+command.getCommandName()+", CommandData: "+commandData+"]");
+            loggerHelper.info("No Command Role exists for [SystemRoleType:"+roleType.name()+", Command: "+command.getCommandName()+", CommandData: "+commandData.toString()+"]");
             throw new AccessDeniedException("No Command Role exists for command '"+command.getCommandName()+"' with data '"+commandData+"'");
         }
         // Check that the user has this SystemRole
