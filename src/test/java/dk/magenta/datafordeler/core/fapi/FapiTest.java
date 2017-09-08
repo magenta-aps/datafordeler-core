@@ -465,6 +465,7 @@ public class FapiTest {
         try {
             System.out.println("Saving entity 1");
             queryManager.saveRegistration(session, demoEntity, demoRegistration);
+            session.flush();
             System.out.println("Saving entity 2");
             queryManager.saveRegistration(session, demoEntity, demoRegistration2);
             System.out.println("Both entitites saved");
