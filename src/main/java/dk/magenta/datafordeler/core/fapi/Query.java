@@ -175,10 +175,20 @@ public abstract class Query<E extends Entity> {
 
     public abstract Map<String, Object> getSearchParameters();
 
+    /**
+     * Obtain a LookupDefinition object that describes the query in that form.
+     * This means a definition where keys are set to the full lookup path for
+     * the attribute in question, and values are set from the query.
+     * @return
+     */
     public LookupDefinition getLookupDefinition() {
         return new LookupDefinition(this.getSearchParameters(), this);
     }
 
+    /**
+     * Parse a ParameterMap from a http request and insert values in this Query object
+     * @param parameters
+     */
     public abstract void setFromParameters(ParameterMap parameters);
 
     /**

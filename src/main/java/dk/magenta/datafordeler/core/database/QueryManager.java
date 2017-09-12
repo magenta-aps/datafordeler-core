@@ -196,9 +196,8 @@ public class QueryManager {
         String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
 
         String entityIdKey = "E" + UUID.randomUUID().toString().replace("-", "");
-        System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.effects r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
+        // System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.effects r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
         org.hibernate.query.Query<D> query = session.createQuery("select "+root+" from " + dClass.getCanonicalName() + " "+root+" join "+root+".effects v join v.registration r join r.entity "+ENTITY+" "+extraJoin+" where "+ENTITY+".id = :"+entityIdKey+" "+ extraWhere, dClass);
-        //System.out.println(query.getQueryString());
 
         query.setParameter(entityIdKey, entity.getId());
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);

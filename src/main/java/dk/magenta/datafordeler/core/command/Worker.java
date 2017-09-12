@@ -4,6 +4,8 @@ import dk.magenta.datafordeler.core.exception.DataFordelerException;
 
 /**
  * Created by lars on 29-05-17.
+ * Command job superclass. Subclasses execute jobs in the run() method,
+ * but should respect the setting of doCancel, which means to stop the run
  */
 public abstract class Worker extends Thread implements Runnable {
 

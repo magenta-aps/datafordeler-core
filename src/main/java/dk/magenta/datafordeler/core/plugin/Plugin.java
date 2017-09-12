@@ -9,6 +9,10 @@ import java.util.*;
 
 /**
  * Created by lars on 11-01-17.
+ * Base class for a plugin. Defines which methods must be implemented.
+ * A Plugin to DAFO is a separate JAR, drawing on and subclassing Core classes.
+ * Upon compilation, the jar is stored in a special folder (configured by dafo.plugins.folder)
+ * and included in the classpath by the Application class.
  */
 public abstract class Plugin {
 
@@ -25,25 +29,50 @@ public abstract class Plugin {
         return version;
     }
 
+    /**
+     * Get the unique name for the plugin
+     * @return
+     */
     public abstract String getName();
 
+    /**
+     * Get the plugin's RegisterManager implementation
+     * @return
+     */
     public abstract RegisterManager getRegisterManager();
 
+    /**
+     * Returns whether this plugin can handle input of the given schema
+     * @param schema
+     * @return
+     */
     public boolean handlesSchema(String schema) {
         return this.getRegisterManager().handlesSchema(schema);
     }
 
-    public EntityManager getEntityManager(String schema) {
+    /**
+     * Get the plugin's EntityManager implementation for the given schema
+     * @return
+     */
+    public final EntityManager getEntityManager(String schema) {
         return this.getRegisterManager().getEntityManager(schema);
     }
 
-    public EntityManager getEntityManager(URI uri) {
+    /**
+     * Get the plugin's EntityManager implementation for the given URI
+     * @return
+     */
+    public final EntityManager getEntityManager(URI uri) {
         return this.getRegisterManager().getEntityManager(uri);
     }
 
+    /**
+     * Get the plugin's ConfigurationManager implementation
+     * @return
+     */
     public abstract ConfigurationManager getConfigurationManager();
 
-    public Collection<String> getHandledURISubstrings() {
+    public final Collection<String> getHandledURISubstrings() {
         return this.getRegisterManager().getHandledURISubstrings();
     }
 
@@ -66,15 +95,15 @@ public abstract class Plugin {
         return areaRestrictionTypes;
     }
 
-    public String getServiceOwner() {
+    public final String getServiceOwner() {
         return this.getName().toLowerCase();
     }
 
-    public void setPluginManager(PluginManager pluginManager) {
+    public final void setPluginManager(PluginManager pluginManager) {
         this.pluginManager = pluginManager;
     }
 
-    public PluginManager getPluginManager() {
+    public final PluginManager getPluginManager() {
         return this.pluginManager;
     }
 }
