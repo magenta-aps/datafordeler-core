@@ -81,8 +81,8 @@ public final class Command extends DatabaseEntry {
         Command command = new Command(commandName);
         InputStream requestBody = request.getInputStream();
         Scanner s = new Scanner(requestBody).useDelimiter("\\A");
-        requestBody.close();
         String commandBody = s.hasNext() ? s.next() : "";
+        requestBody.close();
         command.setCommandBody(commandBody);
         command.setReceived();
         command.setIssuer(userDetails.getIdentity());
