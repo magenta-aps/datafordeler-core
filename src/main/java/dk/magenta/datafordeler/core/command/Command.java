@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.magenta.datafordeler.core.database.DatabaseEntry;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
+import dk.magenta.datafordeler.core.util.InputStreamReader;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -80,9 +81,7 @@ public final class Command extends DatabaseEntry {
         }
         Command command = new Command(commandName);
         InputStream requestBody = request.getInputStream();
-        Scanner s = new Scanner(requestBody).useDelimiter("\\A");
-        String commandBody = s.hasNext() ? s.next() : "";
-        requestBody.close();
+        String commandBody = InputStreamReader.readInputStream(requestBody);
         command.setCommandBody(commandBody);
         command.setReceived();
         command.setIssuer(userDetails.getIdentity());
