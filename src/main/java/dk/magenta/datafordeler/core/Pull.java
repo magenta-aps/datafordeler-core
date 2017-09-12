@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core;
 
+import dk.magenta.datafordeler.core.command.Worker;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
@@ -15,10 +16,10 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by lars on 29-05-17.
+ * A Runnable that performs a pull with a given RegisterManager
  */
 public class Pull extends Worker implements Runnable {
 

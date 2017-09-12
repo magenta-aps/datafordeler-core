@@ -1,4 +1,4 @@
-package dk.magenta.datafordeler.core;
+package dk.magenta.datafordeler.core.command;
 
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 
@@ -16,7 +16,6 @@ public abstract class Worker extends Thread implements Runnable {
     protected WorkerCallback callback = null;
 
     public void end() {
-        System.out.println("setting doCancel");
         this.doCancel = true;
     }
 

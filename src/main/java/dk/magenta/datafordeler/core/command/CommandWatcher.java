@@ -3,7 +3,6 @@ package dk.magenta.datafordeler.core.command;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
-import dk.magenta.datafordeler.core.Worker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -27,6 +26,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Created by lars on 06-06-17.
+ * Bean that looks for newly issued commands in the command table, and executes them as they are found
  */
 @Component
 public class CommandWatcher {
@@ -70,6 +70,10 @@ public class CommandWatcher {
         //this.session.close();
     }
 
+    /**
+     * Looks for new Commands in the table. New commands that have not yet been picked up have the status Command.Status.QUEUED
+     * @return A list of found commands.
+     */
     private synchronized List<Command> getCommands() {
         try {
             Session session = this.sessionManager.getSessionFactory().openSession();
@@ -84,6 +88,11 @@ public class CommandWatcher {
         return null;
     }
 
+    /**
+     * Runs regularly (currently every 2 seconds), picking up newly issued Commands.
+     * When one is found, a Worker thread is started and saved, running the command, and the Command gets the Command.Status.PROCESSING status
+     * When the worker finishes (or errors out), the Command gets the appropriate status (Command.Status.SUCCESS, Command.Status.CANCELLED or Command.Status.FAILED)
+     */
     @Scheduled(fixedRate = 2000)
     public void run() {
         List<Command> commands = this.getCommands();
@@ -131,6 +140,10 @@ public class CommandWatcher {
         this.workers.remove(command.getId());
     }
 
+    /**
+     * Attempts to cancel the Worker associated with the Command, blocking until it completes
+     * @param command
+     */
     public void cancelCommand(Command command) {
         if (!command.done()) {
             Worker worker = workers.get(command.getId());
@@ -156,6 +169,11 @@ public class CommandWatcher {
         }
     }
 
+    /**
+     * Obtain the CommandHandler associated with a command name
+     * @param commandName
+     * @return
+     */
     public CommandHandler getHandler(String commandName) {
         CommandHandler handler = this.mappedHandlers.get(commandName);
         if (handler == null) {
@@ -172,6 +190,10 @@ public class CommandWatcher {
         return handler;
     }
 
+    /**
+     * Saves a Command object to the database
+     * @param command
+     */
     public synchronized void saveCommand(Command command) {
         Session session = this.sessionManager.getSessionFactory().openSession();
         command = (Command) session.merge(command);
