@@ -95,15 +95,14 @@ public class PullCommandHandler extends CommandHandler {
 
     public PullCommandData getCommandData(String commandBody)
         throws DataStreamException, InvalidClientInputException {
-        PullCommandData commandData = null;
         try {
-            commandData = this.objectMapper.readValue(commandBody, PullCommandData.class);
+            PullCommandData commandData = this.objectMapper.readValue(commandBody, PullCommandData.class);
+            this.getLog().info("Command data parsed");
+            return commandData;
         } catch (IOException e) {
-            this.getLog().error("Unable to parse command data");
+            this.getLog().error("Unable to parse command data '"+commandBody+"'");
             throw new InvalidClientInputException("Unable to parse command data");
         }
-        this.getLog().info("Command data parsed");
-        return commandData;
     }
 
     private Plugin getPlugin(PullCommandData commandData) throws PluginNotFoundException {

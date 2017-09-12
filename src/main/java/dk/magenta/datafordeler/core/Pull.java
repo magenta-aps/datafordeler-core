@@ -56,7 +56,6 @@ public class Pull extends Worker implements Runnable {
             for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
                 ItemInputStream<? extends PluginSourceData> eventStream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
 
-                System.out.println("Puller is now reading event stream");
                 int count = 0;
                 try {
                     PluginSourceData event;

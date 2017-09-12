@@ -14,7 +14,7 @@ import java.util.*;
  * Created by lars on 20-02-17.
  * Superclass for bitemporal data, pointing to Effects objects.
  * Pieces of data sharing exact bitemporality may be stored in one DataItem, pointing
- * to all the Effects and Registrations applicable.
+ * to all the Effects applicable (and by extension, Registrations).
  */
 @MappedSuperclass
 @Embeddable
@@ -24,24 +24,32 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
     public DataItem() {
     }
 
+    /**
+     * Add an Effect to this dataItem
+     * @param effect
+     */
     public void addEffect(V effect) {
         effect.dataItems.add(this);
         this.effects.add(effect);
     }
 
+    /**
+     * Remove a previously added Effect
+     * @param effect
+     */
     public void removeEffect(V effect) {
         effect.dataItems.remove(this);
         this.effects.remove(effect);
-    }
-
-    public static String getTableName(Class<? extends DataItem> cls) {
-        return cls.getAnnotation(Table.class).name();
     }
 
     @ManyToMany(mappedBy = "dataItems")
     private Set<V> effects = new HashSet<V>();
 
 
+    /**
+     * Get all Effects for this item
+     * @return
+     */
     public Set<V> getEffects() {
         return effects;
     }
@@ -106,6 +114,10 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
     public void updateReferences(HashMap<String, Identification> references) {
     }
 
+    /**
+     * Return a LookupDefinition that can be used to find this item.
+     * @return
+     */
     public LookupDefinition getLookupDefinition() {
         return new LookupDefinition(this.databaseFields());
     }
