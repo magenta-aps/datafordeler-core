@@ -114,8 +114,9 @@ public class LookupDefinition extends HashMap<String, Object> {
                 StringBuilder fullParts = new StringBuilder(rootKey);
                 for (int i = 0; i<parts.length - 1; i++) {
                     String part = parts[i];
+                    String beforeAppend = fullParts.toString();
                     fullParts.append("_").append(part);
-                    String joinEntry = fullParts + "." + part + " " + fullParts;
+                    String joinEntry = beforeAppend + "." + part + " " + fullParts;
                     if (!joinTables.contains(joinEntry)) {
                         joinTables.add(joinEntry);
                     }
