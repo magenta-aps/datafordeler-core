@@ -108,22 +108,17 @@ public class LookupDefinition extends HashMap<String, Object> {
         for (String key : this.keySet()) {
             if (key.contains(separator)) {
                 String[] parts = key.split(quotedSeparator);
-                String lastPart = rootKey;
                 if (parts[0].equals(entityref)) {
-                    lastPart = entityKey;
                     parts = Arrays.copyOfRange(parts, 1, parts.length);
                 }
                 StringBuilder fullParts = new StringBuilder(rootKey);
                 for (int i = 0; i<parts.length - 1; i++) {
                     String part = parts[i];
-                    String joinEntry = lastPart + "." + part + " " + fullParts + "_" + part;
+                    fullParts.append("_").append(part);
+                    String joinEntry = fullParts + "." + part + " " + fullParts;
                     if (!joinTables.contains(joinEntry)) {
                         joinTables.add(joinEntry);
                     }
-
-                    //s.add(lastPart + "." + part + " " + fullParts + "_" + part);
-                    lastPart = rootKey + "_" + part;
-                    fullParts.append("_").append(part);
                 }
             }
         }
