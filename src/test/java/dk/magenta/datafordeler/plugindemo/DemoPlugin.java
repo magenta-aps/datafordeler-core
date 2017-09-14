@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.plugindemo;
 
 import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
+import dk.magenta.datafordeler.core.plugin.AreaRestrictionDefinition;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.plugin.RolesDefinition;
@@ -28,17 +29,11 @@ public class DemoPlugin extends Plugin {
 
     private DemoRolesDefinition rolesDefinition;
 
+    private DemoAreaRestrictionDefinition demoAreaRestrictionDefinition;
+
     public DemoPlugin() {
         this.rolesDefinition = new DemoRolesDefinition();
-        AreaRestrictionType cardinalDirections = this.addAreaRestrictionType(
-            "Cardinal directions",
-            "The four cardinal directions"
-        );
-
-        cardinalDirections.addChoice("North", "The north quarter", null);
-        cardinalDirections.addChoice("East", "The east quarter", null);
-        cardinalDirections.addChoice("West", "The west quarter", null);
-        cardinalDirections.addChoice("South", "The south quarter", null);
+        this.demoAreaRestrictionDefinition = new DemoAreaRestrictionDefinition(this);
     }
 
     @Override
@@ -72,5 +67,10 @@ public class DemoPlugin extends Plugin {
     @Override
     public RolesDefinition getRolesDefinition() {
         return this.rolesDefinition;
+    }
+
+    @Override
+    public AreaRestrictionDefinition getAreaRestrictionDefinition() {
+        return this.demoAreaRestrictionDefinition;
     }
 }

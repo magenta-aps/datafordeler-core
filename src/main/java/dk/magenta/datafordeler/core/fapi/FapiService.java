@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -187,6 +188,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         );
         this.checkAndLogAccess(loggerHelper);
         Q query = this.getQuery(requestParams, true);
+        this.applyAreaRestrictionsToQuery(query, user);
         envelope.addQueryData(query);
         envelope.addUserData(user);
         envelope.addRequestData(request);
@@ -286,6 +288,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         );
         this.checkAndLogAccess(loggerHelper);
         Q query = this.getQuery(requestParams, false);
+        this.applyAreaRestrictionsToQuery(query, user);
         envelope.addQueryData(query);
         envelope.addUserData(user);
         envelope.addRequestData(request);
@@ -363,6 +366,11 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             throw new InvalidClientInputException(e.getMessage());
         }
         return query;
+    }
+
+    protected void applyAreaRestrictionsToQuery(Q query, DafoUserDetails user) throws InvalidClientInputException {
+        System.out.println("FapiTest.applyAreaRestrictionsToQuery");
+        return;
     }
 
 

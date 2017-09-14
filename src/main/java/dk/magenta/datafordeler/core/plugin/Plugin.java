@@ -18,8 +18,6 @@ public abstract class Plugin {
 
     protected long version = 1L;
 
-    protected List<AreaRestrictionType> areaRestrictionTypes = new ArrayList<>();
-
     private PluginManager pluginManager;
 
     public Plugin() {
@@ -78,22 +76,12 @@ public abstract class Plugin {
 
     public abstract RolesDefinition getRolesDefinition();
 
+    public abstract AreaRestrictionDefinition getAreaRestrictionDefinition();
+
     public boolean isDemo() {
         return false;
     }
 
-    public AreaRestrictionType addAreaRestrictionType(String name, String description) {
-        AreaRestrictionType areaRestrictionType = new AreaRestrictionType(
-            name, description, this
-        );
-        this.areaRestrictionTypes.add(areaRestrictionType);
-
-        return areaRestrictionType;
-    }
-
-    public List<AreaRestrictionType> getAreaRestrictionTypes() {
-        return areaRestrictionTypes;
-    }
 
     public final String getServiceOwner() {
         return this.getName().toLowerCase();

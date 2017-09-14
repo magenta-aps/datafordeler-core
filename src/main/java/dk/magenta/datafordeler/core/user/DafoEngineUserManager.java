@@ -90,7 +90,7 @@ public class DafoEngineUserManager extends DafoUserManager implements PluginMana
 
     // Find unstored types and areas
     for(Plugin plugin : pluginManager.getPlugins()) {
-      Collection<AreaRestrictionType> typesList = plugin.getAreaRestrictionTypes();
+      Collection<AreaRestrictionType> typesList = plugin.getAreaRestrictionDefinition().getAreaRestrictionTypes();
       if(typesList != null) {
         // Make sure we have unique values
         typesList = new HashSet<>(typesList);

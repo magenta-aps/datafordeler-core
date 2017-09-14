@@ -76,7 +76,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.identification;
     }
 
-    @JsonProperty("uuid")
+    @JsonProperty("UUID")
     public UUID getUUID() {
         return this.identification.getUuid();
     }
