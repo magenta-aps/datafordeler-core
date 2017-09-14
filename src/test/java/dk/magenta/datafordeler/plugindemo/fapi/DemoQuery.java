@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.plugindemo.fapi;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import dk.magenta.datafordeler.core.database.LookupDefinition;
 import dk.magenta.datafordeler.core.fapi.ParameterMap;
 import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.fapi.QueryField;
@@ -64,6 +66,21 @@ public class DemoQuery extends Query<DemoEntity> {
         map.put("bynavn", this.bynavn);
         map.put("aktiv", this.aktiv);
         return map;
+    }
+
+    @Override
+    public LookupDefinition getLookupDefinition() {
+        LookupDefinition lookupDefinition = new LookupDefinition(this);
+        if (this.postnr != null) {
+            lookupDefinition.put("postnr", this.postnr, Integer.class);
+        }
+        if (this.aktiv != null) {
+            lookupDefinition.put("aktiv", this.aktiv, Boolean.class);
+        }
+        if (this.bynavn != null) {
+            lookupDefinition.put("bynavn", this.bynavn, String.class);
+        }
+        return lookupDefinition;
     }
 
     @Override

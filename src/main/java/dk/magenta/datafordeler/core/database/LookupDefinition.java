@@ -7,6 +7,7 @@ import dk.magenta.datafordeler.core.util.DoubleHashMap;
 
 import javax.persistence.Column;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -15,17 +16,21 @@ import java.util.regex.Pattern;
  * A LookupDefinition is a way of defining how to look up entities based on the data hierarchy within them.
  * Since the data in an entity is spread out over multiple tables, it is difficult to do a database select
  * on a field when you don't know where it is. So, DataItem subclasses and Query subclasses should implement
- * a method returning a LookupDefinition. At its most basic, it's a map of path strings to sought values.
+ * a method returning a LookupDefinition.
  *
- * Examples of key-value pairs:
+ * Examples of FieldDefinitions:
  *
- * coreData.attribute = 123
- * This means that for a given DataItem table, join its "coreData" table and match on attribute = 123
+ * path: coreData.attribute, value: "123", class: java.lang.Integer
+ * This means that for a given DataItem table, join its "coreData" table and match on attribute = 123, where
+ * the value has been cast to an integer
  *
- * $.foo = 42
+ * This is done because queries insert values as strings, possibly containing wildcards, but if there is no wildcard
+ * we must cast to the correct type before the value is inserted in hibernate
+ *
+ * path: $.foo, value: "42", class: java.lang.Integer
  * This means that we should look in the Entity table (instead of the DataItem table) for a match on foo = 42
  *
- * Of course the map can contain any number of these key-value pairs, so they'll all be AND'ed together
+ * All contained FieldDefinitions will be AND'ed together, and if a FieldDefinition value
  * in the resulting query
  *
  *
@@ -54,13 +59,29 @@ import java.util.regex.Pattern;
  * See also the various uses in QueryManager, which perform database lookups based on LookupDefinitions from
  * Query and DataItem objects
  */
-public class LookupDefinition extends HashMap<String, Object> {
+public class LookupDefinition {
 
     private Query query = null;
     private boolean matchNulls = false;
     public static final String separator = ".";
     public static final String entityref = "$";
     private static final String quotedSeparator = Pattern.quote(separator);
+    private ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
+
+    private class FieldDefinition {
+        public String path;
+        public Object value;
+        public Class type;
+
+        public FieldDefinition(String path, Object value) {
+            this(path, value, value != null ? value.getClass() : null);
+        }
+        public FieldDefinition(String path, Object value, Class type) {
+            this.path = path;
+            this.value = value;
+            this.type = type;
+        }
+    }
 
     public LookupDefinition() {
     }
@@ -73,9 +94,28 @@ public class LookupDefinition extends HashMap<String, Object> {
         this.putAll(map);
     }
 
-    public LookupDefinition(Map<String, Object> map, Query query) {
-        this(map);
-        this.query = query;
+    public void put(String path, Object value) {
+        if (value != null) {
+            if (value instanceof Collection) {
+                for (Object member : (Collection) value) {
+                    this.put(path, member);
+                }
+            } else {
+                this.put(path, value, value.getClass());
+            }
+        }
+    }
+
+    public void put(String path, Object value, Class fieldClass) {
+        if (value != null) {
+            this.fieldDefinitions.add(new FieldDefinition(path, value, fieldClass));
+        }
+    }
+
+    public void putAll(Map<String, Object> map) {
+        for (String key : map.keySet()) {
+            this.put(key, map.get(key));
+        }
     }
 
     /**
@@ -105,9 +145,10 @@ public class LookupDefinition extends HashMap<String, Object> {
      */
     public String getHqlJoinString(String rootKey, String entityKey) {
         ArrayList<String> joinTables = new ArrayList<>();
-        for (String key : this.keySet()) {
-            if (key.contains(separator)) {
-                String[] parts = key.split(quotedSeparator);
+        for (FieldDefinition definition : this.fieldDefinitions) {
+            String path = definition.path;
+            if (path.contains(separator)) {
+                String[] parts = path.split(quotedSeparator);
                 if (parts[0].equals(entityref)) {
                     parts = Arrays.copyOfRange(parts, 1, parts.length);
                 }
@@ -151,12 +192,13 @@ public class LookupDefinition extends HashMap<String, Object> {
      */
     public String getHqlWhereString(String rootKey, String entityKey, String prefix) {
         StringJoiner s = new StringJoiner(" AND ");
-        for (String key : this.keySet()) {
+        for (FieldDefinition definition : this.fieldDefinitions) {
+            String path = definition.path;
 
-            String object = this.getPath(rootKey, entityKey, key);
-            String k = getFinal(key);
+            String object = this.getPath(rootKey, entityKey, path);
+            String k = getFinal(path);
 
-            Object value = this.get(key);
+            Object value = definition.value;
 
             if (value == null) {
                 if (this.matchNulls) {
@@ -237,12 +279,14 @@ public class LookupDefinition extends HashMap<String, Object> {
      */
     public HashMap<String, Object> getHqlParameters(String rootKey, String entityKey) throws PluginImplementationException {
         HashMap<String, Object> map = new HashMap<>();
-        for (String key : this.keySet()) {
+        for (FieldDefinition definition : this.fieldDefinitions) {
+            String path = definition.path;
 
-            String object = this.getPath(rootKey, entityKey, key);
-            String k = getFinal(key);
+            String object = this.getPath(rootKey, entityKey, path);
+            String k = getFinal(path);
 
-            Object value = this.get(key);
+            Object value = definition.value;
+            Class type = definition.type;
             if (value != null) {
                 if (value instanceof List) {
                     List list = (List) value;
@@ -250,14 +294,14 @@ public class LookupDefinition extends HashMap<String, Object> {
                         if (parameterValueWildcard(value)) {
                             map.put(object + "_" + k + "_" + i, ((String) list.get(i)).replace("*", "%"));
                         } else {
-                            map.put(object + "_" + k + "_" + i, this.castValue(object + "_" + k + "_" + i, list.get(i)));
+                            map.put(object + "_" + k + "_" + i, this.castValue(type, list.get(i)));
                         }
                     }
                 } else {
                     if (parameterValueWildcard(value)) {
                         map.put(object + "_" + k, ((String) value).replace("*", "%"));
                     } else {
-                        map.put(object + "_" + k, this.castValue(object + "_" + k, value));
+                        map.put(object + "_" + k, this.castValue(type, value));
                     }
                 }
             }
@@ -266,36 +310,22 @@ public class LookupDefinition extends HashMap<String, Object> {
         return map;
     }
 
-    private Object castValue(String path, Object value) throws PluginImplementationException {
-        if (this.query != null) {
-            Class cls;
-            String[] parts = path.split("_");
-            if (parts[0].equals(QueryManager.ENTITY)) {
-                cls = this.query.getEntityClass();
-            } else {
-                cls = this.query.getDataClass();
+    private Object castValue(Class cls, Object value) throws PluginImplementationException {
+        if (cls == null) {return value;}
+        if ((cls == Long.TYPE || cls == Long.class) && !(value instanceof Long)) {
+            if (value instanceof Number) {
+                return ((Number) value).longValue();
             }
-
-            Field field = null;
-            for (int i = 1; i<parts.length; i++) {
-                String part = parts[i];
-                try {
-                    field = this.getField(cls, part);
-                } catch (NoSuchFieldException e) {
-                    throw new PluginImplementationException("Field '"+part+"' is missing from class "+cls, e);
-                }
-                cls = field.getType();
+            return Long.parseLong(value.toString());
+        } else if ((cls == Integer.TYPE || cls == Integer.class) && !(value instanceof Integer)) {
+            if (value instanceof Number) {
+                return ((Number) value).intValue();
             }
-
-            if (field != null && field.isAnnotationPresent(Column.class)) {
-                if (cls == Integer.TYPE && !(value instanceof Integer)) {
-                    value = Integer.parseInt((String) value);
-                } else if (cls == Boolean.TYPE && !(value instanceof Boolean)) {
-                    value = Query.booleanFromString((String) value);
-                }
-            }
+            return Integer.parseInt(value.toString());
+        } else if ((cls == Boolean.TYPE || cls == Boolean.class) && !(value instanceof Boolean)) {
+            return Query.booleanFromString(value.toString());
         }
-        return value;
+        return cls.cast(value);
     }
 
     private Field getField(Class cls, String name) throws NoSuchFieldException {

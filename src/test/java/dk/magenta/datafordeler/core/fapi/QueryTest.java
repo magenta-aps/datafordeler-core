@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.fapi;
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.database.DataItem;
 import dk.magenta.datafordeler.core.database.Entity;
+import dk.magenta.datafordeler.core.database.LookupDefinition;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,6 +37,12 @@ public class QueryTest {
         @Override
         public Map<String, Object> getSearchParameters() {
             return new HashMap<>();
+        }
+
+        @Override
+        public LookupDefinition getLookupDefinition() {
+            LookupDefinition lookupDefinition = new LookupDefinition(this);
+            return lookupDefinition;
         }
 
         @Override

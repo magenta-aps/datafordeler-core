@@ -48,7 +48,6 @@ public class DemoPlugin extends Plugin {
 
     @Override
     public RegisterManager getRegisterManager() {
-        System.out.println("===== DemoPlugin " + DemoPlugin.class.getClassLoader());
         return this.demoRegisterManager;
     }
 

@@ -86,6 +86,7 @@ public class QueryManager {
 
         // Insert parameters, casting as necessary
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
+
         for (String key : extraParameters.keySet()) {
             databaseQuery.setParameter(key, extraParameters.get(key));
         }

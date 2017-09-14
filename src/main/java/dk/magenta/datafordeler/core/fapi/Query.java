@@ -181,9 +181,7 @@ public abstract class Query<E extends Entity> {
      * the attribute in question, and values are set from the query.
      * @return
      */
-    public LookupDefinition getLookupDefinition() {
-        return new LookupDefinition(this.getSearchParameters(), this);
-    }
+    public abstract LookupDefinition getLookupDefinition();
 
     /**
      * Parse a ParameterMap from a http request and insert values in this Query object
