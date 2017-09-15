@@ -71,23 +71,27 @@ public class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public <E extends Entity> List<E> getAllEntities(Session session, Query query, Class<E> eClass) throws DataFordelerException {
+    public <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass, Class<D> dClass) throws DataFordelerException {
         this.log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
 
         LookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = "d";
-        String extraJoin = lookupDefinition.getHqlJoinString(root, ENTITY);
-        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
 
-        System.out.println("select distinct "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i join "+ENTITY+".registrations r join r.effects v join v.dataItems d "+extraJoin+" where i.uuid != null "+ extraWhere);
+        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY, dClass);
+
+        String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
+                " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
+
+        System.out.println(queryString);
 
         // Build query
-        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select distinct "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i join "+ENTITY+".registrations r join r.effects v join v.dataItems d "+extraJoin+" where i.uuid != null "+ extraWhere, eClass);
+        org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
 
         // Insert parameters, casting as necessary
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
 
         for (String key : extraParameters.keySet()) {
+            System.out.println(key+" = "+extraParameters.get(key));
             databaseQuery.setParameter(key, extraParameters.get(key));
         }
 
@@ -192,16 +196,32 @@ public class QueryManager {
     public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) throws PluginImplementationException {
         this.log.trace("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         LookupDefinition lookupDefinition = similar.getLookupDefinition();
-        String root = "d";
-        String extraJoin = lookupDefinition.getHqlJoinString(root, ENTITY);
-        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
+        String dataItemKey = "d";
+        String extraJoin = lookupDefinition.getHqlJoinString(dataItemKey, ENTITY);
+        StringJoiner extraWhere = new StringJoiner(" AND ");
+
+        List<String> whereParts = lookupDefinition.getHqlWhereParts(dataItemKey, ENTITY, true);
+        if (!whereParts.isEmpty()) {
+            extraWhere.add("");
+            for (String part : whereParts) {
+                extraWhere.add(part);
+            }
+        }
 
         String entityIdKey = "E" + UUID.randomUUID().toString().replace("-", "");
-        // System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.effects r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
-        org.hibernate.query.Query<D> query = session.createQuery("select "+root+" from " + dClass.getCanonicalName() + " "+root+" join "+root+".effects v join v.registration r join r.entity "+ENTITY+" "+extraJoin+" where "+ENTITY+".id = :"+entityIdKey+" "+ extraWhere, dClass);
+
+        String queryString = "SELECT " + dataItemKey + " FROM " + dClass.getCanonicalName() + " " + dataItemKey +
+                " JOIN " + dataItemKey+".effects v" +
+                " JOIN v.registration r" +
+                " JOIN r.entity "+ENTITY + " "+extraJoin +
+                " WHERE " + ENTITY + ".id = :"+entityIdKey + " "+ extraWhere.toString();
+
+
+        System.out.println(queryString);
+        org.hibernate.query.Query<D> query = session.createQuery(queryString, dClass);
 
         query.setParameter(entityIdKey, entity.getId());
-        HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
+        HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(dataItemKey, ENTITY);
         for (String key : extraParameters.keySet()) {
             query.setParameter(key, extraParameters.get(key));
         }

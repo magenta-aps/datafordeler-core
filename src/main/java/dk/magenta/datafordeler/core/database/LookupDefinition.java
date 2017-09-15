@@ -2,12 +2,8 @@ package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.exception.PluginImplementationException;
 import dk.magenta.datafordeler.core.fapi.Query;
-import dk.magenta.datafordeler.core.fapi.QueryField;
-import dk.magenta.datafordeler.core.util.DoubleHashMap;
 
-import javax.persistence.Column;
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -81,6 +77,10 @@ public class LookupDefinition {
             this.value = value;
             this.type = type;
         }
+
+        public boolean onEntity() {
+            return this.path.startsWith(entityref);
+        }
     }
 
     public LookupDefinition() {
@@ -146,92 +146,161 @@ public class LookupDefinition {
     public String getHqlJoinString(String rootKey, String entityKey) {
         ArrayList<String> joinTables = new ArrayList<>();
         for (FieldDefinition definition : this.fieldDefinitions) {
-            String path = definition.path;
-            if (path.contains(separator)) {
-                String[] parts = path.split(quotedSeparator);
-                if (parts[0].equals(entityref)) {
-                    parts = Arrays.copyOfRange(parts, 1, parts.length);
-                }
-                StringBuilder fullParts = new StringBuilder(rootKey);
-                for (int i = 0; i<parts.length - 1; i++) {
-                    String part = parts[i];
-                    String beforeAppend = fullParts.toString();
-                    fullParts.append("_").append(part);
-                    String joinEntry = beforeAppend + "." + part + " " + fullParts;
-                    if (!joinTables.contains(joinEntry)) {
-                        joinTables.add(joinEntry);
-                    }
-                }
-            }
+            joinTables.addAll(this.getHqlJoinParts(rootKey, entityKey, definition));
         }
+        String joinString = " JOIN ";
         if (!joinTables.isEmpty()) {
-            StringJoiner s = new StringJoiner(" JOIN ");
+            StringJoiner s = new StringJoiner(joinString);
             for (String table : joinTables) {
                 s.add(table);
             }
-            return "JOIN " + s.toString();
+            return joinString + s.toString();
         }
         return "";
     }
 
-
-    public String getHqlWhereString(String rootKey, String entityKey) {
-        return this.getHqlWhereString(rootKey, entityKey, "AND");
-    }
-
-    /**
-     * Obtain the table where string, specifying the hql WHERE statement for each value in the LookupDefinition
-     * Used in conjunction with getHqlJoinString (and using the same input keys).
-     *
-     * @param rootKey Root key, denoting the baseline for the join. This is most often the hql identifier
-     *                for the DataItem table: if the HQL so far is "SELECT e from FooEntity JOIN e.registrations r JOIN r.effects v JOIN v.dataItems d",
-     *                then "d" would be the rootKey to look up paths within the dataItem table
-     * @param entityKey Entity key, denoting the hql identifier for the Entity table. In the above example, "e" would be the entityKey
-     * @param prefix prefix string to prepend the output if it is not empty
-     * @return where string, e.g. " AND d_abc.def = :d_abc_def AND d_abc.ghi = :d_abc_ghi
-     */
-    public String getHqlWhereString(String rootKey, String entityKey, String prefix) {
-        StringJoiner s = new StringJoiner(" AND ");
-        for (FieldDefinition definition : this.fieldDefinitions) {
-            String path = definition.path;
-
-            String object = this.getPath(rootKey, entityKey, path);
-            String k = getFinal(path);
-
-            Object value = definition.value;
-
-            if (value == null) {
-                if (this.matchNulls) {
-                    s.add(object + "." + k + " is null");
-                }
-            } else {
-                if (value instanceof List) {
-                    List list = (List) value;
-                    StringJoiner or = new StringJoiner(" OR ");
-                    for (int i=0; i<list.size(); i++) {
-                        if (parameterValueWildcard(list.get(i))) {
-                            or.add("cast(" + object + "." + k + " as string) like :" + object + "_" + k + "_" + i);
-                        } else {
-                            or.add(object + "." + k + " = :" + object + "_" + k + "_" + i);
-                        }
-                    }
-                    if (or.length() > 0) {
-                        s.add("(" + or.toString() + ")");
-                    }
-                } else {
-                    if (parameterValueWildcard(value)) {
-                        s.add("cast(" + object + "." + k + " as string) like :" + object + "_" + k);
-                    } else {
-                        s.add(object + "." + k + " = :" + object + "_" + k);
-                    }
+    private ArrayList<String> getHqlJoinParts(String rootKey, String entityKey, FieldDefinition fieldDefinition) {
+        ArrayList<String> joinTables = new ArrayList<>();
+        String path = fieldDefinition.path;
+        if (path.contains(separator)) {
+            String[] parts = path.split(quotedSeparator);
+            if (parts[0].equals(entityref)) {
+                parts = Arrays.copyOfRange(parts, 1, parts.length);
+            }
+            StringBuilder fullParts = new StringBuilder(rootKey);
+            for (int i = 0; i<parts.length - 1; i++) {
+                String part = parts[i];
+                String beforeAppend = fullParts.toString();
+                fullParts.append("_").append(part);
+                String joinEntry = beforeAppend + "." + part + " " + fullParts;
+                if (!joinTables.contains(joinEntry)) {
+                    joinTables.add(joinEntry);
                 }
             }
-
         }
-        if (s.length() > 0) {
-            return prefix + " " + s.toString();
+        return joinTables;
+    }
+
+    public String getHqlWhereString(String rootKey, String entityKey, Class dClass) {
+        return this.getHqlWhereString(rootKey, entityKey, dClass, " AND ");
+    }
+        /**
+         * Obtain the table where string, specifying the hql WHERE statement for each value in the LookupDefinition
+         * Used in conjunction with getHqlJoinString (and using the same input keys).
+         *
+         * @param dataItemKey Root key, denoting the baseline for the join. This is most often the hql identifier
+         *                for the DataItem table: if the HQL so far is "SELECT e from FooEntity JOIN e.registrations r JOIN r.effects v JOIN v.dataItems d",
+         *                then "d" would be the rootKey to look up paths within the dataItem table
+         * @param entityKey Entity key, denoting the hql identifier for the Entity table. In the above example, "e" would be the entityKey
+         * @return where string, e.g. " AND d_abc.def = :d_abc_def AND d_abc.ghi = :d_abc_ghi
+         */
+    public String getHqlWhereString(String dataItemKey, String entityKey, Class dClass, String prefix) {
+
+        String whereContainer = entityKey + " IN (" +
+                "SELECT " + entityKey + " FROM " + dClass.getCanonicalName() + " " + dataItemKey +
+                " JOIN " + dataItemKey + ".effects v" +
+                " JOIN v.registration r" +
+                " JOIN r.entity " + entityKey +
+                " %s " +
+                " WHERE %s" +
+                ")";
+        StringJoiner extraWhere = new StringJoiner(" AND ");
+        for (FieldDefinition fieldDefinition : this.fieldDefinitions) {
+            if (fieldDefinition.onEntity()) {
+                extraWhere.add("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
+            } else {
+                List<String> joins = this.getHqlJoinParts(dataItemKey, entityKey, fieldDefinition);
+                String join = "";
+                if (joins != null && !joins.isEmpty()) {
+                    StringJoiner sj = new StringJoiner(" JOIN ", " JOIN ", "");
+                    for (String s : joins) {
+                        sj.add(s);
+                    }
+                    join = sj.toString();
+                }
+                String where = this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true);
+
+                extraWhere.add(String.format(whereContainer, join, where));
+            }
+        }
+
+        if (extraWhere.length() > 0) {
+            return prefix + " " + extraWhere.toString();
         }
         return "";
+    }
+
+    public List<String> getHqlWhereParts(String rootKey, String entityKey, boolean joinedTables) {
+        ArrayList<String> strings = new ArrayList<>();
+        for (FieldDefinition definition : this.fieldDefinitions) {
+            String part = this.getHqlWherePart(rootKey, entityKey, definition, joinedTables);
+            if (part != null) {
+                strings.add(part);
+            }
+        }
+        return strings;
+    }
+    private String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition) {
+        return this.getHqlWherePart(rootKey, entityKey, fieldDefinition, false);
+    }
+
+    private String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition, boolean joinedTable) {
+        String path = fieldDefinition.path;
+        String parameterPath = this.getParameterPath(rootKey, entityKey, path);
+        Object value = fieldDefinition.value;
+        String variablePath = this.getVariablePath(rootKey, entityKey, path);
+        if (joinedTable) {
+            int lastIndex = variablePath.lastIndexOf(".");
+            if (lastIndex != -1) {
+                variablePath = variablePath.substring(0, lastIndex).replace('.', '_') + variablePath.substring(lastIndex); // Replace all '.' with '_' except the last one
+            }
+        }
+
+        if (value == null) {
+            if (this.matchNulls) {
+                return variablePath + " is null";
+            }
+        } else if (value instanceof List) {
+            List list = (List) value;
+            StringJoiner or = new StringJoiner(" OR ");
+            for (int i = 0; i < list.size(); i++) {
+                if (parameterValueWildcard(list.get(i))) {
+                    or.add("cast(" + variablePath + " as string) like :" + parameterPath + "_" + i);
+                } else {
+                    or.add(variablePath + " = :" + parameterPath + "_" + i);
+                }
+            }
+            if (or.length() > 0) {
+                return "(" + or.toString() + ")";
+            }
+        } else {
+            if (parameterValueWildcard(value)) {
+                return "cast(" + variablePath + " as string) like :" + parameterPath;
+            } else {
+                return variablePath + " = :" + parameterPath;
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * Convert keys to a path.
+     * @param rootKey table root key
+     * @param entityKey entity key
+     * @param key dot-spearated path, e.g. foo.bar.baz
+     * @return converted path. e.g. (rootKey: "d", entityKey: "e", key: "foo.bar.baz") => "d_foo_bar_baz" or (rootKey: "d", entityKey: "e", key: "$.bar.baz") => "e_bar_baz"
+     */
+    private String getVariablePath(String rootKey, String entityKey, String key) {
+        int separatorIndex = key.indexOf(separator);
+        String first = separatorIndex != -1 ? key.substring(0, separatorIndex) : key;
+        String object = rootKey;
+        if (first.equals(entityref)) {
+            object = entityKey;
+            key = key.substring(separatorIndex + 1);
+        }
+        object += "." + key;
+        return object;
     }
 
     /**
@@ -241,17 +310,15 @@ public class LookupDefinition {
      * @param key dot-spearated path, e.g. foo.bar.baz
      * @return converted path. e.g. (rootKey: "d", entityKey: "e", key: "foo.bar.baz") => "d_foo_bar_baz" or (rootKey: "d", entityKey: "e", key: "$.bar.baz") => "e_bar_baz"
      */
-    private String getPath(String rootKey, String entityKey, String key) {
-        int separatorIndex = key.indexOf(separator);
-        String first = separatorIndex != -1 ? key.substring(0, separatorIndex) : key;
-        String object = rootKey;
-        if (first.equals(entityref)) {
+    private String getParameterPath(String rootKey, String entityKey, String key) {
+        //int separatorIndex = key.indexOf(separator);
+        //String first = separatorIndex != -1 ? key.substring(0, separatorIndex) : key;
+        String object = this.getVariablePath(rootKey, entityKey, key);
+        /*if (first.equals(entityref)) {
             object = entityKey;
             key = key.substring(separatorIndex + 1);
-        }
-        if (key.contains(separator)) {
-            object += "_" + key.substring(0, key.lastIndexOf(separator)).replaceAll(quotedSeparator, "_");
-        }
+        }*/
+        object = object.replaceAll(quotedSeparator, "_");
         return object;
     }
 
@@ -282,8 +349,7 @@ public class LookupDefinition {
         for (FieldDefinition definition : this.fieldDefinitions) {
             String path = definition.path;
 
-            String object = this.getPath(rootKey, entityKey, path);
-            String k = getFinal(path);
+            String parameterPath = this.getParameterPath(rootKey, entityKey, path);
 
             Object value = definition.value;
             Class type = definition.type;
@@ -292,16 +358,16 @@ public class LookupDefinition {
                     List list = (List) value;
                     for (int i=0; i<list.size(); i++) {
                         if (parameterValueWildcard(value)) {
-                            map.put(object + "_" + k + "_" + i, ((String) list.get(i)).replace("*", "%"));
+                            map.put(parameterPath + "_" + i, ((String) list.get(i)).replace("*", "%"));
                         } else {
-                            map.put(object + "_" + k + "_" + i, this.castValue(type, list.get(i)));
+                            map.put(parameterPath + "_" + i, this.castValue(type, list.get(i)));
                         }
                     }
                 } else {
                     if (parameterValueWildcard(value)) {
-                        map.put(object + "_" + k, ((String) value).replace("*", "%"));
+                        map.put(parameterPath, ((String) value).replace("*", "%"));
                     } else {
-                        map.put(object + "_" + k, this.castValue(type, value));
+                        map.put(parameterPath, this.castValue(type, value));
                     }
                 }
             }

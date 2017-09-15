@@ -247,7 +247,9 @@ public class FapiTest {
             Assert.assertNotNull(jsonBody);
 
             Assert.assertEquals("fapitest", jsonBody.findValue("domaene").asText());
-            Assert.assertEquals(uuid.toString(), jsonBody.findValue("UUID").asText());
+            JsonNode firstResult = jsonBody.get("results").get(0);
+            System.out.println(firstResult);
+            Assert.assertEquals(uuid.toString(), firstResult.findValue("UUID").asText());
             JsonNode registrations = jsonBody.get("results").get(0).get("registreringer");
 
             System.out.println("registrations: " + registrations);

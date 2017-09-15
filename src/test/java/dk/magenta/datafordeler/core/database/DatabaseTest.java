@@ -230,63 +230,63 @@ public class DatabaseTest {
 
         DemoQuery demoQuery1 = new DemoQuery();
         demoQuery1.setPostnr(1455);
-        List<DemoEntity> results1 = queryManager.getAllEntities(session, demoQuery1, DemoEntity.class);
+        List<DemoEntity> results1 = queryManager.getAllEntities(session, demoQuery1, DemoEntity.class, DemoData.class);
         Assert.assertEquals(1, results1.size());
         Assert.assertEquals(uuid, results1.get(0).getUUID());
 
         DemoQuery demoQuery2 = new DemoQuery();
         demoQuery2.setPostnr("1455");
-        List<DemoEntity> results2 = queryManager.getAllEntities(session, demoQuery2, DemoEntity.class);
+        List<DemoEntity> results2 = queryManager.getAllEntities(session, demoQuery2, DemoEntity.class, DemoData.class);
         Assert.assertEquals(1, results2.size());
         Assert.assertEquals(uuid, results2.get(0).getUUID());
 
         DemoQuery demoQuery3 = new DemoQuery();
         demoQuery3.setPostnr("1*");
-        List<DemoEntity> results3 = queryManager.getAllEntities(session, demoQuery3, DemoEntity.class);
+        List<DemoEntity> results3 = queryManager.getAllEntities(session, demoQuery3, DemoEntity.class, DemoData.class);
         Assert.assertEquals(1, results3.size());
         Assert.assertEquals(uuid, results3.get(0).getUUID());
 
         DemoQuery demoQuery4 = new DemoQuery();
         demoQuery4.setPostnr("2*");
-        List<DemoEntity> results4 = queryManager.getAllEntities(session, demoQuery4, DemoEntity.class);
+        List<DemoEntity> results4 = queryManager.getAllEntities(session, demoQuery4, DemoEntity.class, DemoData.class);
         Assert.assertEquals(0, results4.size());
 
         DemoQuery demoQuery5 = new DemoQuery();
         demoQuery5.setBynavn("København K");
         demoQuery5.setAktiv("true");
-        List<DemoEntity> results5 = queryManager.getAllEntities(session, demoQuery5, DemoEntity.class);
+        List<DemoEntity> results5 = queryManager.getAllEntities(session, demoQuery5, DemoEntity.class, DemoData.class);
         Assert.assertEquals(1, results5.size());
         Assert.assertEquals(uuid, results5.get(0).getUUID());
 
         DemoQuery demoQuery6 = new DemoQuery();
         demoQuery6.setBynavn("København*");
         demoQuery5.setAktiv("yes");
-        List<DemoEntity> results6 = queryManager.getAllEntities(session, demoQuery6, DemoEntity.class);
+        List<DemoEntity> results6 = queryManager.getAllEntities(session, demoQuery6, DemoEntity.class, DemoData.class);
         Assert.assertEquals(1, results6.size());
         Assert.assertEquals(uuid, results6.get(0).getUUID());
 
         DemoQuery demoQuery7 = new DemoQuery();
         demoQuery7.setBynavn("Roskilde");
-        List<DemoEntity> results7 = queryManager.getAllEntities(session, demoQuery7, DemoEntity.class);
+        List<DemoEntity> results7 = queryManager.getAllEntities(session, demoQuery7, DemoEntity.class, DemoData.class);
         Assert.assertEquals(0, results7.size());
 
         DemoQuery demoQuery8 = new DemoQuery();
         demoQuery8.setBynavn("København K");
         demoQuery8.setPage(2);
-        List<DemoEntity> results8 = queryManager.getAllEntities(session, demoQuery8, DemoEntity.class);
+        List<DemoEntity> results8 = queryManager.getAllEntities(session, demoQuery8, DemoEntity.class, DemoData.class);
         Assert.assertEquals(0, results8.size());
 
         DemoQuery demoQuery9 = new DemoQuery();
         demoQuery9.setBynavn("København K");
         demoQuery9.setPageSize(1);
-        List<DemoEntity> results9 = queryManager.getAllEntities(session, demoQuery9, DemoEntity.class);
+        List<DemoEntity> results9 = queryManager.getAllEntities(session, demoQuery9, DemoEntity.class, DemoData.class);
         Assert.assertEquals(1, results9.size());
         Assert.assertEquals(uuid, results9.get(0).getUUID());
 
         DemoQuery demoQuery10 = new DemoQuery();
         demoQuery10.setBynavn("København K");
         demoQuery10.setAktiv("false");
-        List<DemoEntity> results10 = queryManager.getAllEntities(session, demoQuery10, DemoEntity.class);
+        List<DemoEntity> results10 = queryManager.getAllEntities(session, demoQuery10, DemoEntity.class, DemoData.class);
         Assert.assertEquals(0, results10.size());
     }
 }
