@@ -11,6 +11,7 @@ import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -159,13 +160,15 @@ public class Engine {
                 registrations = entityManager.parseRegistration(event.getData());
             }
 
-            /*
-            Session session = sessionManager.getSessionFactory().openSession();
+            session = sessionManager.getSessionFactory().openSession();
             Transaction transaction = session.beginTransaction();
-            queryManager.saveRegistration(session, registration.getEntity(), registration);
+            for (Registration registration : registrations) {
+                queryManager.saveRegistration(
+                        session, (E) registration.getEntity(), (R) registration
+                );
+            }
             transaction.commit();
             session.close();
-            */
 
             receipt = new Receipt(event.getId(), eventReceived);
             success = true;
