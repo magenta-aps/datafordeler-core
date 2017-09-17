@@ -119,7 +119,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
      * @return
      */
     public LookupDefinition getLookupDefinition() {
-        return new LookupDefinition(this.databaseFields());
+        return new LookupDefinition(this.databaseFields(), this.getClass());
     }
 
     public abstract void forceLoad(Session session);

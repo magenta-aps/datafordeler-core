@@ -228,6 +228,10 @@ public abstract class EntityManager {
         return registrationMap;
     }
 
+    public boolean handlesOwnSaves() {
+        return false;
+    }
+
     /** Registration fetching **/
 
     /**

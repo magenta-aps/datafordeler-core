@@ -71,13 +71,13 @@ public class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass, Class<D> dClass) throws DataFordelerException {
+    public <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass) throws DataFordelerException {
         this.log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
 
         LookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = "d";
 
-        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY, dClass);
+        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
 
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
@@ -284,7 +284,7 @@ public class QueryManager {
      * @param registration Registration to be saved
      */
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems) throws DataFordelerException {
-        this.log.trace("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
+        System.out.println("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
         }
@@ -294,7 +294,7 @@ public class QueryManager {
 
         E existingEntity = this.getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
         if (existingEntity != null) {
-            this.log.debug("There is an existing entity with uuid "+existingEntity.getUUID().toString());
+            this.log.info("There is an existing entity with uuid "+existingEntity.getUUID().toString());
             entity = existingEntity;
         }
         registration.setEntity(entity);
@@ -362,18 +362,25 @@ public class QueryManager {
         }
 
         Identification existing = this.getIdentification(session, entity.getUUID());
+        System.out.println("existing: "+existing);
         if (existing != null && existing != entity.getIdentification()) {
+            System.out.println("identification "+entity.getUUID()+" already exist");
             entity.setIdentifikation(existing);
-        } else {
+            session.saveOrUpdate(entity);
+        } else if (existing == null) {
+            System.out.println("identification "+entity.getUUID()+" does not already exist or is already assigned");
             session.saveOrUpdate(entity.getIdentification());
+            session.saveOrUpdate(entity);
         }
-        session.saveOrUpdate(entity);
+        System.out.println("Saving entity " + entity + " " + entity.getUUID());
+
 
 
         if (dedupEffects) {
             this.dedupEffects(session, registration);
         }
 
+        System.out.println("Saving registration " + registration);
         session.saveOrUpdate(registration);
         if (lastExistingRegistration != null) {
             session.update(lastExistingRegistration);

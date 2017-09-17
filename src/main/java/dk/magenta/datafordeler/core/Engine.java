@@ -160,15 +160,18 @@ public class Engine {
                 registrations = entityManager.parseRegistration(event.getData());
             }
 
-            session = sessionManager.getSessionFactory().openSession();
-            Transaction transaction = session.beginTransaction();
-            for (Registration registration : registrations) {
-                queryManager.saveRegistration(
-                        session, (E) registration.getEntity(), (R) registration
-                );
+            if (!entityManager.handlesOwnSaves()) {
+                session = sessionManager.getSessionFactory().openSession();
+                Transaction transaction = session.beginTransaction();
+                for (Registration registration : registrations) {
+                    queryManager.saveRegistration(
+                            session, (E) registration.getEntity(), (R) registration,
+                            false, false
+                    );
+                }
+                transaction.commit();
+                session.close();
             }
-            transaction.commit();
-            session.close();
 
             receipt = new Receipt(event.getId(), eventReceived);
             success = true;

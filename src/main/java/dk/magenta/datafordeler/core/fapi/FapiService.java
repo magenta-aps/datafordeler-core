@@ -396,7 +396,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         this.applyQuery(session, query);
         Set<E> entities = null;
         try {
-            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass(), this.getDataClass()));
+            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
             for (E entity : entities) {
                 try {
                     objectMapper.writeValueAsString(entity);
