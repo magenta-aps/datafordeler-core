@@ -1,7 +1,9 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
@@ -29,6 +31,7 @@ import javax.jws.WebParam;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
@@ -45,6 +48,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public static final String[] PARAM_REGISTRATION_TO = new String[] {"registreringTil", "registrationTo"};
     public static final String[] PARAM_EFFECT_FROM = new String[] {"virkningFra", "effectFrom"};
     public static final String[] PARAM_EFFECT_TO = new String[] {"virkningTil", "effectTo"};
+    public static final String[] PARAM_RECORD_AFTER = new String[] { "recordAfter" };
 
     @Autowired
     protected ObjectMapper objectMapper;
@@ -189,36 +193,45 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     public Envelope getRest(@PathVariable("id") String id, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
         throws AccessDeniedException, AccessRequiredException, InvalidTokenException, InvalidClientInputException {
         Envelope envelope = new Envelope();
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
-        LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
-        loggerHelper.info(
-            "Incoming REST request for " + this.getServiceName() + " with id " + id
-        );
-        this.checkAndLogAccess(loggerHelper);
-        Q query = this.getQuery(requestParams, true);
-        this.applyAreaRestrictionsToQuery(query, user);
-        envelope.addQueryData(query);
-        envelope.addUserData(user);
-        envelope.addRequestData(request);
+        Session session = sessionManager.getSessionFactory().openSession();
         try {
-            E entity = this.searchById(id, query);
-            if(outputWrapper != null) {
-                envelope.setResult(outputWrapper.wrapResult(entity));
-            } else {
-                envelope.setResult(entity);
+            DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
+            loggerHelper.info(
+                    "Incoming REST request for " + this.getServiceName() + " with id " + id
+            );
+            this.checkAndLogAccess(loggerHelper);
+            Q query = this.getQuery(requestParams, true);
+            this.applyAreaRestrictionsToQuery(query, user);
+            envelope.addQueryData(query);
+            envelope.addUserData(user);
+            envelope.addRequestData(request);
+            try {
+                E entity = this.searchById(id, query, session);
+                if (outputWrapper != null) {
+                    envelope.setResult(outputWrapper.wrapResult(entity));
+                } else {
+                    envelope.setResult(entity);
+                }
+                if (entity == null) {
+                    this.log.debug("Item not found, returning");
+                } else {
+                    this.log.debug("Item found, returning");
+                }
+                envelope.close();
+                loggerHelper.logResult(envelope);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+                throw new InvalidClientInputException(e.getMessage());
             }
-            if (entity == null) {
-                this.log.debug("Item not found, returning");
-            } else {
-                this.log.debug("Item found, returning");
-            }
-            envelope.close();
-            loggerHelper.logResult(envelope);
-            return envelope;
-        } catch (IllegalArgumentException e) {
+        } catch (DataFordelerException e) {
             e.printStackTrace();
-            throw new InvalidClientInputException(e.getMessage());
+            this.log.error("Error in REST getById", e);
+            throw e;
+        } finally {
+            session.close();
         }
+        return envelope;
     }
 
 
@@ -235,34 +248,43 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
                      @WebParam(name="registeringFra") @XmlElement(required = false) String registeringFra,
                      @WebParam(name="registeringTil") @XmlElement(required = false) String registeringTil)
         throws InvalidClientInputException, AccessRequiredException, InvalidTokenException, AccessDeniedException {
+        Session session = sessionManager.getSessionFactory().openSession();
         Envelope envelope = new Envelope();
-        MessageContext messageContext = context.getMessageContext();
-        HttpServletRequest request = (HttpServletRequest)messageContext.get(MessageContext.SERVLET_REQUEST);
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
-        LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
-        loggerHelper.info(
-            "Incoming SOAP request for " + this.getServiceName() + " with id " + id
-        );
-        this.checkAndLogAccess(loggerHelper);
-        Q query = this.getQuery(registeringFra, registeringTil);
-        envelope.addQueryData(query);
-        envelope.addUserData(user);
-        envelope.addRequestData(request);
         try {
-            E entity = this.searchById(id, query);
-            if(outputWrapper != null) {
-                envelope.setResult(outputWrapper.wrapResult(entity));
-            } else {
-                envelope.setResult(entity);
+            MessageContext messageContext = context.getMessageContext();
+            HttpServletRequest request = (HttpServletRequest) messageContext.get(MessageContext.SERVLET_REQUEST);
+            DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
+            loggerHelper.info(
+                    "Incoming SOAP request for " + this.getServiceName() + " with id " + id
+            );
+            this.checkAndLogAccess(loggerHelper);
+            Q query = this.getQuery(registeringFra, registeringTil);
+            envelope.addQueryData(query);
+            envelope.addUserData(user);
+            envelope.addRequestData(request);
+            try {
+                E entity = this.searchById(id, query, session);
+                if (outputWrapper != null) {
+                    envelope.setResult(outputWrapper.wrapResult(entity));
+                } else {
+                    envelope.setResult(entity);
+                }
+                this.log.debug("Item found, returning");
+                this.log.info("registrations: " + entity.getRegistrations());
+                envelope.close();
+                loggerHelper.logResult(envelope);
+            } catch (IllegalArgumentException e) {
+                throw new InvalidClientInputException(e.getMessage());
             }
-            this.log.debug("Item found, returning");
-            this.log.info("registrations: "+entity.getRegistrations());
-            envelope.close();
-            loggerHelper.logResult(envelope);
-            return envelope;
-        } catch (IllegalArgumentException e) {
-            throw new InvalidClientInputException(e.getMessage());
+        } catch (DataFordelerException e) {
+            e.printStackTrace();
+            this.log.error("Error in SOAP getById", e);
+            throw e;
+        } finally {
+            session.close();
         }
+        return envelope;
     }
 
 
@@ -288,26 +310,40 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(exclude = true)
     @RequestMapping(path="/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public Envelope searchRest(@RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request) throws DataFordelerException {
+        Session session = sessionManager.getSessionFactory().openSession();
         Envelope envelope = new Envelope();
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
-        LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
-        loggerHelper.info(
-            "Incoming REST request for " + this.getServiceName() + " with query " + requestParams.toString()
-        );
-        this.checkAndLogAccess(loggerHelper);
-        Q query = this.getQuery(requestParams, false);
-        this.applyAreaRestrictionsToQuery(query, user);
-        envelope.addQueryData(query);
-        envelope.addUserData(user);
-        envelope.addRequestData(request);
-        Set<E> results = this.searchByQuery(query);
-        if(outputWrapper != null) {
-            envelope.setResults(outputWrapper.wrapResults(results));
-        } else {
-            envelope.setResults(results);
+        try {
+            DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
+            loggerHelper.info(
+                    "Incoming REST request for " + this.getServiceName() + " with query " + requestParams.toString()
+            );
+            this.checkAndLogAccess(loggerHelper);
+            Q query = this.getQuery(requestParams, false);
+            this.applyAreaRestrictionsToQuery(query, user);
+            envelope.addQueryData(query);
+            envelope.addUserData(user);
+            envelope.addRequestData(request);
+            Set<E> results = this.searchByQuery(query, session);
+            if (outputWrapper != null) {
+                envelope.setResults(outputWrapper.wrapResults(results));
+            } else {
+                ArrayNode jacksonConverted = objectMapper.valueToTree(results);
+                ArrayList<Object> wrapper = new ArrayList<>();
+                for (JsonNode node : jacksonConverted) {
+                    wrapper.add(node);
+                }
+                envelope.setResults(wrapper);
+            }
+            envelope.close();
+            loggerHelper.logResult(envelope, requestParams.toString());
+        } catch (DataFordelerException e) {
+            e.printStackTrace();
+            this.log.error("Error in REST search", e);
+            throw e;
+        } finally {
+            session.close();
         }
-        envelope.close();
-        loggerHelper.logResult(envelope, requestParams.toString());
         return envelope;
     }
 
@@ -320,26 +356,35 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     // TODO: How to use DafoUserDetails with SOAP requests?
     @WebMethod(operationName = "search")
     public Envelope searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
+        Session session = sessionManager.getSessionFactory().openSession();
         Envelope envelope = new Envelope();
-        MessageContext messageContext = context.getMessageContext();
-        HttpServletRequest request = (HttpServletRequest)messageContext.get(MessageContext.SERVLET_REQUEST);
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
-        LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
-        loggerHelper.info(
-            "Incoming REST request for " + this.getServiceName() + " with query " + query.toString()
-        );
-        this.checkAndLogAccess(loggerHelper);
-        envelope.addQueryData(query);
-        envelope.addUserData(user);
-        envelope.addRequestData(request);
-        Set<E> results = this.searchByQuery(query);
-        if(outputWrapper != null) {
-            envelope.setResult(outputWrapper.wrapResults(results));
-        } else {
-            envelope.setResults(results);
+        try {
+            MessageContext messageContext = context.getMessageContext();
+            HttpServletRequest request = (HttpServletRequest) messageContext.get(MessageContext.SERVLET_REQUEST);
+            DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
+            loggerHelper.info(
+                    "Incoming SOAP request for " + this.getServiceName() + " with query " + query.toString()
+            );
+            this.checkAndLogAccess(loggerHelper);
+            envelope.addQueryData(query);
+            envelope.addUserData(user);
+            envelope.addRequestData(request);
+            Set<E> results = this.searchByQuery(query, session);
+            if (outputWrapper != null) {
+                envelope.setResult(outputWrapper.wrapResults(results));
+            } else {
+                envelope.setResults(results);
+            }
+            envelope.close();
+            loggerHelper.logResult(envelope, query.toString());
+        } catch (DataFordelerException e) {
+            e.printStackTrace();
+            this.log.error("Error in SOAP search", e);
+            throw e;
+        } finally {
+            session.close();
         }
-        envelope.close();
-        loggerHelper.logResult(envelope, query.toString());
         return envelope;
     }
 
@@ -370,6 +415,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             query.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO));
             query.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM));
             query.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO));
+            query.setRecordAfter(parameterMap.getFirstOf(PARAM_RECORD_AFTER));
         } catch (DateTimeParseException e) {
             throw new InvalidClientInputException(e.getMessage());
         }
@@ -390,25 +436,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     //@WebMethod(exclude = true)
     //protected abstract Set<E> searchByQuery(Q query);
     @WebMethod(exclude = true) // Non-soap methods must have this
-    protected Set<E> searchByQuery(Q query) throws DataFordelerException {
-        Session session = this.getSessionManager().getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
+    protected Set<E> searchByQuery(Q query, Session session) throws DataFordelerException {
         this.applyQuery(session, query);
-        Set<E> entities = null;
-        try {
-            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
-            for (E entity : entities) {
-                try {
-                    objectMapper.writeValueAsString(entity);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
-                //entity.forceLoad(session);
-            }
-        } finally {
-            transaction.rollback();
-            session.close();
-        }
+        Set<E> entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
         return entities;
     }
 
@@ -419,8 +449,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @return Found Entities
      */
     @WebMethod(exclude = true)
-    protected E searchById(String id, Q query) {
-        return this.searchById(UUID.fromString(id), query);
+    protected E searchById(String id, Q query, Session session) {
+        return this.searchById(UUID.fromString(id), query, session);
     }
 
 
@@ -431,17 +461,12 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      * @return Found Entities
      */
     @WebMethod(exclude = true)
-    protected E searchById(UUID uuid, Q query) {
-        Session session = this.getSessionManager().getSessionFactory().openSession();
+    protected E searchById(UUID uuid, Q query, Session session) {
         E entity = null;
-        try {
-            this.applyQuery(session, query);
-            entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
-            if (entity != null) {
-                entity.forceLoad(session);
-            }
-        } finally {
-            session.close();
+        this.applyQuery(session, query);
+        entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
+        if (entity != null) {
+            entity.forceLoad(session);
         }
         return entity;
     }
@@ -470,6 +495,10 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             if (query.getEffectTo() != null) {
                 Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
                 filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, query.getEffectTo());
+            }
+            if (query.getRecordAfter() != null) {
+                Filter filter = session.enableFilter(DataItem.FILTER_RECORD_AFTER);
+                filter.setParameter(DataItem.FILTERPARAM_RECORD_AFTER, query.getRecordAfter());
             }
         }
     }

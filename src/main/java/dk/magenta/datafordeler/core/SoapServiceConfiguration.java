@@ -47,9 +47,9 @@ public class SoapServiceConfiguration {
         cxfServlet.setBus(bus);
 
 
-        this.log.info("Known plugins;");
+        this.log.info("Known plugins:");
         for (Plugin plugin : pluginManager.getPlugins()) {
-            this.log.info(plugin.getName());
+            this.log.info("    " + plugin.getName());
         }
 
         List<String> serviceOwnerMatchers = new ArrayList<>();

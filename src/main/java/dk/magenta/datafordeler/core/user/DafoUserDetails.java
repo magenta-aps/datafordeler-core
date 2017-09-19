@@ -24,7 +24,7 @@ public abstract class DafoUserDetails {
   }
 
   public void checkHasSystemRole(String role) throws AccessDeniedException {
-    if(!hasSystemRole(role)) {
+    if (!hasSystemRole(role)) {
       throw new AccessDeniedException(
           "User " + this.toString() + " does not have access to " + role
       );

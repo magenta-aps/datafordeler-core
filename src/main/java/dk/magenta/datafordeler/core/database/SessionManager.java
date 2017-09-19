@@ -42,6 +42,8 @@ public class SessionManager {
             managedClasses.add(dk.magenta.datafordeler.core.database.Registration.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.Effect.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.DataItem.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.RecordCollection.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.RecordData.class);
             managedClasses.add(dk.magenta.datafordeler.core.command.Command.class);
 
             for (Class cls : managedClasses) {
