@@ -1,16 +1,20 @@
 package dk.magenta.datafordeler.core;
 
-import dk.magenta.datafordeler.core.command.DumpCommandHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import dk.magenta.datafordeler.core.command.Worker;
 import dk.magenta.datafordeler.core.database.DumpData;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.Registration;
-import dk.magenta.datafordeler.core.exception.DataFordelerException;
-import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
+import dk.magenta.datafordeler.core.plugin.EntityManager;
+import dk.magenta.datafordeler.core.plugin.Plugin;
+import java.io.StringWriter;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -22,15 +26,14 @@ import org.hibernate.Transaction;
  */
 public class Dump extends Worker {
 
-    private Logger log = LogManager.getLogger("Dump");
+    private static final String[] FORMATS = {"xml", "json"};
+
+    private Logger log = LogManager.getLogger(this.getClass().getName());
 
     private Engine engine;
-    private String query, plugin;
 
-    public Dump(Engine engine, DumpCommandHandler.DumpCommandData data) {
+    public Dump(Engine engine) {
         this.engine = engine;
-        this.query = data.query;
-        this.plugin = data.plugin;
     }
 
     /**
@@ -38,89 +41,96 @@ public class Dump extends Worker {
      * DUMP
      */
     public void run() {
+        Session session =
+            this.engine.sessionManager.getSessionFactory()
+                .openSession();
+
         try {
-            if (runningDumps.keySet().contains(this.query)) {
-                throw new SimilarJobRunningException(
-                    "Another dump job is already running for Query "
-                        + this.query
-                        .getClass()
-                        .getCanonicalName() + " (" + this.query.hashCode()
-                        + ")");
-            }
+            this.log.info("Worker {} is dumping the database", this.getId());
 
-            this.log.info(
-                "Worker " + this.getId() + " adding lock for " + this.query
-                    .getClass()
-                    .getCanonicalName()
-                    + " (" + this.query.hashCode() + ")");
-            runningDumps.put(this.query, this);
-
-            this.log.info(
-                "Worker " + this.getId() + " fetching events with " + this.query
-                    .getClass()
-                    .getCanonicalName());
-
-            boolean error = false;
-
-            // MEAT GOES HERE
-            Class<? extends Entity> cls =
-                this.engine.pluginManager.getPluginByName(this.plugin)
-                    .getRegisterManager().getEntityManager(this.query)
-                    .getManagedEntityClass();
-
-            Session session =
-                this.engine.sessionManager.getSessionFactory().openSession();
             Transaction transaction = session.beginTransaction();
             OffsetDateTime now = OffsetDateTime.now();
 
-            try {
-                List<? extends Entity> entities =
-                    this.engine.queryManager.getAllEntities(session, cls);
+            for (Plugin plugin : this.engine.pluginManager.getPlugins()) {
+                for (EntityManager entityManager :
+                    plugin.getRegisterManager().getEntityManagers()) {
+                    String schema = entityManager.getSchema();
 
-                this.log.info("dumping {} entities of type {}",
-                    entities.size(), this.query);
+                    List<? extends Entity> entities =
+                        this.engine.queryManager.getAllEntities(session,
+                            entityManager.getManagedEntityClass());
 
-                for (Entity entity : entities) {
-                    // FIXME: this is horribly, horribly wrong
-                    Registration reg = entity.getRegistrationAt(now);
+                    this.log.info("dumping {} {} in {}",
+                        entities.size(), schema,
+                        plugin.getName());
 
-                    String data = reg.toString();
+                    // TODO: this is hugely inefficient, using loads of memory
+                    List<Registration> regs = entities.stream().map(
+                        e -> e.getRegistrationAt(now)
+                    ).collect(Collectors.toList());
 
-                    session.save(new DumpData(this.plugin, this.query, data));
+                    for (String format : FORMATS) {
+                        session.save(
+                            new DumpData(plugin.getName(),
+                                schema, format, dump(regs, format), now)
+                        );
+                    }
+
                 }
-
-                transaction.commit();
-            } finally {
-                session.close();
             }
 
+            transaction.commit();
+
             if (this.doCancel) {
-                this.log.info("Worker " + this.getId() + ": Dump interrupted");
-            } else if (error) {
-                this.log.info("Worker " + this.getId() + ": Dump errored");
+                this.log.info("Worker {}: Dump interrupted", this.getId());
             } else {
-                this.log.info("Worker " + this.getId() + ": Dump complete");
+                this.log.info("Worker {}: Dump complete", this.getId());
             }
 
             this.onComplete();
-
-            this.log.info(
-                "Worker " + this.getId() + " removing lock for " + this.query
-                    .getClass()
-                    .getCanonicalName() + " (" + this.query.hashCode() + ") on "
-                    + OffsetDateTime.now()
-                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-            runningDumps.remove(this.query);
-
-        } catch (DataFordelerException e) {
-            runningDumps.remove(this.query);
-            throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            session.close();
         }
     }
 
-    private static final HashMap<String, Dump> runningDumps =
-        new HashMap<>();
+    private String dump(List<? extends Registration> registrations, String
+        format) {
+        try {
+            switch (format) {
+                case "xml": {
+                    StringWriter w = new StringWriter();
 
+                    XMLInputFactory inputFactory = XMLInputFactory.newFactory();
+                    XMLOutputFactory outputFactory = XMLOutputFactory
+                        .newFactory();
+
+                    XMLStreamWriter writer = outputFactory
+                        .createXMLStreamWriter(w);
+                    XmlMapper mapper = new XmlMapper(inputFactory);
+
+                    writer.writeStartDocument();
+                    writer.writeStartElement("Registrations");
+                    for (Registration r : registrations) {
+                        mapper.writeValue(writer, r);
+                    }
+                    writer.writeEndElement();
+                    writer.writeEndDocument();
+
+                    return w.toString();
+
+                }
+
+                case "json":
+                    return new ObjectMapper().writeValueAsString(registrations);
+                default:
+                    return null;
+            }
+        } catch (Exception e) {
+            this.log.warn("dump failed", e);
+
+            return null;
+        }
+    }
 }
