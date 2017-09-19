@@ -158,6 +158,20 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return registrations;
     }
 
+    public R getRegistrationAt(OffsetDateTime dateTime) {
+        for (R registration : this.getRegistrations()) {
+            OffsetDateTime from = registration.getRegistrationFrom();
+            OffsetDateTime to = registration.getRegistrationTo();
+
+            if (!from.isAfter(dateTime) &&
+                (to == null || to.isAfter(dateTime))) {
+                return registration;
+            }
+        }
+
+        return null;
+    }
+
     public void forceLoad(Session session) {
         for (R registration : this.registrations) {
             registration.forceLoad(session);

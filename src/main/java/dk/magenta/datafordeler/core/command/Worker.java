@@ -44,4 +44,6 @@ public abstract class Worker extends Thread implements Runnable {
     public boolean isDoCancel() {
         return doCancel;
     }
+
+    public abstract void run();
 }
