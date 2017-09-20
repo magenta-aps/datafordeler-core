@@ -38,6 +38,9 @@ public abstract class Query<E extends Entity> {
     @QueryField(queryName = "effectTo", type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectTo = null;
 
+    @QueryField(queryName = "recordAfter", type = QueryField.FieldType.STRING)
+    protected OffsetDateTime recordAfter = null;
+
     public Query() {
     }
 
@@ -173,6 +176,19 @@ public abstract class Query<E extends Entity> {
         this.effectTo = parseDateTime(effectTo);
     }
 
+    public OffsetDateTime getRecordAfter() {
+        return this.recordAfter;
+    }
+
+    public void setRecordAfter(OffsetDateTime recordAfter) {
+        this.recordAfter = recordAfter;
+    }
+
+    public void setRecordAfter(String recordAfter) throws DateTimeParseException {
+        this.recordAfter = parseDateTime(recordAfter);
+    }
+
+
     public abstract Map<String, Object> getSearchParameters();
 
     /**
@@ -181,7 +197,13 @@ public abstract class Query<E extends Entity> {
      * the attribute in question, and values are set from the query.
      * @return
      */
-    public abstract LookupDefinition getLookupDefinition();
+    public LookupDefinition getLookupDefinition() {
+        LookupDefinition lookupDefinition = new LookupDefinition(this, this.getDataClass());
+        if (this.recordAfter != null) {
+            lookupDefinition.put("recordSet.records.timestamp", this.recordAfter, OffsetDateTime.class, LookupDefinition.Operator.GT);
+        }
+        return lookupDefinition;
+    }
 
     /**
      * Parse a ParameterMap from a http request and insert values in this Query object
@@ -339,7 +361,7 @@ public abstract class Query<E extends Entity> {
      * @return
      * @throws NoSuchFieldException
      */
-    public Field getField(String fieldName) throws NoSuchFieldException {
+    /*public Field getField(String fieldName) throws NoSuchFieldException {
         for (Class cls = this.getClass(); cls != null; cls = cls.getSuperclass()) {
             try {
                 return cls.getDeclaredField(fieldName);
@@ -366,6 +388,6 @@ public abstract class Query<E extends Entity> {
             }
         }
         return s.toString();
-    }
+    }*/
 
 }

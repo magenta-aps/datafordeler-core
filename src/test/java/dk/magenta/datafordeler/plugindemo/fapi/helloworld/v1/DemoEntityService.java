@@ -84,7 +84,7 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
         this.applyQuery(session, query);
         Set<DemoEntity> entities = null;
         try {
-            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, DemoEntity.class, DemoData.class));
+            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, DemoEntity.class));
         } catch (DataFordelerException e) {
             e.printStackTrace();
         } finally {

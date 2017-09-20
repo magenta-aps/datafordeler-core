@@ -41,7 +41,7 @@ public class QueryTest {
 
         @Override
         public LookupDefinition getLookupDefinition() {
-            LookupDefinition lookupDefinition = new LookupDefinition(this);
+            LookupDefinition lookupDefinition = new LookupDefinition(this, DataItem.class);
             return lookupDefinition;
         }
 

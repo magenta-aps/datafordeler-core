@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.Session;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -20,6 +17,9 @@ import java.util.*;
 @Embeddable
 // @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class DataItem<V extends Effect, D extends DataItem> extends DatabaseEntry {
+
+    public static final String FILTER_RECORD_AFTER = "recordAfterFilter";
+    public static final String FILTERPARAM_RECORD_AFTER = "recordAfterDate";
 
     public DataItem() {
     }
@@ -61,6 +61,36 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
      */
     public boolean equalData(D other) {
         return this.asMap().equals(other.asMap());
+    }
+
+
+    @JsonIgnore
+    @OneToOne(cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL)
+    private RecordCollection recordSet = null;
+
+    public void addRecordData(RecordData recordData) {
+        if (this.recordSet == null) {
+            this.recordSet = new RecordCollection();
+        }
+        this.recordSet.addRecord(recordData);
+        this.setLastUpdated(this.recordSet.getNewestRecord().getTimestamp());
+    }
+
+    @JsonIgnore
+    public RecordCollection getRecordSet() {
+        return this.recordSet;
+    }
+
+    @Column
+    private OffsetDateTime lastUpdated;
+
+    public OffsetDateTime getLastUpdated() {
+        return this.lastUpdated;
+    }
+
+    public void setLastUpdated(OffsetDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     /**
@@ -119,7 +149,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
      * @return
      */
     public LookupDefinition getLookupDefinition() {
-        return new LookupDefinition(this.databaseFields());
+        return new LookupDefinition(this.databaseFields(), this.getClass());
     }
 
     public abstract void forceLoad(Session session);

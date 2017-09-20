@@ -63,34 +63,64 @@ public class LookupDefinition {
     public static final String entityref = "$";
     private static final String quotedSeparator = Pattern.quote(separator);
     private ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
+    private Class<? extends DataItem> dataClass;
+
+    public enum Operator {
+        EQ("="),
+        LT("<"),
+        GT(">"),
+        LTE("<="),
+        GTE(">="),
+        NE("!=");
+        private final String name;
+        private Operator(String s) {
+            name = s;
+        }
+        public String toString() {
+            return this.name;
+        }
+    }
 
     private class FieldDefinition {
+
         public String path;
         public Object value;
         public Class type;
+        public Operator operator = Operator.EQ;
 
         public FieldDefinition(String path, Object value) {
-            this(path, value, value != null ? value.getClass() : null);
+            this(path, value, value != null ? value.getClass() : null, Operator.EQ);
         }
         public FieldDefinition(String path, Object value, Class type) {
+            this(path, value, type, Operator.EQ);
+        }
+        public FieldDefinition(String path, Object value, Class type, Operator operator) {
             this.path = path;
             this.value = value;
             this.type = type;
+            this.operator = operator;
         }
 
         public boolean onEntity() {
             return this.path.startsWith(entityref);
         }
+
+        public String getOperatorSign() {
+            return this.operator.toString();
+        }
     }
 
-    public LookupDefinition() {
+    public LookupDefinition(Class<? extends DataItem> dataClass) {
+        this.dataClass = dataClass;
     }
 
-    public LookupDefinition(Query query) {
+    public LookupDefinition(Query query, Class<? extends DataItem> dataClass) {
+        this(dataClass);
         this.query = query;
     }
 
-    public LookupDefinition(Map<String, Object> map) {
+    public LookupDefinition(Map<String, Object> map, Class<? extends DataItem> dataClass) {
+        this(dataClass);
         this.putAll(map);
     }
 
@@ -109,6 +139,12 @@ public class LookupDefinition {
     public void put(String path, Object value, Class fieldClass) {
         if (value != null) {
             this.fieldDefinitions.add(new FieldDefinition(path, value, fieldClass));
+        }
+    }
+
+    public void put(String path, Object value, Class fieldClass, Operator operator) {
+        if (value != null) {
+            this.fieldDefinitions.add(new FieldDefinition(path, value, fieldClass, operator));
         }
     }
 
@@ -146,7 +182,7 @@ public class LookupDefinition {
     public String getHqlJoinString(String rootKey, String entityKey) {
         ArrayList<String> joinTables = new ArrayList<>();
         for (FieldDefinition definition : this.fieldDefinitions) {
-            joinTables.addAll(this.getHqlJoinParts(rootKey, entityKey, definition));
+            joinTables.addAll(this.getHqlJoinParts(rootKey, definition));
         }
         String joinString = " JOIN ";
         if (!joinTables.isEmpty()) {
@@ -159,7 +195,7 @@ public class LookupDefinition {
         return "";
     }
 
-    private ArrayList<String> getHqlJoinParts(String rootKey, String entityKey, FieldDefinition fieldDefinition) {
+    private ArrayList<String> getHqlJoinParts(String rootKey, FieldDefinition fieldDefinition) {
         ArrayList<String> joinTables = new ArrayList<>();
         String path = fieldDefinition.path;
         if (path.contains(separator)) {
@@ -181,23 +217,24 @@ public class LookupDefinition {
         return joinTables;
     }
 
-    public String getHqlWhereString(String rootKey, String entityKey, Class dClass) {
-        return this.getHqlWhereString(rootKey, entityKey, dClass, " AND ");
+    public String getHqlWhereString(String rootKey, String entityKey) {
+        return this.getHqlWhereString(rootKey, entityKey, " AND ");
     }
-        /**
-         * Obtain the table where string, specifying the hql WHERE statement for each value in the LookupDefinition
-         * Used in conjunction with getHqlJoinString (and using the same input keys).
-         *
-         * @param dataItemKey Root key, denoting the baseline for the join. This is most often the hql identifier
-         *                for the DataItem table: if the HQL so far is "SELECT e from FooEntity JOIN e.registrations r JOIN r.effects v JOIN v.dataItems d",
-         *                then "d" would be the rootKey to look up paths within the dataItem table
-         * @param entityKey Entity key, denoting the hql identifier for the Entity table. In the above example, "e" would be the entityKey
-         * @return where string, e.g. " AND d_abc.def = :d_abc_def AND d_abc.ghi = :d_abc_ghi
-         */
-    public String getHqlWhereString(String dataItemKey, String entityKey, Class dClass, String prefix) {
+
+    /**
+     * Obtain the table where string, specifying the hql WHERE statement for each value in the LookupDefinition
+     * Used in conjunction with getHqlJoinString (and using the same input keys).
+     *
+     * @param dataItemKey Root key, denoting the baseline for the join. This is most often the hql identifier
+     *                for the DataItem table: if the HQL so far is "SELECT e from FooEntity JOIN e.registrations r JOIN r.effects v JOIN v.dataItems d",
+     *                then "d" would be the rootKey to look up paths within the dataItem table
+     * @param entityKey Entity key, denoting the hql identifier for the Entity table. In the above example, "e" would be the entityKey
+     * @return where string, e.g. " AND d_abc.def = :d_abc_def AND d_abc.ghi = :d_abc_ghi
+     */
+    public String getHqlWhereString(String dataItemKey, String entityKey, String prefix) {
 
         String whereContainer = entityKey + " IN (" +
-                "SELECT " + entityKey + " FROM " + dClass.getCanonicalName() + " " + dataItemKey +
+                "SELECT " + entityKey + " FROM " + this.dataClass.getCanonicalName() + " " + dataItemKey +
                 " JOIN " + dataItemKey + ".effects v" +
                 " JOIN v.registration r" +
                 " JOIN r.entity " + entityKey +
@@ -209,7 +246,7 @@ public class LookupDefinition {
             if (fieldDefinition.onEntity()) {
                 extraWhere.add("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
             } else {
-                List<String> joins = this.getHqlJoinParts(dataItemKey, entityKey, fieldDefinition);
+                List<String> joins = this.getHqlJoinParts(dataItemKey, fieldDefinition);
                 String join = "";
                 if (joins != null && !joins.isEmpty()) {
                     StringJoiner sj = new StringJoiner(" JOIN ", " JOIN ", "");
@@ -267,7 +304,7 @@ public class LookupDefinition {
                 if (parameterValueWildcard(list.get(i))) {
                     or.add("cast(" + variablePath + " as string) like :" + parameterPath + "_" + i);
                 } else {
-                    or.add(variablePath + " = :" + parameterPath + "_" + i);
+                    or.add(variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath + "_" + i);
                 }
             }
             if (or.length() > 0) {
@@ -277,7 +314,7 @@ public class LookupDefinition {
             if (parameterValueWildcard(value)) {
                 return "cast(" + variablePath + " as string) like :" + parameterPath;
             } else {
-                return variablePath + " = :" + parameterPath;
+                return variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath;
             }
         }
         return null;
