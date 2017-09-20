@@ -1,3 +1,5 @@
+.. _bitemporality:
+
 Bitemporal datamodel
 ====================
 

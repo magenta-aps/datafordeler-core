@@ -5,6 +5,9 @@ Dokumentation for `datafordeler-core. <https://github.com/magenta-aps/datafordel
 
 .. toctree::
 
+    bitemporality.rst
+    plugins.rst
+
 
 Formål
 ------
@@ -41,7 +44,7 @@ ConfigurationManager
 
 Bitemporalitetsmodel
   Klasser til at definere bitemporalitetsmodellen overfor plugins.
-  Se `Bitemporalitet <bitemporality.rst>`_.
+  Se :ref:`bitemporality`.
 
 LookupDefintion
   Klasse til at beskrive et opslag i databasen. Ud fra en liste af input for feltets objektsti, feltets datatype, den efterspurgte værdi, og eventuelt sammenlignings-operator, kan der genereres komponentstrenge til HQL-opslag i databasen.
@@ -57,7 +60,7 @@ GapiServlet
 
 Plugin-definition
   Superklasser til plugins.
-  Se `Plugins <plugins.rst>`_
+  Se :ref:`plugins`.
 
 Hjælpeklasser til plugins
   Klasser til hentning af data fra eksterne kilder med HTTP, FTP, og HTTP med scan-scroll.
