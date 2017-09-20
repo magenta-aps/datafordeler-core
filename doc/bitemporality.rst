@@ -14,4 +14,5 @@ Registreringen har derunder et antal virkninger, også med tidsafgrænsning, som
 Virkninger har derefter en mange-til-mange relation til Dataobjekter, hvor hvert dataobjekt kan være tilkoblet flere virkninger i flere registreringer.
 Disse repræsenterer en lille stump af entitetens data, som har den refererede bitemporalitet.
 Andre dataobjekter indeholder så andre datastumper med anden bitemporalitet, og sammen udgør de et helt billede af entiteten.
-Hver datastump har også et tidsstempel for hvornår det sidst blev opdateret, så der kan udtrækkes en afgrænset mængde af dataobjekter som er ændret siden et givet tidspunkt.
+Hver datastump har også et tidsstempel for hvornår det sidst blev opdateret,
+så der kan udtrækkes en afgrænset mængde af dataobjekter som er ændret siden et givet tidspunkt.

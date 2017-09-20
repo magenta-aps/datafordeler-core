@@ -27,11 +27,11 @@ ConfigurationManager
   Hvis der ikke findes en Configuration i databasen ved opstart, skabes og gemmes der en med standardværdier.
 
 Dataklasser
-  For hver entitetstype findes klasser til lagring af entiteten og dens dataobjeketer (se `Bitemporalitet <bitemporality.rst>`_),
+  For hver entitetstype findes klasser til lagring af entiteten og dens dataobjeketer (se :ref:`bitemporality`),
   samt tynde implementationer af bitemporalitetsklasserne.
 
 EntityManager
-  Klasse til at håndtere en bestemt Entitetstype, f.eks. "Person".
+  Klasse til at håndtere en bestemt entitetstype, f.eks. "Person".
   EntityManageren sørger for at hente data fra kilden, fortolke indkommende data,
   sende kvitteringer til kilden, samt andre relevante opgaver relateret til den enkelte entitetstype.
 
