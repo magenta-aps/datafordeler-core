@@ -19,9 +19,8 @@ if exist "%DIR%local_settings.properties" (
 
 echo "Build core"
 pushd %COREDIR%
-   call mvnw.cmd clean install -P no-repackage
+   call mvnw.cmd clean install
 popd
-
 
 echo "Build cpr"
 pushd %DIR%..\plugin\cpr
@@ -36,10 +35,6 @@ popd
 echo "Build gladdrreg"
 pushd %DIR%..\plugin\gladdrreg
     call mvnw.cmd clean install
-popd
-
-pushd %COREDIR%
-call mvnw.cmd clean package
 popd
 
 rem Copy compiled WAR so running will not hold a lock on the compiled file destination
