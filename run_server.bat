@@ -24,17 +24,17 @@ popd
 
 
 echo "Build cpr"
-pushd %DIR%..\plugins\CprPlugin
+pushd %DIR%..\plugin\cpr
     call mvnw.cmd clean install
 popd
 
 echo "Build cvr"
-pushd %DIR%..\plugins\CvrPlugin
+pushd %DIR%..\plugin\cvr
     call mvnw.cmd clean install
 popd
 
 echo "Build gladdrreg"
-pushd %DIR%..\plugins\GladdrregPlugin
+pushd %DIR%..\plugin\gladdrreg
     call mvnw.cmd clean install
 popd
 
