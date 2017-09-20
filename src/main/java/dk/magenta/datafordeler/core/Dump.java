@@ -99,6 +99,9 @@ public class Dump extends Worker {
         format) {
         try {
             switch (format) {
+                case "json":
+                    return new ObjectMapper().writeValueAsString(registrations);
+
                 case "xml": {
                     StringWriter w = new StringWriter();
 
@@ -122,8 +125,6 @@ public class Dump extends Worker {
 
                 }
 
-                case "json":
-                    return new ObjectMapper().writeValueAsString(registrations);
                 default:
                     return null;
             }
