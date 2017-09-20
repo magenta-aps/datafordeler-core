@@ -56,7 +56,7 @@ public class PluginManager {
             }
             plugin.setPluginManager(this);
         }
-        for(PluginManagerCallbackHandler handler : postConstructCallbackHandlers) {
+        for (PluginManagerCallbackHandler handler : postConstructCallbackHandlers) {
             handler.executePluginManagerCallback(this);
         }
         afterPostContruct = true;
