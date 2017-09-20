@@ -87,7 +87,7 @@ public class Application {
         } catch (Throwable e) {
             while (e != null) {
                 if (e instanceof com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) {
-                    System.out.println(((com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) e).getErrors());
+                    log.error(((com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) e).getErrors());
                 }
                 e = e.getCause();
             }

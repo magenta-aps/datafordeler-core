@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import dk.magenta.datafordeler.core.role.ReadServiceRole;
 import dk.magenta.datafordeler.core.role.SystemRole;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,5 +18,7 @@ public abstract class RolesDefinition {
     public List<SystemRole> getRoles() {
         return new ArrayList<SystemRole>();
     }
+
+    public abstract ReadServiceRole getDefaultReadRole();
 
 }

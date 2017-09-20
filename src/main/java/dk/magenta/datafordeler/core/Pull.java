@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.HashMap;
 
 /**
@@ -53,8 +54,8 @@ public class Pull extends Worker implements Runnable {
             this.log.info("Worker "+this.getId()+" fetching events with " + this.registerManager.getClass().getCanonicalName());
 
             boolean error = false;
-            for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
-                ItemInputStream<? extends PluginSourceData> eventStream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
+            Collection<ItemInputStream<? extends PluginSourceData>> streams = this.registerManager.pullEvents();
+            for (ItemInputStream<? extends PluginSourceData> eventStream : streams) {
 
                 int count = 0;
                 try {
