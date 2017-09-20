@@ -3,14 +3,11 @@ package dk.magenta.datafordeler.core.fapi;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.LookupDefinition;
 
-import java.lang.reflect.Field;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
 
 /**
  * Query object specifying a search, with basic filter parameters

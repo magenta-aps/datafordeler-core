@@ -2,7 +2,6 @@ package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
-import dk.magenta.datafordeler.core.role.SystemRole;
 
 import java.util.*;
 

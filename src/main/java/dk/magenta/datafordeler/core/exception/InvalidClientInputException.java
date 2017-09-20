@@ -1,9 +1,5 @@
 package dk.magenta.datafordeler.core.exception;
 
-import java.util.zip.DataFormatException;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 

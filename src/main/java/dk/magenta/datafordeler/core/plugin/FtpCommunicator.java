@@ -3,12 +3,7 @@ package dk.magenta.datafordeler.core.plugin;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
-import java.io.ByteArrayInputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.Proxy.Type;
 import org.apache.commons.net.PrintCommandListener;
-import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
@@ -16,10 +11,13 @@ import org.apache.http.StatusLine;
 import org.apache.logging.log4j.util.Strings;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.Proxy.Type;
 import java.net.URI;
 import java.util.*;
 

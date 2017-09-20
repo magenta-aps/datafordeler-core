@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.user;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.role.SystemRole;
+
 import java.util.ArrayList;
 import java.util.Collection;
 

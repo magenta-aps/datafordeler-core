@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.database.Entity;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

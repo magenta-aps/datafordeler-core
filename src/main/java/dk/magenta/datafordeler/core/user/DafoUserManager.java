@@ -2,13 +2,12 @@ package dk.magenta.datafordeler.core.user;
 
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
-import javax.servlet.http.HttpServletRequest;
 import org.opensaml.saml2.core.Assertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Manages DAFO users that are created from incoming SAML tokens.

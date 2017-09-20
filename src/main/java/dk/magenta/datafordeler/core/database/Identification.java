@@ -2,7 +2,9 @@ package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import java.util.UUID;
 
 /**

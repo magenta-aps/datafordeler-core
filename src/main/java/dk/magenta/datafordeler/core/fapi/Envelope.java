@@ -1,15 +1,14 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 
-import java.time.format.DateTimeFormatter;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.annotation.XmlElement;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;

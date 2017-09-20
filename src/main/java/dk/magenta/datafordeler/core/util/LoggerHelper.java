@@ -2,10 +2,10 @@ package dk.magenta.datafordeler.core.util;
 
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.fapi.Envelope;
-import dk.magenta.datafordeler.core.stereotypes.DafoUser;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
-import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * A logger helper that helps outputting request and user information with log messages.

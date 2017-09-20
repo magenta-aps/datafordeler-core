@@ -1,11 +1,11 @@
 package dk.magenta.datafordeler.core.user;
 
+import dk.magenta.datafordeler.core.PluginManager;
+import dk.magenta.datafordeler.core.PluginManagerCallbackHandler;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.role.SystemRole;
-import dk.magenta.datafordeler.core.PluginManager;
-import dk.magenta.datafordeler.core.PluginManagerCallbackHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

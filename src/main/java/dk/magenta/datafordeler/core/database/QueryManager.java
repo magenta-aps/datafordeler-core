@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
+
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
 import java.time.OffsetDateTime;

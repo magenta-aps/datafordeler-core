@@ -3,7 +3,10 @@ package dk.magenta.datafordeler.core;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.quartz.*;
+import org.quartz.InterruptableJob;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.UnableToInterruptJobException;
 
 /**
  * Created by lars on 06-04-17.
