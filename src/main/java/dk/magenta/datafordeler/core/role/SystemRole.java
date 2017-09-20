@@ -64,7 +64,7 @@ public abstract class SystemRole {
 
     public String getRoleName() {
         return this.getGrantType() + this.getTargetName();
-    };
+    }
 
     @Override
     public boolean equals(Object o) {

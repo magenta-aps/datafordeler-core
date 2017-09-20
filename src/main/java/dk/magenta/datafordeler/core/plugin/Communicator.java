@@ -13,8 +13,8 @@ import java.net.URI;
  */
 public interface Communicator {
 
-  public abstract InputStream fetch(URI uri) throws HttpStatusException, DataStreamException;
+  InputStream fetch(URI uri) throws HttpStatusException, DataStreamException;
 
-  public abstract StatusLine send(URI endpoint, String payload) throws IOException;
+  StatusLine send(URI endpoint, String payload) throws IOException;
 
 }

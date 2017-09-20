@@ -73,7 +73,7 @@ public class LookupDefinition {
         GTE(">="),
         NE("!=");
         private final String name;
-        private Operator(String s) {
+        Operator(String s) {
             name = s;
         }
         public String toString() {

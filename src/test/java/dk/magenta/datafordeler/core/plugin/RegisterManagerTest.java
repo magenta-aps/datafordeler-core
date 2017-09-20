@@ -202,7 +202,7 @@ public class RegisterManagerTest extends PluginTestBase {
 
         PluginSourceData data;
         int eventCounter = 0;
-        while ((data = (PluginSourceData) dataStream.next()) != null) {
+        while ((data = dataStream.next()) != null) {
             eventCounter++;
             Assert.assertEquals("msgid", data.getId());
             Assert.assertEquals(reference, data.getReference());
