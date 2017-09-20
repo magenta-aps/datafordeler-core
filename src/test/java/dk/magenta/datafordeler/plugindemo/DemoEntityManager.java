@@ -69,7 +69,6 @@ public class DemoEntityManager extends EntityManager {
     }
 
     public void setPort(int port) {
-        System.out.println("Setting port to "+port);
         this.URISubstrings = new String[] {
                 "http://localhost:" + port
         };

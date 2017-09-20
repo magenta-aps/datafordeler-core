@@ -294,7 +294,7 @@ public class CommandService {
         Session session = sessionManager.getSessionFactory().openSession();
         Command command = null;
         try {
-            Query query = session.createQuery("select c from Command c where c.id = :id");
+            Query query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.id = :id");
             query.setParameter("id", commandId);
             command = (Command) query.getSingleResult();
         } catch (NoResultException e) {

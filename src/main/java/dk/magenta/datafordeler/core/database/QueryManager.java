@@ -82,7 +82,7 @@ public class QueryManager {
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
 
-        this.log.debug(queryString);
+        this.log.info(queryString);
 
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
@@ -91,7 +91,7 @@ public class QueryManager {
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
 
         for (String key : extraParameters.keySet()) {
-            this.log.debug(key+" = "+extraParameters.get(key));
+            this.log.info(key+" = "+extraParameters.get(key));
             databaseQuery.setParameter(key, extraParameters.get(key));
         }
 
@@ -194,7 +194,7 @@ public class QueryManager {
      * @return
      */
     public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) throws PluginImplementationException {
-        this.log.trace("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
+        this.log.debug("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         LookupDefinition lookupDefinition = similar.getLookupDefinition();
         String dataItemKey = "d";
         String extraJoin = lookupDefinition.getHqlJoinString(dataItemKey, ENTITY);
@@ -217,7 +217,7 @@ public class QueryManager {
                 " WHERE " + ENTITY + ".id = :"+entityIdKey + " "+ extraWhere.toString();
 
 
-        System.out.println(queryString);
+        this.log.debug(queryString);
         org.hibernate.query.Query<D> query = session.createQuery(queryString, dClass);
 
         query.setParameter(entityIdKey, entity.getId());
@@ -413,7 +413,7 @@ public class QueryManager {
                 dataItem.addEffect(effect);
             }
 
-            System.out.println("Found " + obsolete.size() + " obsolete items!");
+            this.log.info("Found " + obsolete.size() + " obsolete items!");
             for (D dataItem : obsolete) {
                 Set<V> effects = dataItem.getEffects();
                 for (V e : effects) {

@@ -10,11 +10,11 @@ import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.database.Registration;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.StatusLine;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
@@ -262,6 +262,7 @@ public abstract class EntityManager {
         } catch (HttpStatusException e) {
             throw new FailedReferenceException(reference, e);
         }
+
         return this.parseRegistration(
             registrationData
         );

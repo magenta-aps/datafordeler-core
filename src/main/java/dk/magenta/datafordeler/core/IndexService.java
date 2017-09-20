@@ -69,7 +69,9 @@ public class IndexService {
                     FapiService service = mapEntry.getLeft();
                     boolean isSoap = mapEntry.getRight();
                     ServiceDescriptor serviceDescriptor = service.getServiceDescriptor(servicePath, isSoap);
-                    IndexService.this.serviceDescriptors.add(serviceDescriptor);
+                    if (serviceDescriptor != null) {
+                        IndexService.this.serviceDescriptors.add(serviceDescriptor);
+                    }
                 }
 
                 root.set("services", objectMapper.valueToTree(IndexService.this.serviceDescriptors));

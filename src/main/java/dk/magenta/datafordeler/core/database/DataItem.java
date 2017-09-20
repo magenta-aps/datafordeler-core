@@ -148,6 +148,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
      * Return a LookupDefinition that can be used to find this item.
      * @return
      */
+    @JsonIgnore
     public LookupDefinition getLookupDefinition() {
         return new LookupDefinition(this.databaseFields(), this.getClass());
     }

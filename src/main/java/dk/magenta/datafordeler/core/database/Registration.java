@@ -197,6 +197,12 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return this.createEffect(Effect.convertTime(effectFrom), Effect.convertTime(effectTo));
     }
 
+    public void wireEffects() {
+        for (V effect : this.effects) {
+            effect.setRegistration(this);
+        }
+    }
+
 
 
 
