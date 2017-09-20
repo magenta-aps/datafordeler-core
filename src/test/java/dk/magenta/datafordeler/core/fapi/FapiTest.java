@@ -377,16 +377,16 @@ public class FapiTest {
             ParameterMap parameters = new ParameterMap();
             StringJoiner sj = new StringJoiner("&");
             if (registerFrom != null) {
-                parameters.add(FapiService.PARAM_REGISTRATION_FROM[0], registerFrom);
+                parameters.add(Query.PARAM_REGISTRATION_FROM[0], registerFrom);
             }
             if (registerTo != null) {
-                parameters.add(FapiService.PARAM_REGISTRATION_TO[0], registerTo);
+                parameters.add(Query.PARAM_REGISTRATION_TO[0], registerTo);
             }
             if (effectFrom != null) {
-                parameters.add(FapiService.PARAM_EFFECT_FROM[0], effectFrom);
+                parameters.add(Query.PARAM_EFFECT_FROM[0], effectFrom);
             }
             if (effectTo != null) {
-                parameters.add(FapiService.PARAM_EFFECT_TO[0], effectTo);
+                parameters.add(Query.PARAM_EFFECT_TO[0], effectTo);
             }
             sb.append(urlBase.contains("?") ? "&" : "?");
             sb.append(parameters.asUrlParams());

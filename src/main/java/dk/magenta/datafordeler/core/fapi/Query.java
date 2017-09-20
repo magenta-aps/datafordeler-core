@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.LookupDefinition;
+import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -16,6 +17,14 @@ import java.util.Map;
  * Created by lars on 19-04-17.
  */
 public abstract class Query<E extends Entity> {
+
+    public static final String[] PARAM_PAGE = new String[] {"side", "page"};
+    public static final String[] PARAM_PAGESIZE = new String[] {"sidestoerrelse", "pageSize"};
+    public static final String[] PARAM_REGISTRATION_FROM = new String[] {"registreringFra", "registrationFrom"};
+    public static final String[] PARAM_REGISTRATION_TO = new String[] {"registreringTil", "registrationTo"};
+    public static final String[] PARAM_EFFECT_FROM = new String[] {"virkningFra", "effectFrom"};
+    public static final String[] PARAM_EFFECT_TO = new String[] {"virkningTil", "effectTo"};
+    public static final String[] PARAM_RECORD_AFTER = new String[] { "opdateretEfter", "recordAfter" };
 
     @QueryField(queryName = "page", type = QueryField.FieldType.INT)
     protected int page = 1;
@@ -135,6 +144,7 @@ public abstract class Query<E extends Entity> {
 
     public void setRegistrationFrom(String registrationFrom) throws DateTimeParseException {
         this.registrationFrom = parseDateTime(registrationFrom);
+        System.out.println("Set registrationFrom to "+this.registrationFrom);
     }
 
     public OffsetDateTime getRegistrationTo() {
@@ -204,9 +214,26 @@ public abstract class Query<E extends Entity> {
 
     /**
      * Parse a ParameterMap from a http request and insert values in this Query object
-     * @param parameters
+     * @param parameterMap
      */
-    public abstract void setFromParameters(ParameterMap parameters);
+    public void fillFromParameters(ParameterMap parameterMap, boolean limitsOnly) throws InvalidClientInputException {
+        this.setPage(parameterMap.getFirstOf(PARAM_PAGE));
+        this.setPageSize(parameterMap.getFirstOf(PARAM_PAGESIZE));
+        try {
+            this.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM));
+            this.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO));
+            this.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM));
+            this.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO));
+            this.setRecordAfter(parameterMap.getFirstOf(PARAM_RECORD_AFTER));
+        } catch (DateTimeParseException e) {
+            throw new InvalidClientInputException(e.getMessage());
+        }
+        if (!limitsOnly) {
+            this.setFromParameters(parameterMap);
+        }
+    }
+
+    public abstract void setFromParameters(ParameterMap parameterMap) throws InvalidClientInputException;
 
     /**
      * Convenience method for parsing a String as an integer, without throwing a parseexception
@@ -350,41 +377,5 @@ public abstract class Query<E extends Entity> {
      * @return
      */
     public abstract Class getDataClass();
-
-    /**
-     * Returns a Field for database query building
-     * Subclass fields are exposed in this manner, so the database query manager can inspect them and cast search fields based on their annotations
-     * @param fieldName A valid field (class member) name on the Query subclass
-     * @return
-     * @throws NoSuchFieldException
-     */
-    /*public Field getField(String fieldName) throws NoSuchFieldException {
-        for (Class cls = this.getClass(); cls != null; cls = cls.getSuperclass()) {
-            try {
-                return cls.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-            }
-        }
-        throw new NoSuchFieldException(fieldName);
-    }
-
-    protected String getSubtable(String key) {
-        return null;
-    }
-
-    protected Set<String> getSubtables() {
-        return null;
-    }
-
-    public String getJoins(String root) {
-        StringJoiner s = new StringJoiner(" join ");
-        Set<String> subtables = this.getSubtables();
-        if (subtables != null) {
-            for (String table : this.getSubtables()) {
-                s.add(root + "." + table + " as " + root + "_" + table);
-            }
-        }
-        return s.toString();
-    }*/
 
 }
