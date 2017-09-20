@@ -1,16 +1,13 @@
 package dk.magenta.datafordeler.core.user;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.Attribute;
 import org.opensaml.saml2.core.AttributeStatement;
 import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.schema.XSAny;
 import org.opensaml.xml.schema.XSString;
+
+import java.util.*;
 
 /**
  * Created by jubk on 13-06-2017.
@@ -41,8 +38,8 @@ public class SamlDafoUserDetails extends DafoUserDetails {
 
   public void addUserProfile(UserProfile userprofile) {
     this.userProfiles.put(userprofile.getName(), userprofile);
-    for(String systemRole : userprofile.getSystemRoles()) {
-      if(systemRoles.containsKey(systemRole)) {
+    for (String systemRole : userprofile.getSystemRoles()) {
+      if (systemRoles.containsKey(systemRole)) {
         systemRoles.get(systemRole).add(userprofile);
       } else {
         systemRoles.put(systemRole, Collections.singletonList(userprofile));
@@ -52,10 +49,10 @@ public class SamlDafoUserDetails extends DafoUserDetails {
 
   public List<String> getAssertionUserProfileNames() {
     ArrayList<String> result = new ArrayList<>();
-    for(AttributeStatement attributeStatement : sourceAssertion.getAttributeStatements()) {
-      for(Attribute attribute : attributeStatement.getAttributes()) {
-        if(attribute.getName().equals(USERPROFILE_CLAIM_URL)) {
-          for(XMLObject value : attribute.getAttributeValues()) {
+    for (AttributeStatement attributeStatement : sourceAssertion.getAttributeStatements()) {
+      for (Attribute attribute : attributeStatement.getAttributes()) {
+        if (attribute.getName().equals(USERPROFILE_CLAIM_URL)) {
+          for (XMLObject value : attribute.getAttributeValues()) {
             result.add(getString(value));
           }
         }
@@ -65,10 +62,10 @@ public class SamlDafoUserDetails extends DafoUserDetails {
   }
 
   private String lookupOnBehalfOf() {
-    for(AttributeStatement attributeStatement : sourceAssertion.getAttributeStatements()) {
-      for(Attribute attribute : attributeStatement.getAttributes()) {
-        if(attribute.getName().equals(ON_BEHALF_OF_CLAIM_URL)) {
-          for(XMLObject value : attribute.getAttributeValues()) {
+    for (AttributeStatement attributeStatement : sourceAssertion.getAttributeStatements()) {
+      for (Attribute attribute : attributeStatement.getAttributes()) {
+        if (attribute.getName().equals(ON_BEHALF_OF_CLAIM_URL)) {
+          for (XMLObject value : attribute.getAttributeValues()) {
             return getString(value);
           }
         }
@@ -135,7 +132,7 @@ public class SamlDafoUserDetails extends DafoUserDetails {
 
   @Override
   public Collection<UserProfile> getUserProfilesForRole(String role) {
-    if(systemRoles.containsKey(role)) {
+    if (systemRoles.containsKey(role)) {
       return systemRoles.get(role);
     } else {
       return Collections.EMPTY_LIST;

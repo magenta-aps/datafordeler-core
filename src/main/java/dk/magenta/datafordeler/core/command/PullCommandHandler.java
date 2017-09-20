@@ -3,14 +3,14 @@ package dk.magenta.datafordeler.core.command;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.Engine;
+import dk.magenta.datafordeler.core.PluginManager;
+import dk.magenta.datafordeler.core.Pull;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import dk.magenta.datafordeler.core.exception.PluginNotFoundException;
 import dk.magenta.datafordeler.core.plugin.Plugin;
-import dk.magenta.datafordeler.core.Engine;
-import dk.magenta.datafordeler.core.PluginManager;
-import dk.magenta.datafordeler.core.Pull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,8 @@ import java.util.Map;
 
 /**
  * Created by lars on 29-05-17.
- * A CommandHandler for executing pulls. The command interface
+ * A CommandHandler for executing pulls. The command interface delegates to this
+ * when it receives a "pull" command
  */
 @Component
 public class PullCommandHandler extends CommandHandler {
@@ -60,7 +61,7 @@ public class PullCommandHandler extends CommandHandler {
     @Autowired
     private PluginManager pluginManager;
 
-    private Logger log = LogManager.getLogger(this.getClass().getSimpleName());
+    private Logger log = LogManager.getLogger(PullCommandHandler.class);
 
     protected Logger getLog() {
         return this.log;

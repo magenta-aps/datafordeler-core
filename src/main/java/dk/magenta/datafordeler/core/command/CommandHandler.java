@@ -1,12 +1,10 @@
 package dk.magenta.datafordeler.core.command;
 
-import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -19,10 +17,7 @@ import java.util.List;
 @Component
 public abstract class CommandHandler {
 
-    @Autowired
-    private SessionManager sessionManager;
-
-    private Logger log = LogManager.getLogger(this.getClass().getSimpleName());
+    private Logger log = LogManager.getLogger(CommandHandler.class);
 
     /**
      * Return the command name that this handler answers to. Must be unique among CommandHandlers; no two CommandHandler classes may return the same string

@@ -1,11 +1,10 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.PluginManager;
-import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 
 import java.net.URI;
-import java.util.*;
+import java.util.Collection;
 
 /**
  * Created by lars on 11-01-17.

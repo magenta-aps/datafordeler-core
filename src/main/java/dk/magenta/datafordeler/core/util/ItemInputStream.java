@@ -20,7 +20,7 @@ import java.util.Map;
  */
 public class ItemInputStream<T> extends ObjectInputStream {
 
-    private static Logger log = LogManager.getLogger("ItemInputStream");
+    private static Logger log = LogManager.getLogger(ItemInputStream.class);
 
     public ItemInputStream(InputStream in) throws IOException {
         super(in);

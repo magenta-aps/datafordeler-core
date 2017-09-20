@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
-import java.util.Scanner;
 
 /**
  * Created by lars on 29-05-17.

@@ -8,8 +8,8 @@ import java.io.Serializable;
  * and accept it in their EntityManager.parseRegistration() implementations
  */
 public interface PluginSourceData extends Serializable {
-    public String getData();
-    public String getReference();
-    public String getSchema();
-    public String getId();
+    String getData();
+    String getReference();
+    String getSchema();
+    String getId();
 }

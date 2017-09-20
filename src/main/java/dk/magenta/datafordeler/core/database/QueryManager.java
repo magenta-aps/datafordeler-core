@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
+
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
 import java.time.OffsetDateTime;
@@ -20,7 +21,7 @@ import java.util.*;
 @Component
 public class QueryManager {
 
-    Logger log = LogManager.getLogger("QueryManager");
+    Logger log = LogManager.getLogger(QueryManager.class);
 
     public static final String ENTITY = "e";
 
@@ -54,14 +55,6 @@ public class QueryManager {
         this.logQuery(databaseQuery);
         List<E> results = databaseQuery.getResultList();
         return results;
-    }
-
-    private static boolean parameterValueWildcard(Object value) {
-        if (value instanceof String) {
-            String stringValue = (String) value;
-            return stringValue.startsWith("*") || stringValue.endsWith("*");
-        }
-        return false;
     }
 
     /**

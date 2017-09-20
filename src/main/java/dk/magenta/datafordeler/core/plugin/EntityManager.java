@@ -2,19 +2,19 @@ package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.fapi.FapiService;
-import dk.magenta.datafordeler.core.util.ItemInputStream;
-import dk.magenta.datafordeler.core.io.Receipt;
-import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
-import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.database.Registration;
-import org.apache.commons.io.IOUtils;
+import dk.magenta.datafordeler.core.database.RegistrationReference;
+import dk.magenta.datafordeler.core.exception.*;
+import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.io.Receipt;
+import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.http.StatusLine;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;

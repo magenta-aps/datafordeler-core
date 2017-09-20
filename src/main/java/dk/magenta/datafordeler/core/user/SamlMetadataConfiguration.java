@@ -1,19 +1,9 @@
 package dk.magenta.datafordeler.core.user;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import org.joda.time.DateTime;
 import org.opensaml.Configuration;
 import org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProviderException;
-import org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider;
 import org.opensaml.security.MetadataCredentialResolver;
 import org.opensaml.util.resource.ClasspathResource;
 import org.opensaml.util.resource.Resource;
@@ -23,6 +13,9 @@ import org.opensaml.xml.security.keyinfo.KeyInfoCredentialResolver;
 import org.opensaml.xml.signature.impl.ExplicitKeySignatureTrustEngine;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+
+import java.io.*;
+import java.net.URISyntaxException;
 
 /**
  * Created by jubk on 19-06-2017.
@@ -36,7 +29,7 @@ public class SamlMetadataConfiguration {
       throws ResourceException, MetadataProviderException, URISyntaxException, IOException {
     String path = config.getIssuerMetadataPath();
     File metadataFile;
-    if(path == null) {
+    if (path == null) {
       // Copy the classpath resource sts metadata to a temporary file
       Resource resource = new ClasspathResource(
           "/dk/magenta/datafordeler/core/user/sts_metadata.xml"

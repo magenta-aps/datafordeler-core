@@ -2,7 +2,9 @@ package dk.magenta.datafordeler.core.arearestriction;
 
 import dk.magenta.datafordeler.core.plugin.Plugin;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Describes a type of area restrictions used by a given service or plugin.

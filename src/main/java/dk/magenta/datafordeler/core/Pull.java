@@ -5,7 +5,6 @@ import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
-import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
@@ -24,7 +23,7 @@ import java.util.HashMap;
  */
 public class Pull extends Worker implements Runnable {
 
-    private Logger log = LogManager.getLogger("Pull");
+    private Logger log = LogManager.getLogger(Pull.class);
 
     private RegisterManager registerManager;
     private Engine engine;

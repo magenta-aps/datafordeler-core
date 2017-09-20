@@ -32,13 +32,13 @@ public class ObjectMapperConfiguration {
         SimpleModule dateModule = new SimpleModule();
         dateModule.addSerializer(OffsetDateTime.class, new JsonSerializer<OffsetDateTime>() {
             @Override
-            public void serialize(OffsetDateTime offsetDateTime, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+            public void serialize(OffsetDateTime offsetDateTime, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
                 jsonGenerator.writeString(DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(offsetDateTime));
             }
         });
         dateModule.addDeserializer(OffsetDateTime.class, new JsonDeserializer<OffsetDateTime>() {
             @Override
-            public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+            public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
                 if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
                     jsonParser.nextToken();
                 }

@@ -39,7 +39,7 @@ import java.util.*;
 @Component
 public class DemoEntityManager extends EntityManager {
 
-    protected Logger log = LogManager.getLogger("DemoEntityManager");
+    protected Logger log = LogManager.getLogger(DemoEntityManager.class);
 
     @Autowired
     private ObjectMapper objectMapper;
