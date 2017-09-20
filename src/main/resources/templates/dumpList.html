@@ -17,10 +17,16 @@
           <dt>Id:</dt>
           <dd th:text="${dumpData.id}"></dd>
 
+          <dt>Format:</dt>
+          <dd th:text="${dumpData.format}"></dd>
+
+          <dt>Timestamp:</dt>
+          <dd th:text="${dumpData.timestamp}"></dd>
+
           <dt>Dump address:</dt>
           <dd>
-            <a th:href="@{/dump(plugin=${dumpData.plugin},id=${dumpData.id})}"
-               th:text="@{/dump(plugin=${dumpData.plugin},id=${dumpData.id})}"></a>
+            <a th:href="@{'/dump/' + ${dumpData.format}(plugin=${dumpData.plugin},id=${dumpData.id})}"
+               th:text="@{'/dump/' + ${dumpData.format}(plugin=${dumpData.plugin},id=${dumpData.id})}"></a>
           </dd>
         </dl>
         </div>

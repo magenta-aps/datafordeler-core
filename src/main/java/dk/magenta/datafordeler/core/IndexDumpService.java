@@ -7,6 +7,7 @@ import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
 import dk.magenta.datafordeler.core.plugin.Plugin;
+import dk.magenta.datafordeler.core.role.ReadServiceRole;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
@@ -48,19 +49,17 @@ public class IndexDumpService {
     public void init() {
     }
 
-    protected void checkAccess(DafoUserDetails dafoUserDetails, String pluginName) throws
-        AccessDeniedException, AccessRequiredException {
-
-        Plugin plugin = pluginManager.getPluginByName(pluginName);
-
-        //dafoUserDetails.checkHasSystemRole(plugin.getDefaultReadRole());
+    protected void checkAccess(DafoUserDetails dafoUserDetails, Plugin plugin)
+        throws AccessDeniedException {
+        ReadServiceRole pluginDefaultReadRole = plugin.getRolesDefinition().getDefaultReadRole();
+        dafoUserDetails.checkHasSystemRole(pluginDefaultReadRole);
     }
 
-    private boolean hasAccess(DafoUserDetails dafoUserDetails, String pluginName) {
+    private boolean hasAccess(DafoUserDetails dafoUserDetails, Plugin plugin) {
         try {
-            this.checkAccess(dafoUserDetails, pluginName);
+            this.checkAccess(dafoUserDetails, plugin);
             return true;
-        } catch (AccessDeniedException | AccessRequiredException e) {
+        } catch (AccessDeniedException e) {
             return false;
         }
     }
@@ -68,9 +67,10 @@ public class IndexDumpService {
     protected void checkAndLogAccess(LoggerHelper loggerHelper, String pluginName)
         throws AccessDeniedException, AccessRequiredException {
         try {
-            this.checkAccess(loggerHelper.getUser(), pluginName);
+            Plugin plugin = pluginManager.getPluginByName(pluginName);
+            this.checkAccess(loggerHelper.getUser(), plugin);
         }
-        catch(AccessDeniedException|AccessRequiredException e) {
+        catch(AccessDeniedException e) {
             loggerHelper.info("Access denied: " + e.getMessage());
             throw(e);
         }
@@ -85,9 +85,8 @@ public class IndexDumpService {
 
         Map<String, Object> filter = new HashMap<>();
         for (Plugin plugin : pluginManager.getPlugins()) {
-            String pluginName = plugin.getName();
-            if(hasAccess(user, pluginName))
-                filter.put("plugin", pluginName);
+            if(hasAccess(user, plugin))
+                filter.put("plugin", plugin.getName());
         }
 
         loggerHelper.info("Requesting dump list with following filter: " + filter.toString());
@@ -104,8 +103,28 @@ public class IndexDumpService {
         return new ModelAndView("dumpList", model);
     }
 
-    @RequestMapping(path="", produces="application/json")
-    public String json(@RequestParam("plugin") String plugin, @RequestParam("id") Long id, HttpServletRequest request)
+    @RequestMapping(path="json", produces="application/json")
+    public String json(@RequestParam("plugin") String plugin, @RequestParam("id") Long id,
+        HttpServletRequest request)
+        throws InvalidTokenException, AccessDeniedException, AccessRequiredException {
+        return getDumpData(request, id, plugin, "json");
+    }
+
+    @RequestMapping(path="xml", produces="application/xml")
+    public String xml(@RequestParam("plugin") String plugin, @RequestParam("id") Long id,
+        HttpServletRequest request)
+        throws InvalidTokenException, AccessDeniedException, AccessRequiredException {
+        return getDumpData(request, id, plugin, "xml");
+    }
+
+    @RequestMapping(path="csv", produces="text/csv")
+    public String csv(@RequestParam("plugin") String plugin, @RequestParam("id") Long id,
+        HttpServletRequest request)
+        throws InvalidTokenException, AccessDeniedException, AccessRequiredException {
+        return getDumpData(request, id, plugin, "csv");
+    }
+
+    private String getDumpData(HttpServletRequest request, Long id, String plugin, String format)
         throws InvalidTokenException, AccessDeniedException, AccessRequiredException {
 
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
@@ -119,6 +138,8 @@ public class IndexDumpService {
         Session session = sessionManager.getSessionFactory().openSession();
         Map<String, Object> filter = new HashMap<>();
         filter.put("id", id);
+        filter.put("plugin", plugin);
+        filter.put("format", format);
         DumpData result = queryManager.getItem(session, DumpData.class, filter);
 
         return result.getData();

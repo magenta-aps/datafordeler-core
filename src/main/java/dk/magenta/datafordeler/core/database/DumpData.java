@@ -48,4 +48,10 @@ public final class DumpData extends DatabaseEntry implements
 
   @JsonIgnore
   public String getData() { return this.data; }
+
+  @JsonIgnore
+  public String getFormat() { return format; }
+
+  @JsonIgnore
+  public OffsetDateTime getTimestamp() { return timestamp; }
 }
