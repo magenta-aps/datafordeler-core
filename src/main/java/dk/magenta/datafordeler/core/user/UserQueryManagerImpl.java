@@ -33,7 +33,7 @@ public class UserQueryManagerImpl extends UserQueryManager {
             + " [dafousers_userprofile].[name] = ?",
         new Object[] { name }
     );
-    if(rows.next()) {
+    if (rows.next()) {
       return rows.getInt(1);
     } else {
       return INVALID_USERPROFILE_ID;
@@ -59,7 +59,7 @@ public class UserQueryManagerImpl extends UserQueryManager {
             + " WHERE [dafousers_userprofile].[id] = ?",
         new Object[] {databaseId}
     );
-    while(rows.next()) {
+    while (rows.next()) {
       result.add(rows.getString(1));
     }
     return result;
@@ -92,13 +92,13 @@ public class UserQueryManagerImpl extends UserQueryManager {
         + "  [dafousers_userprofile].[id] = ?",
       new Object[] {databaseId}
     );
-    while(rows.next()) {
+    while (rows.next()) {
       AreaRestriction area = AreaRestriction.lookup(
           rows.getString(3) + ":" +
               rows.getString(2) + ":" +
               rows.getString(1)
       );
-      if(area != null) {
+      if (area != null) {
         result.add(area);
       } else {
         // TODO: Log warning about unkown areatype being mentioned in token
@@ -116,7 +116,7 @@ public class UserQueryManagerImpl extends UserQueryManager {
             + "FROM"
             + " [dafousers_systemrole]"
     );
-    while(rows.next()) {
+    while (rows.next()) {
       result.add(rows.getString(1));
     }
     return result;
@@ -125,7 +125,7 @@ public class UserQueryManagerImpl extends UserQueryManager {
   @Override
   public void insertSystemRole(SystemRole systemRole) {
     String parentName = null;
-    if(systemRole.getParent() != null) {
+    if (systemRole.getParent() != null) {
       parentName = systemRole.getParent().getRoleName();
     }
     jdbcTemplate.update(
@@ -151,7 +151,7 @@ public class UserQueryManagerImpl extends UserQueryManager {
             + "FROM"
             + " [dafousers_arearestrictiontype]"
     );
-    while(rows.next()) {
+    while (rows.next()) {
       result.add(rows.getString(2) + ":" + rows.getString(1));
     }
     return result;
@@ -171,7 +171,7 @@ public class UserQueryManagerImpl extends UserQueryManager {
             + "   [area].[area_restriction_type_id] = [areatype].[id]"
             + " )"
     );
-    while(rows.next()) {
+    while (rows.next()) {
       result.add(
           rows.getString(3) + ":" +
               rows.getString(2) + ":" +
@@ -197,7 +197,7 @@ public class UserQueryManagerImpl extends UserQueryManager {
   public void insertAreaRestriction(AreaRestriction areaRestriction) {
     String typeName = null;
     String serviceTypeName = null;
-    if(areaRestriction.getType() != null) {
+    if (areaRestriction.getType() != null) {
       typeName = areaRestriction.getType().getName();
       serviceTypeName = areaRestriction.getType().getServiceName();
    }

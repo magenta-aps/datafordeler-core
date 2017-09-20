@@ -56,14 +56,6 @@ public class QueryManager {
         return results;
     }
 
-    private static boolean parameterValueWildcard(Object value) {
-        if (value instanceof String) {
-            String stringValue = (String) value;
-            return stringValue.startsWith("*") || stringValue.endsWith("*");
-        }
-        return false;
-    }
-
     /**
      * Get all Entities of a specific class, that match the given parameters
      * @param session Database session to work from

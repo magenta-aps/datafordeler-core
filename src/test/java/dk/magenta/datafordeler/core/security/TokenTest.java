@@ -54,7 +54,7 @@ public class TokenTest {
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body,
         ClientHttpRequestExecution execution) throws IOException {
-      if(tokenString != null && !tokenString.equals("")) {
+      if (tokenString != null && !tokenString.equals("")) {
         request.getHeaders().set("Authorization", "SAML " + tokenString);
       }
 

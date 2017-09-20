@@ -67,7 +67,7 @@ public class PluginManager {
         postConstructCallbackHandlers.add(handler);
         // If this gets called after @PostConstruct handler has been called, just execute
         // the handler straight away.
-        if(afterPostContruct) {
+        if (afterPostContruct) {
             handler.executePluginManagerCallback(this);
         }
     }

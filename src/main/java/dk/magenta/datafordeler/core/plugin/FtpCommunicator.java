@@ -55,7 +55,7 @@ public class FtpCommunicator implements Communicator {
     }
 
     protected void setupProxy(FTPClient ftpClient) throws DataStreamException {
-        if(!Strings.isEmpty(proxyString)) {
+        if (!Strings.isEmpty(proxyString)) {
             try {
                 URI proxyURI = new URI(proxyString);
                 Proxy proxy = new Proxy(
@@ -64,7 +64,7 @@ public class FtpCommunicator implements Communicator {
                 );
                 ftpClient.setProxy(proxy);
             }
-            catch(Exception e) {
+            catch (Exception e) {
                 throw new DataStreamException("Could not add proxy to FTP connection", e);
             }
         }
@@ -161,7 +161,7 @@ public class FtpCommunicator implements Communicator {
     private List<String> filter(List<String> list, String ending){
         List<String> returnValue = new ArrayList<>();
         for (int i = list.size()-1; i >= 0; i--) {
-            if(!list.get(i).endsWith(ending)){
+            if (!list.get(i).endsWith(ending)){
                 returnValue.add(list.get(i));
             }
         }

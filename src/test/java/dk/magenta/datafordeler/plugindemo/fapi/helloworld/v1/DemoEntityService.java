@@ -67,7 +67,7 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
     @Override
     protected void checkAccess(DafoUserDetails user)
         throws AccessDeniedException, AccessRequiredException {
-        if(user == null) {
+        if (user == null) {
             throw new AccessRequiredException(
                 "You must provide a DAFO token to use this service"
             );

@@ -28,7 +28,7 @@ public class TokenParser {
   public Assertion parseAssertion(String fromString) throws InvalidTokenException {
     try {
       byte[] decodedBytes = Base64.decode(fromString);
-      if(decodedBytes == null){
+      if (decodedBytes == null){
         throw new MessageDecodingException("Unable to Base64 decode incoming message");
       }
 

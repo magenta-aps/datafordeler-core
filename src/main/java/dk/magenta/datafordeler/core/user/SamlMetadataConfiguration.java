@@ -36,7 +36,7 @@ public class SamlMetadataConfiguration {
       throws ResourceException, MetadataProviderException, URISyntaxException, IOException {
     String path = config.getIssuerMetadataPath();
     File metadataFile;
-    if(path == null) {
+    if (path == null) {
       // Copy the classpath resource sts metadata to a temporary file
       Resource resource = new ClasspathResource(
           "/dk/magenta/datafordeler/core/user/sts_metadata.xml"

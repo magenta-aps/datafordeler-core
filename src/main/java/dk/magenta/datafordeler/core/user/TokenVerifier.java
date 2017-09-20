@@ -47,13 +47,13 @@ public class TokenVerifier {
   private String cachedIssuerCert;
 
   private String getCachedIssuerCert() throws InvalidTokenException {
-    if(cachedIssuerCert == null) {
+    if (cachedIssuerCert == null) {
       try {
         cachedIssuerCert = getIssuerEntityDescriptor().getIDPSSODescriptor(
             "urn:oasis:names:tc:SAML:2.0:protocol"
         ).getKeyDescriptors().get(0).getKeyInfo().getX509Datas().get(0).getX509Certificates()
             .get(0).getValue().replaceAll("\\s+", "");
-      } catch(Exception e) {
+      } catch (Exception e) {
         throw new InvalidTokenException(
             "Could not get signature certificate from token: " + e.getMessage(), e
         );
@@ -100,12 +100,12 @@ public class TokenVerifier {
     try {
       signatureCert = signature.getKeyInfo().getX509Datas().get(0).getX509Certificates()
           .get(0).getValue().replaceAll("\\s+", "");
-    } catch(Exception e) {
+    } catch (Exception e) {
       throw new InvalidTokenException(
           "Could not get signature certificate from token: " + e.getMessage(), e
       );
     }
-    if(!signatureCert.equals(getCachedIssuerCert())) {
+    if (!signatureCert.equals(getCachedIssuerCert())) {
       throw new InvalidTokenException("Untrusted certificate used to sign token");
     }
 
@@ -144,7 +144,7 @@ public class TokenVerifier {
   }
 
   public void verifyTokenAge(DateTime issueInstant) throws InvalidTokenException {
-    if(!isDateTimeSkewValid(
+    if (!isDateTimeSkewValid(
         config.getTimeSkewInSeconds(),
         config.getMaxAssertionTimeInSeconds(),
         issueInstant
@@ -165,10 +165,10 @@ public class TokenVerifier {
 
   public void verifySubject(Subject subject) throws InvalidTokenException {
     // TODO: Full BEARER validation? Would require recipient in the token
-    if(subject == null) {
+    if (subject == null) {
       throw new InvalidTokenException("No subject specified in token");
     }
-    if(subject.getNameID() == null) {
+    if (subject.getNameID() == null) {
       throw new InvalidTokenException("No NameID specified in token subject");
     }
     // We expect there to be a single SubjectConfirmationData so we fetch that
@@ -177,21 +177,21 @@ public class TokenVerifier {
       subjectConfirmationData = subject.getSubjectConfirmations().get(0)
           .getSubjectConfirmationData();
     }
-    catch(Exception e) {
+    catch (Exception e) {
       throw new InvalidTokenException(
           "Unable to get SubjectConfirmationData from token: " + e.getMessage(), e
       );
     }
     // Check the timestamps on the SubjectConfirmationData
     DateTime notBefore = subjectConfirmationData.getNotBefore();
-    if(notBefore != null && !checkNotBefore(notBefore)) {
+    if (notBefore != null && !checkNotBefore(notBefore)) {
       throw new InvalidTokenException("Failed NotBefore constraint on SubjectConfirmationData");
     }
     DateTime notOnOrAfter = subjectConfirmationData.getNotOnOrAfter();
-    if(notOnOrAfter == null) {
+    if (notOnOrAfter == null) {
       throw new InvalidTokenException("NotOnOrAfter not specified for SubjectConfirmationData");
     } else {
-      if(!checkNotOnOrafter(notOnOrAfter)) {
+      if (!checkNotOnOrafter(notOnOrAfter)) {
         throw new InvalidTokenException(
             "Failed NotOnOrAfter constraint on SubjectConfirmationData"
         );
@@ -202,18 +202,18 @@ public class TokenVerifier {
 
   public void verifyConditions(Conditions conditions) throws InvalidTokenException {
     DateTime notBefore = conditions.getNotBefore();
-    if(notBefore == null) {
+    if (notBefore == null) {
       throw new InvalidTokenException("NotBefore not defined on Conditions");
     } else {
-      if(!checkNotBefore(notBefore)) {
+      if (!checkNotBefore(notBefore)) {
         throw new InvalidTokenException("Failed NotBefore contraint on Conditions");
       }
     }
     DateTime notOnOrAfter = conditions.getNotOnOrAfter();
-    if(notOnOrAfter == null) {
+    if (notOnOrAfter == null) {
       throw new InvalidTokenException("NotOnOrAfter not defined on Conditions");
     } else {
-      if(!checkNotOnOrafter(notOnOrAfter)) {
+      if (!checkNotOnOrafter(notOnOrAfter)) {
         throw new InvalidTokenException("Failed NotOnOrAfter constraint on Conditions");
       }
     }
@@ -222,17 +222,17 @@ public class TokenVerifier {
     try {
       audienceRestriction = conditions.getAudienceRestrictions().get(0);
     }
-    catch(Exception e) {
+    catch (Exception e) {
       throw new InvalidTokenException("No AudienceRestriction in token");
     }
     boolean found = false;
-    for(Audience audience:audienceRestriction.getAudiences()) {
-      if(audience.getAudienceURI().equals(config.getAudienceURI())) {
+    for (Audience audience:audienceRestriction.getAudiences()) {
+      if (audience.getAudienceURI().equals(config.getAudienceURI())) {
         found = true;
         break;
       }
     }
-    if(!found) {
+    if (!found) {
       throw new InvalidTokenException(
           "Expected AudienceURI, " +  config.getAudienceURI() + ", was not found in the token"
       );

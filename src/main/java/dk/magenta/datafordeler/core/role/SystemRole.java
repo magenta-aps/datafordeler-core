@@ -18,7 +18,7 @@ public abstract class SystemRole {
             SystemRoleType type, SystemRoleGrant grantType, SystemRole parent,
             SystemRoleVersion... versions
     ) {
-        if(versions.length < 1) {
+        if (versions.length < 1) {
             throw new IllegalArgumentException("You must supply at least one version");
         }
 
@@ -28,7 +28,7 @@ public abstract class SystemRole {
         this.versions = new ArrayList<>();
         this.children = new ArrayList<>();
 
-        if(parent != null) {
+        if (parent != null) {
             parent.addChild(this);
         }
 
@@ -51,7 +51,7 @@ public abstract class SystemRole {
 
     private void addVersion(SystemRoleVersion version) {
         versions.add(version);
-        if(currentVersion != null && version.getVersion() > currentVersion.getVersion()) {
+        if (currentVersion != null && version.getVersion() > currentVersion.getVersion()) {
             currentVersion = version;
         }
     }

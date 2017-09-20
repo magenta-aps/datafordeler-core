@@ -80,7 +80,7 @@ public class CommandService {
         try {
             this.checkAccess(loggerHelper.getUser(), requiredRole);
         }
-        catch(AccessDeniedException|AccessRequiredException e) {
+        catch (AccessDeniedException|AccessRequiredException e) {
             loggerHelper.info("Access denied: " + e.getMessage());
             throw(e);
         }

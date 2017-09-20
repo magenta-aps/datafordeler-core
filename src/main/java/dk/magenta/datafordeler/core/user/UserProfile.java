@@ -29,10 +29,10 @@ public class UserProfile {
       String name, List<String> systemRoles, List<AreaRestriction> areaRestrictions
   ) {
     this.name = name;
-    if(systemRoles != null) {
+    if (systemRoles != null) {
       this.systemRoles.addAll(systemRoles);
     }
-    if(areaRestrictions != null) {
+    if (areaRestrictions != null) {
       this.areaRestrictions.addAll(areaRestrictions);
     }
   }

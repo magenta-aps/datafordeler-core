@@ -38,7 +38,7 @@ public class LoggerHelper {
 
   private void updatePrefix() {
     String remoteAddr = request.getHeader("X-Forwarded-For");
-    if(remoteAddr == null) {
+    if (remoteAddr == null) {
       remoteAddr = request.getRemoteAddr();
     }
     prefix = String.format(

@@ -41,9 +41,9 @@ public class DafoEngineUserManager extends DafoUserManager implements PluginMana
    */
   @Override
   public void addUserProfilesToSamlUser(SamlDafoUserDetails samlDafoUserDetails) {
-    for(String profileName : samlDafoUserDetails.getAssertionUserProfileNames()) {
+    for (String profileName : samlDafoUserDetails.getAssertionUserProfileNames()) {
       UserProfile userProfile = userQueryManager.getUserProfileByName(profileName);
-      if(userProfile != null) {
+      if (userProfile != null) {
         samlDafoUserDetails.addUserProfile(userProfile);
       } else {
         // TODO: Log warning about unsupported UserProfile in token
@@ -59,8 +59,8 @@ public class DafoEngineUserManager extends DafoUserManager implements PluginMana
     Set<String> storedSystemRoleNames = userQueryManager.getAllStoredSystemRoleNames();
     ArrayList<SystemRole> newSystemRoles = new ArrayList<>();
 
-    for(Plugin plugin : pluginManager.getPlugins()) {
-      if(plugin.getRolesDefinition() != null) {
+    for (Plugin plugin : pluginManager.getPlugins()) {
+      if (plugin.getRolesDefinition() != null) {
         for (SystemRole systemRole : plugin.getRolesDefinition().getRoles()) {
           if (!storedSystemRoleNames.contains(systemRole.getRoleName())) {
             newSystemRoles.add(systemRole);
@@ -74,7 +74,7 @@ public class DafoEngineUserManager extends DafoUserManager implements PluginMana
         Comparator.comparingInt((SystemRole s) -> s.getType().getNumericValue())
     );
 
-    for(SystemRole systemRole : newSystemRoles) {
+    for (SystemRole systemRole : newSystemRoles) {
       userQueryManager.insertSystemRole(systemRole);
     }
   }
@@ -89,9 +89,9 @@ public class DafoEngineUserManager extends DafoUserManager implements PluginMana
         userQueryManager.getAllAreaRestrictionLookupNames();
 
     // Find unstored types and areas
-    for(Plugin plugin : pluginManager.getPlugins()) {
+    for (Plugin plugin : pluginManager.getPlugins()) {
       Collection<AreaRestrictionType> typesList = plugin.getAreaRestrictionDefinition().getAreaRestrictionTypes();
-      if(typesList != null) {
+      if (typesList != null) {
         // Make sure we have unique values
         typesList = new HashSet<>(typesList);
         for (AreaRestrictionType areaRestrictionType : typesList) {
@@ -99,18 +99,18 @@ public class DafoEngineUserManager extends DafoUserManager implements PluginMana
             newAreaRestrictionTypes.add(areaRestrictionType);
           }
           HashSet<AreaRestriction> choices = new HashSet<>(areaRestrictionType.getChoices());
-          for(AreaRestriction areaRestriction : choices) {
-            if(!storedAreaRestrictions.contains(areaRestriction.lookupName())) {
+          for (AreaRestriction areaRestriction : choices) {
+            if (!storedAreaRestrictions.contains(areaRestriction.lookupName())) {
               newAreaRestrictions.add(areaRestriction);
             }
           }
         }
       }
     }
-    for(AreaRestrictionType newType : newAreaRestrictionTypes) {
+    for (AreaRestrictionType newType : newAreaRestrictionTypes) {
       userQueryManager.insertAreaRestrictionType(newType);
     }
-    for(AreaRestriction area : newAreaRestrictions) {
+    for (AreaRestriction area : newAreaRestrictions) {
       userQueryManager.insertAreaRestriction(area);
     }
   }

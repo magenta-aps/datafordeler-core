@@ -51,7 +51,7 @@ public class DafoUserManager {
     // If an authorization header starting with "SAML " is provided, use it to create a
     // SAML token based user.
     String authHeader = request.getHeader("Authorization");
-    if(authHeader != null && authHeader.indexOf("SAML ") == 0) {
+    if (authHeader != null && authHeader.indexOf("SAML ") == 0) {
       LoggerHelper loggerHelper = new LoggerHelper(logger, request);
       loggerHelper.info("Authorizing with SAML token");
 
@@ -59,7 +59,7 @@ public class DafoUserManager {
       try {
          userDetails = getSamlUserDetailsFromToken(authHeader.substring(5));
       }
-      catch(InvalidTokenException e) {
+      catch (InvalidTokenException e) {
         loggerHelper.info("Token verification failed: " + e.getMessage());
         throw(e);
       }
@@ -96,7 +96,7 @@ public class DafoUserManager {
    * @param samlDafoUserDetails
    */
   public void addUserProfilesToSamlUser(SamlDafoUserDetails samlDafoUserDetails) {
-    for(String profileName : samlDafoUserDetails.getAssertionUserProfileNames()) {
+    for (String profileName : samlDafoUserDetails.getAssertionUserProfileNames()) {
       samlDafoUserDetails.addUserProfile(new UserProfile(profileName));
     }
   }

@@ -150,7 +150,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         try {
             this.checkAccess(loggerHelper.getUser());
         }
-        catch(AccessDeniedException|AccessRequiredException e) {
+        catch (AccessDeniedException|AccessRequiredException e) {
             loggerHelper.info("Access denied: " + e.getMessage());
             throw(e);
         }

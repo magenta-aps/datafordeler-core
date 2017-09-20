@@ -38,7 +38,7 @@ public abstract class DafoUserDetails {
   public abstract boolean hasUserProfile(String userProfileName);
 
   public void checkHasUserProfile(String userProfileName) throws AccessDeniedException {
-    if(!hasUserProfile(userProfileName)) {
+    if (!hasUserProfile(userProfileName)) {
       throw new AccessDeniedException(
           "User " + this.toString() + " does not have the UserProfile " + userProfileName
       );
@@ -56,7 +56,7 @@ public abstract class DafoUserDetails {
   public Collection<AreaRestriction> getAreaRestrictionsForRole(String role) {
     ArrayList<AreaRestriction> result = new ArrayList<>();
 
-    for(UserProfile userProfile : getUserProfilesForRole(role)) {
+    for (UserProfile userProfile : getUserProfilesForRole(role)) {
       result.addAll(userProfile.getAreaRestrictions());
     }
 
@@ -69,7 +69,7 @@ public abstract class DafoUserDetails {
 
   @Override
   public String toString() {
-    if(getOnBehalfOf() != null) {
+    if (getOnBehalfOf() != null) {
       return "[" + getIdentity() + "<" + getOnBehalfOf() + ">]@[" + getNameQualifier() + "]";
 
     } else {
