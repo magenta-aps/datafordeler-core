@@ -19,10 +19,7 @@ import java.util.List;
 @Component
 public abstract class CommandHandler {
 
-    @Autowired
-    private SessionManager sessionManager;
-
-    private Logger log = LogManager.getLogger(this.getClass().getSimpleName());
+    private Logger log = LogManager.getLogger(CommandHandler.class);
 
     /**
      * Return the command name that this handler answers to. Must be unique among CommandHandlers; no two CommandHandler classes may return the same string

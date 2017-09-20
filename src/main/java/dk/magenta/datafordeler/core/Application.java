@@ -50,6 +50,8 @@ public class Application {
     @Autowired
     SessionManager sessionManager;
 
+    private static Logger log = LogManager.getLogger(Application.class);
+
     public static final int servicePort = 8445;
 
     public static void main(final String[] args) throws Exception {
@@ -148,8 +150,6 @@ public class Application {
         }
         return null;
     }
-
-    private static Logger log = LogManager.getLogger(Application.class);
 
     @Bean
     public TaskScheduler taskScheduler() {

@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class CommandService {
 
-    private Logger log = LoggerFactory.getLogger("CommandService");
+    private Logger log = LoggerFactory.getLogger(CommandService.class);
 
     @Autowired
     private SessionManager sessionManager;

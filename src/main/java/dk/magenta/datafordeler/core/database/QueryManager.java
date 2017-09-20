@@ -20,7 +20,7 @@ import java.util.*;
 @Component
 public class QueryManager {
 
-    Logger log = LogManager.getLogger("QueryManager");
+    Logger log = LogManager.getLogger(QueryManager.class);
 
     public static final String ENTITY = "e";
 

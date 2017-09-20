@@ -71,7 +71,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     private OutputWrapper<E> outputWrapper;
 
-    private Logger log = LoggerFactory.getLogger("FapiService");
+    private Logger log = LoggerFactory.getLogger(FapiService.class);
 
     /**
      * Obtains the version number of the service. This will be used in the path that requests may interface with

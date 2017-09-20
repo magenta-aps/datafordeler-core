@@ -60,7 +60,7 @@ public class PullCommandHandler extends CommandHandler {
     @Autowired
     private PluginManager pluginManager;
 
-    private Logger log = LogManager.getLogger(this.getClass().getSimpleName());
+    private Logger log = LogManager.getLogger(PullCommandHandler.class);
 
     protected Logger getLog() {
         return this.log;

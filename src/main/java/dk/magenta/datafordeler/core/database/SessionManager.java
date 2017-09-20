@@ -22,7 +22,7 @@ public class SessionManager {
 
     private SessionFactory sessionFactory;
 
-    private Logger log = LogManager.getLogger("SessionManager");
+    private Logger log = LogManager.getLogger(SessionManager.class);
 
     public SessionManager(SessionManagerConfiguration smConfig) {
         try {

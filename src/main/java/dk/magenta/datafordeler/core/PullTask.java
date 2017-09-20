@@ -15,7 +15,7 @@ public class PullTask implements InterruptableJob {
     public static final String DATA_DUMMYRUN = "dummyRun";
     public static final String DATA_SCHEDULE = "schedule";
 
-    private Logger log = LogManager.getLogger("PullTask");
+    private Logger log = LogManager.getLogger(PullTask.class);
 
     private Pull pull;
 

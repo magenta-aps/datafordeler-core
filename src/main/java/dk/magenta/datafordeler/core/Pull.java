@@ -24,7 +24,7 @@ import java.util.HashMap;
  */
 public class Pull extends Worker implements Runnable {
 
-    private Logger log = LogManager.getLogger("Pull");
+    private Logger log = LogManager.getLogger(Pull.class);
 
     private RegisterManager registerManager;
     private Engine engine;

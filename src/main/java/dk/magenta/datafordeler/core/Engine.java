@@ -40,7 +40,7 @@ public class Engine {
     @Value("${dafo.cron.enabled:true}")
     private boolean cronEnabled;
 
-    Logger log = LogManager.getLogger("Engine");
+    Logger log = LogManager.getLogger(Engine.class);
 
     /**
      * Run bean initialization

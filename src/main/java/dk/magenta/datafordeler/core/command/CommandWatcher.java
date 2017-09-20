@@ -31,7 +31,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Component
 public class CommandWatcher {
 
-    private Logger log = LogManager.getLogger("CommandWatcher");
+    private Logger log = LogManager.getLogger(CommandWatcher.class);
 
     @Autowired
     private SessionManager sessionManager;
