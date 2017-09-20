@@ -1,7 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.Column;
-import javax.persistence.Index;
 import javax.persistence.Table;
 import org.hibernate.annotations.Type;
 
@@ -33,4 +33,15 @@ public final class DumpData extends DatabaseEntry implements
   public int compareTo(DumpData o) {
     return Long.compare(this.getId(), o.getId());
   }
+
+  @JsonIgnore
+  public String getPlugin() {
+    return this.plugin;
+  }
+
+  @JsonIgnore
+  public String getEntityName() { return this.entityName; }
+
+  @JsonIgnore
+  public String getData() { return this.data; }
 }
