@@ -15,11 +15,11 @@ Formål
 Datafordelerens Core-komponent har til opgave at styre import og udstilling af data, ved at:
 
 - Implementere generelle metoder til import og udstilling
-- Lade plugins om at definere de specifikke indstillinger (såsom adgangsroller, kilde-urls, og hvordan data hentes og fortolkes)
+- Lade plugins definere de specifikke indstillinger (såsom adgangsroller, kilde-urls, og hvordan data hentes og fortolkes)
 - Definere hvordan bitemporalitetsmodellen er opbygget
 - Definere superklasser til plugins, som de som minimum skal implementere
-- Stille utility-klasser og metoder til rådighed for plugins
-- Foretage databaseopslag til lagring og udtræk af data-entiteter
+- Stille hjælpeklasser og -metoder til rådighed for plugins
+- Foretage databaseopslag til lagring og udtræk af dataentiteter
 
 
 Komponenter
