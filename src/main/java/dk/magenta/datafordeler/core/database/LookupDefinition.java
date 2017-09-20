@@ -61,6 +61,7 @@ public class LookupDefinition {
     private boolean matchNulls = false;
     public static final String separator = ".";
     public static final String entityref = "$";
+    public static final char escape = '\\';
     private static final String quotedSeparator = Pattern.quote(separator);
     private ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
     private Class<? extends DataItem> dataClass;
@@ -302,7 +303,7 @@ public class LookupDefinition {
             StringJoiner or = new StringJoiner(" OR ");
             for (int i = 0; i < list.size(); i++) {
                 if (parameterValueWildcard(list.get(i))) {
-                    or.add("cast(" + variablePath + " as string) like :" + parameterPath + "_" + i);
+                    or.add("cast(" + variablePath + " as string) like :" + parameterPath + "_" + i + " escape '" + LookupDefinition.escape + "'");
                 } else {
                     or.add(variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath + "_" + i);
                 }
@@ -312,7 +313,7 @@ public class LookupDefinition {
             }
         } else {
             if (parameterValueWildcard(value)) {
-                return "cast(" + variablePath + " as string) like :" + parameterPath;
+                return "cast(" + variablePath + " as string) like :" + parameterPath + " escape '" + LookupDefinition.escape + "'";
             } else {
                 return variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath;
             }
@@ -395,25 +396,24 @@ public class LookupDefinition {
                     List list = (List) value;
                     for (int i=0; i<list.size(); i++) {
                         if (parameterValueWildcard(value)) {
-                            map.put(parameterPath + "_" + i, ((String) list.get(i)).replace("*", "%"));
+                            map.put(parameterPath + "_" + i, replaceWildcard(list.get(i)));
                         } else {
-                            map.put(parameterPath + "_" + i, this.castValue(type, list.get(i)));
+                            map.put(parameterPath + "_" + i, castValue(type, list.get(i)));
                         }
                     }
                 } else {
                     if (parameterValueWildcard(value)) {
-                        map.put(parameterPath, ((String) value).replace("*", "%"));
+                        map.put(parameterPath, replaceWildcard(value));
                     } else {
-                        map.put(parameterPath, this.castValue(type, value));
+                        map.put(parameterPath, castValue(type, value));
                     }
                 }
             }
-
         }
         return map;
     }
 
-    private Object castValue(Class cls, Object value) throws PluginImplementationException {
+    private static Object castValue(Class cls, Object value) throws PluginImplementationException {
         if (cls == null) {return value;}
         if ((cls == Long.TYPE || cls == Long.class) && !(value instanceof Long)) {
             if (value instanceof Number) {
@@ -431,24 +431,17 @@ public class LookupDefinition {
         return cls.cast(value);
     }
 
-    private Field getField(Class cls, String name) throws NoSuchFieldException {
-        Class c = cls;
-        while (c != null) {
-            try {
-                return c.getDeclaredField(name);
-            } catch (NoSuchFieldException e) {
-                c = c.getSuperclass();
-            }
-        }
-        throw new NoSuchFieldException(name);
-    }
-
     private static boolean parameterValueWildcard(Object value) {
         if (value instanceof String) {
             String stringValue = (String) value;
-            return stringValue.startsWith("*") || stringValue.endsWith("*");
+            //return stringValue.startsWith("*") || stringValue.endsWith("*");
+            return stringValue.contains("*");
         }
         return false;
+    }
+
+    private static String replaceWildcard(Object item) {
+        return ((String) item).replace("%", escape + "%").replace("*", "%");
     }
 
 }
