@@ -60,14 +60,14 @@ QueryManager
   query og UUID, samt mere generelle opslagsmetoder.
 
 Exception-samling
-  Hierarkisk samling af Exception-klasser til brug i datafordeleren;
+  Hierarkisk samling af exception-klasser til brug i datafordeleren;
   alle exception-klasser nedarver fra en abstrakt DatafordelerException, og har en unik kode.
 
 GapiServlet
   Adgangspunkt for Push af data til datafordeleren.
 
 Plugin-definition
-  Superklasser til plugins.
+  Superklasser til plugins. Definerer hvilke metoder og klasser et plugin som minimum skal implementere.
   Se :ref:`plugins`.
 
 Hjælpeklasser til plugins

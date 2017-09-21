@@ -16,3 +16,8 @@ Disse repræsenterer en lille stump af entitetens data, som har den refererede b
 Andre dataobjekter indeholder så andre datastumper med anden bitemporalitet, og sammen udgør de et helt billede af entiteten.
 Hver datastump har også et tidsstempel for hvornår det sidst blev opdateret,
 så der kan udtrækkes en afgrænset mængde af dataobjekter som er ændret siden et givet tidspunkt.
+
+.. image:: bitemporality.png
+    :width: 442px
+    :align: center
+    :height: 561px
