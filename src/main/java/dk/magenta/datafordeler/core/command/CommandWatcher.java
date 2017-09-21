@@ -77,7 +77,7 @@ public class CommandWatcher {
     private synchronized List<Command> getCommands() {
         try {
             Session session = this.sessionManager.getSessionFactory().openSession();
-            Query<Command> query = session.createQuery("select c from Command c where c.status = :status", Command.class);
+            Query<Command> query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.status = :status", Command.class);
             query.setParameter("status", Command.Status.QUEUED);
             List<Command> commands = query.getResultList();
             session.close();
@@ -136,6 +136,7 @@ public class CommandWatcher {
     }
 
     private void commandComplete(Command command) {
+        command.setHandled();
         CommandWatcher.this.saveCommand(command);
         this.workers.remove(command.getId());
     }
