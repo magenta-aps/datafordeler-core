@@ -26,12 +26,16 @@ ConfigurationManager
   Klasse til at hente og gemme konfigurationen for et givet Plugin.
   Hvis der ikke findes en Configuration i databasen ved opstart, skabes og gemmes der en med standardværdier.
 
+Komponenter for hver entitetstype
+---------------------------------
+
+Hver entitetstype i pluginet har et sæt af klasser associeret, til behandling af objekter af netop denne type:
+
 Dataklasser
   For hver entitetstype findes klasser til lagring af entiteten og dens dataobjeketer (se :ref:`bitemporality`),
   samt tynde implementationer af bitemporalitetsklasserne.
 
 EntityManager
-  Klasse til at håndtere en bestemt entitetstype, f.eks. "Person".
   EntityManageren sørger for at hente data fra kilden, fortolke indkommende data,
   sende kvitteringer til kilden, samt andre relevante opgaver relateret til den enkelte entitetstype.
 
@@ -42,6 +46,6 @@ Service
   I plugins befinder sig en tynd subklasse heraf for hver entitetstype, som således udstiller webservicen i praksis.
 
 Query
-  For hver entitetstype eksisterer en Query-klasse,
-  som beskriver hvilke felter der kan foretages opslag med, og hvordan disse felter indgår i konstruktionen af et databaseopslag.
+  For hver entitetstype eksisterer en Query-klasse, som beskriver hvilke felter der kan foretages opslag med,
+   og hvordan disse felter indgår i konstruktionen af et databaseopslag.
 
