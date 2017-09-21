@@ -19,27 +19,22 @@ if exist "%DIR%local_settings.properties" (
 
 echo "Build core"
 pushd %COREDIR%
-   call mvnw.cmd clean install -P no-repackage
+   call mvnw.cmd clean install
 popd
 
-
 echo "Build cpr"
-pushd %DIR%..\plugins\CprPlugin
+pushd %DIR%..\plugin\cpr
     call mvnw.cmd clean install
 popd
 
 echo "Build cvr"
-pushd %DIR%..\plugins\CvrPlugin
+pushd %DIR%..\plugin\cvr
     call mvnw.cmd clean install
 popd
 
 echo "Build gladdrreg"
-pushd %DIR%..\plugins\GladdrregPlugin
+pushd %DIR%..\plugin\gladdrreg
     call mvnw.cmd clean install
-popd
-
-pushd %COREDIR%
-call mvnw.cmd clean package
 popd
 
 rem Copy compiled WAR so running will not hold a lock on the compiled file destination

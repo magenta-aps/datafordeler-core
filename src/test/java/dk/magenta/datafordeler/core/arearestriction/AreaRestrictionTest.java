@@ -29,7 +29,7 @@ public class AreaRestrictionTest {
 
         AreaRestriction areaRestriction = type.addChoice("testArea", "areaDescription", "12345");
         Assert.assertEquals(1, type.getChoices().size());
-        Assert.assertEquals(areaRestriction, type.getChoices().get(0));
+        Assert.assertEquals(areaRestriction, type.getChoices().iterator().next());
         Assert.assertEquals(type, areaRestriction.getType());
     }
 

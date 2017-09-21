@@ -1,23 +1,25 @@
 package dk.magenta.datafordeler.core.command;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.command.CommandWatcher;
+import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.role.CommandRole;
-import dk.magenta.datafordeler.core.role.ExecuteCommandRole;
 import dk.magenta.datafordeler.core.role.SystemRole;
 import dk.magenta.datafordeler.core.role.SystemRoleType;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
-import dk.magenta.datafordeler.core.PluginManager;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
@@ -25,21 +27,20 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
  * Created by lars on 29-05-17.
+ * Webservice that receives commands on POST requests, checks job status on GET
+ * requests, and cancels jobs on DELETE requests.
+ * The basic idea is that a POST request will parsed, and if successful, a row will be put in the Command table.
+ * GET requests will look at the table and return the job status
+ * DELETE requests will find the associated job in the table and attempt to cancel it
  */
 @RequestMapping("/command")
 @Controller
 public class CommandService {
 
-    private Logger log = LoggerFactory.getLogger("CommandService");
+    private Logger log = LoggerFactory.getLogger(CommandService.class);
 
     @Autowired
     private SessionManager sessionManager;
@@ -63,12 +64,19 @@ public class CommandService {
         return DEBUG_DISABLE_SECURITY;
     }
 
+    /**
+     * Check that the user in the loggerHelper has access to the required role, and if not, log the attempt and throw an exception
+     * @param loggerHelper LoggerHelper object containing user data
+     * @param requiredRole SystemRole to check for
+     * @throws AccessDeniedException
+     * @throws AccessRequiredException
+     */
     protected void checkAndLogAccess(LoggerHelper loggerHelper, SystemRole requiredRole)
             throws AccessDeniedException, AccessRequiredException {
         try {
             this.checkAccess(loggerHelper.getUser(), requiredRole);
         }
-        catch(AccessDeniedException|AccessRequiredException e) {
+        catch (AccessDeniedException|AccessRequiredException e) {
             loggerHelper.info("Access denied: " + e.getMessage());
             throw(e);
         }
@@ -90,7 +98,14 @@ public class CommandService {
         dafoUserDetails.checkHasSystemRole(requiredRole);
     }
 
-    private SystemRole findMatchingRole(SystemRoleType requiredAccess, String commandName, CommandData commandData) {
+    /**
+     * Look through available CommandRoles, locating one that matches the queries access type, command name, and command data
+     * @param requiredAccess SystemRoleType to match, e.g. SystemRoleType.ExecuteCommandRole for command execution
+     * @param commandName Command name. Look for roles with this command name
+     * @param commandData The matched CommandRole must not contain any key-value pair that is not in the CommandData, ie. sent with the command body,
+     * @return
+     */
+    private CommandRole findMatchingRole(SystemRoleType requiredAccess, String commandName, CommandData commandData) {
         for (Plugin plugin : pluginManager.getPlugins()) {
             List<SystemRole> pluginRoles = plugin.getRolesDefinition().getRoles();
             if (pluginRoles != null) {
@@ -119,7 +134,7 @@ public class CommandService {
 
     private void checkRole(Command command, CommandHandler handler, SystemRoleType roleType, LoggerHelper loggerHelper) throws DataStreamException, InvalidClientInputException, AccessDeniedException, AccessRequiredException {
         // Check that the CommandHandler can handle the command, and that there exists a SystemRole granting access to the command
-        CommandData commandData = handler.getCommandData(command);
+        CommandData commandData = handler.getCommandData(command.getCommandBody());
         SystemRole requiredRole = this.findMatchingRole(roleType, command.getCommandName(), commandData);
         if (requiredRole == null) {
             loggerHelper.info("No Command Role exists for [SystemRoleType:"+roleType.name()+", Command: "+command.getCommandName()+", CommandData: "+commandData+"]");
@@ -129,6 +144,21 @@ public class CommandService {
         this.checkAndLogAccess(loggerHelper, requiredRole);
     }
 
+
+    /**
+     * GET listener, invoked as GET /command/[id], where [id] is a numeric identifier previously returned from a POST request
+     * Return the data pertaining to a job, including received time, issuer, status (queued, running, successful, failed, cancelled)
+     * @param request
+     * @param response
+     * @param commandId Command identifier; this is returned for a POST request, and can be used here
+     * @throws IOException
+     * @throws HttpNotFoundException
+     * @throws InvalidClientInputException
+     * @throws InvalidTokenException
+     * @throws AccessRequiredException
+     * @throws AccessDeniedException
+     * @throws DataStreamException
+     */
     @RequestMapping(method = RequestMethod.GET, path="{id}")
     public void doGet(HttpServletRequest request, HttpServletResponse response, @PathVariable("id") Long commandId)
             throws IOException, HttpNotFoundException, InvalidClientInputException, InvalidTokenException, AccessRequiredException, AccessDeniedException, DataStreamException {
@@ -157,6 +187,23 @@ public class CommandService {
         }
     }
 
+
+    /**
+     * POST listener, invoked as POST /command/[commandname], where [commandname] is a known command.
+     * Currently, only the "pull" command exists, invoked by /command/pull
+     * The POST body contains parameters to the command handler, which is free to interpret it how it wants
+     * The PullCommandHandler, currently the only one present, reads the body as JSON
+     * On a successfully parsed request, the resulting Command object is put in the database, from where it will be picked up by the CommandWatcher
+     * @param request
+     * @param response
+     * @param commandName A string denoting the name of a command, e.g. "pull"
+     * @throws IOException
+     * @throws InvalidClientInputException
+     * @throws InvalidTokenException
+     * @throws AccessDeniedException
+     * @throws AccessRequiredException
+     * @throws DataStreamException
+     */
     @RequestMapping(method = RequestMethod.POST, path = "/{command}")
     public void doPost(HttpServletRequest request, HttpServletResponse response, @PathVariable("command") String commandName)
             throws IOException, InvalidClientInputException, InvalidTokenException, AccessDeniedException, AccessRequiredException, DataStreamException {
@@ -167,7 +214,7 @@ public class CommandService {
         Command command;
         try {
             // Extract Command object from request
-            command = Command.fromRequest(request, commandName);
+            command = Command.fromRequest(request, user, commandName);
         } catch (IOException e) {
             loggerHelper.error("Error reading command body", e);
             throw new InvalidClientInputException("Cannot read command body");
@@ -188,6 +235,21 @@ public class CommandService {
         loggerHelper.info("Request complete");
     }
 
+
+    /**
+     * DELETE listener, invoked as DELETE /command/[id], where [id] is a numeric identifier previously returned from a POST request
+     * If a command is found by the given id, a cancel will be attempted and the job status returned (same output as with GET)
+     * @param request
+     * @param response
+     * @param commandId Command identifier; this is returned for a POST request, and can be used here
+     * @throws IOException
+     * @throws InvalidClientInputException
+     * @throws HttpNotFoundException
+     * @throws InvalidTokenException
+     * @throws DataStreamException
+     * @throws AccessDeniedException
+     * @throws AccessRequiredException
+     */
     @RequestMapping(method = RequestMethod.DELETE, path="{id}")
     public void doDelete(HttpServletRequest request, HttpServletResponse response, @PathVariable("id") Long commandId)
             throws IOException, InvalidClientInputException, HttpNotFoundException, InvalidTokenException, DataStreamException, AccessDeniedException, AccessRequiredException {
@@ -219,11 +281,16 @@ public class CommandService {
         }
     }
 
+    /**
+     * Finds a command object in the database, based on an id
+     * @param commandId
+     * @return
+     */
     private Command getCommand(long commandId) {
         Session session = sessionManager.getSessionFactory().openSession();
         Command command = null;
         try {
-            Query query = session.createQuery("select c from Command c where c.id = :id");
+            Query query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.id = :id");
             query.setParameter("id", commandId);
             command = (Command) query.getSingleResult();
         } catch (NoResultException e) {
@@ -232,6 +299,10 @@ public class CommandService {
         return command;
     }
 
+    /**
+     * Saves a Command object to the database
+     * @param command
+     */
     public synchronized void saveCommand(Command command) {
         Session session = this.sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();

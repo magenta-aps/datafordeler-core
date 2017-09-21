@@ -1,8 +1,10 @@
 package dk.magenta.datafordeler.core.arearestriction;
 
 import dk.magenta.datafordeler.core.plugin.Plugin;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Describes a type of area restrictions used by a given service or plugin.
@@ -12,8 +14,7 @@ public class AreaRestrictionType {
     private String name;
     private String description;
     private Plugin sourcePlugin;
-
-    private List<AreaRestriction> choices = new ArrayList<>();
+    private Map<String, AreaRestriction> choices = new HashMap<>();
 
     public AreaRestrictionType(String name, String description, Plugin sourcePlugin) {
         this.name = name;
@@ -34,16 +35,25 @@ public class AreaRestrictionType {
     }
 
     public AreaRestriction addChoice(String name, String description, String sumiffiik) {
-        AreaRestriction areaRestriction = new AreaRestriction(name, description, sumiffiik, this);
-        choices.add(areaRestriction);
+        return this.addChoice(name, description, sumiffiik, null);
+    }
+
+    public AreaRestriction addChoice(String name, String description, String sumiffiik, String value) {
+        AreaRestriction areaRestriction = new AreaRestriction(name, description, sumiffiik, this, value);
+        choices.put(name, areaRestriction);
         return areaRestriction;
     }
 
-    public List<AreaRestriction> getChoices() {
-        return choices;
+    public Collection<AreaRestriction> getChoices() {
+        return choices.values();
     }
 
     public String lookupName() {
         return this.getServiceName() + ":" + this.getName();
     }
+
+    public AreaRestriction getRestriction(String name) {
+        return this.choices.get(name);
+    }
+
 }

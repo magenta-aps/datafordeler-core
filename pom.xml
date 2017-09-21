@@ -198,7 +198,7 @@
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-spring-boot-starter-jaxws</artifactId>
-            <version>RELEASE</version>
+            <version>3.1.13</version>
             <exclusions>
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
@@ -294,29 +294,6 @@
 
     </dependencies>
 
-
-
-    <profiles>
-        <profile>
-            <id>no-repackage</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-                        <version>${spring.boot.version}</version>
-                        <executions>
-                            <execution>
-                                <id>spring-repackaging</id> <!-- here there must be the same identifier as defined in <build><plugins> section -->
-                                <phase>none</phase> <!-- this disables plugin -->
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
     <build>
         <finalName>datafordeler-core</finalName>
         <plugins>
@@ -352,6 +329,9 @@
                         <goals>
                             <goal>repackage</goal>
                         </goals>
+                        <configuration>
+                            <classifier>exec</classifier>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -365,5 +345,4 @@
             <url>http://nexus.magenta-aps.dk/nexus/content/repositories/magenta-snapshots</url>
         </snapshotRepository>
     </distributionManagement>
-
 </project>

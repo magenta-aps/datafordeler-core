@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.magenta.datafordeler.core.database.DatabaseEntry;
+import dk.magenta.datafordeler.core.user.DafoUserDetails;
+import dk.magenta.datafordeler.core.util.InputStreamReader;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,17 +13,17 @@ import javax.persistence.Index;
 import javax.persistence.Table;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.OffsetDateTime;
-import java.util.Scanner;
 
 /**
  * Created by lars on 29-05-17.
- * For communication from an external admin interface.
+ * Command descriptor, holding data about an issued command
  */
 @Entity
 @Table(name = "command", indexes = {@Index(name="status", columnList = "status")})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Command extends DatabaseEntry {
+public final class Command extends DatabaseEntry {
 
     public enum Status {
         QUEUED,
@@ -61,33 +63,28 @@ public class Command extends DatabaseEntry {
         this.setCommandName(commandName);
     }
 
-    public static Command fromRequest(HttpServletRequest request, String commandName) throws IOException {
+    /**
+     * Create a Command object from a http request, a user and a command name
+     * The request is used to obtain the command body (ie. the request body), to be parsed by a CommandHandler
+     * The user object is used to set the command issuer
+     * Also sets the received time
+     * @param request
+     * @param userDetails
+     * @param commandName
+     * @return
+     * @throws IOException
+     */
+    public static Command fromRequest(HttpServletRequest request, DafoUserDetails userDetails, String commandName) throws IOException {
         if (commandName.startsWith("/")) {
             commandName = commandName.substring(1);
         }
         Command command = new Command(commandName);
-        Scanner s = new Scanner(request.getInputStream()).useDelimiter("\\A");
-        String commandBody = s.hasNext() ? s.next() : "";
+        InputStream requestBody = request.getInputStream();
+        String commandBody = InputStreamReader.readInputStream(requestBody);
         command.setCommandBody(commandBody);
         command.setReceived();
-        command.setIssuer("testing"); // TODO: Get issuer from request
+        command.setIssuer(userDetails.getIdentity());
         return command;
-    }
-
-    public static String getCommandName(HttpServletRequest request) {
-        String commandName = request.getPathInfo().toLowerCase();
-        if (commandName.startsWith("/")) {
-            commandName = commandName.substring(1);
-        }
-        return commandName;
-    }
-
-    public static long getCommandId(HttpServletRequest request) {
-        try {
-            return Long.parseLong(Command.getCommandName(request));
-        } catch (NumberFormatException e) {
-            return -1;
-        }
     }
 
     @JsonProperty

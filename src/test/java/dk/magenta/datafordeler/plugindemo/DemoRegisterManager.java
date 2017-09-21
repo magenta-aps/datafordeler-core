@@ -46,7 +46,7 @@ public class DemoRegisterManager extends RegisterManager {
 
     private HttpCommunicator commonFetcher;
 
-    protected Logger log = LogManager.getLogger("DemoRegisterManager");
+    protected Logger log = LogManager.getLogger(DemoRegisterManager.class);
 
     private int port;
 

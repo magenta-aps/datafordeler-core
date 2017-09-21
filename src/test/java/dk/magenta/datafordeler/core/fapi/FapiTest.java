@@ -247,7 +247,9 @@ public class FapiTest {
             Assert.assertNotNull(jsonBody);
 
             Assert.assertEquals("fapitest", jsonBody.findValue("domaene").asText());
-            Assert.assertEquals(uuid.toString(), jsonBody.findValue("uuid").asText());
+            JsonNode firstResult = jsonBody.get("results").get(0);
+            System.out.println(firstResult);
+            Assert.assertEquals(uuid.toString(), firstResult.findValue("UUID").asText());
             JsonNode registrations = jsonBody.get("results").get(0).get("registreringer");
 
             System.out.println("registrations: " + registrations);
@@ -375,16 +377,16 @@ public class FapiTest {
             ParameterMap parameters = new ParameterMap();
             StringJoiner sj = new StringJoiner("&");
             if (registerFrom != null) {
-                parameters.add(FapiService.PARAM_REGISTRATION_FROM[0], registerFrom);
+                parameters.add(Query.PARAM_REGISTRATION_FROM[0], registerFrom);
             }
             if (registerTo != null) {
-                parameters.add(FapiService.PARAM_REGISTRATION_TO[0], registerTo);
+                parameters.add(Query.PARAM_REGISTRATION_TO[0], registerTo);
             }
             if (effectFrom != null) {
-                parameters.add(FapiService.PARAM_EFFECT_FROM[0], effectFrom);
+                parameters.add(Query.PARAM_EFFECT_FROM[0], effectFrom);
             }
             if (effectTo != null) {
-                parameters.add(FapiService.PARAM_EFFECT_TO[0], effectTo);
+                parameters.add(Query.PARAM_EFFECT_TO[0], effectTo);
             }
             sb.append(urlBase.contains("?") ? "&" : "?");
             sb.append(parameters.asUrlParams());

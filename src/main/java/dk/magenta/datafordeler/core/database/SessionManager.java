@@ -1,17 +1,16 @@
 package dk.magenta.datafordeler.core.database;
 
-import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.stereotype.Component;
+
 import javax.annotation.PreDestroy;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -22,7 +21,7 @@ public class SessionManager {
 
     private SessionFactory sessionFactory;
 
-    private Logger log = LogManager.getLogger("SessionManager");
+    private Logger log = LogManager.getLogger(SessionManager.class);
 
     public SessionManager(SessionManagerConfiguration smConfig) {
         try {
@@ -42,6 +41,8 @@ public class SessionManager {
             managedClasses.add(dk.magenta.datafordeler.core.database.Registration.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.Effect.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.DataItem.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.RecordCollection.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.RecordData.class);
             managedClasses.add(dk.magenta.datafordeler.core.command.Command.class);
 
             for (Class cls : managedClasses) {

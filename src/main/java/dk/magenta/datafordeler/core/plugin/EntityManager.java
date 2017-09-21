@@ -2,14 +2,14 @@ package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.fapi.FapiService;
-import dk.magenta.datafordeler.core.util.ItemInputStream;
-import dk.magenta.datafordeler.core.io.Receipt;
-import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
-import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.database.Registration;
+import dk.magenta.datafordeler.core.database.RegistrationReference;
+import dk.magenta.datafordeler.core.exception.*;
+import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.io.Receipt;
+import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.http.StatusLine;
 import org.apache.logging.log4j.Logger;
 
@@ -228,6 +228,10 @@ public abstract class EntityManager {
         return registrationMap;
     }
 
+    public boolean handlesOwnSaves() {
+        return false;
+    }
+
     /** Registration fetching **/
 
     /**
@@ -258,6 +262,7 @@ public abstract class EntityManager {
         } catch (HttpStatusException e) {
             throw new FailedReferenceException(reference, e);
         }
+
         return this.parseRegistration(
             registrationData
         );

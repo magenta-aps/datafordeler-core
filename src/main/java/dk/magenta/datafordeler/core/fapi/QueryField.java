@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface QueryField {
-    public enum FieldType {
+    enum FieldType {
         STRING, INT, BOOLEAN
     }
     FieldType type() default FieldType.STRING;
@@ -20,5 +20,5 @@ public @interface QueryField {
      * The querystring name used when querying this field.
      * @return
      */
-    public String queryName();
+    String queryName();
 }

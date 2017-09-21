@@ -224,6 +224,8 @@ public class DatabaseTest {
         DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
         DemoData demoData = new DemoData(1455, "København K");
         demoData.addEffect(demoEffect);
+        DemoData demoData2 = new DemoData(9999, "NameWith%");
+        demoData2.addEffect(demoEffect);
         queryManager.saveRegistration(session, demoEntity, demoRegistration);
 
         transaction.commit();
@@ -288,5 +290,15 @@ public class DatabaseTest {
         demoQuery10.setAktiv("false");
         List<DemoEntity> results10 = queryManager.getAllEntities(session, demoQuery10, DemoEntity.class);
         Assert.assertEquals(0, results10.size());
+
+        DemoQuery demoQuery11 = new DemoQuery();
+        demoQuery11.setBynavn("NameWith%");
+        List<DemoEntity> results11 = queryManager.getAllEntities(session, demoQuery11, DemoEntity.class);
+        Assert.assertEquals(1, results11.size());
+
+        DemoQuery demoQuery12 = new DemoQuery();
+        demoQuery12.setBynavn("*With%");
+        List<DemoEntity> results12 = queryManager.getAllEntities(session, demoQuery12, DemoEntity.class);
+        Assert.assertEquals(1, results12.size());
     }
 }

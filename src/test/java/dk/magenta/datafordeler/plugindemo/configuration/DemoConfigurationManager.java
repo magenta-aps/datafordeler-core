@@ -18,7 +18,7 @@ public class DemoConfigurationManager extends ConfigurationManager<DemoConfigura
     @Autowired
     SessionManager sessionManager;
 
-    private Logger log = LogManager.getLogger("DemoConfigurationManager");
+    private Logger log = LogManager.getLogger(DemoConfigurationManager.class);
 
     /**
      * Run bean initialization

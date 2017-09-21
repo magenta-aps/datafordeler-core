@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.Session;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -14,34 +11,45 @@ import java.util.*;
  * Created by lars on 20-02-17.
  * Superclass for bitemporal data, pointing to Effects objects.
  * Pieces of data sharing exact bitemporality may be stored in one DataItem, pointing
- * to all the Effects and Registrations applicable.
+ * to all the Effects applicable (and by extension, Registrations).
  */
 @MappedSuperclass
 @Embeddable
 // @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class DataItem<V extends Effect, D extends DataItem> extends DatabaseEntry {
 
+    public static final String FILTER_RECORD_AFTER = "recordAfterFilter";
+    public static final String FILTERPARAM_RECORD_AFTER = "recordAfterDate";
+
     public DataItem() {
     }
 
+    /**
+     * Add an Effect to this dataItem
+     * @param effect
+     */
     public void addEffect(V effect) {
         effect.dataItems.add(this);
         this.effects.add(effect);
     }
 
+    /**
+     * Remove a previously added Effect
+     * @param effect
+     */
     public void removeEffect(V effect) {
         effect.dataItems.remove(this);
         this.effects.remove(effect);
-    }
-
-    public static String getTableName(Class<? extends DataItem> cls) {
-        return cls.getAnnotation(Table.class).name();
     }
 
     @ManyToMany(mappedBy = "dataItems")
     private Set<V> effects = new HashSet<V>();
 
 
+    /**
+     * Get all Effects for this item
+     * @return
+     */
     public Set<V> getEffects() {
         return effects;
     }
@@ -53,6 +61,36 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
      */
     public boolean equalData(D other) {
         return this.asMap().equals(other.asMap());
+    }
+
+
+    @JsonIgnore
+    @OneToOne(cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL)
+    private RecordCollection recordSet = null;
+
+    public void addRecordData(RecordData recordData) {
+        if (this.recordSet == null) {
+            this.recordSet = new RecordCollection();
+        }
+        this.recordSet.addRecord(recordData);
+        this.setLastUpdated(this.recordSet.getNewestRecord().getTimestamp());
+    }
+
+    @JsonIgnore
+    public RecordCollection getRecordSet() {
+        return this.recordSet;
+    }
+
+    @Column
+    private OffsetDateTime lastUpdated;
+
+    public OffsetDateTime getLastUpdated() {
+        return this.lastUpdated;
+    }
+
+    public void setLastUpdated(OffsetDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     /**
@@ -106,8 +144,13 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
     public void updateReferences(HashMap<String, Identification> references) {
     }
 
+    /**
+     * Return a LookupDefinition that can be used to find this item.
+     * @return
+     */
+    @JsonIgnore
     public LookupDefinition getLookupDefinition() {
-        return new LookupDefinition(this.databaseFields());
+        return new LookupDefinition(this.databaseFields(), this.getClass());
     }
 
     public abstract void forceLoad(Session session);

@@ -10,6 +10,6 @@ import java.net.URI;
  * able to look up a Registration
  */
 public interface RegistrationReference extends Serializable {
-    public String getChecksum();
-    public URI getURI();
+    String getChecksum();
+    URI getURI();
 }

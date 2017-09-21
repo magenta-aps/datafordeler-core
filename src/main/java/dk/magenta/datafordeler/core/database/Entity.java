@@ -7,17 +7,19 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.util.Equality;
 import org.hibernate.Session;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.Filters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
-import javax.persistence.CascadeType;
-import javax.persistence.OrderBy;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by lars on 20-02-17.
@@ -76,7 +78,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.identification;
     }
 
-    @JsonProperty("uuid")
+    @JsonProperty("UUID")
     public UUID getUUID() {
         return this.identification.getUuid();
     }

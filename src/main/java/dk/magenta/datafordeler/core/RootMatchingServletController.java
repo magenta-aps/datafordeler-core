@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  */
 public class RootMatchingServletController extends ServletController {
 
-  private static final Logger LOG = LogUtils.getL7dLogger(ServletController.class);
+  private static final Logger log = LogUtils.getL7dLogger(ServletController.class);
 
   public RootMatchingServletController(
       DestinationRegistry destinationRegistry,
@@ -54,7 +54,7 @@ public class RootMatchingServletController extends ServletController {
           d = destinationRegistry.checkRestfulRequest(pathInfo);
           if (d == null || d.getMessageObserver() == null) {
             if (returnErrors) {
-              LOG.warning("Can't find the the request for "
+              log.warning("Can't find the the request for "
                   + request.getRequestURL() + "'s Observer ");
               generateNotFound(request, res);
             }

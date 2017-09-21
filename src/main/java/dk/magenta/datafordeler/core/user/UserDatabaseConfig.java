@@ -25,7 +25,7 @@ public class UserDatabaseConfig {
 
   @Bean
   public UserQueryManager userQueryManager() {
-    if(enabled) {
+    if (enabled) {
       return new UserQueryManagerImpl(userJdbcTemplate());
     } else {
       return new NoDBUserQueryManager();
