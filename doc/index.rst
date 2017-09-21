@@ -42,6 +42,7 @@ CommandService
   Stiller et kommando-interface til rådighed i form af en service,
   hvortil der kan sendes HTTP POST-forespørgsler for at eksekverer kommandoer (f.eks. Pull),
   GET for at se status for eksekverende kommandoer, og DELETE for at afbryde kommandoer.
+  Se :ref:`command`.
 
 ConfigurationManager
   Indlæser/opretter konfigurationsobjekter for de plugins som har en implementation af den.
