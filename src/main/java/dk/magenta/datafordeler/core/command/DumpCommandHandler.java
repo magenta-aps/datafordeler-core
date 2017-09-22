@@ -23,9 +23,6 @@ import org.springframework.stereotype.Component;
 public class DumpCommandHandler extends CommandHandler {
 
     public static class DumpCommandData extends CommandData {
-
-        private static final String KEY = "query";
-
         public DumpCommandData() {
         }
 
@@ -63,8 +60,7 @@ public class DumpCommandHandler extends CommandHandler {
     @Override
     public Worker doHandleCommand(Command command)
         throws DataFordelerException {
-        this.getLog()
-            .info("Handling command '" + command.getCommandName() + "'");
+        this.getLog().info("Handling command '{}'", command.getCommandName());
 
         return new Dump(engine);
     }

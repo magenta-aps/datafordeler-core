@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core;
 
-import dk.magenta.datafordeler.core.database.DumpData;
+import dk.magenta.datafordeler.core.database.DumpInfo;
 import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
@@ -98,7 +98,7 @@ public class IndexDumpService {
 
         HashMap<String, Object> model = new HashMap<>();
         Session session = sessionManager.getSessionFactory().openSession();
-        List<DumpData> resultList = queryManager.getItems(session, DumpData.class, filter);
+        List<DumpInfo> resultList = queryManager.getItems(session, DumpInfo.class, filter);
         model.put("dumpList", resultList);
         return new ModelAndView("dumpList", model);
     }
@@ -140,7 +140,7 @@ public class IndexDumpService {
         filter.put("id", id);
         filter.put("plugin", plugin);
         filter.put("format", format);
-        DumpData result = queryManager.getItem(session, DumpData.class, filter);
+        DumpInfo result = queryManager.getItem(session, DumpInfo.class, filter);
 
         return result.getData();
     }

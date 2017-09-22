@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.plugindemo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
@@ -43,6 +44,9 @@ public class DemoEntityManager extends EntityManager {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private XmlMapper xmlMapper;
 
     @Autowired
     private DemoEntityService demoEntityService;
@@ -87,8 +91,13 @@ public class DemoEntityManager extends EntityManager {
     }
 
     @Override
-    protected ObjectMapper getObjectMapper() {
+    public ObjectMapper getObjectMapper() {
         return this.objectMapper;
+    }
+
+    @Override
+    public XmlMapper getXmlMapper() {
+        return this.xmlMapper;
     }
 
     @Override

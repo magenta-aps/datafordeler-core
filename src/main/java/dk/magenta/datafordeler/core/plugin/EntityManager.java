@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.Registration;
@@ -59,7 +60,13 @@ public abstract class EntityManager {
      * Plugins must return an autowired ObjectMapper instance from this method
      * @return
      */
-    protected abstract ObjectMapper getObjectMapper();
+    public abstract ObjectMapper getObjectMapper();
+
+    /**
+     * Plugins must return an autowired XmlMapper instance from this method
+     * @return
+     */
+    public abstract XmlMapper getXmlMapper();
 
     /**
      * Plugins must return a Fetcher instance from this method

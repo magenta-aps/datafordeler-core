@@ -119,6 +119,16 @@ public class QueryManager {
         }
     }
 
+    public <T extends DatabaseEntry> List<T> getAllItems(
+        Session session, Class<T> tClass
+    ) {
+        org.hibernate.query.Query<T> databaseQuery = session
+            .createQuery(
+                String.format("SELECT t FROM %s t", tClass.getCanonicalName()),
+                tClass);
+        return databaseQuery.getResultList();
+    }
+
     public <T extends DatabaseEntry> List<T> getItems(Session session, Class<T> tClass, Map<String, Object> filter) {
         StringJoiner whereJoiner = new StringJoiner(" and ");
         for (String key : filter.keySet()) {

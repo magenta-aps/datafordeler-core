@@ -48,32 +48,8 @@ public class Engine {
      */
     @PostConstruct
     public void init() {
-        List<Plugin> plugins = this.pluginManager.getPlugins();
-        if (plugins.isEmpty()) {
-            this.log.info("Registered NO plugins");
-        } else {
-            for (Plugin plugin : plugins) {
-                this.log.info("Registered plugin " + plugin.getClass().getCanonicalName());
-                String schedule = plugin.getRegisterManager().getPullCronSchedule();
-                if (schedule != null) {
-                    this.log.info("    Has CRON schedule " + schedule);
-                }
-                /*Session session = this.sessionManager.getSessionFactory().openSession();
-                try {
-                    this.synchronize(session, plugin, null);
-                } catch (DataFordelerException e) {
-                    e.printStackTrace();
-                }*/
-            }
-
-            if (this.cronEnabled) {
-                for (Plugin plugin : plugins) {
-                    String schedule = plugin.getRegisterManager().getPullCronSchedule();
-                    if (schedule != null) {
-                        this.setupPullSchedule(plugin.getRegisterManager());
-                    }
-                }
-            }
+        if (this.cronEnabled) {
+            this.setupSchedules();
         }
     }
 
@@ -199,43 +175,76 @@ public class Engine {
 
     /**
      * Sets the schedule for the registerManager, based on the schedule defined in same
-     * @param registerManager Registermanager to run pull jobs on
      */
-    public void setupPullSchedule(RegisterManager registerManager) {
-        this.setupPullSchedule(registerManager, registerManager.getPullCronSchedule(), false);
+    public void setupSchedules() {
+        List<Plugin> plugins = this.pluginManager.getPlugins();
+        if (plugins.isEmpty()) {
+            this.log.warn("No plugins registered!");
+        }
+
+        for (Plugin plugin : plugins) {
+            RegisterManager registerManager = plugin.getRegisterManager();
+            String schedule = registerManager.getPullCronSchedule();
+            this.log.info("Registered plugin {} has schedule '{}'",
+                plugin.getClass().getCanonicalName(), schedule);
+
+            if (schedule != null) {
+                this.setupPullSchedule(registerManager, schedule, false);
+            }
+        }
+
+        // TODO: don't hard-code dump interval
+        this.setupDumpSchedule(
+            CronScheduleBuilder.dailyAtHourAndMinute(2, 00),
+            false);
     }
 
 
     private Scheduler scheduler = null;
+
     /**
      * Sets the schedule for the registerManager, given a cron string
      * @param registerManager Registermanager to run pull jobs on
      * @param cronSchedule A valid cron schedule, six items, space-separated
      * @param dummyRun For test purposes. If false, no pull will actually be run.
      */
-    public void setupPullSchedule(RegisterManager registerManager, String cronSchedule, boolean dummyRun) {
+    public void setupPullSchedule(RegisterManager registerManager,
+        String cronSchedule,
+        boolean dummyRun) {
+        setupPullSchedule(
+            registerManager,
+            CronScheduleBuilder.cronSchedule(cronSchedule),
+            dummyRun
+        );
+    }
+
+    /**
+     * Sets the schedule for the registerManager, given a schedule
+     * @param registerManager Registermanager to run pull jobs on
+     * @param scheduleBuilder The schedule to use
+     * @param dummyRun For test purposes. If false, no pull will actually be run.
+     */
+    public void setupPullSchedule(RegisterManager registerManager,
+        ScheduleBuilder scheduleBuilder,
+        boolean dummyRun) {
         String registerManagerId = registerManager.getClass().getName() + registerManager.hashCode();
 
         try {
             if (scheduler == null) {
                 this.scheduler = StdSchedulerFactory.getDefaultScheduler();
             }
-            if (cronSchedule != null) {
-                this.log.info("Setting up cron with schedule " + cronSchedule + " to pull from "+registerManager.getClass().getCanonicalName());
+            if (scheduleBuilder != null) {
                 this.pullTriggerKeys.put(registerManagerId, TriggerKey.triggerKey("pullTrigger", registerManagerId));
                 // Set up new schedule, or replace existing
                 Trigger pullTrigger = TriggerBuilder.newTrigger()
                         .withIdentity(this.pullTriggerKeys.get(registerManagerId))
-                        .withSchedule(
-                                CronScheduleBuilder.cronSchedule(cronSchedule)
-                        ).build();
+                        .withSchedule(scheduleBuilder).build();
 
                 JobDataMap jobData = new JobDataMap();
-                jobData.put(PullTask.DATA_ENGINE, this);
-                jobData.put(PullTask.DATA_REGISTERMANAGER, registerManager);
-                jobData.put(PullTask.DATA_DUMMYRUN, dummyRun);
-                jobData.put(PullTask.DATA_SCHEDULE, cronSchedule);
-                JobDetail job = JobBuilder.newJob(PullTask.class)
+                jobData.put(Pull.Task.DATA_ENGINE, this);
+                jobData.put(Pull.Task.DATA_REGISTERMANAGER, registerManager);
+                jobData.put(AbstractTask.DATA_DUMMYRUN, dummyRun);
+                JobDetail job = JobBuilder.newJob(Pull.Task.class)
                         .withIdentity("pullTask-"+registerManagerId)
                         .setJobData(jobData)
                         .build();
@@ -251,7 +260,55 @@ public class Engine {
             }
 
         } catch (SchedulerException e) {
+            this.log.error("failed to schedule pull!", e);
+        }
+    }
 
+    private static final String DUMP_ID = "DUMP";
+    /**
+     * Sets the schedule for dumps
+     * @param scheduleBuilder The repeat schedule
+     * @param dummyRun For test purposes. If false, no pull will actually be run.
+     */
+    public void setupDumpSchedule(ScheduleBuilder scheduleBuilder, boolean dummyRun) {
+        try {
+            if (scheduler == null) {
+                this.scheduler = StdSchedulerFactory.getDefaultScheduler();
+            }
+
+            // Remove old schedule
+            if (this.pullTriggerKeys.containsKey(DUMP_ID)) {
+                this.log.info("Removing schedule for dump");
+                scheduler.unscheduleJob(this.pullTriggerKeys.get(DUMP_ID));
+            }
+
+            if (scheduleBuilder != null) {
+                this.log.info("Setting up dump with schedule {}",
+                    scheduleBuilder);
+                this.pullTriggerKeys.put(DUMP_ID,
+                    TriggerKey.triggerKey("dumpTrigger", DUMP_ID));
+
+                // Set up new schedule, or replace existing
+                Trigger dumpTrigger = TriggerBuilder.newTrigger()
+                    .withIdentity(this.pullTriggerKeys.get(DUMP_ID))
+                    .withSchedule(
+                        scheduleBuilder
+                    ).build();
+
+                JobDataMap jobData = new JobDataMap();
+                jobData.put(Dump.Task.DATA_ENGINE, this);
+                jobData.put(Dump.Task.DATA_DUMMYRUN, dummyRun);
+                JobDetail job = JobBuilder.newJob(Dump.Task.class)
+                    .withIdentity(DUMP_ID)
+                    .setJobData(jobData)
+                    .build();
+
+                scheduler.scheduleJob(job, Collections.singleton(dumpTrigger), true);
+                scheduler.start();
+            }
+
+        } catch (SchedulerException e) {
+            this.log.error("failed to schedule dump!", e);
         }
     }
 

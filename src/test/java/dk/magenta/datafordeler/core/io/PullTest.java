@@ -7,29 +7,12 @@ import dk.magenta.datafordeler.core.Pull;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
 import dk.magenta.datafordeler.core.plugin.Plugin;
-import dk.magenta.datafordeler.core.plugin.PullJobListener;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
+import dk.magenta.datafordeler.core.plugin.TaskListener;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
-import dk.magenta.datafordeler.plugindemo.DemoEntityManager;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.quartz.JobKey;
-import org.quartz.ListenerManager;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.impl.StdSchedulerFactory;
-import org.quartz.impl.matchers.KeyMatcher;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
-
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -39,6 +22,20 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.quartz.JobKey;
+import org.quartz.ListenerManager;
+import org.quartz.ScheduleBuilder;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.KeyMatcher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.LocalServerPort;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * Created by lars on 03-04-17.
@@ -104,8 +101,9 @@ public class PullTest extends GapiTestBase {
 
         Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
         ListenerManager listenerManager = scheduler.getListenerManager();
-        PullJobListener pullJobListener = new PullJobListener("PullTest.schedule");
-        listenerManager.addJobListener(pullJobListener, KeyMatcher.keyEquals(new JobKey("pullTask-" + registerManagerId)));
+        TaskListener taskListener = new TaskListener("PullTest.schedule");
+        listenerManager.addJobListener(
+            taskListener, KeyMatcher.keyEquals(new JobKey("pullTask-" + registerManagerId)));
 
         // A schedule to fire every second
         // Because we're down to 'every second', it will also fire immediately
@@ -114,36 +112,33 @@ public class PullTest extends GapiTestBase {
 
         Thread.sleep(1000);
         // One second has passed, should now have executed exactly twice (initial + 1 second)
-        Assert.assertEquals(2, pullJobListener.size(PullJobListener.Event.jobToBeExecuted));
-        Assert.assertEquals(2, pullJobListener.size(PullJobListener.Event.jobWasExecuted));
+        Assert.assertEquals(2, taskListener.size(TaskListener.Event.jobToBeExecuted));
+        Assert.assertEquals(2, taskListener.size(TaskListener.Event.jobWasExecuted));
 
         Thread.sleep(2000);
         // Three seconds have passed, should now have executed exactly four times (initial plus 3 seconds)
-        Assert.assertEquals(4, pullJobListener.size(PullJobListener.Event.jobToBeExecuted));
-        Assert.assertEquals(4, pullJobListener.size(PullJobListener.Event.jobWasExecuted));
+        Assert.assertEquals(4, taskListener.size(TaskListener.Event.jobToBeExecuted));
+        Assert.assertEquals(4, taskListener.size(TaskListener.Event.jobWasExecuted));
 
 
         // A schedule to fire every two seconds
         this.waitToMilliseconds(500, 50);
-        pullJobListener.reset(PullJobListener.Event.jobToBeExecuted);
-        pullJobListener.reset(PullJobListener.Event.jobWasExecuted);
-        pullJobListener.reset(PullJobListener.Event.jobExecutionVetoed);
+        taskListener.reset();
         engine.setupPullSchedule(plugin.getRegisterManager(), "0/2 * * * * ?", true);
 
         boolean evenSecond = OffsetDateTime.now().getSecond() % 2 == 0;
         Thread.sleep(4000);
-        Assert.assertEquals(evenSecond ? 3 : 2, pullJobListener.size(PullJobListener.Event.jobToBeExecuted));
-        Assert.assertEquals(evenSecond ? 3 : 2, pullJobListener.size(PullJobListener.Event.jobWasExecuted));
+        Assert.assertEquals(evenSecond ? 3 : 2, taskListener.size(TaskListener.Event.jobToBeExecuted));
+        Assert.assertEquals(evenSecond ? 3 : 2, taskListener.size(TaskListener.Event.jobWasExecuted));
 
-        pullJobListener.reset(PullJobListener.Event.jobToBeExecuted);
-        pullJobListener.reset(PullJobListener.Event.jobWasExecuted);
-        pullJobListener.reset(PullJobListener.Event.jobExecutionVetoed);
+        taskListener.reset();
 
-        engine.setupPullSchedule(plugin.getRegisterManager(), null, true);
+        engine.setupPullSchedule(plugin.getRegisterManager(),
+            (ScheduleBuilder)null, true);
         Thread.sleep(2000);
         // Should not run any further
-        Assert.assertEquals(0, pullJobListener.size(PullJobListener.Event.jobToBeExecuted));
-        Assert.assertEquals(0, pullJobListener.size(PullJobListener.Event.jobWasExecuted));
+        Assert.assertEquals(0, taskListener.size(TaskListener.Event.jobToBeExecuted));
+        Assert.assertEquals(0, taskListener.size(TaskListener.Event.jobWasExecuted));
     }
 
     @Test
