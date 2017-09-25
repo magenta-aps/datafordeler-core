@@ -1,7 +1,7 @@
-Datafordeler core
+Datafordelermotor
 =================
 
-Dokumentation for `datafordeler-core. <https://github.com/magenta-aps/datafordeler-core>`_
+Dokumentation for `datafordelermototen. <https://github.com/magenta-aps/datafordeler-core>`_
 
 .. toctree::
 
