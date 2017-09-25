@@ -41,13 +41,6 @@ import java.util.UUID;
 @RequestMapping("/fapi_service_with_no_requestmapping")
 public abstract class FapiService<E extends Entity, Q extends Query> {
 
-    public static final String[] PARAM_PAGE = new String[] {"side", "page"};
-    public static final String[] PARAM_PAGESIZE = new String[] {"sidestoerrelse", "pageSize"};
-    public static final String[] PARAM_REGISTRATION_FROM = new String[] {"registreringFra", "registrationFrom"};
-    public static final String[] PARAM_REGISTRATION_TO = new String[] {"registreringTil", "registrationTo"};
-    public static final String[] PARAM_EFFECT_FROM = new String[] {"virkningFra", "effectFrom"};
-    public static final String[] PARAM_EFFECT_TO = new String[] {"virkningTil", "effectTo"};
-    public static final String[] PARAM_RECORD_AFTER = new String[] { "recordAfter" };
 
     @Autowired
     protected ObjectMapper objectMapper;
@@ -403,21 +396,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected Q getQuery(MultiValueMap<String, String> parameters, boolean limitsOnly) throws InvalidClientInputException {
         Q query = this.getEmptyQuery();
         ParameterMap parameterMap = new ParameterMap(parameters);
-        if (!limitsOnly) {
-            query.setFromParameters(parameterMap);
-        }
-
-        query.setPage(parameterMap.getFirstOf(PARAM_PAGE));
-        query.setPageSize(parameterMap.getFirstOf(PARAM_PAGESIZE));
-        try {
-            query.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM));
-            query.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO));
-            query.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM));
-            query.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO));
-            query.setRecordAfter(parameterMap.getFirstOf(PARAM_RECORD_AFTER));
-        } catch (DateTimeParseException e) {
-            throw new InvalidClientInputException(e.getMessage());
-        }
+        query.fillFromParameters(parameterMap, limitsOnly);
         return query;
     }
 

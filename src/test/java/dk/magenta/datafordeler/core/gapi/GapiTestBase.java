@@ -83,13 +83,16 @@ public abstract class GapiTestBase {
 
     protected void deleteEntity(String uuid) {
         Session session = this.sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
-        DemoEntity entity = this.queryManager.getEntity(session, UUID.fromString(uuid), DemoEntity.class);
-        if (entity != null) {
-            session.delete(entity);
+        try {
+            Transaction transaction = session.beginTransaction();
+            DemoEntity entity = this.queryManager.getEntity(session, UUID.fromString(uuid), DemoEntity.class);
+            if (entity != null) {
+                session.delete(entity);
+            }
+            transaction.commit();
+        } finally {
+            session.close();
         }
-        transaction.commit();
-        session.close();
     }
 
 }

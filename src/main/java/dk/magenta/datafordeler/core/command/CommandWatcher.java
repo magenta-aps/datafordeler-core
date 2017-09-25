@@ -75,17 +75,17 @@ public class CommandWatcher {
      * @return A list of found commands.
      */
     private synchronized List<Command> getCommands() {
+        Session session = this.sessionManager.getSessionFactory().openSession();
         try {
-            Session session = this.sessionManager.getSessionFactory().openSession();
-            Query<Command> query = session.createQuery("select c from Command c where c.status = :status", Command.class);
+            Query<Command> query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.status = :status", Command.class);
             query.setParameter("status", Command.Status.QUEUED);
             List<Command> commands = query.getResultList();
-            session.close();
             return commands;
         } catch (PersistenceException e) {
-            // pass
+            return null;
+        } finally {
+            session.close();
         }
-        return null;
     }
 
     /**
@@ -136,6 +136,7 @@ public class CommandWatcher {
     }
 
     private void commandComplete(Command command) {
+        command.setHandled();
         CommandWatcher.this.saveCommand(command);
         this.workers.remove(command.getId());
     }
@@ -196,10 +197,13 @@ public class CommandWatcher {
      */
     public synchronized void saveCommand(Command command) {
         Session session = this.sessionManager.getSessionFactory().openSession();
-        command = (Command) session.merge(command);
-        Transaction transaction = session.beginTransaction();
-        session.saveOrUpdate(command);
-        transaction.commit();
-        session.close();
+        try {
+            command = (Command) session.merge(command);
+            Transaction transaction = session.beginTransaction();
+            session.saveOrUpdate(command);
+            transaction.commit();
+        } finally {
+            session.close();
+        }
     }
 }
