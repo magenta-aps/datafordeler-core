@@ -509,12 +509,15 @@ public class FapiTest {
 
     private void removeTestObject(UUID uuid) {
         Session session = sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
-        DemoEntity entity = queryManager.getEntity(session, uuid, DemoEntity.class);
-        session.delete(entity);
-        transaction.commit();
-        session.close();
-        System.out.println("Test object "+uuid.toString()+" removed");
+        try {
+            Transaction transaction = session.beginTransaction();
+            DemoEntity entity = queryManager.getEntity(session, uuid, DemoEntity.class);
+            session.delete(entity);
+            transaction.commit();
+            System.out.println("Test object "+uuid.toString()+" removed");
+        } finally {
+            session.close();
+        }
     }
 
 

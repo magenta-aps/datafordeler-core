@@ -32,9 +32,10 @@ public abstract class ConfigurationManager<C extends Configuration> {
             this.getLog().info("No configuration object exists, create one.");
             this.configuration = this.createConfiguration();
             session.persist(this.configuration);
+        } finally {
+            transaction.commit();
+            session.close();
         }
-        transaction.commit();
-        session.close();
     }
 
     /**
@@ -71,11 +72,12 @@ public abstract class ConfigurationManager<C extends Configuration> {
                 configurationClass
             ).getSingleResult();
             session.refresh(configuration);
+            return configuration;
         } catch (NoResultException e) {
-            configuration = null;
+            return null;
+        } finally {
+            session.close();
         }
-        session.close();
-        return configuration;
     }
 
     protected abstract Logger getLog();
