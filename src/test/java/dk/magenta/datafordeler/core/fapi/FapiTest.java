@@ -23,7 +23,6 @@ import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,38 +90,31 @@ public class FapiTest {
     @Test
     @Order(order=1)
     public void findDemoPluginTest() {
-        System.out.println("---------------------------\nfindDemoPluginTest");
         String testSchema = DemoEntity.schema;
         Plugin foundPlugin = this.pluginManager.getPluginForSchema(testSchema);
         Assert.assertEquals(DemoPlugin.class, foundPlugin.getClass());
-        System.out.println("TEST ENDED\n---------------------------");
     }
 
     @Test
     @Order(order=2)
     public void soapExistsTest() throws IOException {
-        System.out.println("---------------------------\nsoapExistsTest");
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/soap?wsdl", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(200, resp.getStatusCode().value());
-        System.out.println("TEST ENDED\n---------------------------");
     }
 
     @Test
     @Order(order=3)
     public void restExistsTest() throws IOException {
-        System.out.println("---------------------------\nrestExistsTest");
         this.setupUser();
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/search", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(200, resp.getStatusCode().value());
-        System.out.println("TEST ENDED\n---------------------------");
     }
 
     @Test
     @Order(order=4)
     public void soapFailOnInvalidUUIDTest() throws IOException, SOAPException {
-        System.out.println("---------------------------\nsoapFailOnInvalidUUIDTest");
         this.setupSoap();
         String service = "http://v1.helloworld.fapi.plugindemo.datafordeler.magenta.dk/";
         soapEnvelope.addNamespaceDeclaration("v1", service);
@@ -139,37 +131,31 @@ public class FapiTest {
             Assert.fail("Must throw SOAPException on invalid request");
         } catch (SOAPException e) {
         }
-        System.out.println("TEST ENDED\n---------------------------");
     }
 
 
     @Test
     @Order(order=5)
     public void restFailOnInvalidUUIDTest() throws IOException {
-        System.out.println("---------------------------\nrestFailOnInvalidUUIDTest");
         this.setupUser();
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/invalid-uuid", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(400, resp.getStatusCode().value());
-        System.out.println("TEST ENDED\n---------------------------");
     }
 
     @Test
     @Order(order=6)
     public void restFailOnInvalidDateTest() throws IOException {
-        System.out.println("---------------------------\nrestFailOnInvalidDateTest");
         this.setupUser();
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/search?postnr=8000&registrationFrom=2000-02-31", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(400, resp.getStatusCode().value());
-        System.out.println("TEST ENDED\n---------------------------");
     }
 
 
     // Disabled for now, as we might not need SOAP: @Test
     @Order(order=7)
     public void soapLookupXMLByUUIDTest() throws IOException, SOAPException, DataFordelerException {
-        System.out.println("---------------------------\nsoapLookupXMLByUUIDTest");
         this.setupSoap();
         UUID uuid = this.addTestObject();
         try {
@@ -215,7 +201,6 @@ public class FapiTest {
             }
         } finally {
             this.removeTestObject(uuid);
-            System.out.println("TEST ENDED\n---------------------------");
         }
     }
 
@@ -247,7 +232,6 @@ public class FapiTest {
     @Test
     @Order(order=8)
     public void restLookupJSONByUUIDTest() throws IOException, DataFordelerException {
-        System.out.println("---------------------------\nrestLookupJSONByUUIDTest");
         this.setupUser();
         UUID uuid = this.addTestObject();
         try {
@@ -298,14 +282,12 @@ public class FapiTest {
             this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{1}}, null, "2017-04-01T15:06:21+01:00", "2016-06-01T00:00:00+01:00", "2017-06-01T00:00:00+01:00");
         } finally {
             this.removeTestObject(uuid);
-            System.out.println("TEST ENDED\n---------------------------");
         }
     }
 
     @Test
     @Order(order=9)
     public void soapLookupXMLByParametersTest() throws IOException, SOAPException, DataFordelerException {
-        System.out.println("---------------------------\nsoapLookupXMLByParametersTest");
         this.setupSoap();
         UUID uuid = this.addTestObject();
         try {
@@ -340,7 +322,6 @@ public class FapiTest {
         }*/
         } finally {
             this.removeTestObject(uuid);
-            System.out.println("TEST ENDED\n---------------------------");
         }
     }
 
@@ -348,7 +329,6 @@ public class FapiTest {
     @Test
     @Order(order=10)
     public void restLookupJSONByParametersTest() throws IOException, DataFordelerException {
-        System.out.println("---------------------------\nrestLookupJSONByParametersTest");
         this.setupUser();
         UUID uuid1 = this.addTestObject();
         UUID uuid2 = this.addTestObject();
@@ -360,14 +340,12 @@ public class FapiTest {
         } finally {
             this.removeTestObject(uuid1);
             this.removeTestObject(uuid2);
-            System.out.println("TEST ENDED\n---------------------------");
         }
     }
 
     @Test
     @Order(order=11)
     public void restLookupXMLByUUIDTest() throws IOException, DataFordelerException {
-        System.out.println("---------------------------\nrestLookupXMLByUUIDTest");
         this.setupUser();
         UUID uuid = this.addTestObject();
         try {
@@ -384,7 +362,6 @@ public class FapiTest {
             Assert.assertTrue(xmlBody.contains("fapitest"));
         } finally {
             this.removeTestObject(uuid);
-            System.out.println("TEST ENDED\n---------------------------");
         }
     }
 
@@ -456,7 +433,6 @@ public class FapiTest {
 
     private UUID addTestObject() throws DataFordelerException {
         UUID uuid = UUID.randomUUID();
-        System.out.println("Creating test object "+uuid.toString());
         DemoEntity demoEntity = new DemoEntity();
         demoEntity.setUUID(uuid);
         demoEntity.setDomain("fapitest");
@@ -491,13 +467,8 @@ public class FapiTest {
         System.out.println(existing+" entities already exist");
         Transaction transaction = session.beginTransaction();
         try {
-            System.out.println("Saving entity 1");
             queryManager.saveRegistration(session, demoEntity, demoRegistration);
-            session.flush();
-            System.out.println("Saving entity 2");
             queryManager.saveRegistration(session, demoEntity, demoRegistration2);
-            session.flush();
-            System.out.println("Both entitites saved");
             try {
                 transaction.commit();
             } catch (Exception e) {}
