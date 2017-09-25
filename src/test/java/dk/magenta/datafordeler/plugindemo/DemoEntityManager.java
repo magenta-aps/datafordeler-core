@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.plugindemo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.database.Registration;
@@ -47,6 +48,9 @@ public class DemoEntityManager extends EntityManager {
 
     @Autowired
     private XmlMapper xmlMapper;
+
+    @Autowired
+    private CsvMapper csvMapper;
 
     @Autowired
     private DemoEntityService demoEntityService;
@@ -99,6 +103,9 @@ public class DemoEntityManager extends EntityManager {
     public XmlMapper getXmlMapper() {
         return this.xmlMapper;
     }
+
+    @Override
+    public CsvMapper getCsvMapper() { return this.csvMapper; }
 
     @Override
     protected Communicator getRegistrationFetcher() {

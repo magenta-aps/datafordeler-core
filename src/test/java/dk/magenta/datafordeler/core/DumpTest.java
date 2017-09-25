@@ -18,6 +18,9 @@ import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -141,19 +144,21 @@ public class DumpTest extends GapiTestBase {
         setUp();
     }
 
-    private void createOneEntity() throws DataFordelerException {
+    private void createOneEntity(int postalcode, String cityname)
+        throws DataFordelerException {
         final OffsetDateTime from =
             OffsetDateTime.parse("2001-01-01T00:00:00+00:00");
 
         DemoEntity entity = new DemoEntity(
-            UUID.randomUUID(), "http://example.com"
+            new UUID(0, Integer.parseInt(Integer.toString(postalcode), 16)),
+            "http://example.com"
         );
         DemoRegistration registration = new DemoRegistration(from, null, 0);
         entity.addRegistration(registration);
 
         DemoEffect effect = new DemoEffect(registration, from, null);
         effect.setDataItems(Arrays.asList(
-            new DemoData(3900, "Nuuk")
+            new DemoData(postalcode, cityname)
         ));
         registration.addEffect(effect);
 
@@ -162,6 +167,10 @@ public class DumpTest extends GapiTestBase {
         queryManager.saveRegistration(session, entity, registration);
         transaction.commit();
         session.close();
+    }
+
+    private void createOneEntity() throws DataFordelerException {
+        createOneEntity(3900, "Nuuk");
     }
 
     /**
@@ -250,7 +259,9 @@ public class DumpTest extends GapiTestBase {
         Assert.assertArrayEquals("Dump contents",
             new String[]{
                 "<?xml version='1.0' encoding='UTF-8'?><Registrations/>",
-                "[]",
+                "{ }",
+                null,
+                null,
             },
             dumps.stream().map(d -> d.getData()).toArray());
 
@@ -263,11 +274,12 @@ public class DumpTest extends GapiTestBase {
     @Test
     public void actualDump() throws Exception {
         Session session;
-        createOneEntity();
+        createOneEntity(3900, "Nuuk");
+        createOneEntity(3992, "Siriuspatruljen");
 
         session = sessionManager.getSessionFactory().openSession();
 
-        Assert.assertEquals("Initial state; two dumps", 0,
+        Assert.assertEquals("Initial state; no dumps", 0,
             queryManager.getAllItems(session, DumpInfo.class).size());
 
         session.close();
@@ -283,10 +295,16 @@ public class DumpTest extends GapiTestBase {
             1 * Dump.FORMATS.length, dumps.size());
 
         Assert.assertArrayEquals("Dump contents",
-            new String[]{
-                getPayload("/dump.xml"),
-                getPayload("/dump.json"),
-            },
+            Arrays.stream(Dump.FORMATS).map(
+                s -> {
+                    try {
+                        return getPayload("/dump." + s);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                }
+            ).toArray(),
             dumps.stream().map(d -> d.getData()).toArray());
 
         session.close();

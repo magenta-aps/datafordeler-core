@@ -20,7 +20,7 @@ public final class DumpInfo extends DatabaseEntry implements
     @Column(nullable = false)
     private OffsetDateTime timestamp;
 
-    @OneToOne(fetch = FetchType.LAZY, orphanRemoval = true, optional = false,
+    @OneToOne(fetch = FetchType.LAZY, orphanRemoval = true, optional = true,
         cascade = CascadeType.ALL)
     @Lob
     private DumpData data;
@@ -35,7 +35,7 @@ public final class DumpInfo extends DatabaseEntry implements
         this.entityName = entityName;
         this.format = format;
         this.timestamp = timestamp;
-        this.data = new DumpData(data);
+        this.data = data != null ? new DumpData(data) : null;
     }
 
     @Override
@@ -55,7 +55,11 @@ public final class DumpInfo extends DatabaseEntry implements
 
     @JsonIgnore
     public String getData() {
-        return this.data.getData();
+        try {
+            return this.data.getData();
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     @JsonIgnore

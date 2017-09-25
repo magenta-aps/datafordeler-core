@@ -1,14 +1,25 @@
 package dk.magenta.datafordeler.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SequenceWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import dk.magenta.datafordeler.core.command.Worker;
 import dk.magenta.datafordeler.core.database.DumpInfo;
+import dk.magenta.datafordeler.core.database.Effect;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
@@ -23,6 +34,7 @@ import org.quartz.JobDataMap;
  * Query
  */
 public class Dump extends Worker {
+
     public static class Task extends AbstractTask<Dump> {
 
         public static final String DATA_ENGINE = "engine";
@@ -33,7 +45,7 @@ public class Dump extends Worker {
         }
     }
 
-    static final String[] FORMATS = {"xml", "json"};
+    static final String[] FORMATS = {"xml", "json", "csv", "tsv"};
 
     private Logger log = LogManager.getLogger(this.getClass().getName());
 
@@ -83,9 +95,11 @@ public class Dump extends Worker {
                         plugin.getName());
 
                     // TODO: this is hugely inefficient, using loads of memory
-                    List<Registration> regs = entities.stream().map(
-                        e -> e.getRegistrationAt(timestamp)
-                    ).collect(Collectors.toList());
+                    Map<String, ? extends Registration> regs = entities.stream()
+                        .collect(Collectors.toMap(
+                            e -> e.getUUID().toString(),
+                            e -> e.getRegistrationAt(timestamp))
+                        );
 
                     for (String format : FORMATS) {
                         session.save(
@@ -116,29 +130,97 @@ public class Dump extends Worker {
 
     private String dump(
         EntityManager entityManager,
-        List<? extends Registration> registrations, String
+        Map<String, ? extends Registration> registrations, String
         format) {
         try {
             switch (format) {
                 case "json":
-                    return entityManager.getObjectMapper().writeValueAsString
+                    ObjectMapper objectMapper = entityManager.getObjectMapper();
+                    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+                    return objectMapper.writeValueAsString
                         (registrations);
 
                 case "xml": {
                     StringWriter w = new StringWriter();
+                    XmlMapper xmlMapper = entityManager.getXmlMapper();
+                    xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
+
                     XMLOutputFactory outputFactory = XMLOutputFactory
                         .newFactory();
-
                     XMLStreamWriter writer = outputFactory
                         .createXMLStreamWriter(w);
 
                     writer.writeStartDocument();
                     writer.writeStartElement("Registrations");
-                    for (Registration r : registrations) {
-                        entityManager.getXmlMapper().writeValue(writer, r);
+                    for (Registration r : registrations.values()) {
+                        xmlMapper.writeValue(writer, r);
                     }
                     writer.writeEndElement();
                     writer.writeEndDocument();
+
+                    return w.toString();
+                }
+
+                case "tsv":
+                case "csv": {
+                    Iterator<Map<String, Object>> dataIter =
+                        registrations.values().stream()
+                            .flatMap(
+                                reg -> ((List<Effect>) reg.getEffects())
+                                    .stream()
+                            ).map(
+                            obj -> {
+                                Effect e = (Effect) obj;
+                                Registration r = e.getRegistration();
+                                Map<String, Object> data = e.getData();
+
+                                data.put("registrationFrom",
+                                    r.getRegistrationFrom());
+                                data.put("registrationTo",
+                                    r.getRegistrationFrom());
+                                data.put("sequenceNumber",
+                                    r.getSequenceNumber());
+                                data.put("uuid", r.getEntity().getUUID());
+
+                                return data;
+                            }
+                        ).iterator();
+
+                    if (!dataIter.hasNext()) {
+                        return null;
+                    }
+
+                    CsvMapper mapper = entityManager.getCsvMapper();
+                    CsvSchema.Builder builder =
+                        new CsvSchema.Builder();
+
+                    Map<String, Object> first = dataIter.next();
+                    ArrayList<String> keys =
+                        new ArrayList<>(first.keySet());
+                    Collections.sort(keys);
+
+                    for (int i = 0; i < keys.size(); i++) {
+                        builder.addColumn(new CsvSchema.Column(
+                            i, keys.get(i),
+                            CsvSchema.ColumnType.NUMBER_OR_STRING
+                        ));
+                    }
+
+                    CsvSchema schema = builder.build().withHeader();
+
+                    if (format.equals("tsv")) {
+                        schema = schema.withColumnSeparator('\t');
+                    }
+
+                    StringWriter w = new StringWriter();
+                    SequenceWriter writer =
+                        mapper.writer(schema).writeValues(w);
+
+                    writer.write(first);
+
+                    while (dataIter.hasNext()) {
+                        writer.write(dataIter.next());
+                    }
 
                     return w.toString();
                 }
