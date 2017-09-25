@@ -48,46 +48,50 @@ public class SyncTest extends GapiTestBase {
     @Test
     public void testSynchronize() throws DataFordelerException, IOException {
         Session session = this.sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
+        String uuid1 = "2eed5323-f94f-5a9f-9607-39739c3585b5";
+        String uuid2 = "2eed5323-f94f-5a9f-9607-39739c3585b6";
+        try {
+            Transaction transaction = session.beginTransaction();
 
-        ExpectorCallback listChecksumsCallback = new ExpectorCallback();
-        String response = this.getPayload("/listchecksums_response.json");
-        this.callbackController.addCallbackResponse("/test/listChecksums", response, listChecksumsCallback);
+            ExpectorCallback listChecksumsCallback = new ExpectorCallback();
+            String response = this.getPayload("/listchecksums_response.json");
+            this.callbackController.addCallbackResponse("/test/listChecksums", response, listChecksumsCallback);
 
-        HashMap<String, String[]> checksums = new HashMap<>();
-        checksums.put("2eed5323-f94f-5a9f-9607-39739c3585b5", new String[]{"8da553a54d4c7b1bbb95f47d803a758d", "2a2ef17de084b10fe30ca726e2168c2e"});
-        checksums.put("2eed5323-f94f-5a9f-9607-39739c3585b6", new String[]{"8da553a54d4c7b1bbb95f47d803a758e", "2a2ef17de084b10fe30ca726e2168c2f"});
+            HashMap<String, String[]> checksums = new HashMap<>();
+            checksums.put(uuid1, new String[]{"8da553a54d4c7b1bbb95f47d803a758d", "2a2ef17de084b10fe30ca726e2168c2e"});
+            checksums.put(uuid2, new String[]{"8da553a54d4c7b1bbb95f47d803a758e", "2a2ef17de084b10fe30ca726e2168c2f"});
 
-        for (String entityId : checksums.keySet()) {
-            int sequenceNumber = 0;
-            for (String registrationChecksum : checksums.get(entityId)) {
-                sequenceNumber++;
-                String full = this.getPayload("/referencelookuptest.json")
-                        .replace("%{checksum}", registrationChecksum)
-                        .replace("%{entityid}", entityId)
-                        .replace("%{sequenceNumber}", Integer.toString(sequenceNumber));
-                ExpectorCallback lookupCallback = new ExpectorCallback();
-                this.callbackController.addCallbackResponse("/test/get/" + registrationChecksum, full, lookupCallback);
+            for (String entityId : checksums.keySet()) {
+                int sequenceNumber = 0;
+                for (String registrationChecksum : checksums.get(entityId)) {
+                    sequenceNumber++;
+                    String full = this.getPayload("/referencelookuptest.json")
+                            .replace("%{checksum}", registrationChecksum)
+                            .replace("%{entityid}", entityId)
+                            .replace("%{sequenceNumber}", Integer.toString(sequenceNumber));
+                    ExpectorCallback lookupCallback = new ExpectorCallback();
+                    this.callbackController.addCallbackResponse("/test/get/" + registrationChecksum, full, lookupCallback);
+                }
             }
+
+            List<? extends Registration> newRegistrations;
+            Plugin plugin = pluginManager.getPluginForSchema("Postnummer");
+            DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
+            registerManager.setPort(this.port);
+            newRegistrations = engine.synchronize(session, plugin, null);
+            Assert.assertEquals(4, newRegistrations.size());
+            transaction.commit();
+
+
+            transaction = session.beginTransaction();
+            newRegistrations = engine.synchronize(session, plugin, null);
+            transaction.commit();
+            Assert.assertEquals(0, newRegistrations.size());
+        } finally {
+            session.close();
         }
 
-        List<? extends Registration> newRegistrations;
-        Plugin plugin = pluginManager.getPluginForSchema("Postnummer");
-        DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
-        registerManager.setPort(this.port);
-        newRegistrations = engine.synchronize(session, plugin, null);
-        Assert.assertEquals(4, newRegistrations.size());
-        transaction.commit();
-        session.close();
-
-        session = this.sessionManager.getSessionFactory().openSession();
-        transaction = session.beginTransaction();
-        newRegistrations = engine.synchronize(session, plugin, null);
-        transaction.commit();
-        session.close();
-        Assert.assertEquals(0, newRegistrations.size());
-
-        this.deleteEntity("2eed5323-f94f-5a9f-9607-39739c3585b5");
-        this.deleteEntity("2eed5323-f94f-5a9f-9607-39739c3585b6");
+        this.deleteEntity(uuid1);
+        this.deleteEntity(uuid2);
     }
 }

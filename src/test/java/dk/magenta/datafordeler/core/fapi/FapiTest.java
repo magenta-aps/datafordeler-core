@@ -463,14 +463,16 @@ public class FapiTest {
         demoData4.addEffect(demoEffect4);
 
         Session session = sessionManager.getSessionFactory().openSession();
+        long existing = queryManager.count(session, DemoEntity.class, null);
+        System.out.println(existing+" entities already exist");
         Transaction transaction = session.beginTransaction();
         try {
             queryManager.saveRegistration(session, demoEntity, demoRegistration);
             queryManager.saveRegistration(session, demoEntity, demoRegistration2);
-        } finally {
             try {
                 transaction.commit();
             } catch (Exception e) {}
+        } finally {
             session.close();
         }
         return uuid;
@@ -478,11 +480,15 @@ public class FapiTest {
 
     private void removeTestObject(UUID uuid) {
         Session session = sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
-        DemoEntity entity = queryManager.getEntity(session, uuid, DemoEntity.class);
-        session.delete(entity);
-        transaction.commit();
-        session.close();
+        try {
+            Transaction transaction = session.beginTransaction();
+            DemoEntity entity = queryManager.getEntity(session, uuid, DemoEntity.class);
+            session.delete(entity);
+            transaction.commit();
+            System.out.println("Test object "+uuid.toString()+" removed");
+        } finally {
+            session.close();
+        }
     }
 
 
