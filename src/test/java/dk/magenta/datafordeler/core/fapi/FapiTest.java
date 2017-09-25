@@ -88,14 +88,10 @@ public class FapiTest {
     private SOAPPart soapPart;
     private SOAPEnvelope soapEnvelope;
 
-    @Before
-    public void before() {
-        System.out.println("---------------------------");
-    }
-
     @Test
     @Order(order=1)
     public void findDemoPluginTest() {
+        System.out.println("---------------------------");
         String testSchema = DemoEntity.schema;
         Plugin foundPlugin = this.pluginManager.getPluginForSchema(testSchema);
         Assert.assertEquals(DemoPlugin.class, foundPlugin.getClass());
@@ -104,6 +100,7 @@ public class FapiTest {
     @Test
     @Order(order=2)
     public void soapExistsTest() throws IOException {
+        System.out.println("---------------------------");
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/soap?wsdl", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(200, resp.getStatusCode().value());
@@ -112,6 +109,7 @@ public class FapiTest {
     @Test
     @Order(order=3)
     public void restExistsTest() throws IOException {
+        System.out.println("---------------------------");
         this.setupUser();
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/search", HttpMethod.GET, httpEntity, String.class);
@@ -121,6 +119,7 @@ public class FapiTest {
     @Test
     @Order(order=4)
     public void soapFailOnInvalidUUIDTest() throws IOException, SOAPException {
+        System.out.println("---------------------------");
         this.setupSoap();
         String service = "http://v1.helloworld.fapi.plugindemo.datafordeler.magenta.dk/";
         soapEnvelope.addNamespaceDeclaration("v1", service);
@@ -143,6 +142,7 @@ public class FapiTest {
     @Test
     @Order(order=5)
     public void restFailOnInvalidUUIDTest() throws IOException {
+        System.out.println("---------------------------");
         this.setupUser();
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/invalid-uuid", HttpMethod.GET, httpEntity, String.class);
@@ -152,6 +152,7 @@ public class FapiTest {
     @Test
     @Order(order=6)
     public void restFailOnInvalidDateTest() throws IOException {
+        System.out.println("---------------------------");
         this.setupUser();
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/search?postnr=8000&registrationFrom=2000-02-31", HttpMethod.GET, httpEntity, String.class);
@@ -162,6 +163,7 @@ public class FapiTest {
     // Disabled for now, as we might not need SOAP: @Test
     @Order(order=7)
     public void soapLookupXMLByUUIDTest() throws IOException, SOAPException, DataFordelerException {
+        System.out.println("---------------------------");
         this.setupSoap();
         UUID uuid = this.addTestObject();
         try {
@@ -238,6 +240,7 @@ public class FapiTest {
     @Test
     @Order(order=8)
     public void restLookupJSONByUUIDTest() throws IOException, DataFordelerException {
+        System.out.println("---------------------------");
         this.setupUser();
         UUID uuid = this.addTestObject();
         try {
@@ -294,6 +297,7 @@ public class FapiTest {
     @Test
     @Order(order=9)
     public void soapLookupXMLByParametersTest() throws IOException, SOAPException, DataFordelerException {
+        System.out.println("---------------------------");
         this.setupSoap();
         UUID uuid = this.addTestObject();
         try {
@@ -335,6 +339,7 @@ public class FapiTest {
     @Test
     @Order(order=10)
     public void restLookupJSONByParametersTest() throws IOException, DataFordelerException {
+        System.out.println("---------------------------");
         this.setupUser();
         UUID uuid1 = this.addTestObject();
         UUID uuid2 = this.addTestObject();
@@ -352,6 +357,7 @@ public class FapiTest {
     @Test
     @Order(order=11)
     public void restLookupXMLByUUIDTest() throws IOException, DataFordelerException {
+        System.out.println("---------------------------");
         this.setupUser();
         UUID uuid = this.addTestObject();
         try {
@@ -470,6 +476,8 @@ public class FapiTest {
         demoData4.addEffect(demoEffect4);
 
         Session session = sessionManager.getSessionFactory().openSession();
+        long existing = queryManager.count(session, DemoEntity.class, null);
+        System.out.println(existing+" entities already exist");
         Transaction transaction = session.beginTransaction();
         try {
             System.out.println("Saving entity 1");
