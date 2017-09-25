@@ -23,6 +23,7 @@ import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,6 +87,11 @@ public class FapiTest {
     private SOAPMessage soapMessage;
     private SOAPPart soapPart;
     private SOAPEnvelope soapEnvelope;
+
+    @Before
+    public void before() {
+        System.out.println("---------------------------");
+    }
 
     @Test
     @Order(order=1)
@@ -433,6 +439,7 @@ public class FapiTest {
 
     private UUID addTestObject() throws DataFordelerException {
         UUID uuid = UUID.randomUUID();
+        System.out.println("Creating test object "+uuid.toString());
         DemoEntity demoEntity = new DemoEntity();
         demoEntity.setUUID(uuid);
         demoEntity.setDomain("fapitest");
@@ -487,6 +494,7 @@ public class FapiTest {
         session.delete(entity);
         transaction.commit();
         session.close();
+        System.out.println("Test object "+uuid.toString()+" removed");
     }
 
 
