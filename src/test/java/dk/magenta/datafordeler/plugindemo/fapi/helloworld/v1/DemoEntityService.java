@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.plugindemo.fapi.helloworld.v1;
 
+import dk.magenta.datafordeler.core.database.DataItem;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
@@ -9,6 +10,7 @@ import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.plugindemo.DemoPlugin;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
 import dk.magenta.datafordeler.plugindemo.fapi.DemoQuery;
+import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import org.hibernate.Session;
 
@@ -48,6 +50,11 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
     }
 
     @Override
+    protected Class<? extends DataItem> getDataClass() {
+        return DemoData.class;
+    }
+
+    @Override
     public Plugin getPlugin() {
         return this.demoPlugin;
     }
@@ -60,7 +67,7 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
     @Override
     protected void checkAccess(DafoUserDetails user)
         throws AccessDeniedException, AccessRequiredException {
-        if(user == null) {
+        if (user == null) {
             throw new AccessRequiredException(
                 "You must provide a DAFO token to use this service"
             );
@@ -77,7 +84,7 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
         this.applyQuery(session, query);
         Set<DemoEntity> entities = null;
         try {
-            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
+            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, DemoEntity.class));
         } catch (DataFordelerException e) {
             e.printStackTrace();
         } finally {

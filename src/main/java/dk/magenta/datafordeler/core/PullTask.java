@@ -3,7 +3,10 @@ package dk.magenta.datafordeler.core;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.quartz.*;
+import org.quartz.InterruptableJob;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.UnableToInterruptJobException;
 
 /**
  * Created by lars on 06-04-17.
@@ -15,7 +18,7 @@ public class PullTask implements InterruptableJob {
     public static final String DATA_DUMMYRUN = "dummyRun";
     public static final String DATA_SCHEDULE = "schedule";
 
-    private Logger log = LogManager.getLogger("PullTask");
+    private Logger log = LogManager.getLogger(PullTask.class);
 
     private Pull pull;
 

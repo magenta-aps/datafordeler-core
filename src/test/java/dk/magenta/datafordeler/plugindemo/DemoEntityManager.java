@@ -40,7 +40,7 @@ import java.util.*;
 @Component
 public class DemoEntityManager extends EntityManager {
 
-    protected Logger log = LogManager.getLogger("DemoEntityManager");
+    protected Logger log = LogManager.getLogger(DemoEntityManager.class);
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -70,7 +70,6 @@ public class DemoEntityManager extends EntityManager {
     }
 
     public void setPort(int port) {
-        System.out.println("Setting port to "+port);
         this.URISubstrings = new String[] {
                 "http://localhost:" + port
         };

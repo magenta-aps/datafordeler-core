@@ -26,7 +26,7 @@ public class CallbackController {
     @Autowired
     ObjectMapper objectMapper;
 
-    Logger log = LogManager.getLogger("CallbackController");
+    Logger log = LogManager.getLogger(CallbackController.class);
 
     private class Expector {
         public String response;

@@ -1,9 +1,11 @@
-package dk.magenta.datafordeler.core;
+package dk.magenta.datafordeler.core.command;
 
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 
 /**
  * Created by lars on 29-05-17.
+ * Command job superclass. Subclasses execute jobs in the run() method,
+ * but should respect the setting of doCancel, which means to stop the run
  */
 public abstract class Worker extends Thread implements Runnable {
 
@@ -16,7 +18,6 @@ public abstract class Worker extends Thread implements Runnable {
     protected WorkerCallback callback = null;
 
     public void end() {
-        System.out.println("setting doCancel");
         this.doCancel = true;
     }
 

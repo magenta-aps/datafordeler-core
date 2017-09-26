@@ -92,10 +92,13 @@ public class LoadPluginTest {
     public void configurationTest() {
         Plugin plugin = this.pluginManager.getPluginForSchema(DemoEntity.schema);
         Session session = sessionManager.getSessionFactory().openSession();
-        DemoConfiguration configuration = (DemoConfiguration) plugin.getConfigurationManager().getConfiguration();
-        Assert.assertNotNull(configuration.getPullCronSchedule());
-        Assert.assertEquals("0 0 0 * * ?", configuration.getPullCronSchedule());
-        session.close();
+        try {
+            DemoConfiguration configuration = (DemoConfiguration) plugin.getConfigurationManager().getConfiguration();
+            Assert.assertNotNull(configuration.getPullCronSchedule());
+            Assert.assertEquals("0 0 0 * * ?", configuration.getPullCronSchedule());
+        } finally {
+            session.close();
+        }
     }
 
 

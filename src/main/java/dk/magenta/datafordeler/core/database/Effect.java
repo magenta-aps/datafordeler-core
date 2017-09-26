@@ -8,7 +8,9 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.Equality;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.Session;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.ParamDef;
 
 import javax.persistence.*;
@@ -31,8 +33,11 @@ import java.util.*;
  */
 @MappedSuperclass
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-@FilterDef(name=Effect.FILTER_EFFECT_FROM, parameters=@ParamDef(name=Effect.FILTERPARAM_EFFECT_FROM, type="java.time.OffsetDateTime"))
-@FilterDef(name=Effect.FILTER_EFFECT_TO, parameters=@ParamDef(name=Effect.FILTERPARAM_EFFECT_TO, type="java.time.OffsetDateTime"))
+@FilterDefs({
+        @FilterDef(name = Effect.FILTER_EFFECT_FROM, parameters = @ParamDef(name = Effect.FILTERPARAM_EFFECT_FROM, type = "java.time.OffsetDateTime")),
+        @FilterDef(name = Effect.FILTER_EFFECT_TO, parameters = @ParamDef(name = Effect.FILTERPARAM_EFFECT_TO, type = "java.time.OffsetDateTime")),
+        @FilterDef(name = DataItem.FILTER_RECORD_AFTER, parameters = @ParamDef(name = DataItem.FILTERPARAM_RECORD_AFTER, type = "java.time.OffsetDateTime"))
+})
 @JsonPropertyOrder({"effectFrom", "effectTo", "dataItems"})
 public abstract class Effect<R extends Registration, V extends Effect, D extends DataItem> extends DatabaseEntry implements Comparable<Effect> {
 
@@ -46,6 +51,7 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     protected R registration;
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Filter(name = DataItem.FILTER_RECORD_AFTER, condition="(lastUpdated > :"+DataItem.FILTERPARAM_RECORD_AFTER+")")
     protected Set<D> dataItems;
 
     @Column(nullable = true, insertable = true, updatable = false)
@@ -109,12 +115,14 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     }
 
     protected void setRegistration(R registration) {
-        if (registration != null) {
+        if (registration != null && registration != this.registration) {
             if (this.registration != null) {
                 this.registration.removeEffect(this);
             }
             this.registration = registration;
-            registration.addEffect(this);
+            if (!registration.effects.contains(this)) {
+                registration.addEffect(this);
+            }
         }
     }
 

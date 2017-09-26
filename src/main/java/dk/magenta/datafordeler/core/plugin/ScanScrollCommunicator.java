@@ -6,9 +6,7 @@ import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.HttpGetWithEntity;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -18,8 +16,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -99,39 +95,77 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                 @Override
                 public void run() {
                     try {
-                        HttpPost initialPost = new HttpPost(startUri);
-                        initialPost.setEntity(new StringEntity(body, "utf-8"));
-                        CloseableHttpResponse response;
-                        log.info("Sending initial POST to "+startUri);
-                        try {
-                            response = httpclient.execute(initialPost);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            throw new DataStreamException(e);
-                        }
-                        log.info("Initial POST sent");
-                        log.info("HTTP status: "+response.getStatusLine().getStatusCode());
-                        if (response.getStatusLine().getStatusCode() != 200) {
-                            log.info(response.getEntity().getContent());
-                        }
+                        JsonNode responseNode;
 
-                        JsonNode responseNode = objectMapper.readTree(response.getEntity().getContent());
-                        String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
+                        File postFile = new File("data/initial.json");
 
-                        while (scrollId != null) {
-                            URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
-                            HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
-                            partialGet.setEntity(new StringEntity(scrollId));
+                        if (postFile.exists()) {
+
+                            log.info("Getting data from cache");
+                            InputStream postResponseData = new FileInputStream(postFile);
+                            responseNode = objectMapper.readTree(postResponseData);
+                            postResponseData.close();
+
+                        } else {
+
+                            HttpPost initialPost = new HttpPost(startUri);
+                            initialPost.setEntity(new StringEntity(body, "utf-8"));
+                            CloseableHttpResponse response;
+                            log.info("Sending initial POST to " + startUri);
                             try {
-                                log.info("Sending chunk GET to "+fetchUri);
-                                response = httpclient.execute(partialGet);
-                                BufferedInputStream data = new BufferedInputStream(response.getEntity().getContent(), 8192);
+                                response = httpclient.execute(initialPost);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                throw new DataStreamException(e);
+                            }
+                            log.info("Initial POST sent");
+                            log.info("HTTP status: " + response.getStatusLine().getStatusCode());
+                            if (response.getStatusLine().getStatusCode() != 200) {
+                                log.info(response.getEntity().getContent());
+                            }
 
+                            responseNode = objectMapper.readTree(response.getEntity().getContent());
+
+                            postFile.createNewFile();
+                            FileWriter fw = new FileWriter(postFile);
+                            fw.write(responseNode.toString());
+                            fw.close();
+                        }
+
+
+                        String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
+                        int i = 0;
+                        while (scrollId != null) {
+
+                            InputStream getResponseData;
+
+                            File getFile = new File("data/data"+i+".json");
+                            if (getFile.exists()) {
+
+                                getResponseData = new FileInputStream(getFile);
+
+
+                            } else {
+
+                                URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
+                                HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
+                                partialGet.setEntity(new StringEntity(scrollId));
+                                try {
+                                    log.info("Sending chunk GET to " + fetchUri);
+                                    CloseableHttpResponse response = httpclient.execute(partialGet);
+                                    getResponseData = new BufferedInputStream(response.getEntity().getContent(), 8192);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    throw new DataStreamException(e);
+                                }
+                            }
+
+                            try {
                                 int peekSize = 400;
-                                data.mark(peekSize);
+                                getResponseData.mark(peekSize);
                                 byte[] peekBytes = new byte[peekSize];
-                                data.read(peekBytes, 0, peekSize);
-                                data.reset();
+                                getResponseData.read(peekBytes, 0, peekSize);
+                                getResponseData.reset();
 
                                 String peekString = new String(peekBytes, 0, peekSize, "utf-8");
                                 Matcher m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
@@ -142,28 +176,38 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                     scrollId = null;
                                     log.info("next scrollId not found");
                                 }
-                                IOUtils.copy(data, outputStream);
-                                if (scrollId != null) {
-                                    // There is more data
-                                    outputStream.write(delimiter);
-                                    if (throttle > 0) {
-                                        try {
-                                            log.info("Waiting "+throttle+" milliseconds before next request");
-                                            Thread.sleep(throttle);
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                } else {
-                                    // Reached the end
-                                    log.info("Closing outputstream");
-                                    outputStream.close();
-                                }
+                                IOUtils.copy(getResponseData, outputStream);
+
+                                postFile.createNewFile();
+                                FileWriter fw = new FileWriter(getFile);
+                                IOUtils.copy(getResponseData, fw);
+                                fw.close();
+                                i++;
 
                             } catch (IOException e) {
                                 e.printStackTrace();
                                 throw new DataStreamException(e);
+                            } finally {
+                                getResponseData.close();
                             }
+
+                            if (scrollId != null) {
+                                // There is more data
+                                outputStream.write(delimiter);
+                                if (throttle > 0) {
+                                    try {
+                                        log.info("Waiting "+throttle+" milliseconds before next request");
+                                        Thread.sleep(throttle);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            } else {
+                                // Reached the end
+                                log.info("Closing outputstream");
+                                outputStream.close();
+                            }
+
                         }
                     } catch (DataStreamException | IOException | URISyntaxException e) {
                         e.printStackTrace();

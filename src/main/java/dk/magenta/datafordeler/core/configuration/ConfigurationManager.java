@@ -10,7 +10,7 @@ import javax.persistence.NoResultException;
 /**
  * Created by lars on 06-04-17.
  * Plugin configurations are stored in separate database tables, each with only one
- * row. On loading the program, the Configuration is retrieved from the database, or
+ * row. On loading the program, the Configuration object is retrieved from the database, or
  * if one doesn’t exist (such as on the first run), created and saved.
  */
 public abstract class ConfigurationManager<C extends Configuration> {
@@ -32,17 +32,34 @@ public abstract class ConfigurationManager<C extends Configuration> {
             this.getLog().info("No configuration object exists, create one.");
             this.configuration = this.createConfiguration();
             session.persist(this.configuration);
+        } finally {
+            transaction.commit();
+            session.close();
         }
-        transaction.commit();
-        session.close();
     }
 
+    /**
+     * Get the specific class object, a subclass of Configuration
+     * @return
+     */
     protected abstract Class<C> getConfigurationClass();
 
+    /**
+     * Create a new Configuration object, empty or with default values, because one does not already exist
+     * @return
+     */
     protected abstract C createConfiguration();
 
+    /**
+     * Return a session manager
+     * @return
+     */
     protected abstract SessionManager getSessionManager();
 
+    /**
+     * Retrieve the configuration object from the database
+     * @return
+     */
     public C getConfiguration() {
         // This should always fetch fresh data from the database as that data might have been
         // changed.
@@ -55,11 +72,12 @@ public abstract class ConfigurationManager<C extends Configuration> {
                 configurationClass
             ).getSingleResult();
             session.refresh(configuration);
+            return configuration;
         } catch (NoResultException e) {
-            configuration = null;
+            return null;
+        } finally {
+            session.close();
         }
-        session.close();
-        return configuration;
     }
 
     protected abstract Logger getLog();

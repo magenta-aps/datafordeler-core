@@ -65,4 +65,9 @@ public class DemoRolesDefinition extends RolesDefinition {
         roles.add(STOP_DEMO_PULL_ROLE);
         return roles;
     }
+
+    @Override
+    public ReadServiceRole getDefaultReadRole() {
+        return READ_SERVICE_ROLE;
+    }
 }

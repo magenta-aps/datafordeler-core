@@ -18,7 +18,7 @@ public abstract class UserQueryManager {
     UserProfile userProfile = null;
 
     int userProfileId = getUserProfileIdByName(name);
-    if(userProfileId != INVALID_USERPROFILE_ID) {
+    if (userProfileId != INVALID_USERPROFILE_ID) {
       userProfile = new UserProfile(name);
       userProfile.setDatabaseId(userProfileId);
       userProfile.getSystemRoles().addAll(

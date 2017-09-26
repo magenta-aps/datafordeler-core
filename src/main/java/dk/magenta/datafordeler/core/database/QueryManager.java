@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
+
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
 import java.time.OffsetDateTime;
@@ -20,7 +21,7 @@ import java.util.*;
 @Component
 public class QueryManager {
 
-    Logger log = LogManager.getLogger("QueryManager");
+    Logger log = LogManager.getLogger(QueryManager.class);
 
     public static final String ENTITY = "e";
 
@@ -50,18 +51,10 @@ public class QueryManager {
      */
     public <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
         this.log.trace("Get all Entities of class " + eClass.getCanonicalName());
-        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
+        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
         this.logQuery(databaseQuery);
         List<E> results = databaseQuery.getResultList();
         return results;
-    }
-
-    private static boolean parameterValueWildcard(Object value) {
-        if (value instanceof String) {
-            String stringValue = (String) value;
-            return stringValue.startsWith("*") || stringValue.endsWith("*");
-        }
-        return false;
     }
 
     /**
@@ -71,35 +64,27 @@ public class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public <E extends Entity> List<E> getAllEntities(Session session, Query query, Class<E> eClass) throws DataFordelerException {
-        this.log.trace("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
-        StringJoiner queryString = new StringJoiner(" and ");
-        Map<String, Object> parameters = query.getSearchParameters();
-        for (String key : parameters.keySet()) {
-            Object value = parameters.get(key);
-            if (value != null) {
-                if (parameterValueWildcard(value)) {
-                    queryString.add("cast(d." + key + " as string) like :" + key);
-                } else {
-                    queryString.add("d." + key + " = :" + key);
-                }
-            }
-        }
+    public <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass) throws DataFordelerException {
+        this.log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
 
         LookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = "d";
-        String extraJoin = lookupDefinition.getHqlJoinString(root);
-        String extraWhere = lookupDefinition.getHqlWhereString(root);
+
+        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
+
+        String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
+                " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
+
+        this.log.info(queryString);
 
         // Build query
-        //org.hibernate.query.Query<E> databaseQuery = session.createQuery("select e from " + eClass.getName() + " e join e.identification i join e.registrations r join r.effects v join v.dataItems d where i.uuid != null and " + queryString.toString(), eClass);
-        //System.out.println("select distinct "+ENTITY+" from " + eClass.getSimpleName() + " " + ENTITY + " join "+ENTITY+".identification i join "+ENTITY+".registrations r join r.effects v join v.dataItems d "+extraJoin+" where i.uuid != null "+ extraWhere);
-        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select distinct "+ENTITY+" from " + eClass.getSimpleName() + " " + ENTITY + " join "+ENTITY+".identification i join "+ENTITY+".registrations r join r.effects v join v.dataItems d "+extraJoin+" where i.uuid != null "+ extraWhere, eClass);
+        org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
 
         // Insert parameters, casting as necessary
-        HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root);
+        HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
+
         for (String key : extraParameters.keySet()) {
-            //System.out.println(key +" = "+extraParameters.get(key)+ " ("+extraParameters.get(key).getClass().getSimpleName()+")");
+            this.log.info(key+" = "+extraParameters.get(key));
             databaseQuery.setParameter(key, extraParameters.get(key));
         }
 
@@ -124,7 +109,7 @@ public class QueryManager {
      */
     public <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
         this.log.trace("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid);
-        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid = :uuid", eClass);
+        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid = :uuid", eClass);
         databaseQuery.setParameter("uuid", uuid);
         this.logQuery(databaseQuery);
         try {
@@ -139,7 +124,7 @@ public class QueryManager {
         for (String key : filter.keySet()) {
             whereJoiner.add("t."+key+" = :"+key);
         }
-        org.hibernate.query.Query<T> databaseQuery = session.createQuery("select t from " + tClass.getName() + " t where " + whereJoiner.toString(), tClass);
+        org.hibernate.query.Query<T> databaseQuery = session.createQuery("select t from " + tClass.getCanonicalName() + " t where " + whereJoiner.toString(), tClass);
         for (String key : filter.keySet()) {
             databaseQuery.setParameter(key, filter.get(key));
         }
@@ -164,7 +149,7 @@ public class QueryManager {
             }
             where = " where " + whereJoiner.toString();
         }
-        org.hibernate.query.Query databaseQuery = session.createQuery("select count(t) from " + tClass.getName() + " t " + where);
+        org.hibernate.query.Query databaseQuery = session.createQuery("select count(t) from " + tClass.getCanonicalName() + " t " + where);
         if (filter != null && !filter.isEmpty()) {
             for (String key : filter.keySet()) {
                 databaseQuery.setParameter(key, filter.get(key));
@@ -185,7 +170,7 @@ public class QueryManager {
     public <V extends Effect> List<V> getEffects(Session session, Entity entity, OffsetDateTime effectFrom, OffsetDateTime effectTo, Class<V> vClass) {
         // AFAIK, this method is only ever used for testing
         this.log.trace("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-        org.hibernate.query.Query<V> databaseQuery = session.createQuery("select v from " + entity.getClass().getName() + " " + ENTITY +" join "+ENTITY+".registrations r join r.effects v where "+ENTITY+".id = :id and v.effectFrom = :from and v.effectTo = :to", vClass);
+        org.hibernate.query.Query<V> databaseQuery = session.createQuery("select v from " + entity.getClass().getCanonicalName() + " " + ENTITY +" join "+ENTITY+".registrations r join r.effects v where "+ENTITY+".id = :id and v.effectFrom = :from and v.effectTo = :to", vClass);
         databaseQuery.setParameter("id", entity.getId());
         databaseQuery.setParameter("from", effectFrom);
         databaseQuery.setParameter("to", effectTo);
@@ -202,19 +187,34 @@ public class QueryManager {
      * @return
      */
     public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) throws PluginImplementationException {
-        this.log.trace("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
+        this.log.debug("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         LookupDefinition lookupDefinition = similar.getLookupDefinition();
-        String root = "d";
-        String extraJoin = lookupDefinition.getHqlJoinString(root);
-        String extraWhere = lookupDefinition.getHqlWhereString(root);
+        String dataItemKey = "d";
+        String extraJoin = lookupDefinition.getHqlJoinString(dataItemKey, ENTITY);
+        StringJoiner extraWhere = new StringJoiner(" AND ");
+
+        List<String> whereParts = lookupDefinition.getHqlWhereParts(dataItemKey, ENTITY, true);
+        if (!whereParts.isEmpty()) {
+            extraWhere.add("");
+            for (String part : whereParts) {
+                extraWhere.add(part);
+            }
+        }
 
         String entityIdKey = "E" + UUID.randomUUID().toString().replace("-", "");
-        //System.out.println("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.effects r join r.entity e "+extraJoin+" where e.id = :"+entityIdKey+" "+ extraWhere);
-        org.hibernate.query.Query<D> query = session.createQuery("select "+root+" from " + dClass.getSimpleName() + " "+root+" join "+root+".effects v join v.registration r join r.entity "+ENTITY+" "+extraJoin+" where "+ENTITY+".id = :"+entityIdKey+" "+ extraWhere, dClass);
-        //System.out.println(query.getQueryString());
+
+        String queryString = "SELECT " + dataItemKey + " FROM " + dClass.getCanonicalName() + " " + dataItemKey +
+                " JOIN " + dataItemKey+".effects v" +
+                " JOIN v.registration r" +
+                " JOIN r.entity "+ENTITY + " "+extraJoin +
+                " WHERE " + ENTITY + ".id = :"+entityIdKey + " "+ extraWhere.toString();
+
+
+        this.log.debug(queryString);
+        org.hibernate.query.Query<D> query = session.createQuery(queryString, dClass);
 
         query.setParameter(entityIdKey, entity.getId());
-        HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root);
+        HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(dataItemKey, ENTITY);
         for (String key : extraParameters.keySet()) {
             query.setParameter(key, extraParameters.get(key));
         }
@@ -277,7 +277,7 @@ public class QueryManager {
      * @param registration Registration to be saved
      */
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems) throws DataFordelerException {
-        this.log.trace("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
+        this.log.info("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
         }
@@ -287,7 +287,7 @@ public class QueryManager {
 
         E existingEntity = this.getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
         if (existingEntity != null) {
-            this.log.debug("There is an existing entity with uuid "+existingEntity.getUUID().toString());
+            this.log.info("There is an existing entity with uuid "+existingEntity.getUUID().toString());
             entity = existingEntity;
         }
         registration.setEntity(entity);
@@ -356,11 +356,15 @@ public class QueryManager {
 
         Identification existing = this.getIdentification(session, entity.getUUID());
         if (existing != null && existing != entity.getIdentification()) {
+            this.log.debug("identification "+entity.getUUID()+" already exist");
             entity.setIdentifikation(existing);
-        } else {
+            session.saveOrUpdate(entity);
+        } else if (existing == null) {
+            this.log.debug("identification "+entity.getUUID()+" does not already exist or is already assigned");
             session.saveOrUpdate(entity.getIdentification());
+            session.saveOrUpdate(entity);
         }
-        session.saveOrUpdate(entity);
+
 
 
         if (dedupEffects) {
@@ -402,7 +406,7 @@ public class QueryManager {
                 dataItem.addEffect(effect);
             }
 
-            System.out.println("Found " + obsolete.size() + " obsolete items!");
+            this.log.info("Found " + obsolete.size() + " obsolete items!");
             for (D dataItem : obsolete) {
                 Set<V> effects = dataItem.getEffects();
                 for (V e : effects) {

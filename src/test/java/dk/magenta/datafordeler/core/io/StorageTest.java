@@ -76,17 +76,20 @@ public class StorageTest extends GapiTestBase {
         testData6.addEffect(testEffect6);
 
         Session session = sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
-        queryManager.saveRegistration(session, testEntity, testRegistration);
+        try {
+            Transaction transaction = session.beginTransaction();
+            queryManager.saveRegistration(session, testEntity, testRegistration);
 
-        Assert.assertEquals(2, testRegistration.getEffects().size());
+            Assert.assertEquals(2, testRegistration.getEffects().size());
 
-        for (TestEffect testEffect : testRegistration.getEffects()) {
-            Assert.assertEquals(3, testEffect.getDataItems().size());
+            for (TestEffect testEffect : testRegistration.getEffects()) {
+                Assert.assertEquals(3, testEffect.getDataItems().size());
+            }
+
+            transaction.commit();
+        } finally {
+            session.close();
         }
-
-        transaction.commit();
-        session.close();
 
         this.deleteEntity(uuid);
     }
@@ -110,11 +113,15 @@ public class StorageTest extends GapiTestBase {
         testData2.addEffect(testEffect2);
 
         Session session = sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
-        queryManager.saveRegistration(session, testEntity, testRegistration1);
-        queryManager.saveRegistration(session, testEntity, testRegistration2);
-        transaction.commit();
-        session.close();
+        try {
+            Transaction transaction = session.beginTransaction();
+            queryManager.saveRegistration(session, testEntity, testRegistration1);
+            session.flush();
+            queryManager.saveRegistration(session, testEntity, testRegistration2);
+            transaction.commit();
+        } finally {
+            session.close();
+        }
 
         this.deleteEntity(uuid);
     }
@@ -138,11 +145,14 @@ public class StorageTest extends GapiTestBase {
         testData2.addEffect(testEffect2);
 
         Session session = sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
-        queryManager.saveRegistration(session, testEntity, testRegistration1);
-        queryManager.saveRegistration(session, testEntity, testRegistration2);
-        transaction.commit();
-        session.close();
+        try {
+            Transaction transaction = session.beginTransaction();
+            queryManager.saveRegistration(session, testEntity, testRegistration1);
+            queryManager.saveRegistration(session, testEntity, testRegistration2);
+            transaction.commit();
+        } finally {
+            session.close();
+        }
 
         this.deleteEntity(uuid);
     }
@@ -166,11 +176,14 @@ public class StorageTest extends GapiTestBase {
         testData2.addEffect(testEffect2);
 
         Session session = sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
-        queryManager.saveRegistration(session, testEntity, testRegistration1);
-        queryManager.saveRegistration(session, testEntity, testRegistration2);
-        transaction.commit();
-        session.close();
+        try {
+            Transaction transaction = session.beginTransaction();
+            queryManager.saveRegistration(session, testEntity, testRegistration1);
+            queryManager.saveRegistration(session, testEntity, testRegistration2);
+            transaction.commit();
+        } finally {
+            session.close();
+        }
 
         this.deleteEntity(uuid);
     }

@@ -61,7 +61,6 @@ public class FtpCommunicatorTest {
         tempFile.delete();
     }
 
-    @Ignore
     @Test
     public void testDownloadSingleFile() throws Exception {
 
@@ -78,7 +77,6 @@ public class FtpCommunicatorTest {
     }
 
 
-    @Ignore
     @Test
     public void testDownloadIgnoreDoneFiles() throws Exception {
 
@@ -115,7 +113,6 @@ public class FtpCommunicatorTest {
 
     }
 
-    @Ignore
     @Test
     public void testDownloadTwoFiles() throws Exception {
 
@@ -153,7 +150,6 @@ public class FtpCommunicatorTest {
 
     }
 
-    @Ignore
     @Test
     public void testDownloadMultipleFiles() throws Exception {
 
@@ -257,7 +253,7 @@ public class FtpCommunicatorTest {
         factory.setPort(port);
 
         SslConfigurationFactory ssl = new SslConfigurationFactory();
-        ssl.setKeystoreFile(new File(ClassLoader.getSystemResource("test.jks").toURI()));
+        ssl.setKeystoreFile(new File("keystores/dafo.keystore"));
         ssl.setKeystorePassword("password");
         factory.setSslConfiguration(ssl.createSslConfiguration());
         factory.setImplicitSsl(true);

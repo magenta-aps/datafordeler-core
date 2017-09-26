@@ -10,8 +10,8 @@ import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.Session;
 import org.hibernate.annotations.*;
 
-import javax.persistence.*;
 import javax.persistence.CascadeType;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
+
+import dk.magenta.datafordeler.core.database.Entity;
 
 /**
  * Created by lars on 20-02-17.
@@ -196,6 +198,12 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
     public final V createEffect(LocalDate effectFrom, LocalDate effectTo) {
         return this.createEffect(Effect.convertTime(effectFrom), Effect.convertTime(effectTo));
+    }
+
+    public void wireEffects() {
+        for (V effect : this.effects) {
+            effect.setRegistration(this);
+        }
     }
 
 

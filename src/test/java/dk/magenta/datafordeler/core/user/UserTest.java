@@ -78,13 +78,9 @@ public class UserTest {
 
     // Mock up userprofile info instead of fetching it from the database
     doReturn(TEST_USERPROFILE_ID).when(userQueryManager).getUserProfileIdByName(anyObject());
-    doReturn(Arrays.asList(new String[] {
-        "ReadDemoService"
-    })).when(userQueryManager).getSystemRoleNamesByUserProfileId(TEST_USERPROFILE_ID);
-    doReturn(Arrays.asList(new AreaRestriction[] {
-        AreaRestriction.lookup("Demo:Cardinal directions:North"),
-        AreaRestriction.lookup("Demo:Cardinal directions:East")
-    })).when(userQueryManager).getAreaRestrictionsByUserProfileId(TEST_USERPROFILE_ID);
+    doReturn(Arrays.asList("ReadDemoService")).when(userQueryManager).getSystemRoleNamesByUserProfileId(TEST_USERPROFILE_ID);
+    doReturn(Arrays.asList(AreaRestriction.lookup("Demo:Cardinal directions:North"),
+            AreaRestriction.lookup("Demo:Cardinal directions:East"))).when(userQueryManager).getAreaRestrictionsByUserProfileId(TEST_USERPROFILE_ID);
 
     SamlDafoUserDetails samlDafoUserDetails = dafoEngineUserManager.getSamlUserDetailsFromToken(
         tokenData

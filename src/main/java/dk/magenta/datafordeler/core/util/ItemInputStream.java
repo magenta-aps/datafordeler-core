@@ -20,7 +20,7 @@ import java.util.Map;
  */
 public class ItemInputStream<T> extends ObjectInputStream {
 
-    private static Logger log = LogManager.getLogger("ItemInputStream");
+    private static Logger log = LogManager.getLogger(ItemInputStream.class);
 
     public ItemInputStream(InputStream in) throws IOException {
         super(in);
@@ -141,7 +141,6 @@ public class ItemInputStream<T> extends ObjectInputStream {
                                 level++;
                                 if (level == listItemLevel) {
                                     JsonNode node = objectMapper.readTree(jsonParser);
-                                    System.out.println(node);
                                     level--;
                                     String type = node.get(schemaKey).asText();
                                     if (classMap.containsKey(type)) {

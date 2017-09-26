@@ -3,7 +3,6 @@ package dk.magenta.datafordeler.core.command;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
-import dk.magenta.datafordeler.core.Worker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.persistence.PersistenceException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -26,11 +26,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Created by lars on 06-06-17.
+ * Bean that looks for newly issued commands in the command table, and executes them as they are found
  */
 @Component
 public class CommandWatcher {
 
-    private Logger log = LogManager.getLogger("CommandWatcher");
+    private Logger log = LogManager.getLogger(CommandWatcher.class);
 
     @Autowired
     private SessionManager sessionManager;
@@ -69,19 +70,33 @@ public class CommandWatcher {
         //this.session.close();
     }
 
+    /**
+     * Looks for new Commands in the table. New commands that have not yet been picked up have the status Command.Status.QUEUED
+     * @return A list of found commands.
+     */
     private synchronized List<Command> getCommands() {
         Session session = this.sessionManager.getSessionFactory().openSession();
-        Query<Command> query = session.createQuery("select c from Command c where c.status = :status", Command.class);
-        query.setParameter("status", Command.Status.QUEUED);
-        List<Command> commands = query.getResultList();
-        session.close();
-        return commands;
+        try {
+            Query<Command> query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.status = :status", Command.class);
+            query.setParameter("status", Command.Status.QUEUED);
+            List<Command> commands = query.getResultList();
+            return commands;
+        } catch (PersistenceException e) {
+            return null;
+        } finally {
+            session.close();
+        }
     }
 
+    /**
+     * Runs regularly (currently every 2 seconds), picking up newly issued Commands.
+     * When one is found, a Worker thread is started and saved, running the command, and the Command gets the Command.Status.PROCESSING status
+     * When the worker finishes (or errors out), the Command gets the appropriate status (Command.Status.SUCCESS, Command.Status.CANCELLED or Command.Status.FAILED)
+     */
     @Scheduled(fixedRate = 2000)
     public void run() {
         List<Command> commands = this.getCommands();
-        if (!commands.isEmpty()) {
+        if (commands != null && !commands.isEmpty()) {
             this.log.info("Found " + commands.size() + " queued commands");
             for (Command command : commands) {
                 CommandHandler commandHandler = this.getHandler(command.getCommandName());
@@ -121,10 +136,15 @@ public class CommandWatcher {
     }
 
     private void commandComplete(Command command) {
+        command.setHandled();
         CommandWatcher.this.saveCommand(command);
         this.workers.remove(command.getId());
     }
 
+    /**
+     * Attempts to cancel the Worker associated with the Command, blocking until it completes
+     * @param command
+     */
     public void cancelCommand(Command command) {
         if (!command.done()) {
             Worker worker = workers.get(command.getId());
@@ -150,6 +170,11 @@ public class CommandWatcher {
         }
     }
 
+    /**
+     * Obtain the CommandHandler associated with a command name
+     * @param commandName
+     * @return
+     */
     public CommandHandler getHandler(String commandName) {
         CommandHandler handler = this.mappedHandlers.get(commandName);
         if (handler == null) {
@@ -166,12 +191,19 @@ public class CommandWatcher {
         return handler;
     }
 
+    /**
+     * Saves a Command object to the database
+     * @param command
+     */
     public synchronized void saveCommand(Command command) {
         Session session = this.sessionManager.getSessionFactory().openSession();
-        command = (Command) session.merge(command);
-        Transaction transaction = session.beginTransaction();
-        session.saveOrUpdate(command);
-        transaction.commit();
-        session.close();
+        try {
+            command = (Command) session.merge(command);
+            Transaction transaction = session.beginTransaction();
+            session.saveOrUpdate(command);
+            transaction.commit();
+        } finally {
+            session.close();
+        }
     }
 }

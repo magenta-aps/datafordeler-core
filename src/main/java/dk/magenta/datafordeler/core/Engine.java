@@ -16,6 +16,7 @@ import org.hibernate.Transaction;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -37,7 +38,10 @@ public class Engine {
     @Autowired
     SessionManager sessionManager;
 
-    Logger log = LogManager.getLogger("Engine");
+    @Value("${dafo.cron.enabled:true}")
+    private boolean cronEnabled;
+
+    Logger log = LogManager.getLogger(Engine.class);
 
     /**
      * Run bean initialization
@@ -55,37 +59,24 @@ public class Engine {
                 if (schedule != null) {
                     this.log.info("    Has CRON schedule " + schedule);
                 }
-            /*Session session = this.sessionManager.getSessionFactory().openSession();
-            try {
-                this.synchronize(session, plugin, null);
-            } catch (DataFordelerException e) {
-                e.printStackTrace();
-            }*/
-
-            }
-            for (Plugin plugin : plugins) {
-                String schedule = plugin.getRegisterManager().getPullCronSchedule();
-                if (schedule != null) {
-                    this.setupPullSchedule(plugin.getRegisterManager());
-                }
-            }
-        }
-    }
-
-    /*public void initialSynchronize() {
-        System.out.println("initialSynchronize");
-        for (Plugin plugin : this.pluginManager.getPlugins()) {
-            if (!plugin.isDemo()) {
-                Session session = this.sessionManager.getSessionFactory().openSession();
+                /*Session session = this.sessionManager.getSessionFactory().openSession();
                 try {
                     this.synchronize(session, plugin, null);
                 } catch (DataFordelerException e) {
                     e.printStackTrace();
+                }*/
+            }
+
+            if (this.cronEnabled) {
+                for (Plugin plugin : plugins) {
+                    String schedule = plugin.getRegisterManager().getPullCronSchedule();
+                    if (schedule != null) {
+                        this.setupPullSchedule(plugin.getRegisterManager());
+                    }
                 }
-                session.close();
             }
         }
-    }*/
+    }
 
 
     /** Push **/
@@ -169,6 +160,18 @@ public class Engine {
                 session.close();
             }*/
 
+            if (!entityManager.handlesOwnSaves()) {
+                session = sessionManager.getSessionFactory().openSession();
+                Transaction transaction = session.beginTransaction();
+                for (Registration registration : registrations) {
+                    queryManager.saveRegistration(
+                            session, (E) registration.getEntity(), (R) registration,
+                            false, false
+                    );
+                }
+                transaction.commit();
+                session.close();
+            }
 
             receipt = new Receipt(event.getId(), eventReceived);
             success = true;

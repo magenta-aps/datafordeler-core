@@ -1,16 +1,16 @@
 package dk.magenta.datafordeler.core.command;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.Engine;
+import dk.magenta.datafordeler.core.PluginManager;
+import dk.magenta.datafordeler.core.Pull;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import dk.magenta.datafordeler.core.exception.PluginNotFoundException;
 import dk.magenta.datafordeler.core.plugin.Plugin;
-import dk.magenta.datafordeler.core.Engine;
-import dk.magenta.datafordeler.core.PluginManager;
-import dk.magenta.datafordeler.core.Pull;
-import dk.magenta.datafordeler.core.Worker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,8 @@ import java.util.Map;
 
 /**
  * Created by lars on 29-05-17.
+ * A CommandHandler for executing pulls. The command interface delegates to this
+ * when it receives a "pull" command
  */
 @Component
 public class PullCommandHandler extends CommandHandler {
@@ -59,7 +61,7 @@ public class PullCommandHandler extends CommandHandler {
     @Autowired
     private PluginManager pluginManager;
 
-    private Logger log = LogManager.getLogger(this.getClass().getSimpleName());
+    private Logger log = LogManager.getLogger(PullCommandHandler.class);
 
     protected Logger getLog() {
         return this.log;
@@ -77,7 +79,7 @@ public class PullCommandHandler extends CommandHandler {
     public Worker doHandleCommand(Command command) throws DataFordelerException {
         this.getLog().info("Handling command '"+command.getCommandName()+"'");
 
-        PullCommandData commandData = this.getCommandData(command);
+        PullCommandData commandData = this.getCommandData(command.getCommandBody());
         Plugin plugin = this.getPlugin(commandData);
         this.getLog().info("Pulling with plugin "+plugin.getClass().getCanonicalName());
 
@@ -92,17 +94,16 @@ public class PullCommandHandler extends CommandHandler {
         return pull;
     }
 
-    public PullCommandData getCommandData(Command command)
+    public PullCommandData getCommandData(String commandBody)
         throws DataStreamException, InvalidClientInputException {
-        PullCommandData commandData = null;
         try {
-            commandData = this.objectMapper.readValue(command.getCommandBody(), PullCommandData.class);
+            PullCommandData commandData = this.objectMapper.readValue(commandBody, PullCommandData.class);
+            this.getLog().info("Command data parsed");
+            return commandData;
         } catch (IOException e) {
-            this.getLog().error("Unable to parse command data");
+            this.getLog().error("Unable to parse command data '"+commandBody+"'");
             throw new InvalidClientInputException("Unable to parse command data");
         }
-        this.getLog().info("Command data parsed");
-        return commandData;
     }
 
     private Plugin getPlugin(PullCommandData commandData) throws PluginNotFoundException {
@@ -112,5 +113,14 @@ public class PullCommandHandler extends CommandHandler {
             throw new PluginNotFoundException(commandData.plugin, false);
         }
         return plugin;
+    }
+
+    public String getCommandStatus(Command command) {
+        try {
+            return this.objectMapper.writeValueAsString(command);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

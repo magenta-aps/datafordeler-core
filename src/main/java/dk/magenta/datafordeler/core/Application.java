@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.Properties;
 import java.util.regex.Matcher;
 
 /**
@@ -49,6 +49,8 @@ public class Application {
 
     @Autowired
     SessionManager sessionManager;
+
+    private static Logger log = LogManager.getLogger(Application.class);
 
     public static final int servicePort = 8445;
 
@@ -87,7 +89,7 @@ public class Application {
         } catch (Throwable e) {
             while (e != null) {
                 if (e instanceof com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) {
-                    System.out.println(((com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) e).getErrors());
+                    log.error(((com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) e).getErrors());
                 }
                 e = e.getCause();
             }
@@ -148,8 +150,6 @@ public class Application {
         }
         return null;
     }
-
-    private static Logger log = LogManager.getLogger(Application.class);
 
     @Bean
     public TaskScheduler taskScheduler() {

@@ -256,9 +256,6 @@ public class ModelTest {
         Assert.assertFalse(demoData2.equalData(demoData3));
         Assert.assertFalse(demoData3.equalData(demoData2));
 
-        // Test getTableName
-        Assert.assertEquals("demo_data", DataItem.getTableName(DemoData.class));
-
         // Test toString
         Assert.assertEquals("DemoData["+demoData1.hashCode()+"] {\n" +
                 "    aktiv: true\n" +

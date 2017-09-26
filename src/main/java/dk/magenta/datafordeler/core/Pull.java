@@ -1,11 +1,11 @@
 package dk.magenta.datafordeler.core;
 
+import dk.magenta.datafordeler.core.command.Worker;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
-import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
@@ -15,15 +15,16 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by lars on 29-05-17.
+ * A Runnable that performs a pull with a given RegisterManager
  */
 public class Pull extends Worker implements Runnable {
 
-    private Logger log = LogManager.getLogger("Pull");
+    private Logger log = LogManager.getLogger(Pull.class);
 
     private RegisterManager registerManager;
     private Engine engine;
@@ -55,10 +56,9 @@ public class Pull extends Worker implements Runnable {
             ImportMetadata importMetadata = new ImportMetadata();
 
             boolean error = false;
-            for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
-                ItemInputStream<? extends PluginSourceData> eventStream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
+            Collection<ItemInputStream<? extends PluginSourceData>> streams = this.registerManager.pullEvents();
+            for (ItemInputStream<? extends PluginSourceData> eventStream : streams) {
 
-                System.out.println("Puller is now reading event stream");
                 int count = 0;
                 try {
                     PluginSourceData event;
