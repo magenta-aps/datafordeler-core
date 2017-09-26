@@ -4,6 +4,7 @@ import dk.magenta.datafordeler.core.command.Worker;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
+import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
@@ -52,6 +53,8 @@ public class Pull extends Worker implements Runnable {
 
             this.log.info("Worker "+this.getId()+" fetching events with " + this.registerManager.getClass().getCanonicalName());
 
+            ImportMetadata importMetadata = new ImportMetadata();
+
             boolean error = false;
             Collection<ItemInputStream<? extends PluginSourceData>> streams = this.registerManager.pullEvents();
             for (ItemInputStream<? extends PluginSourceData> eventStream : streams) {
@@ -60,7 +63,7 @@ public class Pull extends Worker implements Runnable {
                 try {
                     PluginSourceData event;
                     while ((event = eventStream.next()) != null && !this.doCancel) {
-                        if (!this.engine.handleEvent(event, this.registerManager.getPlugin())) {
+                        if (!this.engine.handleEvent(event, this.registerManager.getPlugin(), importMetadata)) {
                             this.log.warn("Worker " + this.getId() + " failed handling event " + event.getId() + ", not processing further events");
                             eventStream.close();
                             break;
