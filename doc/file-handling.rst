@@ -16,4 +16,4 @@ brugere. Udtræk gemmes i følgende formater:
 * CSV, eller kommasepareret liste.
 * TSV, eller tabsepareret liste.
 
-Hvert udtræk gemmes indtil videre for bestandig.
+Vi gemmer indtil videre kun det seneste udtræk.
