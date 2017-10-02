@@ -71,5 +71,12 @@ public final class DumpInfo extends DatabaseEntry implements
     public OffsetDateTime getTimestamp() {
         return timestamp;
     }
+
+    public String toString() {
+        return String.format(
+            "DumpInfo(%s, %s, %s, %s, %s)",
+            plugin, entityName, format, timestamp, data
+        );
+    }
 }
 

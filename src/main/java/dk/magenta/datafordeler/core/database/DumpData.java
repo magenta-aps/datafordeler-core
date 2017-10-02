@@ -22,4 +22,8 @@ public class DumpData extends DatabaseEntry {
     String getData() {
         return data;
     }
+
+    public String toString() {
+        return String.format("DumpData(%d)", this.getId());
+    }
 }

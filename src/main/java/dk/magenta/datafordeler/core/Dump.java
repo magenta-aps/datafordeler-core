@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 import org.apache.logging.log4j.LogManager;
@@ -81,6 +82,8 @@ public class Dump extends Worker {
                     plugin.getRegisterManager().getEntityManagers()) {
 
                     String schema = entityManager.getSchema();
+                    CriteriaBuilder criteriaBuilder = session
+                        .getCriteriaBuilder();
 
                     Class<? extends Entity> entityClass = entityManager
                         .getManagedEntityClass();
@@ -102,11 +105,34 @@ public class Dump extends Worker {
                         );
 
                     for (String format : FORMATS) {
-                        session.save(
-                            new DumpInfo(plugin.getName(),
-                                schema, format, timestamp,
-                                dump(entityManager, regs, format))
-                        );
+                        DumpInfo dump = new DumpInfo(plugin.getName(),
+                            schema, format, timestamp,
+                            dump(entityManager, regs, format));
+
+                        log.info("Saving {}", dump);
+
+                        // first, delete pre-existing, comparable dumps
+                        List<DumpInfo> olderDumps = session.createQuery(
+                            "SELECT d FROM DumpInfo d WHERE " +
+                                "d.plugin = :plugin AND " +
+                                "d.entityName = :schema AND " +
+                                "d.format = :format AND " +
+                                "d.timestamp < :timestamp",
+                            DumpInfo.class
+                        )
+                            .setParameter("schema", schema)
+                            .setParameter("plugin", plugin.getName())
+                            .setParameter("format", format)
+                            .setParameter("timestamp", timestamp)
+                            .getResultList();
+
+                        for (DumpInfo olderDump : olderDumps) {
+                            log.info("Deleting older {}", olderDump);
+                            session.delete(olderDump);
+                        }
+
+                        // then, save the dump
+                        session.save(dump);
                     }
 
                 }

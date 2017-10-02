@@ -246,12 +246,19 @@ public class DumpTest extends GapiTestBase {
             session.close();
         }
 
+        // first dump
         new Dump(this.engine).run();
 
         Session session = sessionManager.getSessionFactory().openSession();
 
         List<DumpInfo> dumps =
             queryManager.getAllItems(session, DumpInfo.class);
+
+        Assert.assertEquals("After one run",
+            1 * Dump.FORMATS.length, dumps.size());
+
+        List<DumpData> dumpDatas =
+            queryManager.getAllItems(session, DumpData.class);
 
         Assert.assertEquals("After one run",
             1 * Dump.FORMATS.length, dumps.size());
@@ -264,6 +271,23 @@ public class DumpTest extends GapiTestBase {
                 null,
             },
             dumps.stream().map(d -> d.getData()).toArray());
+
+        session.close();
+
+        // second dump
+        new Dump(this.engine).run();
+
+        session = sessionManager.getSessionFactory().openSession();
+
+        dumps = queryManager.getAllItems(session, DumpInfo.class);
+
+        Assert.assertEquals("After two runs",
+            1 * Dump.FORMATS.length, dumps.size());
+
+        dumpDatas = queryManager.getAllItems(session, DumpData.class);
+
+        Assert.assertEquals("After two runs",
+            1 * Dump.FORMATS.length, dumps.size());
 
         session.close();
     }
