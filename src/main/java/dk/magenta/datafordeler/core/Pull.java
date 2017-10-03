@@ -56,6 +56,7 @@ public class Pull extends Worker implements Runnable {
             ImportMetadata importMetadata = new ImportMetadata();
 
             boolean error = false;
+            this.log.info("RegisterManager is: " + this.registerManager);
             Collection<ItemInputStream<? extends PluginSourceData>> streams = this.registerManager.pullEvents();
             for (ItemInputStream<? extends PluginSourceData> eventStream : streams) {
 
