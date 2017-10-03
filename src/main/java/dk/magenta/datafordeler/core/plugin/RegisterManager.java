@@ -145,11 +145,8 @@ public abstract class RegisterManager {
     }
 
     public List<ItemInputStream<? extends PluginSourceData>> pullEvents() throws DataFordelerException {
-        this.getLog().info("RegisterManager.pullEvents()");
         ArrayList<ItemInputStream<? extends PluginSourceData>> streams = new ArrayList<>();
-        this.getLog().info(this.getEntityManagers().size() + " entitymanagers present");
         for (EntityManager entityManager : this.getEntityManagers()) {
-            this.getLog().info("Pulling for " + entityManager);
             streams.add(this.pullEvents(this.getEventInterface(entityManager), entityManager));
         }
         return streams;

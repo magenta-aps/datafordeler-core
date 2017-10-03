@@ -56,7 +56,6 @@ public class Pull extends Worker implements Runnable {
             ImportMetadata importMetadata = new ImportMetadata();
 
             boolean error = false;
-            this.log.info("RegisterManager is: " + this.registerManager);
             Collection<ItemInputStream<? extends PluginSourceData>> streams = this.registerManager.pullEvents();
             for (ItemInputStream<? extends PluginSourceData> eventStream : streams) {
 
@@ -100,6 +99,8 @@ public class Pull extends Worker implements Runnable {
 
         } catch (DataFordelerException e) {
             runningPulls.remove(this.registerManager);
+            e.printStackTrace();
+            this.log.error(e);
             throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
