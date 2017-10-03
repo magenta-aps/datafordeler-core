@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.EntityExistsException;
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
 import java.time.OffsetDateTime;
@@ -33,9 +34,12 @@ public class QueryManager {
      */
     public Identification getIdentification(Session session, UUID uuid) {
         this.log.trace("Get Identification from UUID " + uuid);
+        //Identification identification = session.get(Identification.class, uuid);
+        //this.log.info(identification);
         org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
         databaseQuery.setParameter("uuid", uuid);
         this.logQuery(databaseQuery);
+
         try {
             return databaseQuery.getSingleResult();
         } catch (NoResultException e) {
@@ -354,7 +358,12 @@ public class QueryManager {
             dedupItems(session, entity, registration);
         }
 
-        Identification existing = this.getIdentification(session, entity.getUUID());
+        Identification existing;
+        if (entity.getIdentification() != null && entity.getIdentification().getId() != null) {
+            existing = session.get(Identification.class, entity.getIdentification().getId());
+        } else {
+            existing = this.getIdentification(session, entity.getUUID());
+        }
         if (existing != null && existing != entity.getIdentification()) {
             this.log.debug("identification "+entity.getUUID()+" already exist");
             entity.setIdentifikation(existing);
