@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.database.EntityReference;
+import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.io.Event;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
@@ -44,6 +45,9 @@ public class DemoRegisterManager extends RegisterManager {
     @Autowired
     private DemoPlugin plugin;
 
+    @Autowired
+    private SessionManager sessionManager;
+
     private HttpCommunicator commonFetcher;
 
     protected Logger log = LogManager.getLogger(DemoRegisterManager.class);
@@ -63,6 +67,11 @@ public class DemoRegisterManager extends RegisterManager {
     @Override
     public Plugin getPlugin() {
         return this.plugin;
+    }
+
+    @Override
+    public SessionManager getSessionManager() {
+        return this.sessionManager;
     }
 
     public void setPort(int port) {

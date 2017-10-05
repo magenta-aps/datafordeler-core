@@ -3,11 +3,13 @@ package dk.magenta.datafordeler.core.plugin;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
+import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Session;
 import org.springframework.web.util.UriUtils;
 
 import java.io.InputStream;
@@ -41,6 +43,8 @@ public abstract class RegisterManager {
     protected abstract Logger getLog();
 
     public abstract Plugin getPlugin();
+
+    public abstract SessionManager getSessionManager();
 
 
     public abstract URI getBaseEndpoint();
@@ -144,10 +148,10 @@ public abstract class RegisterManager {
         return this.parseEventResponse(responseBody, entityManager);
     }
 
-    public List<ItemInputStream<? extends PluginSourceData>> pullEvents() throws DataFordelerException {
-        ArrayList<ItemInputStream<? extends PluginSourceData>> streams = new ArrayList<>();
+    public Map<EntityManager, ItemInputStream<? extends PluginSourceData>> pullEvents() throws DataFordelerException {
+        HashMap<EntityManager, ItemInputStream<? extends PluginSourceData>> streams = new HashMap<>();
         for (EntityManager entityManager : this.getEntityManagers()) {
-            streams.add(this.pullEvents(this.getEventInterface(entityManager), entityManager));
+            streams.put(entityManager, this.pullEvents(this.getEventInterface(entityManager), entityManager));
         }
         return streams;
     }
@@ -259,6 +263,12 @@ public abstract class RegisterManager {
             }
         }
         return sj.toString();
-
     }
+
+    public void setLastUpdated(EntityManager entityManager, OffsetDateTime timestamp) {
+        Session session = this.getSessionManager().getSessionFactory().openSession();
+        entityManager.setLastUpdated(session, timestamp);
+        session.close();
+    }
+
 }

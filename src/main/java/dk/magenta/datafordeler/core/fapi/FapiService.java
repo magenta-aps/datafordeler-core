@@ -49,9 +49,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     private SessionManager sessionManager;
 
     @Autowired
-    private QueryManager queryManager;
-
-    @Autowired
     private DafoUserManager dafoUserManager;
 
     @Resource(name="wsContext")
@@ -108,15 +105,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      */
     public SessionManager getSessionManager() {
         return this.sessionManager;
-    }
-
-
-    /**
-     * Obtains the autowired QueryManager
-     * @return QueryManager instance
-     */
-    protected QueryManager getQueryManager() {
-        return this.queryManager;
     }
 
     protected OutputWrapper<E> getOutputWrapper() {
@@ -415,7 +403,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(exclude = true) // Non-soap methods must have this
     protected Set<E> searchByQuery(Q query, Session session) throws DataFordelerException {
         this.applyQuery(session, query);
-        Set<E> entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
+        Set<E> entities = new HashSet<>(QueryManager.getAllEntities(session, query, this.getEntityClass()));
         return entities;
     }
 
@@ -441,7 +429,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     protected E searchById(UUID uuid, Q query, Session session) {
         E entity = null;
         this.applyQuery(session, query);
-        entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
+        entity = QueryManager.getEntity(session, uuid, this.getEntityClass());
         if (entity != null) {
             entity.forceLoad(session);
         }

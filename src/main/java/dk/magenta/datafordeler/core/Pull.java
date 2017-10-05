@@ -1,22 +1,26 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.command.Worker;
+import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
+import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by lars on 29-05-17.
@@ -54,10 +58,12 @@ public class Pull extends Worker implements Runnable {
             this.log.info("Worker "+this.getId()+" fetching events with " + this.registerManager.getClass().getCanonicalName());
 
             ImportMetadata importMetadata = new ImportMetadata();
+            OffsetDateTime pullTime = OffsetDateTime.now();
 
             boolean error = false;
-            Collection<ItemInputStream<? extends PluginSourceData>> streams = this.registerManager.pullEvents();
-            for (ItemInputStream<? extends PluginSourceData> eventStream : streams) {
+            Map<EntityManager, ItemInputStream<? extends PluginSourceData>> streams = this.registerManager.pullEvents();
+            for (EntityManager entityManager : streams.keySet()) {
+                ItemInputStream<? extends PluginSourceData> eventStream = streams.get(entityManager);
 
                 int count = 0;
                 try {
@@ -70,6 +76,9 @@ public class Pull extends Worker implements Runnable {
                         }
                         count++;
                     }
+                    // Done. Write last-updated timestamp
+                    this.registerManager.setLastUpdated(entityManager, pullTime);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                     DataStreamException ex = new DataStreamException(e);

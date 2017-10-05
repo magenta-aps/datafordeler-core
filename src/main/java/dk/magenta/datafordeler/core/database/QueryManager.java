@@ -7,9 +7,7 @@ import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
-import org.springframework.stereotype.Component;
 
-import javax.persistence.EntityExistsException;
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
 import java.time.OffsetDateTime;
@@ -19,10 +17,9 @@ import java.util.*;
 /**
  * Created by lars on 22-02-17.
  */
-@Component
-public class QueryManager {
+public abstract class QueryManager {
 
-    Logger log = LogManager.getLogger(QueryManager.class);
+    private static Logger log = LogManager.getLogger(QueryManager.class);
 
     public static final String ENTITY = "e";
 
@@ -32,13 +29,13 @@ public class QueryManager {
      * @param uuid UUID to search for
      * @return
      */
-    public Identification getIdentification(Session session, UUID uuid) {
-        this.log.trace("Get Identification from UUID " + uuid);
+    public static Identification getIdentification(Session session, UUID uuid) {
+        log.trace("Get Identification from UUID " + uuid);
         //Identification identification = session.get(Identification.class, uuid);
-        //this.log.info(identification);
+        //log.info(identification);
         org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
         databaseQuery.setParameter("uuid", uuid);
-        this.logQuery(databaseQuery);
+        logQuery(databaseQuery);
 
         try {
             return databaseQuery.getSingleResult();
@@ -53,10 +50,10 @@ public class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
-        this.log.trace("Get all Entities of class " + eClass.getCanonicalName());
+    public static <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
+        log.trace("Get all Entities of class " + eClass.getCanonicalName());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
-        this.logQuery(databaseQuery);
+        logQuery(databaseQuery);
         List<E> results = databaseQuery.getResultList();
         return results;
     }
@@ -68,8 +65,8 @@ public class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass) throws DataFordelerException {
-        this.log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
+    public static <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass) throws DataFordelerException {
+        log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
 
         LookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = "d";
@@ -79,7 +76,7 @@ public class QueryManager {
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
 
-        this.log.info(queryString);
+        log.info(queryString);
 
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
@@ -88,7 +85,7 @@ public class QueryManager {
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
 
         for (String key : extraParameters.keySet()) {
-            this.log.info(key+" = "+extraParameters.get(key));
+            log.info(key+" = "+extraParameters.get(key));
             databaseQuery.setParameter(key, extraParameters.get(key));
         }
 
@@ -99,7 +96,7 @@ public class QueryManager {
         if (query.getCount() < Integer.MAX_VALUE) {
             databaseQuery.setMaxResults(query.getCount());
         }
-        this.logQuery(databaseQuery);
+        logQuery(databaseQuery);
         List<E> results = databaseQuery.getResultList();
         return results;
     }
@@ -111,11 +108,11 @@ public class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
-        this.log.trace("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid);
+    public static <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
+        log.trace("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid);
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid = :uuid", eClass);
         databaseQuery.setParameter("uuid", uuid);
-        this.logQuery(databaseQuery);
+        logQuery(databaseQuery);
         try {
             return databaseQuery.getSingleResult();
         } catch (NoResultException e) {
@@ -123,7 +120,7 @@ public class QueryManager {
         }
     }
 
-    public <T extends DatabaseEntry> List<T> getItems(Session session, Class<T> tClass, Map<String, Object> filter) {
+    public static <T extends DatabaseEntry> List<T> getItems(Session session, Class<T> tClass, Map<String, Object> filter) {
         StringJoiner whereJoiner = new StringJoiner(" and ");
         for (String key : filter.keySet()) {
             whereJoiner.add("t."+key+" = :"+key);
@@ -135,8 +132,8 @@ public class QueryManager {
         return databaseQuery.getResultList();
     }
 
-    public <T extends DatabaseEntry> T getItem(Session session, Class<T> tClass, Map<String, Object> filter) {
-        List<T> items = this.getItems(session, tClass, filter);
+    public static <T extends DatabaseEntry> T getItem(Session session, Class<T> tClass, Map<String, Object> filter) {
+        List<T> items = getItems(session, tClass, filter);
         if (!items.isEmpty()) {
             return items.get(0);
         } else {
@@ -144,7 +141,7 @@ public class QueryManager {
         }
     }
 
-    public <T extends DatabaseEntry> long count(Session session, Class<T> tClass, Map<String, Object> filter) {
+    public static <T extends DatabaseEntry> long count(Session session, Class<T> tClass, Map<String, Object> filter) {
         String where = "";
         if (filter != null && !filter.isEmpty()) {
             StringJoiner whereJoiner = new StringJoiner(" and ");
@@ -171,14 +168,14 @@ public class QueryManager {
      * @param vClass Effect subclass
      * @return
      */
-    public <V extends Effect> List<V> getEffects(Session session, Entity entity, OffsetDateTime effectFrom, OffsetDateTime effectTo, Class<V> vClass) {
+    public static <V extends Effect> List<V> getEffects(Session session, Entity entity, OffsetDateTime effectFrom, OffsetDateTime effectTo, Class<V> vClass) {
         // AFAIK, this method is only ever used for testing
-        this.log.trace("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        log.trace("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         org.hibernate.query.Query<V> databaseQuery = session.createQuery("select v from " + entity.getClass().getCanonicalName() + " " + ENTITY +" join "+ENTITY+".registrations r join r.effects v where "+ENTITY+".id = :id and v.effectFrom = :from and v.effectTo = :to", vClass);
         databaseQuery.setParameter("id", entity.getId());
         databaseQuery.setParameter("from", effectFrom);
         databaseQuery.setParameter("to", effectTo);
-        this.logQuery(databaseQuery);
+        logQuery(databaseQuery);
         return databaseQuery.list();
     }
 
@@ -190,8 +187,8 @@ public class QueryManager {
      * @param dClass DataItem subclass
      * @return
      */
-    public <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) throws PluginImplementationException {
-        this.log.debug("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
+    public static <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) throws PluginImplementationException {
+        log.debug("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         LookupDefinition lookupDefinition = similar.getLookupDefinition();
         String dataItemKey = "d";
         String extraJoin = lookupDefinition.getHqlJoinString(dataItemKey, ENTITY);
@@ -214,7 +211,7 @@ public class QueryManager {
                 " WHERE " + ENTITY + ".id = :"+entityIdKey + " "+ extraWhere.toString();
 
 
-        this.log.debug(queryString);
+        log.debug(queryString);
         org.hibernate.query.Query<D> query = session.createQuery(queryString, dClass);
 
         query.setParameter(entityIdKey, entity.getId());
@@ -222,7 +219,7 @@ public class QueryManager {
         for (String key : extraParameters.keySet()) {
             query.setParameter(key, extraParameters.get(key));
         }
-        this.logQuery(query);
+        logQuery(query);
         List<D> results = query.list();
         return results;
     }
@@ -232,8 +229,8 @@ public class QueryManager {
      * @param session Database session to work from
      * @param registration Registration to dedup
      */
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void dedupEffects(Session session, R registration) {
-        this.log.trace("Remove duplicate Effects in Registration " + registration.getId() + " ("+registration.getRegisterChecksum()+")");
+    public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void dedupEffects(Session session, R registration) {
+        log.trace("Remove duplicate Effects in Registration " + registration.getId() + " ("+registration.getRegisterChecksum()+")");
         DoubleHashMap<OffsetDateTime, OffsetDateTime, V> authoritative = new DoubleHashMap<>();
         ListHashMap<V, V> duplicates = new ListHashMap<>();
         for (V effect : registration.getEffects()) {
@@ -246,14 +243,14 @@ public class QueryManager {
             }
         }
         if (duplicates.isEmpty()) {
-            this.log.info("No duplicate effects found");
+            log.info("No duplicate effects found");
         } else {
             for (V master : duplicates.keySet()) {
                 List<V> dups = duplicates.get(master);
-                this.log.info("There are " + dups.size() + " duplicates of Effect " + master.getEffectFrom() + " - " + master.getEffectTo());
+                log.info("There are " + dups.size() + " duplicates of Effect " + master.getEffectFrom() + " - " + master.getEffectTo());
                 int i = 0;
                 for (V dup : dups) {
-                    this.log.info("    Duplicate " + i + " contains " + dup.getDataItems().size() + " DataItems");
+                    log.info("    Duplicate " + i + " contains " + dup.getDataItems().size() + " DataItems");
                     for (D dataItem : dup.getDataItems()) {
                         dataItem.addEffect(master);
                         dataItem.removeEffect(dup);
@@ -271,8 +268,8 @@ public class QueryManager {
      * @param session A database session to work on
      * @param registration Registration to be saved
      */
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration) throws DataFordelerException {
-        this.saveRegistration(session, entity, registration, true, true);
+    public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration) throws DataFordelerException {
+        saveRegistration(session, entity, registration, true, true);
     }
 
     /**
@@ -280,8 +277,8 @@ public class QueryManager {
      * @param session A database session to work on
      * @param registration Registration to be saved
      */
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems) throws DataFordelerException {
-        this.log.info("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
+    public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems) throws DataFordelerException {
+        log.info("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
         }
@@ -289,9 +286,9 @@ public class QueryManager {
             throw new MissingEntityException(registration);
         }
 
-        E existingEntity = this.getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
+        E existingEntity = getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
         if (existingEntity != null) {
-            this.log.info("There is an existing entity with uuid "+existingEntity.getUUID().toString());
+            log.info("There is an existing entity with uuid "+existingEntity.getUUID().toString());
             entity = existingEntity;
         }
         registration.setEntity(entity);
@@ -339,7 +336,7 @@ public class QueryManager {
                 for (String key : references.keySet()) {
                     Identification reference = references.get(key);
                     if (reference != null) {
-                        Identification otherReference = this.getIdentification(session, reference.getUuid());
+                        Identification otherReference = getIdentification(session, reference.getUuid());
                         if (otherReference != null && reference != otherReference) {
                             references.put(key, otherReference);
                             changed = true;
@@ -362,14 +359,14 @@ public class QueryManager {
         if (entity.getIdentification() != null && entity.getIdentification().getId() != null) {
             existing = session.get(Identification.class, entity.getIdentification().getId());
         } else {
-            existing = this.getIdentification(session, entity.getUUID());
+            existing = getIdentification(session, entity.getUUID());
         }
         if (existing != null && existing != entity.getIdentification()) {
-            this.log.debug("identification "+entity.getUUID()+" already exist");
+            log.debug("identification "+entity.getUUID()+" already exist");
             entity.setIdentifikation(existing);
             session.saveOrUpdate(entity);
         } else if (existing == null) {
-            this.log.debug("identification "+entity.getUUID()+" does not already exist or is already assigned");
+            log.debug("identification "+entity.getUUID()+" does not already exist or is already assigned");
             session.saveOrUpdate(entity.getIdentification());
             session.saveOrUpdate(entity);
         }
@@ -377,7 +374,7 @@ public class QueryManager {
 
 
         if (dedupEffects) {
-            this.dedupEffects(session, registration);
+            dedupEffects(session, registration);
         }
 
         session.saveOrUpdate(registration);
@@ -399,13 +396,13 @@ public class QueryManager {
 
     }
 
-    private <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void dedupItems(Session session, E entity, R registration) throws PluginImplementationException {
+    private static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void dedupItems(Session session, E entity, R registration) throws PluginImplementationException {
         // Dedup dataitems
         // Find existing DataItems on the Entity that hold the same data
         for (V effect : registration.getEffects()) {
             HashSet<D> obsolete = new HashSet<D>();
             for (D dataItem : effect.getDataItems()) {
-                List<D> existing = this.getDataItems(session, entity, dataItem, (Class<D>) dataItem.getClass());
+                List<D> existing = getDataItems(session, entity, dataItem, (Class<D>) dataItem.getClass());
                 // If found, use that DataItem instead
                 if (existing != null && !existing.isEmpty() && dataItem != existing.get(0)) {
                     obsolete.add(dataItem);
@@ -415,7 +412,7 @@ public class QueryManager {
                 dataItem.addEffect(effect);
             }
 
-            this.log.info("Found " + obsolete.size() + " obsolete items!");
+            log.info("Found " + obsolete.size() + " obsolete items!");
             for (D dataItem : obsolete) {
                 Set<V> effects = dataItem.getEffects();
                 for (V e : effects) {
@@ -427,13 +424,13 @@ public class QueryManager {
         }
     }
 
-    private void logQuery(org.hibernate.query.Query query) {
-        if (this.log.isDebugEnabled()) {
+    private static void logQuery(org.hibernate.query.Query query) {
+        if (log.isDebugEnabled()) {
             StringJoiner sj = new StringJoiner(", ");
             for (Parameter parameter : query.getParameters()) {
                 sj.add(parameter.getName() + ": " + query.getParameterValue(parameter));
             }
-            this.log.debug(query.getQueryString() + " [" + sj.toString() + "]");
+            log.debug(query.getQueryString() + " [" + sj.toString() + "]");
         }
     }
 

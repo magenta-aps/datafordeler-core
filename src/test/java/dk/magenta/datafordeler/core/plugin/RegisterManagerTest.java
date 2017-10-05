@@ -30,10 +30,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -197,8 +194,8 @@ public class RegisterManagerTest extends PluginTestBase {
         ExpectorCallback eventCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/getNewEvents", body, eventCallback);
 
-        List<ItemInputStream<? extends PluginSourceData>> dataStreams = this.plugin.getRegisterManager().pullEvents();
-        ItemInputStream<? extends PluginSourceData> dataStream = dataStreams.get(0);
+        Map<EntityManager, ItemInputStream<? extends PluginSourceData>> dataStreams = this.plugin.getRegisterManager().pullEvents();
+        ItemInputStream<? extends PluginSourceData> dataStream = dataStreams.values().iterator().next();
 
         PluginSourceData data;
         int eventCounter = 0;

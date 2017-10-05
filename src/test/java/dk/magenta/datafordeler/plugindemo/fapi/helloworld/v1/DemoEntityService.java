@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.plugindemo.fapi.helloworld.v1;
 
 import dk.magenta.datafordeler.core.database.DataItem;
+import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
@@ -84,7 +85,7 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
         this.applyQuery(session, query);
         Set<DemoEntity> entities = null;
         try {
-            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, DemoEntity.class));
+            entities = new HashSet<>(QueryManager.getAllEntities(session, query, DemoEntity.class));
         } catch (DataFordelerException e) {
             e.printStackTrace();
         } finally {
