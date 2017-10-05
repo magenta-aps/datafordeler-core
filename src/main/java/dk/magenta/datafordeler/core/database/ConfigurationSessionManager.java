@@ -6,7 +6,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import javax.annotation.PreDestroy;
@@ -18,13 +17,13 @@ import java.util.Set;
  * A bean to obtain Sessions with. Autowire this in, and obtain sessions with
  * sessionManager.getSessionFactory().openSession();
  */
-public class SessionManager {
+public class ConfigurationSessionManager {
 
     private SessionFactory sessionFactory;
 
-    private Logger log = LogManager.getLogger(SessionManager.class);
+    private Logger log = LogManager.getLogger(ConfigurationSessionManager.class);
 
-    public SessionManager(SessionManagerConfiguration smConfig) {
+    public ConfigurationSessionManager(SessionManagerConfiguration smConfig) {
         try {
             this.log.info("Initialize SessionManager");
             // Create the SessionFactory from hibernate.cfg.xml
@@ -32,27 +31,18 @@ public class SessionManager {
             // Create empty configuration object
             Configuration configuration = new Configuration();
 
-            this.log.info("Loading configuration from hibernate.cfg.xml");
+            this.log.info("Loading configuration from "+smConfig.getSecondaryHibernateConfigurationFile());
             Properties props = System.getProperties();
-            configuration.configure(smConfig.getPrimaryHibernateConfigurationFile());
+            configuration.configure(smConfig.getSecondaryHibernateConfigurationFile());
 
             Set<Class> managedClasses = new HashSet<>();
-            managedClasses.add(dk.magenta.datafordeler.core.database.Identification.class);
-            managedClasses.add(dk.magenta.datafordeler.core.database.Entity.class);
-            managedClasses.add(dk.magenta.datafordeler.core.database.Registration.class);
-            managedClasses.add(dk.magenta.datafordeler.core.database.Effect.class);
-            managedClasses.add(dk.magenta.datafordeler.core.database.DataItem.class);
-            managedClasses.add(dk.magenta.datafordeler.core.database.RecordCollection.class);
-            managedClasses.add(dk.magenta.datafordeler.core.database.RecordData.class);
-            managedClasses.add(dk.magenta.datafordeler.core.command.Command.class);
 
             for (Class cls : managedClasses) {
                 this.log.info("Located hardcoded data class "+cls.getCanonicalName());
             }
 
             ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
-            componentProvider.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));
-            componentProvider.addExcludeFilter(new AssignableTypeFilter(dk.magenta.datafordeler.core.configuration.Configuration.class));
+            componentProvider.addIncludeFilter(new AssignableTypeFilter(dk.magenta.datafordeler.core.configuration.Configuration.class));
 
             Set<BeanDefinition> components = componentProvider.findCandidateComponents("dk.magenta.datafordeler");
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
