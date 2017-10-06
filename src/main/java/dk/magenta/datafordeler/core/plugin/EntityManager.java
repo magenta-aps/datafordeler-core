@@ -354,7 +354,7 @@ public abstract class EntityManager {
         if (lastUpdated == null) {
             lastUpdated = new LastUpdated();
             lastUpdated.setPlugin(this.registerManager.getPlugin().getName());
-            lastUpdated.setSchema(this.getSchema());
+            lastUpdated.setSchemaName(this.getSchema());
         }
         lastUpdated.setTimestamp(time);
         session.saveOrUpdate(lastUpdated);

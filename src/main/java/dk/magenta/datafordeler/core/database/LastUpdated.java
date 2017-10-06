@@ -13,7 +13,7 @@ public class LastUpdated extends DatabaseEntry {
     private String plugin;
 
     @Column
-    private String schema;
+    private String schemaName;
 
     @Column
     private OffsetDateTime timestamp;
@@ -27,12 +27,12 @@ public class LastUpdated extends DatabaseEntry {
         this.plugin = plugin;
     }
 
-    public String getSchema() {
-        return this.schema;
+    public String getSchemaName() {
+        return this.schemaName;
     }
 
-    public void setSchema(String schema) {
-        this.schema = schema;
+    public void setSchemaName(String schemaName) {
+        this.schemaName = schemaName;
     }
 
     public OffsetDateTime getTimestamp() {
