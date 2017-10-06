@@ -58,39 +58,24 @@ public class Pull extends Worker implements Runnable {
             this.log.info("Worker "+this.getId()+" fetching events with " + this.registerManager.getClass().getCanonicalName());
 
             ImportMetadata importMetadata = new ImportMetadata();
-            OffsetDateTime pullTime = OffsetDateTime.now();
 
             boolean error = false;
-            Map<EntityManager, ItemInputStream<? extends PluginSourceData>> streams = this.registerManager.pullEvents();
-            for (EntityManager entityManager : streams.keySet()) {
-                ItemInputStream<? extends PluginSourceData> eventStream = streams.get(entityManager);
-
-                int count = 0;
-                try {
-                    PluginSourceData event;
-                    while ((event = eventStream.next()) != null && !this.doCancel) {
-                        if (!this.engine.handleEvent(event, this.registerManager.getPlugin(), importMetadata)) {
-                            this.log.warn("Worker " + this.getId() + " failed handling event " + event.getId() + ", not processing further events");
-                            eventStream.close();
-                            break;
-                        }
-                        count++;
-                    }
+            if (this.registerManager.pullsEventsCommonly()) {
+                ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents();
+                error = this.doPull(importMetadata, stream);
+                // Done. Write last-updated timestamp
+                if (!error) {
+                    this.registerManager.setLastUpdated(null, importMetadata.getImportTime());
+                }
+            } else {
+                for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
+                    ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
+                    error = this.doPull(importMetadata, stream);
                     // Done. Write last-updated timestamp
-                    this.registerManager.setLastUpdated(entityManager, pullTime);
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    DataStreamException ex = new DataStreamException(e);
-                    this.onError(ex);
-                    error = true;
-                    throw ex;
-                } catch (Throwable e) {
-                    error = true;
-                    e.printStackTrace();
-                } finally {
-                    this.log.info("Worker " + this.getId() + " processed " + count + " events. Closing stream.");
-                    eventStream.close();
+                    if (error) {
+                        break;
+                    }
+                    this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
                 }
             }
 
@@ -114,6 +99,37 @@ public class Pull extends Worker implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean doPull(ImportMetadata importMetadata, ItemInputStream<? extends PluginSourceData> eventStream) throws DataStreamException, IOException {
+        boolean error = false;
+
+        int count = 0;
+        try {
+            PluginSourceData event;
+            while ((event = eventStream.next()) != null && !this.doCancel) {
+                if (!this.engine.handleEvent(event, this.registerManager.getPlugin(), importMetadata)) {
+                    this.log.warn("Worker " + this.getId() + " failed handling event " + event.getId() + ", not processing further events");
+                    eventStream.close();
+                    break;
+                }
+                count++;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            DataStreamException ex = new DataStreamException(e);
+            this.onError(ex);
+            error = true;
+            throw ex;
+        } catch (Throwable e) {
+            error = true;
+            e.printStackTrace();
+        } finally {
+            this.log.info("Worker " + this.getId() + " processed " + count + " events. Closing stream.");
+            eventStream.close();
+        }
+        return error;
     }
 
     private static HashMap<RegisterManager, Pull> runningPulls = new HashMap<>();

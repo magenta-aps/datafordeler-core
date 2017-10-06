@@ -10,6 +10,7 @@ import dk.magenta.datafordeler.core.testutil.CallbackController;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.KeyExpectorCallback;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
+import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityReference;
 import org.junit.Assert;
@@ -50,6 +51,9 @@ public class RegisterManagerTest extends PluginTestBase {
 
     @Autowired
     protected CallbackController callbackController;
+
+    @Autowired
+    private DemoRegisterManager demoRegisterManager;
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
@@ -182,7 +186,8 @@ public class RegisterManagerTest extends PluginTestBase {
     public void testPullEvents() throws DataFordelerException, IOException, InterruptedException, ExecutionException, TimeoutException {
 
         String checksum = this.hash(UUID.randomUUID().toString());
-        String reference = "http://localhost:" + Application.servicePort + "/test/get/" + checksum;
+        this.demoRegisterManager.setPort(port);
+        String reference = "http://localhost:" + port + "/test/get/" + checksum;
         String uuid = UUID.randomUUID().toString();
         String full = this.getPayload("/referencelookuptest.json")
                 .replace("%{checksum}", checksum)
@@ -194,8 +199,7 @@ public class RegisterManagerTest extends PluginTestBase {
         ExpectorCallback eventCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/getNewEvents", body, eventCallback);
 
-        Map<EntityManager, ItemInputStream<? extends PluginSourceData>> dataStreams = this.plugin.getRegisterManager().pullEvents();
-        ItemInputStream<? extends PluginSourceData> dataStream = dataStreams.values().iterator().next();
+        ItemInputStream<? extends PluginSourceData> dataStream = this.plugin.getRegisterManager().pullEvents();
 
         PluginSourceData data;
         int eventCounter = 0;
