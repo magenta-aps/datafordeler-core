@@ -184,4 +184,4 @@ if __name__ == '__main__':
     if os.path.exists(DEST_DIR):
         print "YAJSW already installed in %s, remove to reinstall" % DEST_DIR
     else:
-install_yajsw()
+        install_yajsw()
