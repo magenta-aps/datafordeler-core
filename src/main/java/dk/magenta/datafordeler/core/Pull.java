@@ -61,20 +61,22 @@ public class Pull extends Worker implements Runnable {
 
             boolean error = false;
             if (this.registerManager.pullsEventsCommonly()) {
+                this.log.info("Pulling data for "+this.registerManager.getClass().getSimpleName());
                 ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents();
                 error = this.doPull(importMetadata, stream);
-                // Done. Write last-updated timestamp
                 if (!error) {
+                    // Done. Write last-updated timestamp
                     this.registerManager.setLastUpdated(null, importMetadata.getImportTime());
                 }
             } else {
                 for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
+                    this.log.info("Pulling data for "+entityManager.getClass().getSimpleName());
                     ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
                     error = this.doPull(importMetadata, stream);
-                    // Done. Write last-updated timestamp
                     if (error) {
                         break;
                     }
+                    // Done. Write last-updated timestamp
                     this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
                 }
             }
