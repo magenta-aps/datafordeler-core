@@ -335,8 +335,8 @@ public abstract class EntityManager {
 
     private LastUpdated getLastUpdatedObject(Session session) {
         HashMap<String, Object> filter = new HashMap<>();
-        filter.put("plugin", this.registerManager.getPlugin().getName());
-        filter.put("schema", this.getSchema());
+        filter.put(LastUpdated.DB_FIELD_PLUGIN, this.registerManager.getPlugin().getName());
+        filter.put(LastUpdated.DB_FIELD_SCHEMA_NAME, this.getSchema());
         return QueryManager.getItem(session, LastUpdated.class, filter);
     }
 

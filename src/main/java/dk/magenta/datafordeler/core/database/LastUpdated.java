@@ -9,12 +9,15 @@ import java.time.OffsetDateTime;
 @Table(name = "last_updated")
 public class LastUpdated extends DatabaseEntry {
 
+    public static final String DB_FIELD_PLUGIN = "plugin";
     @Column
     private String plugin;
 
+    public static final String DB_FIELD_SCHEMA_NAME = "schemaName";
     @Column
     private String schemaName;
 
+    public static final String DB_FIELD_TIMESTAMP = "timestamp";
     @Column
     private OffsetDateTime timestamp;
 
