@@ -395,10 +395,11 @@ public class LookupDefinition {
                 if (value instanceof List) {
                     List list = (List) value;
                     for (int i=0; i<list.size(); i++) {
-                        if (parameterValueWildcard(value)) {
-                            map.put(parameterPath + "_" + i, replaceWildcard(list.get(i)));
+                        Object item = list.get(i);
+                        if (parameterValueWildcard(item)) {
+                            map.put(parameterPath + "_" + i, replaceWildcard(item));
                         } else {
-                            map.put(parameterPath + "_" + i, castValue(type, list.get(i)));
+                            map.put(parameterPath + "_" + i, castValue(type, item));
                         }
                     }
                 } else {
