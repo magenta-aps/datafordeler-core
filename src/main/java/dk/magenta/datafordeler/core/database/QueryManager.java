@@ -13,6 +13,7 @@ import javax.persistence.Parameter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Created by lars on 22-02-17.
@@ -98,6 +99,49 @@ public abstract class QueryManager {
         }
         logQuery(databaseQuery);
         List<E> results = databaseQuery.getResultList();
+        return results;
+    }
+
+    /**
+     * Get all Entities of a specific class, that match the given parameters
+     * @param session Database session to work from
+     * @param query Query object defining search parameters
+     * @param eClass Entity subclass
+     * @return
+     */
+    public static <E extends Entity, D extends DataItem> Stream<E> getAllEntitiesAsStream(Session session, Query query, Class<E> eClass) {
+        log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
+
+        LookupDefinition lookupDefinition = query.getLookupDefinition();
+        String root = "d";
+
+        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
+
+        String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
+                " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
+
+        log.info(queryString);
+
+        // Build query
+        org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
+
+        // Insert parameters, casting as necessary
+        HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
+
+        for (String key : extraParameters.keySet()) {
+            log.info(key+" = "+extraParameters.get(key));
+            databaseQuery.setParameter(key, extraParameters.get(key));
+        }
+
+        // Offset & limit
+        if (query.getOffset() > 0) {
+            databaseQuery.setFirstResult(query.getOffset());
+        }
+        if (query.getCount() < Integer.MAX_VALUE) {
+            databaseQuery.setMaxResults(query.getCount());
+        }
+        logQuery(databaseQuery);
+        Stream<E> results = databaseQuery.stream();
         return results;
     }
 
