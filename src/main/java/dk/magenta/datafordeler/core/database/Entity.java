@@ -134,6 +134,17 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return null;
     }
 
+    public R getRegistrationAt(OffsetDateTime time) {
+        for (R registration : this.registrations) {
+            OffsetDateTime from = registration.getRegistrationFrom();
+            OffsetDateTime to = registration.getRegistrationTo();
+            if ((from == null || from.isBefore(time) || from.isEqual(time)) && (to == null || to.isAfter(time) || to.isEqual(time))) {
+                return registration;
+            }
+        }
+        return null;
+    }
+
     /**
      * Finds a registration under this entity that starts and ends at the given
      * OffsetDateTime pair

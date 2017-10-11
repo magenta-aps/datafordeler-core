@@ -150,6 +150,18 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return null;
     }
 
+    public List<V> getEffectsAt(OffsetDateTime time) {
+        List<V> effects = new ArrayList<>();
+        for (V effect : this.effects) {
+            OffsetDateTime from = effect.getEffectFrom();
+            OffsetDateTime to = effect.getEffectTo();
+            if ((from == null || from.isBefore(time) || from.isEqual(time)) && (to == null || to.isAfter(time) || to.isEqual(time))) {
+                effects.add(effect);
+            }
+        }
+        return effects;
+    }
+
     public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
         return this.getEffect(
                 effectFrom != null ? OffsetDateTime.of(effectFrom, ZoneOffset.UTC) : null,

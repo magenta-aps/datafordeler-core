@@ -65,7 +65,7 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass) throws DataFordelerException {
+    public static <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
 
         LookupDefinition lookupDefinition = query.getLookupDefinition();
@@ -112,6 +112,18 @@ public abstract class QueryManager {
         log.trace("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid);
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid = :uuid", eClass);
         databaseQuery.setParameter("uuid", uuid);
+        logQuery(databaseQuery);
+        try {
+            return databaseQuery.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public static <E extends Entity> E getEntity(Session session, Identification identification, Class<E> eClass) {
+        log.trace("Get Entity of class " + eClass.getCanonicalName() + " by identification "+identification.getUuid());
+        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " where " + ENTITY + ".identification = :identification", eClass);
+        databaseQuery.setParameter("identification", identification);
         logQuery(databaseQuery);
         try {
             return databaseQuery.getSingleResult();
