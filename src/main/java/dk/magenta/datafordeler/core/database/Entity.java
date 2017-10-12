@@ -54,10 +54,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     })
     protected List<R> registrations;
 
-    @Transient
-    @JsonIgnore
-    private Query filter = null;
-
     public Entity() {
         this.registrations = new ArrayList<R>();
         this.identification = new Identification();
