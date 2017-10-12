@@ -402,7 +402,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     //protected abstract Set<E> searchByQuery(Q query);
     @WebMethod(exclude = true) // Non-soap methods must have this
     protected Set<E> searchByQuery(Q query, Session session) throws DataFordelerException {
-        this.applyQuery(session, query);
+        query.applyFilters(session);
         Set<E> entities = new HashSet<>(QueryManager.getAllEntities(session, query, this.getEntityClass()));
         return entities;
     }
@@ -428,44 +428,12 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(exclude = true)
     protected E searchById(UUID uuid, Q query, Session session) {
         E entity = null;
-        this.applyQuery(session, query);
+        query.applyFilters(session);
         entity = QueryManager.getEntity(session, uuid, this.getEntityClass());
         if (entity != null) {
             entity.forceLoad(session);
         }
         return entity;
-    }
-
-
-    /**
-     * Put Query parameters into the Hibernate session. Subclasses should override this and call this method, then
-     * put their own Query-subclass-specific parameters in as well
-     * @param session Hibernate session in use
-     * @param query Query object constructed from a request
-     */
-    protected void applyQuery(Session session, Q query) {
-        if (query != null) {
-            if (query.getRegistrationFrom() != null) {
-                Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
-                filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, query.getRegistrationFrom());
-            }
-            if (query.getRegistrationTo() != null) {
-                Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
-                filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, query.getRegistrationTo());
-            }
-            if (query.getEffectFrom() != null) {
-                Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
-                filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, query.getEffectFrom());
-            }
-            if (query.getEffectTo() != null) {
-                Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
-                filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, query.getEffectTo());
-            }
-            if (query.getRecordAfter() != null) {
-                Filter filter = session.enableFilter(DataItem.FILTER_RECORD_AFTER);
-                filter.setParameter(DataItem.FILTERPARAM_RECORD_AFTER, query.getRecordAfter());
-            }
-        }
     }
 
 }

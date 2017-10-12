@@ -82,7 +82,7 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
     @WebMethod(exclude = true) // Non-soap methods must have this
     protected Set<DemoEntity> searchByQuery(DemoQuery query) throws AccessDeniedException {
         Session session = this.getSessionManager().getSessionFactory().openSession();
-        this.applyQuery(session, query);
+        query.applyFilters(session);
         Set<DemoEntity> entities = null;
         try {
             entities = new HashSet<>(QueryManager.getAllEntities(session, query, DemoEntity.class));
