@@ -71,6 +71,8 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
     }
 
+    private Pattern emptyResultsPattern = Pattern.compile("\"results\":\\s*\\[\\]");
+
     /**
      * Fetch data from the external source; sends a POST to the initialUri, 
      * with the body, and waits for a response.
@@ -151,6 +153,13 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                     scrollId = null;
                                     log.info("next scrollId not found");
                                 }
+
+                                m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(peekString);
+                                if (m.find()) {
+                                    scrollId = null;
+                                }
+
+
                                 IOUtils.copy(getResponseData, outputStream);
 
                             } catch (IOException e) {
