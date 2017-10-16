@@ -347,8 +347,6 @@ public abstract class QueryManager {
             log.info("There is an existing entity with uuid "+existingEntity.getUUID().toString());
             entity = existingEntity;
         }
-        registration.setEntity(entity);
-        entity.addRegistration(registration);
 
 
         // Validate registration:
@@ -371,6 +369,7 @@ public abstract class QueryManager {
                     }
                 }
             }
+
             if (highestSequenceNumber > -1 && registration.getSequenceNumber() != highestSequenceNumber + 1) {
                 throw new SkippedSequenceNumberException(registration, highestSequenceNumber);
             }
@@ -382,6 +381,9 @@ public abstract class QueryManager {
                 }
             }
         }
+
+        registration.setEntity(entity);
+        entity.addRegistration(registration);
 
         // Normalize references: setting them to existing Identification entries if possible
         // If no existing Identification exists, keep the one we have and save it to the session
