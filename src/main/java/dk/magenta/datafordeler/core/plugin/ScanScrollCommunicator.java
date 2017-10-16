@@ -71,7 +71,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
     }
 
-    private Pattern emptyResultsPattern = Pattern.compile("\"results\":\\s*\\[\\]");
+    private Pattern emptyResultsPattern = Pattern.compile("\"results\":\\s*\\[\\s*\\]");
 
     /**
      * Fetch data from the external source; sends a POST to the initialUri, 
@@ -145,22 +145,23 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                 getResponseData.reset();
 
                                 String peekString = new String(peekBytes, 0, peekSize, "utf-8");
-                                Matcher m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
+
+                                Matcher m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(peekString);
                                 if (m.find()) {
-                                    scrollId = m.group(1);
-                                    log.info("found next scrollId");
+                                    log.info("Empty results encountered");
+                                    scrollId = null;
                                 } else {
-                                    scrollId = null;
-                                    log.info("next scrollId not found");
+                                    m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
+                                    if (m.find()) {
+                                        scrollId = m.group(1);
+                                        log.info("found next scrollId");
+                                    } else {
+                                        scrollId = null;
+                                        log.info("next scrollId not found");
+                                    }
+                                    IOUtils.copy(getResponseData, outputStream);
                                 }
-
-                                m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(peekString);
-                                if (m.find()) {
-                                    scrollId = null;
-                                }
-
-
-                                IOUtils.copy(getResponseData, outputStream);
+                                
 
                             } catch (IOException e) {
                                 e.printStackTrace();
