@@ -354,7 +354,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         if (this.registrationFrom == null && oDateTime == null) return 0;
         if (oDateTime == null) return 1;
         if (this.registrationFrom == null) return -1;
-        return this.registrationFrom.compareTo(oDateTime);
+        return this.registrationFrom.toInstant().compareTo(oDateTime.toInstant());
     }
 
 
