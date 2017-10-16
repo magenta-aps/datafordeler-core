@@ -71,7 +71,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
     }
 
-    private Pattern emptyResultsPattern = Pattern.compile("\"results\":\\s*\\[\\s*\\]");
+    private Pattern emptyResultsPattern = Pattern.compile("\"hits\":\\s*\\[\\s*\\]");
 
     /**
      * Fetch data from the external source; sends a POST to the initialUri, 
@@ -118,6 +118,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
                         responseNode = objectMapper.readTree(response.getEntity().getContent());
 
+                        int i = 0;
                         String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
                         while (scrollId != null) {
 
@@ -145,6 +146,8 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                 getResponseData.reset();
 
                                 String peekString = new String(peekBytes, 0, peekSize, "utf-8");
+                                System.out.println(i + " " + peekString);
+                                i++;
 
                                 Matcher m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(peekString);
                                 if (m.find()) {
@@ -161,7 +164,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                     }
                                     IOUtils.copy(getResponseData, outputStream);
                                 }
-                                
+
 
                             } catch (IOException e) {
                                 e.printStackTrace();
