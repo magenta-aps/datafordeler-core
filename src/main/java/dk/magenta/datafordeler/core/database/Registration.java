@@ -357,7 +357,12 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return this.registrationFrom.toInstant().compareTo(oDateTime.toInstant());
     }
 
-
+    public boolean equals(Registration o) {
+        return o != null &&
+            compareTo(o) == 0 &&
+            getSequenceNumber() == o.getSequenceNumber() &&
+            getRegisterChecksum().equalsIgnoreCase(o.getRegisterChecksum());
+    }
 
     public R split(OffsetDateTime splitTime) {
         //Registration newReg = this.entity.createRegistration();
