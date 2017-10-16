@@ -347,8 +347,6 @@ public abstract class QueryManager {
             log.info("There is an existing entity with uuid "+existingEntity.getUUID().toString());
             entity = existingEntity;
         }
-        registration.setEntity(entity);
-        entity.addRegistration(registration);
 
 
         // Validate registration:
@@ -361,6 +359,12 @@ public abstract class QueryManager {
             for (R otherRegistration : entity.getRegistrations()) {
                 if (otherRegistration != registration) { // Consider only other registrations
                     if (otherRegistration.getId() != null || session.contains(otherRegistration)) { // Consider only saved registrations
+                        if (registration.equals(otherRegistration)) {
+                            // the registration exactly matches a
+                            // pre-existing registration, so saving it is a
+                            // no-op
+                            return;
+                        }
                         if (otherRegistration.getSequenceNumber() == registration.getSequenceNumber()) {
                             throw new DuplicateSequenceNumberException(registration, otherRegistration);
                         }
@@ -371,6 +375,7 @@ public abstract class QueryManager {
                     }
                 }
             }
+
             if (highestSequenceNumber > -1 && registration.getSequenceNumber() != highestSequenceNumber + 1) {
                 throw new SkippedSequenceNumberException(registration, highestSequenceNumber);
             }
@@ -382,6 +387,9 @@ public abstract class QueryManager {
                 }
             }
         }
+
+        registration.setEntity(entity);
+        entity.addRegistration(registration);
 
         // Normalize references: setting them to existing Identification entries if possible
         // If no existing Identification exists, keep the one we have and save it to the session
