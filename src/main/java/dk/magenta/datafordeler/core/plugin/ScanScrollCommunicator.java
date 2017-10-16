@@ -139,7 +139,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             }
 
                             try {
-                                int peekSize = 400;
+                                int peekSize = 1000;
                                 getResponseData.mark(peekSize);
                                 byte[] peekBytes = new byte[peekSize];
                                 getResponseData.read(peekBytes, 0, peekSize);
