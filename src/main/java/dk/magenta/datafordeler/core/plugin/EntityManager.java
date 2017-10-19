@@ -4,16 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import dk.magenta.datafordeler.core.database.Entity;
-import dk.magenta.datafordeler.core.database.EntityReference;
-import dk.magenta.datafordeler.core.database.Registration;
-import dk.magenta.datafordeler.core.database.RegistrationReference;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.http.StatusLine;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Session;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -206,9 +205,9 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(InputStream registrationData) throws DataFordelerException {
+    public List<? extends Registration> parseRegistration(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
-        return this.parseRegistration(data);
+        return this.parseRegistration(data, importMetadata);
     }
 
     /**
@@ -217,26 +216,26 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(String registrationData) throws DataFordelerException {
+    public List<? extends Registration> parseRegistration(String registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         try {
-            return this.parseRegistration(this.getObjectMapper().readTree(registrationData));
+            return this.parseRegistration(this.getObjectMapper().readTree(registrationData), importMetadata);
         } catch (IOException e) {
             throw new DataStreamException(e);
         }
     }
 
-    public List<? extends Registration> parseRegistration(JsonNode registrationData) throws DataFordelerException {
+    public List<? extends Registration> parseRegistration(JsonNode registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         return null;
     }
 
 
 
-    public Map<String, List<? extends Registration>> parseRegistrationList(JsonNode registrationData) throws DataFordelerException {
+    public Map<String, List<? extends Registration>> parseRegistrationList(JsonNode registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         HashMap<String, List<? extends Registration>> registrationMap = new HashMap<>();
         Iterator<String> keyIterator = registrationData.fieldNames();
         while (keyIterator.hasNext()) {
             String key = keyIterator.next();
-            List<? extends Registration> registrations = this.parseRegistration(registrationData.get(key));
+            List<? extends Registration> registrations = this.parseRegistration(registrationData.get(key), importMetadata);
             registrationMap.put(key, registrations);
         }
         return registrationMap;
@@ -264,7 +263,7 @@ public abstract class EntityManager {
      * @throws IOException
      * @throws FailedReferenceException
      */
-    public List<? extends Registration> fetchRegistration(RegistrationReference reference) throws IOException, DataFordelerException {
+    public List<? extends Registration> fetchRegistration(RegistrationReference reference, ImportMetadata importMetadata) throws IOException, DataFordelerException {
         this.getLog().info("Fetching registration from reference "+reference.getURI());
         if (!this.managedRegistrationReferenceClass.isInstance(reference)) {
             throw new WrongSubclassException(this.managedRegistrationReferenceClass, reference);
@@ -278,7 +277,8 @@ public abstract class EntityManager {
         }
 
         return this.parseRegistration(
-            registrationData
+            registrationData,
+            importMetadata
         );
     }
 
@@ -344,4 +344,33 @@ public abstract class EntityManager {
     }
 
     protected abstract Logger getLog();
+
+
+
+    private LastUpdated getLastUpdatedObject(Session session) {
+        HashMap<String, Object> filter = new HashMap<>();
+        filter.put(LastUpdated.DB_FIELD_PLUGIN, this.registerManager.getPlugin().getName());
+        filter.put(LastUpdated.DB_FIELD_SCHEMA_NAME, this.getSchema());
+        return QueryManager.getItem(session, LastUpdated.class, filter);
+    }
+
+    public OffsetDateTime getLastUpdated(Session session) {
+        LastUpdated lastUpdated = this.getLastUpdatedObject(session);
+        if (lastUpdated != null) {
+            return lastUpdated.getTimestamp();
+        }
+        return null;
+    }
+
+
+    public void setLastUpdated(Session session, OffsetDateTime time) {
+        LastUpdated lastUpdated = this.getLastUpdatedObject(session);
+        if (lastUpdated == null) {
+            lastUpdated = new LastUpdated();
+            lastUpdated.setPlugin(this.registerManager.getPlugin().getName());
+            lastUpdated.setSchemaName(this.getSchema());
+        }
+        lastUpdated.setTimestamp(time);
+        session.saveOrUpdate(lastUpdated);
+    }
 }

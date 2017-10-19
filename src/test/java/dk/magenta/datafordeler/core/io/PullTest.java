@@ -4,6 +4,7 @@ import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.Engine;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.Pull;
+import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
 import dk.magenta.datafordeler.core.plugin.Plugin;

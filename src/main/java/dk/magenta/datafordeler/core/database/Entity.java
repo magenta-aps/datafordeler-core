@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.util.Equality;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
@@ -53,10 +52,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
             @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="(registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO+")")
     })
     protected List<R> registrations;
-
-    @Transient
-    @JsonIgnore
-    private Query filter = null;
 
     public Entity() {
         this.registrations = new ArrayList<R>();
@@ -134,6 +129,17 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return null;
     }
 
+    public R getRegistrationAt(OffsetDateTime time) {
+        for (R registration : this.registrations) {
+            OffsetDateTime from = registration.getRegistrationFrom();
+            OffsetDateTime to = registration.getRegistrationTo();
+            if ((from == null || from.isBefore(time) || from.isEqual(time)) && (to == null || to.isAfter(time) || to.isEqual(time))) {
+                return registration;
+            }
+        }
+        return null;
+    }
+
     /**
      * Finds a registration under this entity that starts and ends at the given
      * OffsetDateTime pair
@@ -158,20 +164,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
             }
         }
         return registrations;
-    }
-
-    public R getRegistrationAt(OffsetDateTime dateTime) {
-        for (R registration : this.getRegistrations()) {
-            OffsetDateTime from = registration.getRegistrationFrom();
-            OffsetDateTime to = registration.getRegistrationTo();
-
-            if (!from.isAfter(dateTime) &&
-                (to == null || to.isAfter(dateTime))) {
-                return registration;
-            }
-        }
-
-        return null;
     }
 
     public void forceLoad(Session session) {

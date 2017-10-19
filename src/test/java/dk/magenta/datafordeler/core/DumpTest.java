@@ -2,12 +2,7 @@ package dk.magenta.datafordeler.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.database.DatabaseEntry;
-import dk.magenta.datafordeler.core.database.DumpData;
-import dk.magenta.datafordeler.core.database.DumpInfo;
-import dk.magenta.datafordeler.core.database.Identification;
-import dk.magenta.datafordeler.core.database.QueryManager;
-import dk.magenta.datafordeler.core.database.SessionManager;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -18,16 +13,6 @@ import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.LazyInitializationException;
@@ -38,12 +23,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.quartz.JobKey;
-import org.quartz.ListenerManager;
-import org.quartz.ScheduleBuilder;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.KeyMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +37,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.transaction.Transactional;
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Created by lars on 03-04-17.
@@ -74,9 +65,6 @@ public class DumpTest extends GapiTestBase {
 
     @Autowired
     private SessionManager sessionManager;
-
-    @Autowired
-    private QueryManager queryManager;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -111,11 +99,11 @@ public class DumpTest extends GapiTestBase {
         Session session = sessionManager.getSessionFactory().openSession();
         Assert.assertTrue(
             "no pre-existing dumps allowed",
-            queryManager.getAllItems(session, DumpInfo.class).isEmpty()
+            QueryManager.getAllItems(session, DumpInfo.class).isEmpty()
         );
         Assert.assertTrue(
             "no pre-existing dumps allowed",
-            queryManager.getAllItems(session, DumpData.class).isEmpty()
+            QueryManager.getAllItems(session, DumpData.class).isEmpty()
         );
         session.close();
     }
@@ -135,7 +123,7 @@ public class DumpTest extends GapiTestBase {
             DumpInfo.class,
             DumpData.class
         )) {
-            for (DatabaseEntry entry : queryManager.getAllItems(session, cls)) {
+            for (DatabaseEntry entry : QueryManager.getAllItems(session, cls)) {
                 session.delete(entry);
             }
         }
@@ -164,7 +152,7 @@ public class DumpTest extends GapiTestBase {
 
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
-        queryManager.saveRegistration(session, entity, registration);
+        QueryManager.saveRegistration(session, entity, registration);
         transaction.commit();
         session.close();
     }
@@ -242,7 +230,7 @@ public class DumpTest extends GapiTestBase {
             Session session = sessionManager.getSessionFactory().openSession();
 
             Assert.assertEquals("Initial state; no dumps", 0,
-                queryManager.getAllItems(session, DumpInfo.class).size());
+                QueryManager.getAllItems(session, DumpInfo.class).size());
             session.close();
         }
 
@@ -252,13 +240,13 @@ public class DumpTest extends GapiTestBase {
         Session session = sessionManager.getSessionFactory().openSession();
 
         List<DumpInfo> dumps =
-            queryManager.getAllItems(session, DumpInfo.class);
+            QueryManager.getAllItems(session, DumpInfo.class);
 
         Assert.assertEquals("After one run",
             1 * Dump.FORMATS.length, dumps.size());
 
         List<DumpData> dumpDatas =
-            queryManager.getAllItems(session, DumpData.class);
+            QueryManager.getAllItems(session, DumpData.class);
 
         Assert.assertEquals("After one run",
             1 * Dump.FORMATS.length, dumps.size());
@@ -279,12 +267,12 @@ public class DumpTest extends GapiTestBase {
 
         session = sessionManager.getSessionFactory().openSession();
 
-        dumps = queryManager.getAllItems(session, DumpInfo.class);
+        dumps = QueryManager.getAllItems(session, DumpInfo.class);
 
         Assert.assertEquals("After two runs",
             1 * Dump.FORMATS.length, dumps.size());
 
-        dumpDatas = queryManager.getAllItems(session, DumpData.class);
+        dumpDatas = QueryManager.getAllItems(session, DumpData.class);
 
         Assert.assertEquals("After two runs",
             1 * Dump.FORMATS.length, dumps.size());
@@ -304,7 +292,7 @@ public class DumpTest extends GapiTestBase {
         session = sessionManager.getSessionFactory().openSession();
 
         Assert.assertEquals("Initial state; no dumps", 0,
-            queryManager.getAllItems(session, DumpInfo.class).size());
+            QueryManager.getAllItems(session, DumpInfo.class).size());
 
         session.close();
 
@@ -313,7 +301,7 @@ public class DumpTest extends GapiTestBase {
         session = sessionManager.getSessionFactory().openSession();
 
         List<DumpInfo> dumps =
-            queryManager.getAllItems(session, DumpInfo.class);
+            QueryManager.getAllItems(session, DumpInfo.class);
 
         Assert.assertEquals("After one run",
             1 * Dump.FORMATS.length, dumps.size());
@@ -348,7 +336,7 @@ public class DumpTest extends GapiTestBase {
         new Dump(this.engine).run();
 
         List<DumpInfo> dumps =
-            queryManager.getAllItems(session, DumpInfo.class);
+            QueryManager.getAllItems(session, DumpInfo.class);
 
         session.close();
 

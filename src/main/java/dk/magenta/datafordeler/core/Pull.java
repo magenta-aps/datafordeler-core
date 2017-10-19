@@ -4,18 +4,20 @@ import dk.magenta.datafordeler.core.command.Worker;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
+import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
+import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
-import java.io.IOException;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.HashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.JobDataMap;
+
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 
 /**
  * Created by lars on 29-05-17.
@@ -66,33 +68,27 @@ public class Pull extends Worker implements Runnable {
 
             this.log.info("Worker "+this.getId()+" fetching events with " + this.registerManager.getClass().getCanonicalName());
 
-            boolean error = false;
-            Collection<ItemInputStream<? extends PluginSourceData>> streams = this.registerManager.pullEvents();
-            for (ItemInputStream<? extends PluginSourceData> eventStream : streams) {
+            ImportMetadata importMetadata = new ImportMetadata();
 
-                int count = 0;
-                try {
-                    PluginSourceData event;
-                    while ((event = eventStream.next()) != null && !this.doCancel) {
-                        if (!this.engine.handleEvent(event, this.registerManager.getPlugin())) {
-                            this.log.warn("Worker " + this.getId() + " failed handling event " + event.getId() + ", not processing further events");
-                            eventStream.close();
-                            break;
-                        }
-                        count++;
+            boolean error = false;
+            if (this.registerManager.pullsEventsCommonly()) {
+                this.log.info("Pulling data for "+this.registerManager.getClass().getSimpleName());
+                ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents();
+                error = this.doPull(importMetadata, stream);
+                if (!error) {
+                    // Done. Write last-updated timestamp
+                    this.registerManager.setLastUpdated(null, importMetadata.getImportTime());
+                }
+            } else {
+                for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
+                    this.log.info("Pulling data for "+entityManager.getClass().getSimpleName());
+                    ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
+                    error = this.doPull(importMetadata, stream);
+                    if (error) {
+                        break;
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    DataStreamException ex = new DataStreamException(e);
-                    this.onError(ex);
-                    error = true;
-                    throw ex;
-                } catch (Throwable e) {
-                    error = true;
-                    e.printStackTrace();
-                } finally {
-                    this.log.info("Worker " + this.getId() + " processed " + count + " events. Closing stream.");
-                    eventStream.close();
+                    // Done. Write last-updated timestamp
+                    this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
                 }
             }
 
@@ -110,10 +106,43 @@ public class Pull extends Worker implements Runnable {
 
         } catch (DataFordelerException e) {
             runningPulls.remove(this.registerManager);
+            e.printStackTrace();
+            this.log.error(e);
             throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean doPull(ImportMetadata importMetadata, ItemInputStream<? extends PluginSourceData> eventStream) throws DataStreamException, IOException {
+        boolean error = false;
+
+        int count = 0;
+        try {
+            PluginSourceData event;
+            while ((event = eventStream.next()) != null && !this.doCancel) {
+                if (!this.engine.handleEvent(event, this.registerManager.getPlugin(), importMetadata)) {
+                    this.log.warn("Worker " + this.getId() + " failed handling event " + event.getId() + ", not processing further events");
+                    eventStream.close();
+                    break;
+                }
+                count++;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            DataStreamException ex = new DataStreamException(e);
+            this.onError(ex);
+            error = true;
+            throw ex;
+        } catch (Throwable e) {
+            error = true;
+            e.printStackTrace();
+        } finally {
+            this.log.info("Worker " + this.getId() + " processed " + count + " events. Closing stream.");
+            eventStream.close();
+        }
+        return error;
     }
 
     private static HashMap<RegisterManager, Pull> runningPulls = new HashMap<>();

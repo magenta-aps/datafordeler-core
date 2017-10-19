@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.HttpGetWithEntity;
+import dk.magenta.datafordeler.core.util.InputStreamReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -70,6 +71,8 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
     }
 
+    private Pattern emptyResultsPattern = Pattern.compile("\"hits\":\\s*\\[\\s*\\]");
+
     /**
      * Fetch data from the external source; sends a POST to the initialUri, 
      * with the body, and waits for a response.
@@ -97,92 +100,71 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                     try {
                         JsonNode responseNode;
 
-                        File postFile = new File("data/initial.json");
-
-                        if (postFile.exists()) {
-
-                            log.info("Getting data from cache");
-                            InputStream postResponseData = new FileInputStream(postFile);
-                            responseNode = objectMapper.readTree(postResponseData);
-                            postResponseData.close();
-
-                        } else {
-
-                            HttpPost initialPost = new HttpPost(startUri);
-                            initialPost.setEntity(new StringEntity(body, "utf-8"));
-                            CloseableHttpResponse response;
-                            log.info("Sending initial POST to " + startUri);
-                            try {
-                                response = httpclient.execute(initialPost);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                throw new DataStreamException(e);
-                            }
-                            log.info("Initial POST sent");
-                            log.info("HTTP status: " + response.getStatusLine().getStatusCode());
-                            if (response.getStatusLine().getStatusCode() != 200) {
-                                log.info(response.getEntity().getContent());
-                            }
-
-                            responseNode = objectMapper.readTree(response.getEntity().getContent());
-
-                            postFile.createNewFile();
-                            FileWriter fw = new FileWriter(postFile);
-                            fw.write(responseNode.toString());
-                            fw.close();
+                        HttpPost initialPost = new HttpPost(startUri);
+                        initialPost.setEntity(new StringEntity(body, "utf-8"));
+                        CloseableHttpResponse response;
+                        log.info("Sending initial POST to " + startUri);
+                        try {
+                            response = httpclient.execute(initialPost);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            throw new DataStreamException(e);
+                        }
+                        log.info("Initial POST sent");
+                        log.info("HTTP status: " + response.getStatusLine().getStatusCode());
+                        if (response.getStatusLine().getStatusCode() != 200) {
+                            log.info(InputStreamReader.readInputStream(response.getEntity().getContent()));
                         }
 
+                        responseNode = objectMapper.readTree(response.getEntity().getContent());
 
-                        String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
                         int i = 0;
+                        String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
                         while (scrollId != null) {
 
                             InputStream getResponseData;
 
-                            File getFile = new File("data/data"+i+".json");
-                            if (getFile.exists()) {
+                            URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
+                            HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
+                            partialGet.setEntity(new StringEntity(scrollId));
+                            try {
+                                log.info("Sending chunk GET to " + fetchUri);
+                                response = httpclient.execute(partialGet);
+                                getResponseData = new BufferedInputStream(response.getEntity().getContent(), 8192);
 
-                                getResponseData = new FileInputStream(getFile);
 
-
-                            } else {
-
-                                URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
-                                HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
-                                partialGet.setEntity(new StringEntity(scrollId));
-                                try {
-                                    log.info("Sending chunk GET to " + fetchUri);
-                                    CloseableHttpResponse response = httpclient.execute(partialGet);
-                                    getResponseData = new BufferedInputStream(response.getEntity().getContent(), 8192);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                    throw new DataStreamException(e);
-                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                throw new DataStreamException(e);
                             }
 
                             try {
-                                int peekSize = 400;
+                                int peekSize = 1000;
                                 getResponseData.mark(peekSize);
                                 byte[] peekBytes = new byte[peekSize];
                                 getResponseData.read(peekBytes, 0, peekSize);
                                 getResponseData.reset();
 
                                 String peekString = new String(peekBytes, 0, peekSize, "utf-8");
-                                Matcher m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
-                                if (m.find()) {
-                                    scrollId = m.group(1);
-                                    log.info("found next scrollId");
-                                } else {
-                                    scrollId = null;
-                                    log.info("next scrollId not found");
-                                }
-                                IOUtils.copy(getResponseData, outputStream);
-
-                                postFile.createNewFile();
-                                FileWriter fw = new FileWriter(getFile);
-                                IOUtils.copy(getResponseData, fw);
-                                fw.close();
+                                System.out.println(i + " " + peekString);
                                 i++;
+
+                                Matcher m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(peekString);
+                                if (m.find()) {
+                                    log.info("Empty results encountered");
+                                    scrollId = null;
+                                } else {
+                                    m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
+                                    if (m.find()) {
+                                        scrollId = m.group(1);
+                                        log.info("found next scrollId");
+                                    } else {
+                                        scrollId = null;
+                                        log.info("next scrollId not found");
+                                    }
+                                    IOUtils.copy(getResponseData, outputStream);
+                                }
+
 
                             } catch (IOException e) {
                                 e.printStackTrace();

@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.configuration;
 
+import dk.magenta.datafordeler.core.database.ConfigurationSessionManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -54,7 +55,7 @@ public abstract class ConfigurationManager<C extends Configuration> {
      * Return a session manager
      * @return
      */
-    protected abstract SessionManager getSessionManager();
+    protected abstract ConfigurationSessionManager getSessionManager();
 
     /**
      * Retrieve the configuration object from the database

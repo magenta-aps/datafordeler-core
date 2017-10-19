@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.gapi;
 
 import dk.magenta.datafordeler.core.Engine;
 import dk.magenta.datafordeler.core.io.Event;
+import dk.magenta.datafordeler.core.io.ImportMetadata;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.olingo.commons.api.data.Entity;
@@ -57,12 +58,13 @@ public class GapiProcessor implements EntityProcessor {
         try {
             this.log.info("handle createEntity");
             boolean success;
+            ImportMetadata importMetadata = new ImportMetadata();
             try {
                 ODataDeserializer deserializer = this.oData.createDeserializer(requestFormat);
                 DeserializerResult deserializerResult = deserializer.entity(request.getBody(), this.edm.getEntityType(GapiEdmProvider.ET_EVENT));
                 Entity entity = deserializerResult.getEntity();
                 Event event = GapiEdmProvider.convertEvent(entity);
-                success = this.engine.handleEvent(event);
+                success = this.engine.handleEvent(event, importMetadata);
             } catch (ODataLibraryException e) {
                 e.printStackTrace();
                 throw e;

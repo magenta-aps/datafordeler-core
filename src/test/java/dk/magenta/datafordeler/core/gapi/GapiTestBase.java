@@ -35,9 +35,6 @@ public abstract class GapiTestBase {
     @Autowired
     private SessionManager sessionManager;
 
-    @Autowired
-    private QueryManager queryManager;
-
     protected static final String INTERFACE_PATH = "/odata/gapi/Events";
 
     protected String envelopData(String schema, String data) throws IOException {
@@ -85,7 +82,7 @@ public abstract class GapiTestBase {
         Session session = this.sessionManager.getSessionFactory().openSession();
         try {
             Transaction transaction = session.beginTransaction();
-            DemoEntity entity = this.queryManager.getEntity(session, UUID.fromString(uuid), DemoEntity.class);
+            DemoEntity entity = QueryManager.getEntity(session, UUID.fromString(uuid), DemoEntity.class);
             if (entity != null) {
                 session.delete(entity);
             }

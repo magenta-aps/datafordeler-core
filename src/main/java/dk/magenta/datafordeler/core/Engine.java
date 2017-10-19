@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
+import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
@@ -32,9 +33,6 @@ public class Engine {
     PluginManager pluginManager;
 
     @Autowired
-    QueryManager queryManager;
-
-    @Autowired
     SessionManager sessionManager;
 
     @Value("${dafo.cron.enabled:true}")
@@ -56,8 +54,8 @@ public class Engine {
 
     /** Push **/
 
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event) {
-        return this.handleEvent(event, null);
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event, ImportMetadata importMetadata) {
+        return this.handleEvent(event, null, importMetadata);
     }
 
     /**
@@ -66,7 +64,7 @@ public class Engine {
      * When a registration is at hand, it is saved and a receipt is sent to the entitymanager that handles the registration
      * @param event Event to be handled
      * */
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event, Plugin plugin) {
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event, Plugin plugin, ImportMetadata importMetadata) {
         log.info("Handling event '" + event.getId() + "'");
         OffsetDateTime eventReceived = OffsetDateTime.now();
         Receipt receipt;
@@ -105,7 +103,7 @@ public class Engine {
                 try {
                     RegistrationReference reference = entityManager.parseReference(referenceURI);
                     log.info("Parsed reference: " + entityManager.getRegistrationInterface(reference));
-                    registrations = entityManager.fetchRegistration(reference);
+                    registrations = entityManager.fetchRegistration(reference, importMetadata);
                     log.info("Referenced registration fetched");
                 } catch (IOException e) {
                     throw new DataStreamException(e);
@@ -124,14 +122,22 @@ public class Engine {
                 if (entityManager == null) {
                     throw new EntityManagerNotFoundException(schema);
                 }
-                registrations = entityManager.parseRegistration(event.getData());
+                registrations = entityManager.parseRegistration(event.getData(), importMetadata);
             }
+/*
+            for (Registration registration : registrations) {
+                session = sessionManager.getSessionFactory().openSession();
+                Transaction transaction = session.beginTransaction();
+                queryManager.saveRegistration(session, registration.getEntity(), registration, true, true);
+                transaction.commit();
+                session.close();
+            }*/
 
             if (!entityManager.handlesOwnSaves()) {
                 session = sessionManager.getSessionFactory().openSession();
                 Transaction transaction = session.beginTransaction();
                 for (Registration registration : registrations) {
-                    queryManager.saveRegistration(
+                    QueryManager.saveRegistration(
                             session, (E) registration.getEntity(), (R) registration,
                             false, false
                     );
@@ -344,11 +350,12 @@ public class Engine {
         ItemInputStream<? extends EntityReference> entityReferences = registerManager.listRegisterChecksums(null, from);
         EntityReference<E, P> entityReference;
         ArrayList<R> newRegistrations = new ArrayList<R>();
+        ImportMetadata importMetadata = new ImportMetadata();
         try {
             while ((entityReference = entityReferences.next()) != null) {
                 Class<E> entityClass = entityReference.getEntityClass();
                 EntityManager entityManager = registerManager.getEntityManager(entityClass);
-                E entity = this.queryManager.getEntity(session, entityReference.getObjectId(), entityClass);
+                E entity = QueryManager.getEntity(session, entityReference.getObjectId(), entityClass);
                 HashSet<String> knownChecksums = new HashSet<>();
                 if (entity != null) {
                     for (Object oRegistration : entity.getRegistrations()) {
@@ -370,9 +377,10 @@ public class Engine {
                 }
 
                 for (P registrationReference : missingRegistrationReferences) {
-                    List<? extends Registration> registrations = entityManager.fetchRegistration(registrationReference);
+                    List<? extends Registration> registrations = entityManager.fetchRegistration(registrationReference, importMetadata);
                     for (Registration registration : registrations) {
-                        queryManager.saveRegistration(session, entity, (R) registration);
+                        registration.setLastImportTime(importMetadata.getImportTime());
+                        QueryManager.saveRegistration(session, entity, (R) registration);
                         newRegistrations.add((R) registration);
                     }
                 }

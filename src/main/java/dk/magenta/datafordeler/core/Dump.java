@@ -7,10 +7,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import dk.magenta.datafordeler.core.command.Worker;
-import dk.magenta.datafordeler.core.database.DumpInfo;
-import dk.magenta.datafordeler.core.database.Effect;
-import dk.magenta.datafordeler.core.database.Entity;
-import dk.magenta.datafordeler.core.database.Registration;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import java.io.StringWriter;
@@ -87,9 +84,8 @@ public class Dump extends Worker {
 
                     Class<? extends Entity> entityClass = entityManager
                         .getManagedEntityClass();
-                    List<? extends Entity<? extends Entity, ? extends
-                        Registration>> entities =
-                        this.engine.queryManager.getAllEntities(session,
+                    List<? extends Entity> entities =
+                        QueryManager.getAllEntities(session,
                             entityClass);
 
                     this.log.debug(

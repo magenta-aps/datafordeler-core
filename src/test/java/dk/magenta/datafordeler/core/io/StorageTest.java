@@ -41,9 +41,6 @@ public class StorageTest extends GapiTestBase {
     @Autowired
     Engine engine;
 
-    @Autowired
-    QueryManager queryManager;
-
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
@@ -78,7 +75,7 @@ public class StorageTest extends GapiTestBase {
         Session session = sessionManager.getSessionFactory().openSession();
         try {
             Transaction transaction = session.beginTransaction();
-            queryManager.saveRegistration(session, testEntity, testRegistration);
+            QueryManager.saveRegistration(session, testEntity, testRegistration);
 
             Assert.assertEquals(2, testRegistration.getEffects().size());
 
@@ -115,9 +112,9 @@ public class StorageTest extends GapiTestBase {
         Session session = sessionManager.getSessionFactory().openSession();
         try {
             Transaction transaction = session.beginTransaction();
-            queryManager.saveRegistration(session, testEntity, testRegistration1);
+            QueryManager.saveRegistration(session, testEntity, testRegistration1);
             session.flush();
-            queryManager.saveRegistration(session, testEntity, testRegistration2);
+            QueryManager.saveRegistration(session, testEntity, testRegistration2);
             transaction.commit();
         } finally {
             session.close();
@@ -147,8 +144,8 @@ public class StorageTest extends GapiTestBase {
         Session session = sessionManager.getSessionFactory().openSession();
         try {
             Transaction transaction = session.beginTransaction();
-            queryManager.saveRegistration(session, testEntity, testRegistration1);
-            queryManager.saveRegistration(session, testEntity, testRegistration2);
+            QueryManager.saveRegistration(session, testEntity, testRegistration1);
+            QueryManager.saveRegistration(session, testEntity, testRegistration2);
             transaction.commit();
         } finally {
             session.close();
@@ -178,8 +175,8 @@ public class StorageTest extends GapiTestBase {
         Session session = sessionManager.getSessionFactory().openSession();
         try {
             Transaction transaction = session.beginTransaction();
-            queryManager.saveRegistration(session, testEntity, testRegistration1);
-            queryManager.saveRegistration(session, testEntity, testRegistration2);
+            QueryManager.saveRegistration(session, testEntity, testRegistration1);
+            QueryManager.saveRegistration(session, testEntity, testRegistration2);
             transaction.commit();
         } finally {
             session.close();
