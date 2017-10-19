@@ -4,6 +4,7 @@
     "registreringFra" : "2001-01-01T01:00:00+01:00",
     "registreringTil" : null,
     "checksum" : null,
+    "sidstImporteret" : null,
     "virkninger" : [ {
       "virkningFra" : "2001-01-01T01:00:00+01:00",
       "virkningTil" : null,
@@ -20,6 +21,7 @@
     "registreringFra" : "2001-01-01T01:00:00+01:00",
     "registreringTil" : null,
     "checksum" : null,
+    "sidstImporteret" : null,
     "virkninger" : [ {
       "virkningFra" : "2001-01-01T01:00:00+01:00",
       "virkningTil" : null,
