@@ -11,6 +11,7 @@ import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
 import org.hibernate.Filter;
+import java.util.List;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,6 @@ import javax.xml.ws.handler.MessageContext;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -304,7 +304,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             envelope.addQueryData(query);
             envelope.addUserData(user);
             envelope.addRequestData(request);
-            Set<E> results = this.searchByQuery(query, session);
+            List<E> results = this.searchByQuery(query, session);
             if (outputWrapper != null) {
                 envelope.setResults(outputWrapper.wrapResults(results));
             } else {
@@ -350,7 +350,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             envelope.addQueryData(query);
             envelope.addUserData(user);
             envelope.addRequestData(request);
-            Set<E> results = this.searchByQuery(query, session);
+            List<E> results = this.searchByQuery(query, session);
             if (outputWrapper != null) {
                 envelope.setResult(outputWrapper.wrapResults(results));
             } else {
@@ -401,10 +401,10 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     //@WebMethod(exclude = true)
     //protected abstract Set<E> searchByQuery(Q query);
     @WebMethod(exclude = true) // Non-soap methods must have this
-    protected Set<E> searchByQuery(Q query, Session session) throws DataFordelerException {
+    protected List<E> searchByQuery(Q query, Session session) throws DataFordelerException {
         query.applyFilters(session);
-        Set<E> entities = new HashSet<>(QueryManager.getAllEntities(session, query, this.getEntityClass()));
-        return entities;
+        return QueryManager.getAllEntities(session, query,
+            this.getEntityClass());
     }
 
     /**
