@@ -1,36 +1,50 @@
 {
-  "00000000-0000-0000-0000-000000003900" : {
-    "sekvensnummer" : 0,
-    "registreringFra" : "2001-01-01T01:00:00+01:00",
-    "registreringTil" : null,
-    "checksum" : null,
-    "sidstImporteret" : null,
-    "virkninger" : [ {
-      "virkningFra" : "2001-01-01T01:00:00+01:00",
-      "virkningTil" : null,
-      "data" : {
-        "aktiv" : true,
-        "bynavn" : "Nuuk",
-        "postnr" : 3900,
-        "reference" : null
-      }
-    } ]
-  },
-  "00000000-0000-0000-0000-000000003992" : {
-    "sekvensnummer" : 0,
-    "registreringFra" : "2001-01-01T01:00:00+01:00",
-    "registreringTil" : null,
-    "checksum" : null,
-    "sidstImporteret" : null,
-    "virkninger" : [ {
-      "virkningFra" : "2001-01-01T01:00:00+01:00",
-      "virkningTil" : null,
-      "data" : {
-        "aktiv" : true,
-        "bynavn" : "Siriuspatruljen",
-        "postnr" : 3992,
-        "reference" : null
-      }
-    } ]
-  }
+  "path" : "",
+  "terms" : "https://doc.test.data.gl/terms",
+  "requestTimestamp" : null,
+  "responseTimestamp" : null,
+  "username" : "[DUMP]@[INTERNAL]",
+  "page" : 1,
+  "pageSize" : 10,
+  "results" : [ {
+    "registreringer" : [ {
+      "sekvensnummer" : 0,
+      "registreringFra" : "2001-01-01T01:00:00+01:00",
+      "registreringTil" : null,
+      "checksum" : null,
+      "sidstImporteret" : null,
+      "virkninger" : [ {
+        "virkningFra" : "2001-01-01T01:00:00+01:00",
+        "virkningTil" : null,
+        "data" : {
+          "aktiv" : true,
+          "bynavn" : "Nuuk",
+          "postnr" : 3900,
+          "reference" : null
+        }
+      } ]
+    } ],
+    "UUID" : "00000000-0000-0000-0000-000000003900",
+    "domaene" : "http://example.com"
+  }, {
+    "registreringer" : [ {
+      "sekvensnummer" : 0,
+      "registreringFra" : "2001-01-01T01:00:00+01:00",
+      "registreringTil" : null,
+      "checksum" : null,
+      "sidstImporteret" : null,
+      "virkninger" : [ {
+        "virkningFra" : "2001-01-01T01:00:00+01:00",
+        "virkningTil" : null,
+        "data" : {
+          "aktiv" : true,
+          "bynavn" : "Siriuspatruljen",
+          "postnr" : 3992,
+          "reference" : null
+        }
+      } ]
+    } ],
+    "UUID" : "00000000-0000-0000-0000-000000003992",
+    "domaene" : "http://example.com"
+  } ]
 }

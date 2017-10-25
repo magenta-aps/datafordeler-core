@@ -18,8 +18,15 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerExecutionChain;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,6 +46,12 @@ public class Engine {
     private boolean cronEnabled;
 
     Logger log = LogManager.getLogger(Engine.class);
+
+    @Autowired(required = false)
+    private RequestMappingHandlerMapping handlerMapping;
+
+    @Autowired(required = false)
+    private RequestMappingHandlerAdapter handlerAdapter;
 
     /**
      * Run bean initialization
@@ -391,5 +404,27 @@ public class Engine {
             this.log.error("Synchronization with plugin "+plugin.getClass().getCanonicalName()+" failed", e);
         }
         return newRegistrations;
+    }
+
+    public void handleRequest(HttpServletRequest request,
+        HttpServletResponse response) throws Exception {
+
+        HandlerExecutionChain chain =
+            handlerMapping.getHandler(request);
+
+        log.info("HANDLER for {} is {}", request.getRequestURI(), chain);
+        for (HandlerInterceptor interceptor : chain.getInterceptors()) {
+            log.info("INTERCEPTOR is {}", interceptor);
+        }
+
+        if (chain == null || chain.getHandler() == null) {
+            throw new HttpNotFoundException("No handler found for " +
+                request.getRequestURI());
+        }
+
+        // we merely propagate any exception thrown here
+        HandlerMethod method = (HandlerMethod) chain.getHandler();
+
+        handlerAdapter.handle(request, response, method);
     }
 }

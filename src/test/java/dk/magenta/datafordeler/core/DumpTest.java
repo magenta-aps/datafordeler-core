@@ -23,20 +23,19 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.KeyMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.transaction.Transactional;
@@ -52,6 +51,13 @@ import java.util.stream.Collectors;
  */
 @RunWith(OrderedRunner.class)
 @ContextConfiguration(classes = Application.class)
+@PropertySource("classpath:application-test.properties")
+@TestPropertySource(
+    properties = {
+        "spring.jackson.serialization.indent-output=true",
+        "dafo.testing=true",
+    }
+)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DumpTest extends GapiTestBase {
 
@@ -65,9 +71,6 @@ public class DumpTest extends GapiTestBase {
 
     @Autowired
     private SessionManager sessionManager;
-
-    @Autowired
-    private TestRestTemplate restTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -129,6 +132,7 @@ public class DumpTest extends GapiTestBase {
         }
         transaction.commit();
         session.close();
+
         setUp();
     }
 
@@ -243,20 +247,38 @@ public class DumpTest extends GapiTestBase {
             QueryManager.getAllItems(session, DumpInfo.class);
 
         Assert.assertEquals("After one run",
-            1 * Dump.FORMATS.length, dumps.size());
+            1 * Dump.Format.values().length, dumps.size());
 
         List<DumpData> dumpDatas =
             QueryManager.getAllItems(session, DumpData.class);
 
         Assert.assertEquals("After one run",
-            1 * Dump.FORMATS.length, dumps.size());
+            1 * Dump.Format.values().length, dumps.size());
 
         Assert.assertArrayEquals("Dump contents",
             new String[]{
-                "<?xml version='1.0' encoding='UTF-8'?><Registrations/>",
-                "{ }",
-                null,
-                null,
+                "<Envelope>\n"
+                    + "  <path></path>\n"
+                    + "  <terms>https://doc.test.data.gl/terms</terms>\n"
+                    + "  <requestTimestamp/>\n"
+                    + "  <responseTimestamp/>\n"
+                    + "  <username>[DUMP]@[INTERNAL]</username>\n"
+                    + "  <page>1</page>\n"
+                    + "  <pageSize>10</pageSize>\n"
+                    + "  <results/>\n"
+                    + "</Envelope>\n",
+                "{\n"
+                    + "  \"path\" : \"\",\n"
+                    + "  \"terms\" : \"https://doc.test.data.gl/terms\",\n"
+                    + "  \"requestTimestamp\" : null,\n"
+                    + "  \"responseTimestamp\" : null,\n"
+                    + "  \"username\" : \"[DUMP]@[INTERNAL]\",\n"
+                    + "  \"page\" : 1,\n"
+                    + "  \"pageSize\" : 10,\n"
+                    + "  \"results\" : [ ]\n"
+                    + "}",
+                "",
+                "",
             },
             dumps.stream().map(d -> d.getData()).toArray());
 
@@ -270,12 +292,12 @@ public class DumpTest extends GapiTestBase {
         dumps = QueryManager.getAllItems(session, DumpInfo.class);
 
         Assert.assertEquals("After two runs",
-            1 * Dump.FORMATS.length, dumps.size());
+            1 * Dump.Format.values().length, dumps.size());
 
         dumpDatas = QueryManager.getAllItems(session, DumpData.class);
 
         Assert.assertEquals("After two runs",
-            1 * Dump.FORMATS.length, dumps.size());
+            1 * Dump.Format.values().length, dumps.size());
 
         session.close();
     }
@@ -304,13 +326,13 @@ public class DumpTest extends GapiTestBase {
             QueryManager.getAllItems(session, DumpInfo.class);
 
         Assert.assertEquals("After one run",
-            1 * Dump.FORMATS.length, dumps.size());
+            1 * Dump.Format.values().length, dumps.size());
 
         Assert.assertArrayEquals("Dump contents",
-            Arrays.stream(Dump.FORMATS).map(
+            Arrays.stream(Dump.Format.values()).map(
                 s -> {
                     try {
-                        return getPayload("/dump." + s);
+                        return getPayload("/dump." + s.name());
                     } catch (IOException e) {
                         e.printStackTrace();
                         return null;
@@ -341,7 +363,7 @@ public class DumpTest extends GapiTestBase {
         session.close();
 
         Assert.assertEquals("After one run",
-            1 * Dump.FORMATS.length, dumps.size());
+            1 * Dump.Format.values().length, dumps.size());
 
         for (DumpInfo dump : dumps) {
             try {

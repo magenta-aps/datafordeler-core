@@ -2,8 +2,6 @@ package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.fapi.FapiService;
@@ -60,19 +58,7 @@ public abstract class EntityManager {
      * Plugins must return an autowired ObjectMapper instance from this method
      * @return
      */
-    public abstract ObjectMapper getObjectMapper();
-
-    /**
-     * Plugins must return an autowired XmlMapper instance from this method
-     * @return
-     */
-    public abstract XmlMapper getXmlMapper();
-
-    /**
-     * Plugins must return an autowired CsvMapper instance from this method
-     * @return
-     */
-    public abstract CsvMapper getCsvMapper();
+    protected abstract ObjectMapper getObjectMapper();
 
     /**
      * Plugins must return a Fetcher instance from this method
