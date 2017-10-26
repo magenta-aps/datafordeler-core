@@ -33,9 +33,6 @@ public class Engine {
     PluginManager pluginManager;
 
     @Autowired
-    QueryManager queryManager;
-
-    @Autowired
     SessionManager sessionManager;
 
     @Value("${dafo.cron.enabled:true}")
@@ -164,7 +161,7 @@ public class Engine {
                 session = sessionManager.getSessionFactory().openSession();
                 Transaction transaction = session.beginTransaction();
                 for (Registration registration : registrations) {
-                    queryManager.saveRegistration(
+                    QueryManager.saveRegistration(
                             session, (E) registration.getEntity(), (R) registration,
                             false, false
                     );
@@ -301,7 +298,7 @@ public class Engine {
             while ((entityReference = entityReferences.next()) != null) {
                 Class<E> entityClass = entityReference.getEntityClass();
                 EntityManager entityManager = registerManager.getEntityManager(entityClass);
-                E entity = this.queryManager.getEntity(session, entityReference.getObjectId(), entityClass);
+                E entity = QueryManager.getEntity(session, entityReference.getObjectId(), entityClass);
                 HashSet<String> knownChecksums = new HashSet<>();
                 if (entity != null) {
                     for (Object oRegistration : entity.getRegistrations()) {
@@ -326,7 +323,7 @@ public class Engine {
                     List<? extends Registration> registrations = entityManager.fetchRegistration(registrationReference, importMetadata);
                     for (Registration registration : registrations) {
                         registration.setLastImportTime(importMetadata.getImportTime());
-                        queryManager.saveRegistration(session, entity, (R) registration);
+                        QueryManager.saveRegistration(session, entity, (R) registration);
                         newRegistrations.add((R) registration);
                     }
                 }

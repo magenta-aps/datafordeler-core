@@ -150,6 +150,18 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return null;
     }
 
+    public List<V> getEffectsAt(OffsetDateTime time) {
+        List<V> effects = new ArrayList<>();
+        for (V effect : this.effects) {
+            OffsetDateTime from = effect.getEffectFrom();
+            OffsetDateTime to = effect.getEffectTo();
+            if ((from == null || from.isBefore(time) || from.isEqual(time)) && (to == null || to.isAfter(time) || to.isEqual(time))) {
+                effects.add(effect);
+            }
+        }
+        return effects;
+    }
+
     public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
         return this.getEffect(
                 effectFrom != null ? OffsetDateTime.of(effectFrom, ZoneOffset.UTC) : null,
@@ -342,10 +354,15 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         if (this.registrationFrom == null && oDateTime == null) return 0;
         if (oDateTime == null) return 1;
         if (this.registrationFrom == null) return -1;
-        return this.registrationFrom.compareTo(oDateTime);
+        return this.registrationFrom.toInstant().compareTo(oDateTime.toInstant());
     }
 
-
+    public boolean equals(Registration o) {
+        return o != null &&
+            compareTo(o) == 0 &&
+            getSequenceNumber() == o.getSequenceNumber() &&
+            getRegisterChecksum().equalsIgnoreCase(o.getRegisterChecksum());
+    }
 
     public R split(OffsetDateTime splitTime) {
         //Registration newReg = this.entity.createRegistration();

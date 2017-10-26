@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.database.EntityReference;
+import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.io.Event;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
@@ -14,6 +15,7 @@ import dk.magenta.datafordeler.plugindemo.configuration.DemoConfigurationManager
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -44,6 +46,9 @@ public class DemoRegisterManager extends RegisterManager {
     @Autowired
     private DemoPlugin plugin;
 
+    @Autowired
+    private SessionManager sessionManager;
+
     private HttpCommunicator commonFetcher;
 
     protected Logger log = LogManager.getLogger(DemoRegisterManager.class);
@@ -63,6 +68,11 @@ public class DemoRegisterManager extends RegisterManager {
     @Override
     public Plugin getPlugin() {
         return this.plugin;
+    }
+
+    @Override
+    public SessionManager getSessionManager() {
+        return this.sessionManager;
     }
 
     public void setPort(int port) {
@@ -115,6 +125,15 @@ public class DemoRegisterManager extends RegisterManager {
     }
 
     @Override
+    public boolean pullsEventsCommonly() {
+        return true;
+    }
+
+    public ItemInputStream<? extends PluginSourceData> pullEvents() throws DataFordelerException {
+        return this.pullEvents(this.getEventInterface(null), null);
+    }
+
+    @Override
     protected ItemInputStream<? extends PluginSourceData> parseEventResponse(InputStream responseContent, EntityManager entityManager) throws DataFordelerException {
         return ItemInputStream.parseJsonStream(responseContent, Event.class, "events", this.getObjectMapper());
     }
@@ -149,6 +168,19 @@ public class DemoRegisterManager extends RegisterManager {
             classMap.put(entityManager.getSchema(), entityManager.getManagedEntityReferenceClass());
         }
         return ItemInputStream.parseJsonStream(responseContent, classMap, "items", "type", this.objectMapper);
+    }
+
+    @Override
+    public void setLastUpdated(EntityManager entityManager, OffsetDateTime timestamp) {
+        Session session = this.getSessionManager().getSessionFactory().openSession();
+        if (entityManager == null) {
+            for (EntityManager e : this.entityManagers) {
+                e.setLastUpdated(session, timestamp);
+            }
+        } else {
+            entityManager.setLastUpdated(session, timestamp);
+        }
+        session.close();
     }
 
 

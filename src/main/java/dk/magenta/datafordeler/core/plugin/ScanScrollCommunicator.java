@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.HttpGetWithEntity;
+import dk.magenta.datafordeler.core.util.InputStreamReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -70,6 +71,8 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
     }
 
+    private Pattern emptyResultsPattern = Pattern.compile("\"hits\":\\s*\\[\\s*\\]");
+
     /**
      * Fetch data from the external source; sends a POST to the initialUri, 
      * with the body, and waits for a response.
@@ -110,11 +113,12 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         log.info("Initial POST sent");
                         log.info("HTTP status: " + response.getStatusLine().getStatusCode());
                         if (response.getStatusLine().getStatusCode() != 200) {
-                            log.info(response.getEntity().getContent());
+                            log.info(InputStreamReader.readInputStream(response.getEntity().getContent()));
                         }
 
                         responseNode = objectMapper.readTree(response.getEntity().getContent());
 
+                        int i = 0;
                         String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
                         while (scrollId != null) {
 
@@ -135,22 +139,32 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             }
 
                             try {
-                                int peekSize = 400;
+                                int peekSize = 1000;
                                 getResponseData.mark(peekSize);
                                 byte[] peekBytes = new byte[peekSize];
                                 getResponseData.read(peekBytes, 0, peekSize);
                                 getResponseData.reset();
 
                                 String peekString = new String(peekBytes, 0, peekSize, "utf-8");
-                                Matcher m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
+                                System.out.println(i + " " + peekString);
+                                i++;
+
+                                Matcher m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(peekString);
                                 if (m.find()) {
-                                    scrollId = m.group(1);
-                                    log.info("found next scrollId");
-                                } else {
+                                    log.info("Empty results encountered");
                                     scrollId = null;
-                                    log.info("next scrollId not found");
+                                } else {
+                                    m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
+                                    if (m.find()) {
+                                        scrollId = m.group(1);
+                                        log.info("found next scrollId");
+                                    } else {
+                                        scrollId = null;
+                                        log.info("next scrollId not found");
+                                    }
+                                    IOUtils.copy(getResponseData, outputStream);
                                 }
-                                IOUtils.copy(getResponseData, outputStream);
+
 
                             } catch (IOException e) {
                                 e.printStackTrace();

@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.plugindemo.fapi.helloworld.v1;
 
 import dk.magenta.datafordeler.core.database.DataItem;
+import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
@@ -81,12 +82,10 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
     @WebMethod(exclude = true) // Non-soap methods must have this
     protected Set<DemoEntity> searchByQuery(DemoQuery query) throws AccessDeniedException {
         Session session = this.getSessionManager().getSessionFactory().openSession();
-        this.applyQuery(session, query);
+        query.applyFilters(session);
         Set<DemoEntity> entities = null;
         try {
-            entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, DemoEntity.class));
-        } catch (DataFordelerException e) {
-            e.printStackTrace();
+            entities = new HashSet<>(QueryManager.getAllEntities(session, query, DemoEntity.class));
         } finally {
             session.close();
         }

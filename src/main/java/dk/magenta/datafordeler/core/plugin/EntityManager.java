@@ -2,10 +2,7 @@ package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.database.Entity;
-import dk.magenta.datafordeler.core.database.EntityReference;
-import dk.magenta.datafordeler.core.database.Registration;
-import dk.magenta.datafordeler.core.database.RegistrationReference;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
@@ -13,6 +10,7 @@ import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.http.StatusLine;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Session;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -332,4 +330,33 @@ public abstract class EntityManager {
     }
 
     protected abstract Logger getLog();
+
+
+
+    private LastUpdated getLastUpdatedObject(Session session) {
+        HashMap<String, Object> filter = new HashMap<>();
+        filter.put(LastUpdated.DB_FIELD_PLUGIN, this.registerManager.getPlugin().getName());
+        filter.put(LastUpdated.DB_FIELD_SCHEMA_NAME, this.getSchema());
+        return QueryManager.getItem(session, LastUpdated.class, filter);
+    }
+
+    public OffsetDateTime getLastUpdated(Session session) {
+        LastUpdated lastUpdated = this.getLastUpdatedObject(session);
+        if (lastUpdated != null) {
+            return lastUpdated.getTimestamp();
+        }
+        return null;
+    }
+
+
+    public void setLastUpdated(Session session, OffsetDateTime time) {
+        LastUpdated lastUpdated = this.getLastUpdatedObject(session);
+        if (lastUpdated == null) {
+            lastUpdated = new LastUpdated();
+            lastUpdated.setPlugin(this.registerManager.getPlugin().getName());
+            lastUpdated.setSchemaName(this.getSchema());
+        }
+        lastUpdated.setTimestamp(time);
+        session.saveOrUpdate(lastUpdated);
+    }
 }
