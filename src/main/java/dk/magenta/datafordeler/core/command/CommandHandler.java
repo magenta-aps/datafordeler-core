@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.command;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
@@ -51,7 +52,7 @@ public abstract class CommandHandler {
      * @param command
      * @return
      */
-    public abstract String getCommandStatus(Command command);
+    public abstract ObjectNode getCommandStatus(Command command);
 
 
     /**

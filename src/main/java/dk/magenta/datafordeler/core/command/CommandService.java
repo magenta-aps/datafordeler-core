@@ -1,6 +1,8 @@
 package dk.magenta.datafordeler.core.command;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.*;
@@ -58,7 +60,7 @@ public class CommandService {
     private DafoUserManager dafoUserManager;
 
     // For debugging purposes - make sure this is set to false when running in production
-    private static boolean DEBUG_DISABLE_SECURITY = false;
+    private static boolean DEBUG_DISABLE_SECURITY = true;
 
     public static boolean getDebugDisableSecurity() {
         return DEBUG_DISABLE_SECURITY;
@@ -165,6 +167,12 @@ public class CommandService {
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info("GET request received on address " + request.getServletPath());
+
+
+        if (commandId == null) {
+            System.out.println("null received");
+        }
+
         if (commandId >= 0) {
             loggerHelper.info("Request for status on job id "+commandId);
             Command command = this.getCommand(commandId);
@@ -177,7 +185,7 @@ public class CommandService {
                 throw new InvalidClientInputException("No handler found for command");
             } else {
                 this.checkRole(command, handler, SystemRoleType.ReadCommandRole, loggerHelper);
-                String output = handler.getCommandStatus(command);
+                String output = objectMapper.writeValueAsString(handler.getCommandStatus(command));
                 loggerHelper.info("Status on job id "+commandId+" is "+output);
                 response.getWriter().write(output);
             }
@@ -185,6 +193,31 @@ public class CommandService {
             loggerHelper.info("Request for status on job id "+commandId+", but no such job exists");
             throw new HttpNotFoundException("Job id "+commandId+" not found");
         }
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path="")
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, HttpNotFoundException, InvalidClientInputException, InvalidTokenException, AccessRequiredException, AccessDeniedException, DataStreamException {
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+        LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
+        loggerHelper.info("GET request received on address " + request.getServletPath());
+
+        loggerHelper.info("Request for status on all jobs");
+        List<Command> commands = this.getCommandSummary();
+        ArrayNode list = objectMapper.createArrayNode();
+        for (Command command : commands) {
+            CommandHandler handler = commandWatcher.getHandler(command.getCommandName());
+            if (handler == null) {
+                loggerHelper.info("No handler found for command " + command.getCommandName() + " (job id " + command.getId() + ")");
+                throw new InvalidClientInputException("No handler found for command");
+            } else {
+                this.checkRole(command, handler, SystemRoleType.ReadCommandRole, loggerHelper);
+                ObjectNode output = handler.getCommandStatus(command);
+                list.add(output);
+                loggerHelper.info("Status on job id " + command.getId() + " is " + output);
+            }
+        }
+        response.getWriter().write(objectMapper.writeValueAsString(list));
     }
 
 
@@ -297,6 +330,18 @@ public class CommandService {
         }
         session.close();
         return command;
+    }
+
+    private List<Command> getCommandSummary() {
+        Session session = sessionManager.getSessionFactory().openSession();
+        List<Command> commands = null;
+        try {
+            Query query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c order by c.handled desc", Command.class);
+            commands = query.getResultList();
+        } catch (NoResultException e) {
+        }
+        session.close();
+        return commands;
     }
 
     /**

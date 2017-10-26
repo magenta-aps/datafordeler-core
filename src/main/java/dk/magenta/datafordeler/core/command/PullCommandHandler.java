@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.command;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.Engine;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.Pull;
@@ -115,12 +116,7 @@ public class PullCommandHandler extends CommandHandler {
         return plugin;
     }
 
-    public String getCommandStatus(Command command) {
-        try {
-            return this.objectMapper.writeValueAsString(command);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public ObjectNode getCommandStatus(Command command) {
+        return objectMapper.valueToTree(command);
     }
 }

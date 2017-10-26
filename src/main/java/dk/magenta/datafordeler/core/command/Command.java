@@ -54,7 +54,6 @@ public final class Command extends DatabaseEntry {
     private String commandName;
 
     @Column(nullable = true)
-    @JsonIgnore
     private String commandBody;
 
     public Command() {}
