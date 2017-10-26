@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.command;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,6 +16,7 @@ import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +26,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.persistence.NoResultException;
-import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by lars on 29-05-17.
@@ -195,15 +196,27 @@ public class CommandService {
         }
     }
 
-    @RequestMapping(method = RequestMethod.GET, path="")
-    public void doGet(HttpServletRequest request, HttpServletResponse response)
+    @RequestMapping(method = RequestMethod.GET, path="pull/summary/{plugin}/{state}")
+    public void doGetSummary(HttpServletRequest request, HttpServletResponse response, @PathVariable("plugin") String pluginName, @PathVariable("state") String state)
             throws IOException, HttpNotFoundException, InvalidClientInputException, InvalidTokenException, AccessRequiredException, AccessDeniedException, DataStreamException {
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info("GET request received on address " + request.getServletPath());
 
-        loggerHelper.info("Request for status on all jobs");
-        List<Command> commands = this.getCommandSummary();
+        pluginName = pluginName.toLowerCase();
+        if (!pluginName.equals("all")) {
+            Plugin plugin = pluginManager.getPluginByName(pluginName);
+            if (plugin == null) {
+                throw new InvalidClientInputException("Plugin "+pluginName+" not found");
+            }
+        }
+        state = state.toLowerCase();
+        List<String> validStates = Arrays.asList(new String[] {"latest", "running"});
+        if (!validStates.contains(state)) {
+            throw new InvalidClientInputException("Invalid state '"+state+"', valid choices are: "+validStates.toString());
+        }
+
+        List<Command> commands = this.getPullCommandSummary(pluginName, state);
         ArrayNode list = objectMapper.createArrayNode();
         for (Command command : commands) {
             CommandHandler handler = commandWatcher.getHandler(command.getCommandName());
@@ -323,22 +336,76 @@ public class CommandService {
         Session session = sessionManager.getSessionFactory().openSession();
         Command command = null;
         try {
-            Query query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.id = :id");
+            Query<Command> query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.id = :id", Command.class);
             query.setParameter("id", commandId);
-            command = (Command) query.getSingleResult();
+            command = query.getSingleResult();
         } catch (NoResultException e) {
         }
         session.close();
         return command;
     }
 
-    private List<Command> getCommandSummary() {
+    private List<Command> getPullCommandSummary(String plugin, String state) {
         Session session = sessionManager.getSessionFactory().openSession();
-        List<Command> commands = null;
-        try {
-            Query query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c order by c.handled desc", Command.class);
-            commands = query.getResultList();
-        } catch (NoResultException e) {
+        List<Command> commands = new ArrayList<>();
+        String entityKey = "c";
+        String whereJoin = " and ";
+
+        StringJoiner where = new StringJoiner(whereJoin);
+        HashMap<String, Object> parameters = new HashMap<>();
+
+        where.add(entityKey + ".commandName = :commandName");
+        parameters.put("commandName", "pull");
+
+        if (state.equals("running")) {
+            where.add(entityKey+".status = :status");
+            parameters.put("status", Command.Status.PROCESSING);
+        }
+
+        List<String> plugins;
+        if (plugin.equals("all")) {
+            plugins = new ArrayList<>();
+            for (Plugin p : pluginManager.getPlugins()) {
+                plugins.add(p.getName());
+            }
+        } else {
+            plugins = Collections.singletonList(plugin);
+        }
+
+
+        for (String p : plugins) {
+            StringJoiner thisWhere = new StringJoiner(whereJoin);
+            thisWhere.merge(where);
+            HashMap<String, Object> thisParameters = new HashMap<>(parameters);
+
+            thisWhere.add(entityKey + ".commandBody LIKE :pluginName");
+            thisParameters.put("pluginName", "%\"plugin\"!:\""+p+"\"%");
+
+            try {
+                Query<Command> query = session.createQuery(
+                        "select c from dk.magenta.datafordeler.core.command.Command " + entityKey + " " +
+                                "where " + thisWhere.toString() + " " +
+                                "escape '!' " +
+                                "order by " + entityKey + ".handled desc ",
+                        Command.class
+                );
+                System.out.println(query.getQueryString());
+                for (String parameterName : thisParameters.keySet()) {
+                    System.out.println(parameterName+" = "+thisParameters.get(parameterName));
+                    query.setParameter(parameterName, thisParameters.get(parameterName));
+                }
+
+
+                Command c = query.getSingleResult();
+                System.out.println(c);
+                try {
+                    System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(c));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                commands.add(c);
+            } catch (NoResultException e) {
+            }
         }
         session.close();
         return commands;
