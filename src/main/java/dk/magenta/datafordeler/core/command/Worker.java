@@ -11,7 +11,7 @@ public abstract class Worker extends Thread implements Runnable {
 
     public static class WorkerCallback {
         public void onComplete(boolean cancelled){}
-        public void onError(DataFordelerException e) {}
+        public void onError(Throwable e) {}
     }
 
     protected boolean doCancel = false;
@@ -33,7 +33,7 @@ public abstract class Worker extends Thread implements Runnable {
         }
     }
 
-    protected void onError(DataFordelerException e) {
+    protected void onError(Throwable e) {
         if (this.callback != null) {
             try {
                 this.callback.onError(e);

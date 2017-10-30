@@ -78,10 +78,10 @@ public class LoadPluginTest {
     @Test
     @Order(order=4)
     public void findDemoPluginTest2() throws URISyntaxException {
+
         Plugin foundPlugin = this.pluginManager.getPluginForURI(new URI("http://localhost:" + Application.servicePort));
         Assert.assertNotNull(foundPlugin);
         Assert.assertEquals(DemoPlugin.class, foundPlugin.getClass());
-
 
         foundPlugin = this.pluginManager.getPluginForURI(new URI("http://example.com"));
         Assert.assertNull(foundPlugin);

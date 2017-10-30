@@ -119,9 +119,13 @@ public class CommandWatcher {
                         }
 
                         @Override
-                        public void onError(DataFordelerException e) {
+                        public void onError(Throwable e) {
                             super.onError(e);
                             command.setStatus(Command.Status.FAILED);
+                            while (e.getCause() != null) {
+                                e = e.getCause();
+                            }
+                            command.setErrorMessage(e.getMessage());
                             CommandWatcher.this.commandComplete(command);
                         }
                     });

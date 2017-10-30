@@ -54,10 +54,6 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     })
     protected List<R> registrations;
 
-    @Transient
-    @JsonIgnore
-    private Query filter = null;
-
     public Entity() {
         this.registrations = new ArrayList<R>();
         this.identification = new Identification();
@@ -128,6 +124,17 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     public R getRegistration(OffsetDateTime registrationFrom) {
         for (R registration : this.registrations) {
             if (registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) {
+                return registration;
+            }
+        }
+        return null;
+    }
+
+    public R getRegistrationAt(OffsetDateTime time) {
+        for (R registration : this.registrations) {
+            OffsetDateTime from = registration.getRegistrationFrom();
+            OffsetDateTime to = registration.getRegistrationTo();
+            if ((from == null || from.isBefore(time) || from.isEqual(time)) && (to == null || to.isAfter(time) || to.isEqual(time))) {
                 return registration;
             }
         }

@@ -1,6 +1,9 @@
 package dk.magenta.datafordeler.core.command;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.*;
@@ -13,6 +16,7 @@ import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +26,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.persistence.NoResultException;
-import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by lars on 29-05-17.
@@ -58,7 +61,7 @@ public class CommandService {
     private DafoUserManager dafoUserManager;
 
     // For debugging purposes - make sure this is set to false when running in production
-    private static boolean DEBUG_DISABLE_SECURITY = false;
+    private static boolean DEBUG_DISABLE_SECURITY = true;
 
     public static boolean getDebugDisableSecurity() {
         return DEBUG_DISABLE_SECURITY;
@@ -165,6 +168,12 @@ public class CommandService {
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info("GET request received on address " + request.getServletPath());
+
+
+        if (commandId == null) {
+            System.out.println("null received");
+        }
+
         if (commandId >= 0) {
             loggerHelper.info("Request for status on job id "+commandId);
             Command command = this.getCommand(commandId);
@@ -177,7 +186,7 @@ public class CommandService {
                 throw new InvalidClientInputException("No handler found for command");
             } else {
                 this.checkRole(command, handler, SystemRoleType.ReadCommandRole, loggerHelper);
-                String output = handler.getCommandStatus(command);
+                String output = objectMapper.writeValueAsString(handler.getCommandStatus(command));
                 loggerHelper.info("Status on job id "+commandId+" is "+output);
                 response.getWriter().write(output);
             }
@@ -185,6 +194,43 @@ public class CommandService {
             loggerHelper.info("Request for status on job id "+commandId+", but no such job exists");
             throw new HttpNotFoundException("Job id "+commandId+" not found");
         }
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path="pull/summary/{plugin}/{state}")
+    public void doGetSummary(HttpServletRequest request, HttpServletResponse response, @PathVariable("plugin") String pluginName, @PathVariable("state") String state)
+            throws IOException, HttpNotFoundException, InvalidClientInputException, InvalidTokenException, AccessRequiredException, AccessDeniedException, DataStreamException {
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+        LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
+        loggerHelper.info("GET request received on address " + request.getServletPath());
+
+        pluginName = pluginName.toLowerCase();
+        if (!pluginName.equals("all")) {
+            Plugin plugin = pluginManager.getPluginByName(pluginName);
+            if (plugin == null) {
+                throw new InvalidClientInputException("Plugin "+pluginName+" not found");
+            }
+        }
+        state = state.toLowerCase();
+        List<String> validStates = Arrays.asList(new String[] {"latest", "running"});
+        if (!validStates.contains(state)) {
+            throw new InvalidClientInputException("Invalid state '"+state+"', valid choices are: "+validStates.toString());
+        }
+
+        List<Command> commands = this.getPullCommandSummary(pluginName, state);
+        ArrayNode list = objectMapper.createArrayNode();
+        for (Command command : commands) {
+            CommandHandler handler = commandWatcher.getHandler(command.getCommandName());
+            if (handler == null) {
+                loggerHelper.info("No handler found for command " + command.getCommandName() + " (job id " + command.getId() + ")");
+                throw new InvalidClientInputException("No handler found for command");
+            } else {
+                this.checkRole(command, handler, SystemRoleType.ReadCommandRole, loggerHelper);
+                ObjectNode output = handler.getCommandStatus(command);
+                list.add(output);
+                loggerHelper.info("Status on job id " + command.getId() + " is " + output);
+            }
+        }
+        response.getWriter().write(objectMapper.writeValueAsString(list));
     }
 
 
@@ -290,13 +336,76 @@ public class CommandService {
         Session session = sessionManager.getSessionFactory().openSession();
         Command command = null;
         try {
-            Query query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.id = :id");
+            Query<Command> query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.id = :id", Command.class);
             query.setParameter("id", commandId);
-            command = (Command) query.getSingleResult();
+            command = query.getSingleResult();
         } catch (NoResultException e) {
         }
         session.close();
         return command;
+    }
+
+    private List<Command> getPullCommandSummary(String plugin, String state) {
+        Session session = sessionManager.getSessionFactory().openSession();
+        List<Command> commands = new ArrayList<>();
+        String entityKey = "c";
+        String whereJoin = " and ";
+
+        StringJoiner where = new StringJoiner(whereJoin);
+        HashMap<String, Object> parameters = new HashMap<>();
+
+        where.add(entityKey + ".commandName = :commandName");
+        parameters.put("commandName", "pull");
+
+        if (state.equals("running")) {
+            where.add("(" + entityKey + ".status = :queued OR " + entityKey + ".status = :processing)");
+            parameters.put("queued", Command.Status.QUEUED);
+            parameters.put("processing", Command.Status.PROCESSING);
+        }
+
+        List<String> plugins;
+        if (plugin.equals("all")) {
+            plugins = new ArrayList<>();
+            for (Plugin p : pluginManager.getPlugins()) {
+                plugins.add(p.getName());
+            }
+        } else {
+            plugins = Collections.singletonList(plugin);
+        }
+
+
+        for (String p : plugins) {
+            StringJoiner thisWhere = new StringJoiner(whereJoin);
+            thisWhere.merge(where);
+            HashMap<String, Object> thisParameters = new HashMap<>(parameters);
+
+            thisWhere.add(entityKey + ".commandBody LIKE :pluginName");
+            thisParameters.put("pluginName", "%\"plugin\"!:\""+p+"\"%");
+
+            try {
+                Query<Command> query = session.createQuery(
+                        "select c from dk.magenta.datafordeler.core.command.Command " + entityKey + " " +
+                                "where " + thisWhere.toString() + " " +
+                                "escape '!' " +
+                                "order by " + entityKey + ".handled desc ",
+                        Command.class
+                );
+                for (String parameterName : thisParameters.keySet()) {
+                    query.setParameter(parameterName, thisParameters.get(parameterName));
+                }
+                query.setMaxResults(1);
+
+
+                List<Command> list = query.getResultList();
+                if (!list.isEmpty()) {
+                    commands.add(list.get(0));
+                }
+
+            } catch (NoResultException e) {
+            }
+        }
+        session.close();
+        return commands;
     }
 
     /**

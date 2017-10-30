@@ -10,18 +10,25 @@ import dk.magenta.datafordeler.core.user.UserProfile;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
+import dk.magenta.datafordeler.plugindemo.DemoPlugin;
+import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.*;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 
 import static org.mockito.Mockito.when;
@@ -41,12 +48,31 @@ public class CommandTest extends GapiTestBase {
     private DafoUserManager dafoUserManager;
 
     @Autowired
-    EmbeddedWebApplicationContext server;
+    private EmbeddedWebApplicationContext server;
+
+    @Autowired
+    private DemoPlugin demoPlugin;
+
+    @LocalServerPort
+    private int port;
+
+    @Before
+    public void before() {
+        //DemoRegisterManager registerManager = (DemoRegisterManager) this.demoPlugin.getRegisterManager();
+        //registerManager.setPort(this.port);
+        DemoRegisterManager.setPortOnAll(this.port);
+    }
+
+    @After
+    public void after() {
+        //DemoRegisterManager registerManager = (DemoRegisterManager) this.demoPlugin.getRegisterManager();
+        //registerManager.setPort(Application.servicePort);
+        DemoRegisterManager.setPortOnAll(Application.servicePort);
+    }
 
     @Order(order = 1)
     @Test
-    public void pullTest() throws IOException, InterruptedException {
-
+    public void pullTest() throws IOException, InterruptedException, URISyntaxException {
         UserProfile testUserProfile = new UserProfile("TestProfile", Arrays.asList(
                 DemoRolesDefinition.EXECUTE_DEMO_PULL_ROLE.getRoleName(),
                 DemoRolesDefinition.READ_DEMO_PULL_ROLE.getRoleName(),
@@ -58,7 +84,7 @@ public class CommandTest extends GapiTestBase {
         when(dafoUserManager.getFallbackUser()).thenReturn(testUserDetails);
 
         String checksum = this.hash(UUID.randomUUID().toString());
-        String reference = "http://localhost:8444/test/get/" + checksum;
+        String reference = "http://localhost:"+this.port+"/test/get/" + checksum;
         String uuid = UUID.randomUUID().toString();
         String full = this.getPayload("/referencelookuptest.json")
                 .replace("%{checksum}", checksum)

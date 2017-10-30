@@ -2,9 +2,12 @@ package dk.magenta.datafordeler.core.io;
 
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
+import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +39,16 @@ public class PushTest extends GapiTestBase {
     @Autowired
     private DemoRegisterManager demoRegisterManager;
 
+    @Before
+    public void before() {
+        demoRegisterManager.setPort(this.port);
+    }
+
+    @After
+    public void after() {
+        demoRegisterManager.setPort(Application.servicePort);
+    }
+
     /**
      * Tests that an event can be sent to the GAPI interface, the referenced object gets fetched, and a receipt is sent back
      * @throws IOException
@@ -45,8 +58,6 @@ public class PushTest extends GapiTestBase {
      */
     @Test
     public void referenceLookupTest() throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        this.demoRegisterManager.setPort(this.port);
-
         String checksum = this.hash(UUID.randomUUID().toString());
         String reference = "http://localhost:"+this.port+"/test/get/"+checksum;
         String uuid = UUID.randomUUID().toString();

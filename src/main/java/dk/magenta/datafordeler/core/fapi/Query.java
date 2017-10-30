@@ -1,8 +1,9 @@
 package dk.magenta.datafordeler.core.fapi;
 
-import dk.magenta.datafordeler.core.database.Entity;
-import dk.magenta.datafordeler.core.database.LookupDefinition;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
+import org.hibernate.Filter;
+import org.hibernate.Session;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -377,5 +378,35 @@ public abstract class Query<E extends Entity> {
      * @return
      */
     public abstract Class getDataClass();
+
+
+
+    /**
+     * Put Query parameters into the Hibernate session. Subclasses should override this and call this method, then
+     * put their own Query-subclass-specific parameters in as well
+     * @param session Hibernate session in use
+     */
+    public void applyFilters(Session session) {
+        if (this.getRegistrationFrom() != null) {
+            Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
+            filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFrom());
+        }
+        if (this.getRegistrationTo() != null) {
+            Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
+            filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationTo());
+        }
+        if (this.getEffectFrom() != null) {
+            Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
+            filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
+        }
+        if (this.getEffectTo() != null) {
+            Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
+            filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
+        }
+        if (this.getRecordAfter() != null) {
+            Filter filter = session.enableFilter(DataItem.FILTER_RECORD_AFTER);
+            filter.setParameter(DataItem.FILTERPARAM_RECORD_AFTER, this.getRecordAfter());
+        }
+    }
 
 }

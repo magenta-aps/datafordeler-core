@@ -380,9 +380,8 @@ public class LookupDefinition {
      *                then "d" would be the rootKey to look up paths within the dataItem table
      * @param entityKey Entity key, denoting the hql identifier for the Entity table. In the above example, "e" would be the entityKey
      * @return Map to be used for filling the query parameters. E.g. {"d_abc_def": 23, "d_abc_ghi": 42}
-     * @throws PluginImplementationException
      */
-    public HashMap<String, Object> getHqlParameters(String rootKey, String entityKey) throws PluginImplementationException {
+    public HashMap<String, Object> getHqlParameters(String rootKey, String entityKey) {
         HashMap<String, Object> map = new HashMap<>();
         for (FieldDefinition definition : this.fieldDefinitions) {
             String path = definition.path;
@@ -395,10 +394,11 @@ public class LookupDefinition {
                 if (value instanceof List) {
                     List list = (List) value;
                     for (int i=0; i<list.size(); i++) {
-                        if (parameterValueWildcard(value)) {
-                            map.put(parameterPath + "_" + i, replaceWildcard(list.get(i)));
+                        Object item = list.get(i);
+                        if (parameterValueWildcard(item)) {
+                            map.put(parameterPath + "_" + i, replaceWildcard(item));
                         } else {
-                            map.put(parameterPath + "_" + i, castValue(type, list.get(i)));
+                            map.put(parameterPath + "_" + i, castValue(type, item));
                         }
                     }
                 } else {
@@ -413,7 +413,7 @@ public class LookupDefinition {
         return map;
     }
 
-    private static Object castValue(Class cls, Object value) throws PluginImplementationException {
+    private static Object castValue(Class cls, Object value) {
         if (cls == null) {return value;}
         if ((cls == Long.TYPE || cls == Long.class) && !(value instanceof Long)) {
             if (value instanceof Number) {
@@ -427,6 +427,8 @@ public class LookupDefinition {
             return Integer.parseInt(value.toString());
         } else if ((cls == Boolean.TYPE || cls == Boolean.class) && !(value instanceof Boolean)) {
             return Query.booleanFromString(value.toString());
+        } else if ((cls == UUID.class) && !(value instanceof UUID)) {
+            return UUID.fromString(value.toString());
         }
         return cls.cast(value);
     }

@@ -4,6 +4,7 @@ import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.Engine;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.Pull;
+import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -61,8 +62,7 @@ public class PullTest extends GapiTestBase {
     @Order(order=1)
     public void pull() throws DataFordelerException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Plugin plugin = pluginManager.getPluginForSchema("Postnummer");
-        DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
-        registerManager.setPort(this.port);
+        DemoRegisterManager.setPortOnAll(this.port);
 
         String checksum = this.hash(UUID.randomUUID().toString());
         System.out.println("checksum: "+checksum);
@@ -93,6 +93,7 @@ public class PullTest extends GapiTestBase {
         Assert.assertTrue(receiptCallback.get(20, TimeUnit.SECONDS));
 
         this.deleteEntity(uuid);
+        DemoRegisterManager.setPortOnAll(Application.servicePort);
     }
 
     @Test
@@ -150,7 +151,7 @@ public class PullTest extends GapiTestBase {
     @Order(order=3)
     public void full() throws DataFordelerException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Plugin plugin = pluginManager.getPluginForSchema("Postnummer");
-
+        DemoRegisterManager.setPortOnAll(this.port);
         String checksum = this.hash(UUID.randomUUID().toString());
         String reference = "http://localhost:"+this.port+"/test/get/" + checksum;
         String uuid = UUID.randomUUID().toString();
@@ -174,13 +175,13 @@ public class PullTest extends GapiTestBase {
         String cronSchedule = next.getSecond() + " " + next.getMinute() + " " + next.getHour() + " " + next.getDayOfMonth() + " " + next.getMonthValue() + " " + "?";
 
         DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
-        registerManager.setPort(this.port);
         engine.setupPullSchedule(registerManager, cronSchedule, false);
 
         Assert.assertTrue(lookupCallback.get(20, TimeUnit.SECONDS));
         Assert.assertTrue(receiptCallback.get(20, TimeUnit.SECONDS));
 
         this.deleteEntity(uuid);
+        DemoRegisterManager.setPortOnAll(Application.servicePort);
     }
 
     private String jsonList(List<String> jsonData, String listKey) {
