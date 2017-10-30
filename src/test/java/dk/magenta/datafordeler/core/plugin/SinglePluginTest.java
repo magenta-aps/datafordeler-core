@@ -4,7 +4,9 @@ import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.context.embedded.LocalServerPort;
@@ -26,6 +28,18 @@ public class SinglePluginTest extends PluginTestBase {
     @LocalServerPort
     private int port;
 
+    @Before
+    public void before() {
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
+        registerManager.setPort(this.port);
+    }
+
+    @After
+    public void after() {
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
+        registerManager.setPort(Application.servicePort);
+    }
+
     @Test
     public void testGetVersion() {
         Assert.assertEquals(1L, this.plugin.getVersion());
@@ -36,8 +50,6 @@ public class SinglePluginTest extends PluginTestBase {
         URI uri = new URI("http://localhost:" + this.port);
         Assert.assertTrue(this.plugin.getRegisterManager() instanceof RegisterManager);
         Assert.assertTrue(this.plugin.getRegisterManager() instanceof DemoRegisterManager);
-        DemoRegisterManager demoRegisterManager = (DemoRegisterManager) this.plugin.getRegisterManager();
-        demoRegisterManager.setPort(this.port);
         Assert.assertEquals(this.plugin.getEntityManager(DemoEntity.schema), this.plugin.getRegisterManager().getEntityManager(DemoEntity.class));
         Assert.assertEquals(this.plugin.getEntityManager(uri), this.plugin.getEntityManager(DemoEntity.schema));
     }

@@ -17,9 +17,7 @@ import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityReference;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistrationReference;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +58,19 @@ public class EntityManagerTest extends PluginTestBase {
 
     @LocalServerPort
     private int port;
+
+
+    @Before
+    public void before() {
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
+        registerManager.setPort(this.port);
+    }
+
+    @After
+    public void after() {
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
+        registerManager.setPort(Application.servicePort);
+    }
 
     @Test
     public void testLinks() {

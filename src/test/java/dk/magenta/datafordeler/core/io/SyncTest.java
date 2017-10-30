@@ -12,7 +12,9 @@ import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,20 @@ public class SyncTest extends GapiTestBase {
 
     @LocalServerPort
     private int port;
+
+    @Before
+    public void before() {
+        Plugin plugin = this.pluginManager.getPluginForSchema("Postnummer");
+        DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
+        registerManager.setPort(this.port);
+    }
+
+    @After
+    public void after() {
+        Plugin plugin = this.pluginManager.getPluginForSchema("Postnummer");
+        DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
+        registerManager.setPort(Application.servicePort);
+    }
 
     @Test
     public void testSynchronize() throws DataFordelerException, IOException {
@@ -77,7 +93,6 @@ public class SyncTest extends GapiTestBase {
             List<? extends Registration> newRegistrations;
             Plugin plugin = pluginManager.getPluginForSchema("Postnummer");
             DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
-            registerManager.setPort(this.port);
             newRegistrations = engine.synchronize(session, plugin, null);
             Assert.assertEquals(4, newRegistrations.size());
             transaction.commit();

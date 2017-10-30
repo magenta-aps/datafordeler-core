@@ -17,8 +17,10 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.stereotype.Component;
 
+import javax.inject.Singleton;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * Created by lars on 05-04-17.
@@ -55,10 +58,17 @@ public class DemoRegisterManager extends RegisterManager {
 
     private int port;
 
+    private UUID id;
+
     public DemoRegisterManager() {
+        this.id = UUID.randomUUID();
+        System.out.println("create new DemoRegisterManager "+id);
         this.commonFetcher = new HttpCommunicator();
         this.port = Application.servicePort;
+        instances.add(this);
     }
+
+    private static ArrayList<DemoRegisterManager> instances = new ArrayList();
 
     @Override
     protected Logger getLog() {
@@ -75,7 +85,14 @@ public class DemoRegisterManager extends RegisterManager {
         return this.sessionManager;
     }
 
+    public static void setPortOnAll(int port) {
+        for (DemoRegisterManager instance : instances) {
+            instance.setPort(port);
+        }
+    }
+
     public void setPort(int port) {
+        System.out.println("setting port on "+id+" to "+port);
         this.port = port;
         PluginManager pluginManager = this.plugin.getPluginManager();
 
@@ -100,6 +117,7 @@ public class DemoRegisterManager extends RegisterManager {
     @Override
     public URI getBaseEndpoint() {
         try {
+            System.out.println(this.port +" on "+id);
             return new URI("http", null, "localhost", this.port, "/test", null, null);
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -121,6 +139,7 @@ public class DemoRegisterManager extends RegisterManager {
 
     @Override
     public URI getEventInterface(EntityManager entityManager) {
+        System.out.println("getEventInterface has port "+this.getBaseEndpoint()+" on "+this.hashCode());
         return expandBaseURI(this.getBaseEndpoint(), "/getNewEvents");
     }
 
