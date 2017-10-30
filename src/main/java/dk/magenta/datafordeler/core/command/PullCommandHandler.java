@@ -88,14 +88,12 @@ public class PullCommandHandler extends CommandHandler {
         Plugin plugin = this.getPlugin(commandData);
         this.getLog().info("Pulling with plugin "+plugin.getClass().getCanonicalName());
 
-        Thread.UncaughtExceptionHandler exceptionHandler = new Thread.UncaughtExceptionHandler() {
+        Pull pull = new Pull(engine, plugin);
+        pull.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             public void uncaughtException(Thread th, Throwable ex) {
                 PullCommandHandler.this.getLog().error("Pull failed", ex);
             }
-        };
-
-        Pull pull = new Pull(engine, plugin);
-        pull.setUncaughtExceptionHandler(exceptionHandler);
+        });
         return pull;
     }
 
@@ -106,8 +104,9 @@ public class PullCommandHandler extends CommandHandler {
             this.getLog().info("Command data parsed");
             return commandData;
         } catch (IOException e) {
-            this.getLog().error("Unable to parse command data '"+commandBody+"'");
-            throw new InvalidClientInputException("Unable to parse command data");
+            InvalidClientInputException ex = new InvalidClientInputException("Unable to parse command data '"+commandBody+"'");
+            this.getLog().error(ex);
+            throw ex;
         }
     }
 

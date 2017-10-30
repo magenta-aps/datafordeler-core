@@ -358,8 +358,9 @@ public class CommandService {
         parameters.put("commandName", "pull");
 
         if (state.equals("running")) {
-            where.add(entityKey+".status = :status");
-            parameters.put("status", Command.Status.PROCESSING);
+            where.add("(" + entityKey + ".status = :queued OR " + entityKey + ".status = :processing)");
+            parameters.put("queued", Command.Status.QUEUED);
+            parameters.put("processing", Command.Status.PROCESSING);
         }
 
         List<String> plugins;
@@ -389,21 +390,17 @@ public class CommandService {
                                 "order by " + entityKey + ".handled desc ",
                         Command.class
                 );
-                System.out.println(query.getQueryString());
                 for (String parameterName : thisParameters.keySet()) {
-                    System.out.println(parameterName+" = "+thisParameters.get(parameterName));
                     query.setParameter(parameterName, thisParameters.get(parameterName));
                 }
+                query.setMaxResults(1);
 
 
-                Command c = query.getSingleResult();
-                System.out.println(c);
-                try {
-                    System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(c));
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
+                List<Command> list = query.getResultList();
+                if (!list.isEmpty()) {
+                    commands.add(list.get(0));
                 }
-                commands.add(c);
+
             } catch (NoResultException e) {
             }
         }

@@ -63,19 +63,14 @@ public class Pull extends Worker implements Runnable {
             if (this.registerManager.pullsEventsCommonly()) {
                 this.log.info("Pulling data for "+this.registerManager.getClass().getSimpleName());
                 ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents();
-                error = this.doPull(importMetadata, stream);
-                if (!error) {
-                    // Done. Write last-updated timestamp
-                    this.registerManager.setLastUpdated(null, importMetadata.getImportTime());
-                }
+                this.doPull(importMetadata, stream);
+                // Done. Write last-updated timestamp
+                this.registerManager.setLastUpdated(null, importMetadata.getImportTime());
             } else {
                 for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
                     this.log.info("Pulling data for "+entityManager.getClass().getSimpleName());
                     ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
-                    error = this.doPull(importMetadata, stream);
-                    if (error) {
-                        break;
-                    }
+                    this.doPull(importMetadata, stream);
                     // Done. Write last-updated timestamp
                     this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
                 }
@@ -91,20 +86,17 @@ public class Pull extends Worker implements Runnable {
             this.onComplete();
 
             this.log.info("Worker " + this.getId() + " removing lock for " + this.registerManager.getClass().getCanonicalName() + " ("+this.registerManager.hashCode()+") on " + OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-            runningPulls.remove(this.registerManager);
 
-        } catch (DataFordelerException e) {
-            runningPulls.remove(this.registerManager);
-            e.printStackTrace();
+        } catch (Throwable e) {
             this.log.error(e);
+            this.onError(e);
             throw new RuntimeException(e);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } finally {
+            runningPulls.remove(this.registerManager);
         }
     }
 
-    private boolean doPull(ImportMetadata importMetadata, ItemInputStream<? extends PluginSourceData> eventStream) throws DataStreamException, IOException {
-        boolean error = false;
+    private void doPull(ImportMetadata importMetadata, ItemInputStream<? extends PluginSourceData> eventStream) throws DataStreamException, IOException {
 
         int count = 0;
         try {
@@ -119,19 +111,11 @@ public class Pull extends Worker implements Runnable {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
-            DataStreamException ex = new DataStreamException(e);
-            this.onError(ex);
-            error = true;
-            throw ex;
-        } catch (Throwable e) {
-            error = true;
-            e.printStackTrace();
+            throw new DataStreamException(e);
         } finally {
             this.log.info("Worker " + this.getId() + " processed " + count + " events. Closing stream.");
             eventStream.close();
         }
-        return error;
     }
 
     private static HashMap<RegisterManager, Pull> runningPulls = new HashMap<>();
