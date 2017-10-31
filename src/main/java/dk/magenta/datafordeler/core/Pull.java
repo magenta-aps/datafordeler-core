@@ -60,28 +60,40 @@ public class Pull extends Worker implements Runnable {
             ImportMetadata importMetadata = new ImportMetadata();
 
             boolean error = false;
+            boolean skip = false;
             if (this.registerManager.pullsEventsCommonly()) {
                 this.log.info("Pulling data for "+this.registerManager.getClass().getSimpleName());
                 ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents();
-                this.doPull(importMetadata, stream);
-                // Done. Write last-updated timestamp
-                this.registerManager.setLastUpdated(null, importMetadata.getImportTime());
+                if (stream != null) {
+                    this.doPull(importMetadata, stream);
+                    // Done. Write last-updated timestamp
+                    this.registerManager.setLastUpdated(null, importMetadata.getImportTime());
+                } else {
+                    skip = true;
+                }
             } else {
                 for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
                     this.log.info("Pulling data for "+entityManager.getClass().getSimpleName());
                     ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
-                    this.doPull(importMetadata, stream);
-                    // Done. Write last-updated timestamp
-                    this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
+                    if (stream != null) {
+                        this.doPull(importMetadata, stream);
+                        // Done. Write last-updated timestamp
+                        this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
+                    } else {
+                        skip = true;
+                    }
                 }
             }
 
+            String prefix = "Worker " + this.getId() + ": ";
             if (this.doCancel) {
-                this.log.info("Worker " + this.getId() + ": Pull interrupted");
+                this.log.info(prefix + "Pull interrupted");
             } else if (error) {
-                this.log.info("Worker " + this.getId() + ": Pull errored");
+                this.log.info(prefix + "Pull errored");
+            } else if (skip) {
+                this.log.info(prefix + "Pull skipped");
             } else {
-                this.log.info("Worker " + this.getId() + ": Pull complete");
+                this.log.info(prefix + "Pull complete");
             }
             this.onComplete();
 
