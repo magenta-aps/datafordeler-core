@@ -1,9 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
-import dk.magenta.datafordeler.core.exception.PluginImplementationException;
 import dk.magenta.datafordeler.core.fapi.Query;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.regex.Pattern;
 

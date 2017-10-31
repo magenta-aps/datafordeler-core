@@ -1,7 +1,5 @@
 package dk.magenta.datafordeler.core.command;
 
-import dk.magenta.datafordeler.core.exception.DataFordelerException;
-
 /**
  * Created by lars on 29-05-17.
  * Command job superclass. Subclasses execute jobs in the run() method,

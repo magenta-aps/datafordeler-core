@@ -145,7 +145,6 @@ public abstract class Query<E extends Entity> {
 
     public void setRegistrationFrom(String registrationFrom) throws DateTimeParseException {
         this.registrationFrom = parseDateTime(registrationFrom);
-        System.out.println("Set registrationFrom to "+this.registrationFrom);
     }
 
     public OffsetDateTime getRegistrationTo() {

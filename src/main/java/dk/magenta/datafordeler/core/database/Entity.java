@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.util.Equality;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;

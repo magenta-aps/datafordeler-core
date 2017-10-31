@@ -69,7 +69,6 @@ public class CallbackController {
 
     @RequestMapping(value = "**")
     public @ResponseBody String handleGet(HttpServletRequest request) {
-        System.out.println("handleGet");
         String path = request.getServletPath();
         Expector expector = this.expectors.get(path);
         if (expector != null) {

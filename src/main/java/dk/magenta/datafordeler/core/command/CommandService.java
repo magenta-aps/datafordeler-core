@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core.command;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -168,11 +167,6 @@ public class CommandService {
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info("GET request received on address " + request.getServletPath());
-
-
-        if (commandId == null) {
-            System.out.println("null received");
-        }
 
         if (commandId >= 0) {
             loggerHelper.info("Request for status on job id "+commandId);

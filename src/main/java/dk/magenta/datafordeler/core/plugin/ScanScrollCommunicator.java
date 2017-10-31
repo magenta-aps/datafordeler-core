@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.HttpGetWithEntity;
-import dk.magenta.datafordeler.core.util.InputStreamReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -131,7 +130,6 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
                     responseNode = objectMapper.readTree(content);
 
-                    int i = 0;
                     String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
                     while (scrollId != null) {
 
@@ -159,8 +157,6 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             getResponseData.reset();
 
                             String peekString = new String(peekBytes, 0, peekSize, "utf-8");
-                            System.out.println(i + " " + peekString);
-                            i++;
 
                             Matcher m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(peekString);
                             if (m.find()) {

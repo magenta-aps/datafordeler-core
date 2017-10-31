@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.DatabaseEntry;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
-import dk.magenta.datafordeler.core.util.InputStreamReader;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,7 +13,6 @@ import javax.persistence.Index;
 import javax.persistence.Table;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.OffsetDateTime;
 
 /**
@@ -85,8 +83,6 @@ public final class Command extends DatabaseEntry {
                         request.getInputStream()
                 )
         );
-        System.out.println("commandBody: "+commandBody);
-        //String commandBody = InputStreamReader.readInputStream(requestBody);
         command.setCommandBody(commandBody);
         command.setReceived();
         command.setIssuer(userDetails.getIdentity());
