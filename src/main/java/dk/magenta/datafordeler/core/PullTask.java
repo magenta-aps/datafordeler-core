@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core;
 
-import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
