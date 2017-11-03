@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.HttpGetWithEntity;
+import dk.magenta.datafordeler.core.util.InputStreamReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -124,6 +125,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                     log.info("HTTP status: " + response.getStatusLine().getStatusCode());
                     InputStream content = response.getEntity().getContent();
                     if (response.getStatusLine().getStatusCode() != 200) {
+                        log.error(InputStreamReader.readInputStream(response.getEntity().getContent()));
                         throw new HttpStatusException(response.getStatusLine(), startUri);
                     }
 

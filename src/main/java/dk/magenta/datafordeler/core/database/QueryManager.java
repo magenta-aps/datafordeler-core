@@ -45,6 +45,26 @@ public abstract class QueryManager {
         }
     }
 
+
+    private static DoubleHashMap<String, UUID, Identification> identifications = new DoubleHashMap<>();
+
+    public static Identification getOrCreateIdentification(Session session, UUID uuid, String domain) {
+        if (!identifications.containsKey(domain)) {
+            org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
+            databaseQuery.setParameter("domain", domain);
+            for (Identification identification : databaseQuery.getResultList()) {
+                identifications.put(domain, uuid, identification);
+            }
+        }
+        Identification identification = identifications.get(domain, uuid);
+        if (identification == null) {
+            identification = new Identification(uuid, domain);
+            session.save(identification);
+            identifications.put(domain, uuid, identification);
+        }
+        return identification;
+    }
+
     /**
      * Get all Entities of a specific class
      * @param session Database session to work from
@@ -334,19 +354,20 @@ public abstract class QueryManager {
      * @param registration Registration to be saved
      */
     public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems) throws DataFordelerException {
-        log.info("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
+        log.debug("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
+
+            E existingEntity = getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
+            if (existingEntity != null) {
+                log.debug("There is an existing entity with uuid " + existingEntity.getUUID().toString());
+                entity = existingEntity;
+            }
         }
         if (entity == null) {
             throw new MissingEntityException(registration);
         }
 
-        E existingEntity = getEntity(session, entity.getUUID(), (Class<E>) entity.getClass());
-        if (existingEntity != null) {
-            log.info("There is an existing entity with uuid "+existingEntity.getUUID().toString());
-            entity = existingEntity;
-        }
 
 
         // Validate registration:
@@ -423,7 +444,7 @@ public abstract class QueryManager {
         if (entity.getIdentification() != null && entity.getIdentification().getId() != null) {
             existing = session.get(Identification.class, entity.getIdentification().getId());
         } else {
-            existing = getIdentification(session, entity.getUUID());
+            existing = getOrCreateIdentification(session, entity.getUUID(), entity.getDomain());
         }
         if (existing != null && existing != entity.getIdentification()) {
             log.debug("identification "+entity.getUUID()+" already exist");
