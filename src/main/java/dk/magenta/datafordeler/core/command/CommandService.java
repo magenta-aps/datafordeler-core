@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.command;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -219,7 +220,7 @@ public class CommandService {
                 throw new InvalidClientInputException("No handler found for command");
             } else {
                 this.checkRole(command, handler, SystemRoleType.ReadCommandRole, loggerHelper);
-                ObjectNode output = handler.getCommandStatus(command);
+                JsonNode output = handler.getCommandStatus(command);
                 list.add(output);
                 loggerHelper.info("Status on job id " + command.getId() + " is " + output);
             }

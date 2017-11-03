@@ -1,19 +1,22 @@
 package dk.magenta.datafordeler.core.command;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.TextNode;
 import dk.magenta.datafordeler.core.Dump;
 import dk.magenta.datafordeler.core.Engine;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
-import java.util.Collections;
-import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Created by lars on 29-05-17. A CommandHandler for executing dumps. The
@@ -70,9 +73,9 @@ public class DumpCommandHandler extends CommandHandler {
         return null;
     }
 
-    public String getCommandStatus(Command command) {
+    public JsonNode getCommandStatus(Command command) {
         try {
-            return this.objectMapper.writeValueAsString(command);
+            return new TextNode(this.objectMapper.writeValueAsString(command));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             return null;

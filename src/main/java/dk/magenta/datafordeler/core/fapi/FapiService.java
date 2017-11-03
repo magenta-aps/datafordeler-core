@@ -5,10 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import dk.magenta.datafordeler.core.database.DataItem;
-import dk.magenta.datafordeler.core.database.Entity;
-import dk.magenta.datafordeler.core.database.QueryManager;
-import dk.magenta.datafordeler.core.database.SessionManager;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
@@ -33,10 +32,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Created by lars on 19-04-17.
