@@ -1,8 +1,8 @@
 package dk.magenta.datafordeler.core.command;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.Engine;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.Pull;
@@ -87,14 +87,12 @@ public class PullCommandHandler extends CommandHandler {
         Plugin plugin = this.getPlugin(commandData);
         this.getLog().info("Pulling with plugin "+plugin.getClass().getCanonicalName());
 
-        Thread.UncaughtExceptionHandler exceptionHandler = new Thread.UncaughtExceptionHandler() {
+        Pull pull = new Pull(engine, plugin);
+        pull.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             public void uncaughtException(Thread th, Throwable ex) {
                 PullCommandHandler.this.getLog().error("Pull failed", ex);
             }
-        };
-
-        Pull pull = new Pull(engine, plugin);
-        pull.setUncaughtExceptionHandler(exceptionHandler);
+        });
         return pull;
     }
 
@@ -105,8 +103,9 @@ public class PullCommandHandler extends CommandHandler {
             this.getLog().info("Command data parsed");
             return commandData;
         } catch (IOException e) {
-            this.getLog().error("Unable to parse command data '"+commandBody+"'");
-            throw new InvalidClientInputException("Unable to parse command data");
+            InvalidClientInputException ex = new InvalidClientInputException("Unable to parse command data '"+commandBody+"'");
+            this.getLog().error(ex);
+            throw ex;
         }
     }
 
@@ -119,12 +118,7 @@ public class PullCommandHandler extends CommandHandler {
         return plugin;
     }
 
-    public String getCommandStatus(Command command) {
-        try {
-            return this.objectMapper.writeValueAsString(command);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public ObjectNode getCommandStatus(Command command) {
+        return objectMapper.valueToTree(command);
     }
 }

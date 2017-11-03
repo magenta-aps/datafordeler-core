@@ -9,6 +9,8 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,6 +49,8 @@ public abstract class Query<E extends Entity> {
 
     @QueryField(queryName = "recordAfter", type = QueryField.FieldType.STRING)
     protected OffsetDateTime recordAfter = null;
+
+    private List<String> kommunekodeRestriction = new ArrayList<>();
 
     public Query() {
     }
@@ -145,7 +149,6 @@ public abstract class Query<E extends Entity> {
 
     public void setRegistrationFrom(String registrationFrom) throws DateTimeParseException {
         this.registrationFrom = parseDateTime(registrationFrom);
-        System.out.println("Set registrationFrom to "+this.registrationFrom);
     }
 
     public OffsetDateTime getRegistrationTo() {
@@ -194,6 +197,13 @@ public abstract class Query<E extends Entity> {
 
     public void setRecordAfter(String recordAfter) throws DateTimeParseException {
         this.recordAfter = parseDateTime(recordAfter);
+    }
+
+    public void addKommunekodeRestriction(String kommunekode) {
+        this.kommunekodeRestriction.add(kommunekode);
+    }
+    public List<String> getKommunekodeRestriction() {
+        return this.kommunekodeRestriction;
     }
 
 

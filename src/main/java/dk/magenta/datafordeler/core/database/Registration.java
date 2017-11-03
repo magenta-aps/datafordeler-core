@@ -109,7 +109,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "registration")
     @Filters({
             @Filter(name = Effect.FILTER_EFFECT_FROM, condition="(effectTo >= :"+Effect.FILTERPARAM_EFFECT_FROM+" OR effectTo is null)"),
             @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+" or effectFrom is null)")
@@ -181,6 +181,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
      */
     public void addEffect(V effect) {
         if (!this.effects.contains(effect)) {
+            effect.setRegistration(this);
             this.effects.add(effect);
         }
     }
@@ -196,6 +197,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @JsonProperty(value = "virkninger", access = JsonProperty.Access.WRITE_ONLY)
     public void setEffects(Collection<V> effects) {
         this.effects = new ArrayList<V>(effects);
+        this.wireEffects();
     }
 
     protected abstract V createEmptyEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo);

@@ -1,9 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
-import dk.magenta.datafordeler.core.exception.PluginImplementationException;
 import dk.magenta.datafordeler.core.fapi.Query;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -65,6 +63,7 @@ public class LookupDefinition {
     private static final String quotedSeparator = Pattern.quote(separator);
     private ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
     private Class<? extends DataItem> dataClass;
+    private int nextId = 0;
 
     public enum Operator {
         EQ("="),
@@ -88,6 +87,7 @@ public class LookupDefinition {
         public Object value;
         public Class type;
         public Operator operator = Operator.EQ;
+        public int id;
 
         public FieldDefinition(String path, Object value) {
             this(path, value, value != null ? value.getClass() : null, Operator.EQ);
@@ -100,6 +100,7 @@ public class LookupDefinition {
             this.value = value;
             this.type = type;
             this.operator = operator;
+            this.id = LookupDefinition.this.nextId++;
         }
 
         public boolean onEntity() {
@@ -284,7 +285,7 @@ public class LookupDefinition {
 
     private String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition, boolean joinedTable) {
         String path = fieldDefinition.path;
-        String parameterPath = this.getParameterPath(rootKey, entityKey, path);
+        String parameterPath = this.getParameterPath(rootKey, entityKey, path) + "_" + fieldDefinition.id;
         Object value = fieldDefinition.value;
         String variablePath = this.getVariablePath(rootKey, entityKey, path);
         if (joinedTable) {
@@ -386,7 +387,7 @@ public class LookupDefinition {
         for (FieldDefinition definition : this.fieldDefinitions) {
             String path = definition.path;
 
-            String parameterPath = this.getParameterPath(rootKey, entityKey, path);
+            String parameterPath = this.getParameterPath(rootKey, entityKey, path) + "_" + definition.id;
 
             Object value = definition.value;
             Class type = definition.type;
