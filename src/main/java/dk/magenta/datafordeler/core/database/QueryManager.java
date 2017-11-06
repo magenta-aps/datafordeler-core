@@ -53,7 +53,7 @@ public abstract class QueryManager {
             org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
             databaseQuery.setParameter("domain", domain);
             for (Identification identification : databaseQuery.getResultList()) {
-                identifications.put(domain, uuid, identification);
+                identifications.put(domain, identification.getUuid(), identification);
             }
         }
         Identification identification = identifications.get(domain, uuid);
@@ -63,6 +63,10 @@ public abstract class QueryManager {
             identifications.put(domain, uuid, identification);
         }
         return identification;
+    }
+
+    public static void clearCache() {
+        identifications.clear();
     }
 
     /**
@@ -447,8 +451,9 @@ public abstract class QueryManager {
             existing = getOrCreateIdentification(session, entity.getUUID(), entity.getDomain());
         }
         if (existing != null && existing != entity.getIdentification()) {
-            log.debug("identification "+entity.getUUID()+" already exist");
+            log.debug("identification "+entity.getUUID()+" exist");
             entity.setIdentifikation(existing);
+            session.saveOrUpdate(existing);
             session.saveOrUpdate(entity);
         } else if (existing == null) {
             log.debug("identification "+entity.getUUID()+" does not already exist or is already assigned");

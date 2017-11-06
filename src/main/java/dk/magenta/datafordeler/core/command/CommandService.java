@@ -60,7 +60,7 @@ public class CommandService {
     private DafoUserManager dafoUserManager;
 
     // For debugging purposes - make sure this is set to false when running in production
-    private static boolean DEBUG_DISABLE_SECURITY = true;
+    private static boolean DEBUG_DISABLE_SECURITY = false;
 
     public static boolean getDebugDisableSecurity() {
         return DEBUG_DISABLE_SECURITY;
