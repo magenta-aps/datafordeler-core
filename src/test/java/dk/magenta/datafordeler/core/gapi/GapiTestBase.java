@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 
@@ -92,4 +93,22 @@ public abstract class GapiTestBase {
         }
     }
 
-}
+
+    // Because code doesn't execute instantaneously, there are often times when we wait for one second,
+    // perform a time-sensitive check on whether a job has run, and it turns out that a little over one
+    // second has passed, making the job run one more time than we expected, failing the test
+    // E.g. start a x.998, wait 1000ms, check job. But now it's (x+2).001 (instead of (x+1).998), and the job has run three times, where we expected two
+    // Solution: always start at around x.500
+    protected void waitToMilliseconds(int millis, int tolerance) throws
+        InterruptedException {
+        System.out.println(OffsetDateTime.now());
+        int current = OffsetDateTime.now().getNano() / 1000000;
+        int wait = 0;
+        if (current > millis + tolerance) {
+            wait = 1000 + millis - current;
+        } else if (current < millis - tolerance) {
+            wait = millis - current;
+        }
+        System.out.println("wait: "+wait);
+        Thread.sleep(wait);
+    }}

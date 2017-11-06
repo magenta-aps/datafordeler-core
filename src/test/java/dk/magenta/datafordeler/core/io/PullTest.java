@@ -4,7 +4,6 @@ import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.Engine;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.Pull;
-import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -14,6 +13,17 @@ import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.quartz.*;
+import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.KeyMatcher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.LocalServerPort;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
+
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -23,20 +33,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.quartz.JobKey;
-import org.quartz.ListenerManager;
-import org.quartz.ScheduleBuilder;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.impl.StdSchedulerFactory;
-import org.quartz.impl.matchers.KeyMatcher;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * Created by lars on 03-04-17.
@@ -186,23 +182,4 @@ public class PullTest extends GapiTestBase {
         }
         return "{\""+listKey+"\":["+sj.toString()+"]}";
     }
-
-    // Because code doesn't execute instantaneously, there are often times when we wait for one second,
-    // perform a time-sensitive check on whether a job has run, and it turns out that a little over one
-    // second has passed, making the job run one more time than we expected, failing the test
-    // E.g. start a x.998, wait 1000ms, check job. But now it's (x+2).001 (instead of (x+1).998), and the job has run three times, where we expected two
-    // Solution: always start at around x.500
-    private void waitToMilliseconds(int millis, int tolerance) throws InterruptedException {
-        System.out.println(OffsetDateTime.now());
-        int current = OffsetDateTime.now().getNano() / 1000000;
-        int wait = 0;
-        if (current > millis + tolerance) {
-            wait = 1000 + millis - current;
-        } else if (current < millis - tolerance) {
-            wait = millis - current;
-        }
-        System.out.println("wait: "+wait);
-        Thread.sleep(wait);
-    }
-
 }

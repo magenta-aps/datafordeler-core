@@ -1,8 +1,10 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +26,7 @@ public class TaskListener implements JobListener {
         jobWasExecuted
     }
 
-    private HashMap<Event, ArrayList<JobExecutionContext>> contextList;
+    private Map<Event, ArrayList<JobExecutionContext>> contextList;
 
     private List<JobExecutionContext> getContext(Event key) {
         return this.contextList.computeIfAbsent(key,
@@ -33,7 +35,7 @@ public class TaskListener implements JobListener {
 
     public TaskListener(String name) {
         this.name = name;
-        this.contextList = new HashMap<>();
+        this.contextList = Collections.synchronizedMap(new HashMap<>());
     }
 
     @Override

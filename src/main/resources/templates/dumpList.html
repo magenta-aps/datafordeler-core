@@ -9,24 +9,28 @@
 <body>
     <div class="container">
       <div th:each="dumpData : ${dumpList}">
-        <h3 th:text="${dumpData.plugin}"></h3>
-        <dl class="dl-horizontal">
-          <dt>Entity Name:</dt>
-          <dd th:text="${dumpData.entityName}"></dd>
+        <h3 th:text="${dumpData.name}"></h3>
 
-          <dt>Id:</dt>
-          <dd th:text="${dumpData.id}"></dd>
+        <dl class="dl-horizontal">
+          <dt>Path:</dt>
+          <dd th:text="${dumpData.requestPath}"></dd>
 
           <dt>Format:</dt>
           <dd th:text="${dumpData.format}"></dd>
 
+          <dt>Id:</dt>
+          <dd th:text="${dumpData.id}"></dd>
+
           <dt>Timestamp:</dt>
           <dd th:text="${dumpData.timestamp}"></dd>
 
-          <dt>Dump address:</dt>
+          <dt>Location:</dt>
           <dd>
-            <a th:href="@{'/dump/' + ${dumpData.format}(plugin=${dumpData.plugin},id=${dumpData.id})}"
-               th:text="@{'/dump/' + ${dumpData.format}(plugin=${dumpData.plugin},id=${dumpData.id})}"></a>
+            <a th:href="@{'/dump/by-name/' + ${dumpData.name}}"
+               th:text="@{'/dump/by-name/' + ${dumpData.name}}"></a>
+            <br>
+            <a th:href="@{'/dump/by-id/' + ${dumpData.id}}"
+               th:text="@{'/dump/by-id/' + ${dumpData.id}}"></a>
           </dd>
         </dl>
         </div>

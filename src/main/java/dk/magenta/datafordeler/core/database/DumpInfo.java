@@ -1,13 +1,13 @@
 package dk.magenta.datafordeler.core.database;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dk.magenta.datafordeler.core.dump.DumpConfiguration;
+import org.apache.commons.io.Charsets;
+
+import javax.persistence.*;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.time.OffsetDateTime;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.FetchType;
-import javax.persistence.Lob;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
 
 @javax.persistence.Entity
 @Table(name = "dump_info")
@@ -15,7 +15,7 @@ public final class DumpInfo extends DatabaseEntry implements
     Comparable<DumpInfo> {
 
     @Column(nullable = false)
-    private String plugin, entityName, format;
+    private String name, requestPath, charset, format;
 
     @Column(nullable = false)
     private OffsetDateTime timestamp;
@@ -29,11 +29,13 @@ public final class DumpInfo extends DatabaseEntry implements
 
     }
 
-    public DumpInfo(String plugin, String entityName, String format,
-        OffsetDateTime timestamp, String data) {
-        this.plugin = plugin;
-        this.entityName = entityName;
-        this.format = format;
+    public DumpInfo(DumpConfiguration config,
+        OffsetDateTime timestamp,
+        byte[] data) {
+        this.name = config.getName();
+        this.requestPath = config.getRequestPath();
+        this.format = config.getFormat().name();
+        this.charset = config.getCharset().name();
         this.timestamp = timestamp;
         this.data = data != null ? new DumpData(data) : null;
     }
@@ -44,17 +46,17 @@ public final class DumpInfo extends DatabaseEntry implements
     }
 
     @JsonIgnore
-    public String getPlugin() {
-        return this.plugin;
+    public String getName() {
+        return this.name;
     }
 
     @JsonIgnore
-    public String getEntityName() {
-        return this.entityName;
+    public String getRequestPath() {
+        return this.requestPath;
     }
 
     @JsonIgnore
-    public String getData() {
+    public byte[] getData() {
         try {
             return this.data.getData();
         } catch (NullPointerException e) {
@@ -63,8 +65,17 @@ public final class DumpInfo extends DatabaseEntry implements
     }
 
     @JsonIgnore
-    public String getFormat() {
-        return format;
+    public String getStringData() {
+        try {
+            return new String(this.data.getData(), this.charset);
+        } catch (NullPointerException | UnsupportedEncodingException e) {
+            return null;
+        }
+    }
+
+    @JsonIgnore
+    public DumpConfiguration.Format getFormat() {
+        return DumpConfiguration.Format.valueOf(format);
     }
 
     @JsonIgnore
@@ -75,8 +86,12 @@ public final class DumpInfo extends DatabaseEntry implements
     public String toString() {
         return String.format(
             "DumpInfo(%s, %s, %s, %s, %s)",
-            plugin, entityName, format, timestamp, data
+            name, requestPath, format, timestamp, data
         );
+    }
+
+    public Charset getCharset() {
+        return Charsets.toCharset(charset);
     }
 }
 

@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.database.*;
+import dk.magenta.datafordeler.core.dump.DumpConfiguration;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
@@ -41,6 +42,9 @@ public class Engine {
 
     @Autowired
     SessionManager sessionManager;
+
+    @Autowired
+    ConfigurationSessionManager configurationSessionManager;
 
     @Value("${dafo.cron.enabled:true}")
     private boolean cronEnabled;
@@ -212,10 +216,7 @@ public class Engine {
             }
         }
 
-        // TODO: don't hard-code dump interval
-        this.setupDumpSchedule(
-            CronScheduleBuilder.dailyAtHourAndMinute(2, 00),
-            false);
+        this.setupDumpSchedules();
     }
 
 
@@ -283,42 +284,64 @@ public class Engine {
         }
     }
 
-    private static final String DUMP_ID = "DUMP";
+    public boolean setupDumpSchedules() {
+        Session session =
+            configurationSessionManager.getSessionFactory().openSession();
+
+        try {
+            return QueryManager.getAllItemsAsStream(session,
+                DumpConfiguration.class)
+                .allMatch(
+                    c -> setupDumpSchedule(c, false)
+                );
+        } finally {
+            session.close();
+        }
+    }
+
     /**
      * Sets the schedule for dumps
-     * @param scheduleBuilder The repeat schedule
+     * @param config The dump configuration
      * @param dummyRun For test purposes. If false, no pull will actually be run.
      */
-    public void setupDumpSchedule(ScheduleBuilder scheduleBuilder, boolean dummyRun) {
+    boolean setupDumpSchedule(DumpConfiguration config, boolean
+        dummyRun) {
         try {
             if (scheduler == null) {
                 this.scheduler = StdSchedulerFactory.getDefaultScheduler();
             }
 
+            String triggerID = String.format("DUMP-%d", config.getId());
+
             // Remove old schedule
-            if (this.pullTriggerKeys.containsKey(DUMP_ID)) {
+            if (this.pullTriggerKeys.containsKey(triggerID)) {
                 this.log.info("Removing schedule for dump");
-                scheduler.unscheduleJob(this.pullTriggerKeys.get(DUMP_ID));
+                scheduler.unscheduleJob(this.pullTriggerKeys.get(triggerID));
             }
+
+            CronScheduleBuilder scheduleBuilder = config.getSchedule();
 
             if (scheduleBuilder != null) {
                 this.log.info("Setting up dump with schedule {}",
                     scheduleBuilder);
-                this.pullTriggerKeys.put(DUMP_ID,
-                    TriggerKey.triggerKey("dumpTrigger", DUMP_ID));
+                this.pullTriggerKeys.put(triggerID,
+                    TriggerKey.triggerKey("dumpTrigger", triggerID));
 
                 // Set up new schedule, or replace existing
                 Trigger dumpTrigger = TriggerBuilder.newTrigger()
-                    .withIdentity(this.pullTriggerKeys.get(DUMP_ID))
+                    .withIdentity(this.pullTriggerKeys.get(triggerID))
                     .withSchedule(
                         scheduleBuilder
                     ).build();
+                this.log.info("The trigger is {}",
+                    dumpTrigger);
 
                 JobDataMap jobData = new JobDataMap();
                 jobData.put(Dump.Task.DATA_ENGINE, this);
+                jobData.put(Dump.Task.DATA_CONFIG, config);
                 jobData.put(Dump.Task.DATA_DUMMYRUN, dummyRun);
                 JobDetail job = JobBuilder.newJob(Dump.Task.class)
-                    .withIdentity(DUMP_ID)
+                    .withIdentity(triggerID)
                     .setJobData(jobData)
                     .build();
 
@@ -326,8 +349,10 @@ public class Engine {
                 scheduler.start();
             }
 
-        } catch (SchedulerException e) {
+            return true;
+        } catch (Exception e) {
             this.log.error("failed to schedule dump!", e);
+            return false;
         }
     }
 

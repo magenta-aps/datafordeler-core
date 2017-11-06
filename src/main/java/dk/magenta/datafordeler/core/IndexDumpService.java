@@ -6,30 +6,41 @@ import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
+import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.role.ReadServiceRole;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Controller
 @ResponseBody
 @RequestMapping("dump")
 public class IndexDumpService {
+
+    @Autowired
+    private Engine engine;
 
     @Autowired
     private SessionManager sessionManager;
@@ -61,10 +72,11 @@ public class IndexDumpService {
         }
     }
 
-    protected void checkAndLogAccess(LoggerHelper loggerHelper, String pluginName)
+    protected void checkAndLogAccess(LoggerHelper loggerHelper,
+        String requestPath)
         throws AccessDeniedException, AccessRequiredException {
         try {
-            Plugin plugin = pluginManager.getPluginByName(pluginName);
+            Plugin plugin = pluginManager.getPluginForServicePath(requestPath);
             this.checkAccess(loggerHelper.getUser(), plugin);
         }
         catch(AccessDeniedException e) {
@@ -95,50 +107,79 @@ public class IndexDumpService {
 
         HashMap<String, Object> model = new HashMap<>();
         Session session = sessionManager.getSessionFactory().openSession();
-        List<DumpInfo> resultList = QueryManager.getItems(session, DumpInfo.class, filter);
-        model.put("dumpList", resultList);
+        List<DumpInfo> dumpInfos =
+            QueryManager.getAllItemsAsStream(session, DumpInfo.class)
+                .filter(
+                    d -> hasAccess(user,
+                        engine.pluginManager.getPluginForServicePath(
+                            d.getRequestPath()
+                        )
+                    )
+                )
+                .collect(Collectors.toList());
+        model.put("dumpList", dumpInfos);
         return new ModelAndView("dumpList", model);
     }
 
-    @RequestMapping(path="json", produces="application/json")
-    public String json(@RequestParam("plugin") String plugin, @RequestParam("id") Long id,
-        HttpServletRequest request)
-        throws InvalidTokenException, AccessDeniedException, AccessRequiredException {
-        return getDumpData(request, id, plugin, "json");
-    }
-
-    @RequestMapping(path="xml", produces="application/xml")
-    public String xml(@RequestParam("plugin") String plugin, @RequestParam("id") Long id,
-        HttpServletRequest request)
-        throws InvalidTokenException, AccessDeniedException, AccessRequiredException {
-        return getDumpData(request, id, plugin, "xml");
-    }
-
-    @RequestMapping(path="csv", produces="text/csv")
-    public String csv(@RequestParam("plugin") String plugin, @RequestParam("id") Long id,
-        HttpServletRequest request)
-        throws InvalidTokenException, AccessDeniedException, AccessRequiredException {
-        return getDumpData(request, id, plugin, "csv");
-    }
-
-    private String getDumpData(HttpServletRequest request, Long id, String plugin, String format)
-        throws InvalidTokenException, AccessDeniedException, AccessRequiredException {
-
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
-        LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
-
-        loggerHelper.info("Requesting dump from plugin: " + plugin
-            + " for entity with id: " + id);
-
-        this.checkAndLogAccess(loggerHelper, plugin);
-
-        Session session = sessionManager.getSessionFactory().openSession();
+    @RequestMapping(path="by-id/{id}")
+    public void get(@PathVariable Long id,
+        HttpServletRequest request,
+        HttpServletResponse response)
+        throws InvalidTokenException, AccessDeniedException, AccessRequiredException, IOException {
         Map<String, Object> filter = new HashMap<>();
         filter.put("id", id);
-        filter.put("plugin", plugin);
-        filter.put("format", format);
-        DumpInfo result = QueryManager.getItem(session, DumpInfo.class, filter);
 
-        return result.getData();
+        getDump(request, response, filter);
+    }
+
+    @RequestMapping(path="by-name/{name}")
+    public void get(@PathVariable String name,
+        HttpServletRequest request,
+        HttpServletResponse response)
+        throws InvalidTokenException, AccessDeniedException, AccessRequiredException, IOException {
+        Map<String, Object> filter = new HashMap<>();
+        filter.put("name", name);
+
+        getDump(request, response, filter);
+    }
+
+    private void getDump(HttpServletRequest request,
+        HttpServletResponse response, Map<String, Object> filter)
+        throws InvalidTokenException, AccessDeniedException, AccessRequiredException, IOException {
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+        Session session = sessionManager.getSessionFactory().openSession();
+        LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
+        DumpInfo info = QueryManager.getItem(session, DumpInfo.class, filter);
+
+        loggerHelper.info("Requesting dump {} from \"{}\"",
+            info.getName(), info.getRequestPath());
+
+        this.checkAndLogAccess(loggerHelper, info.getRequestPath());
+
+        response.setContentType(info.getFormat().getMediaType().toString());
+        response.setCharacterEncoding(info.getCharset().toString());
+
+        response.getOutputStream().write(info.getData());
+    }
+
+    /**
+     * Unauthenticated request handler that allows notifying the DAFO of a
+     * dump configuration change. The main downside to having allowing
+     * unauthenticated requests is that it makes us somewhat vulnerable to
+     * DoS attacks -- constantly triggering this handler might prevent dumps
+     * form running.
+     *
+     * We reload the data from the database, rather than data given in the
+     * request.
+     *
+     * The result is
+     *
+     * @param request The HTTP request, as filled in by Spring.
+     * @return Either "success!" or "failure!" depending on whether the
+     * reload worked.
+     */
+    @RequestMapping(path="notify", produces="text/plain")
+    public String text(HttpServletRequest request) {
+        return engine.setupDumpSchedules() ? "success!\n" : "failure!\n";
     }
 }

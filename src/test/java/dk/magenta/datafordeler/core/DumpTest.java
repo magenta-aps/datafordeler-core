@@ -3,6 +3,8 @@ package dk.magenta.datafordeler.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
+import dk.magenta.datafordeler.core.dump.DumpConfiguration;
+import dk.magenta.datafordeler.core.dump.DumpConfiguration.Format;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -13,6 +15,7 @@ import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
+import org.apache.commons.io.Charsets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.LazyInitializationException;
@@ -23,7 +26,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.quartz.*;
+import org.quartz.JobKey;
+import org.quartz.ListenerManager;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.KeyMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,6 +146,8 @@ public class DumpTest extends GapiTestBase {
         throws DataFordelerException {
         final OffsetDateTime from =
             OffsetDateTime.parse("2001-01-01T00:00:00+00:00");
+        final OffsetDateTime split =
+            OffsetDateTime.parse("2011-01-01T00:00:00+00:00");
 
         DemoEntity entity = new DemoEntity(
             new UUID(0, Integer.parseInt(Integer.toString(postalcode), 16)),
@@ -148,11 +156,11 @@ public class DumpTest extends GapiTestBase {
         DemoRegistration registration = new DemoRegistration(from, null, 0);
         entity.addRegistration(registration);
 
-        DemoEffect effect = new DemoEffect(registration, from, null);
-        effect.setDataItems(Arrays.asList(
+        DemoEffect effect1 = new DemoEffect(registration, from, null);
+        effect1.setDataItems(Arrays.asList(
             new DemoData(postalcode, cityname)
         ));
-        registration.addEffect(effect);
+        registration.addEffect(effect1);
 
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
@@ -173,48 +181,48 @@ public class DumpTest extends GapiTestBase {
         Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
         ListenerManager listenerManager = scheduler.getListenerManager();
         TaskListener taskListener = new TaskListener("DumpTest.schedule");
-        listenerManager.addJobListener(
-            taskListener,
-            KeyMatcher.keyEquals(new JobKey("DUMP"))
-        );
-        SimpleScheduleBuilder scheduleBuilder =
-            SimpleScheduleBuilder.simpleSchedule().repeatForever();
 
         // A schedule to fire every second
         // Because we're down to 'every second', it will also fire immediately
+        DumpConfiguration config = new DumpConfiguration(
+            null,
+            null,
+            null,
+            null,
+            "* * * * * *",
+            null,
+            null);
+        listenerManager.addJobListener(
+            taskListener,
+            KeyMatcher.keyEquals(new JobKey("DUMP-" + config.getId()))
+        );
+
+        this.waitToMilliseconds(500, 50);
+
         engine.setupDumpSchedule(
-            scheduleBuilder.withIntervalInMilliseconds(100),
+            config,
             true);
 
-        Thread.sleep(100);
+        Thread.sleep(1000);
         // One second has passed, should now have executed exactly twice (initial + 1 second)
         Assert.assertEquals(2,
             taskListener.size(TaskListener.Event.jobToBeExecuted));
         Assert.assertEquals(2,
             taskListener.size(TaskListener.Event.jobWasExecuted));
 
-        Thread.sleep(250);
+        Thread.sleep(2000);
         // Three seconds have passed, should now have executed exactly four times (initial plus 3 seconds)
         Assert.assertEquals(4, taskListener.size(TaskListener.Event
             .jobToBeExecuted));
         Assert.assertEquals(4, taskListener.size(TaskListener.Event
             .jobWasExecuted));
 
-        // A schedule to fire every two seconds
-        taskListener.reset();
-        engine.setupDumpSchedule(scheduleBuilder.withIntervalInMilliseconds
-                (200),
-            true);
-
-        Thread.sleep(450);
-        Assert.assertEquals(3, taskListener.size(TaskListener.Event
-            .jobToBeExecuted));
-        Assert.assertEquals(3, taskListener.size(TaskListener.Event
-            .jobWasExecuted));
+        this.waitToMilliseconds(500, 50);
 
         taskListener.reset();
 
-        engine.setupDumpSchedule((ScheduleBuilder) null, true);
+        config.setSchedule(null);
+        engine.setupDumpSchedule(config, true);
         Thread.sleep(500);
         // Should not run any further
         Assert.assertEquals(0,
@@ -238,22 +246,36 @@ public class DumpTest extends GapiTestBase {
             session.close();
         }
 
+        List<DumpConfiguration> configs = Arrays
+            .stream(Format.values()).map(f ->
+                new DumpConfiguration(
+                    "duuump-" + f.name(),
+                    "/demo/postnummer/1/rest/search",
+                    f,
+                    Charsets.UTF_8,
+                    "* * * * * *",
+                    "Testfætter Hestesens filhåndteringsudtræksafprøvning",
+                    null
+                )).collect(Collectors.toList());
+
         // first dump
-        new Dump(this.engine).run();
+        for (DumpConfiguration config : configs) {
+            new Dump(this.engine, config).run();
+        }
 
         Session session = sessionManager.getSessionFactory().openSession();
 
         List<DumpInfo> dumps =
             QueryManager.getAllItems(session, DumpInfo.class);
 
-        Assert.assertEquals("After one run",
-            1 * Dump.Format.values().length, dumps.size());
-
         List<DumpData> dumpDatas =
             QueryManager.getAllItems(session, DumpData.class);
 
         Assert.assertEquals("After one run",
-            1 * Dump.Format.values().length, dumps.size());
+            configs.size(), dumps.size());
+
+        Assert.assertEquals("After one run",
+            configs.size(), dumpDatas.size());
 
         Assert.assertArrayEquals("Dump contents",
             new String[]{
@@ -280,24 +302,26 @@ public class DumpTest extends GapiTestBase {
                 "",
                 "",
             },
-            dumps.stream().map(d -> d.getData()).toArray());
+            dumps.stream().map(DumpInfo::getStringData).toArray());
 
         session.close();
 
         // second dump
-        new Dump(this.engine).run();
+        for (DumpConfiguration config : configs) {
+            new Dump(this.engine, config).run();
+        }
 
         session = sessionManager.getSessionFactory().openSession();
 
         dumps = QueryManager.getAllItems(session, DumpInfo.class);
 
         Assert.assertEquals("After two runs",
-            1 * Dump.Format.values().length, dumps.size());
+            configs.size(), dumps.size());
 
         dumpDatas = QueryManager.getAllItems(session, DumpData.class);
 
         Assert.assertEquals("After two runs",
-            1 * Dump.Format.values().length, dumps.size());
+            configs.size(), dumpDatas.size());
 
         session.close();
     }
@@ -318,7 +342,22 @@ public class DumpTest extends GapiTestBase {
 
         session.close();
 
-        new Dump(this.engine).run();
+        List<DumpConfiguration> configs = Arrays
+            .stream(Format.values()).map(f ->
+                new DumpConfiguration(
+                    "duuump-" + f.name(),
+                    "/demo/postnummer/1/rest/search",
+                    f,
+                    Charsets.UTF_8,
+                    "* * * * * *",
+                    "Testfætter Hestesens filhåndteringsudtræksafprøvning",
+                    null
+                )).collect(Collectors.toList());
+
+        // first dump
+        for (DumpConfiguration config : configs) {
+            new Dump(this.engine, config).run();
+        }
 
         session = sessionManager.getSessionFactory().openSession();
 
@@ -326,10 +365,10 @@ public class DumpTest extends GapiTestBase {
             QueryManager.getAllItems(session, DumpInfo.class);
 
         Assert.assertEquals("After one run",
-            1 * Dump.Format.values().length, dumps.size());
+            configs.size(), dumps.size());
 
         Assert.assertArrayEquals("Dump contents",
-            Arrays.stream(Dump.Format.values()).map(
+            Arrays.stream(DumpConfiguration.Format.values()).map(
                 s -> {
                     try {
                         return getPayload("/dump." + s.name());
@@ -339,7 +378,21 @@ public class DumpTest extends GapiTestBase {
                     }
                 }
             ).toArray(),
-            dumps.stream().map(d -> d.getData()).toArray());
+            dumps.stream().map(DumpInfo::getStringData).toArray());
+
+        session.close();
+
+        // second dump
+        for (DumpConfiguration config : configs) {
+            new Dump(this.engine, config).run();
+        }
+
+        session = sessionManager.getSessionFactory().openSession();
+
+        Assert.assertEquals(
+            configs.size(),
+            QueryManager.getAllItems(session, DumpData.class).size()
+        );
 
         session.close();
     }
@@ -355,15 +408,22 @@ public class DumpTest extends GapiTestBase {
 
         Session session = sessionManager.getSessionFactory().openSession();
 
-        new Dump(this.engine).run();
+        new Dump(this.engine, new DumpConfiguration(
+            "duuump-whatever",
+            "/demo/postnummer/1/rest/search",
+            DumpConfiguration.Format.csv,
+            Charsets.UTF_8,
+            "* * * * * *",
+            "Testfætter Hestesens filhåndteringsudtræksafprøvning",
+            null
+        )).run();
 
         List<DumpInfo> dumps =
             QueryManager.getAllItems(session, DumpInfo.class);
 
         session.close();
 
-        Assert.assertEquals("After one run",
-            1 * Dump.Format.values().length, dumps.size());
+        Assert.assertEquals("After one run", 1, dumps.size());
 
         for (DumpInfo dump : dumps) {
             try {
@@ -393,4 +453,5 @@ public class DumpTest extends GapiTestBase {
 
         Assert.assertNotNull(json);
     }
+
 }
