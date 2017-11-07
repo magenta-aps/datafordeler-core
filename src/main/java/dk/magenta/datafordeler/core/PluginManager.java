@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core;
 
+import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -101,6 +103,21 @@ public class PluginManager {
                 return this.pluginsByURISubstring.get(substring);
             }
         }
+        return null;
+    }
+
+    public Plugin getPluginForServicePath(String path) {
+        for (Plugin plugin : this.plugins) {
+            for (EntityManager entityManager : plugin.getRegisterManager().getEntityManagers()) {
+                FapiService restService = entityManager.getEntityService();
+                for (String servicePath : restService.getServicePaths()) {
+                    if (path.startsWith(servicePath)) {
+                        return plugin;
+                    }
+                }
+            }
+        }
+
         return null;
     }
 

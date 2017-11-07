@@ -363,7 +363,9 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return o != null &&
             compareTo(o) == 0 &&
             getSequenceNumber() == o.getSequenceNumber() &&
-            getRegisterChecksum().equalsIgnoreCase(o.getRegisterChecksum());
+            (getRegisterChecksum() == o.getRegisterChecksum() ||
+                getRegisterChecksum()
+                    .equalsIgnoreCase(o.getRegisterChecksum()));
     }
 
     public R split(OffsetDateTime splitTime) {

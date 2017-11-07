@@ -11,6 +11,7 @@ import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.quartz.JobDataMap;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -22,6 +23,20 @@ import java.util.HashMap;
  * A Runnable that performs a pull with a given RegisterManager
  */
 public class Pull extends Worker implements Runnable {
+    /**
+     * Created by lars on 06-04-17.
+     */
+    public static class Task extends AbstractTask<Pull> {
+        public static final String DATA_ENGINE = "engine";
+        public static final String DATA_REGISTERMANAGER = "registerManager";
+
+        @Override
+        protected Pull createWorker(JobDataMap dataMap) {
+            Engine engine = (Engine) dataMap.get(DATA_ENGINE);
+            RegisterManager registerManager = (RegisterManager) dataMap.get(DATA_REGISTERMANAGER);
+            return new Pull(engine, registerManager);
+        }
+    }
 
     private Logger log = LogManager.getLogger(Pull.class);
 

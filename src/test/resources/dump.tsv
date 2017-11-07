@@ -1,0 +1,3 @@
+aktiv	bynavn	effectFrom	effectTo	postnr	reference	registrationFrom	registrationTo	sequenceNumber	uuid
+true	Nuuk	"2001-01-01T01:00:00+01:00"		3900		"2001-01-01T01:00:00+01:00"	"2001-01-01T01:00:00+01:00"	0	"00000000-0000-0000-0000-000000003900"
+true	Siriuspatruljen	"2001-01-01T01:00:00+01:00"		3992		"2001-01-01T01:00:00+01:00"	"2001-01-01T01:00:00+01:00"	0	"00000000-0000-0000-0000-000000003992"

@@ -51,4 +51,8 @@ public class DemoRegistration extends Registration<DemoEntity, DemoRegistration,
         return new DemoEffect();
     }
 
+    @Override
+    public void setLastImportTime() {
+        this.setLastImportTime(null);
+    }
 }
