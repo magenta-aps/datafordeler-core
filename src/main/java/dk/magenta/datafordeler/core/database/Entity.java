@@ -252,14 +252,15 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         // If the last existing registration ends before our requested end, create a new registration there
         OffsetDateTime requestedEndTime = registrationTo == null ? OffsetDateTime.MAX : registrationTo;
         if (latestEnd != null && latestEnd.isBefore(requestedEndTime)) {
-            log.debug("Last registrations ended before our requested end, create missing registration at "+(latestEnd.isEqual(OffsetDateTime.MIN) ? registrationFrom : latestEnd)+" - "+registrationTo);
+            log.debug(this.getUUID()+" Last registration ended before our requested end, create missing registration at "+(latestEnd.isEqual(OffsetDateTime.MIN) ? registrationFrom : latestEnd)+" - "+registrationTo);
             R registration = this.createRegistration();
             registration.setRegistrationFrom(latestEnd.isEqual(OffsetDateTime.MIN) ? registrationFrom : latestEnd);
             registration.setRegistrationTo(registrationTo);
             registrations.add(registration);
         }
 
-        orderedRegistrations = new ArrayList<>(this.getRegistrations());
+        //orderedRegistrations = new ArrayList<>(this.getRegistrations()); // hvorfor ikke registrations???
+        orderedRegistrations = new ArrayList<>(registrations); // hvorfor ikke registrations???
         Collections.sort(orderedRegistrations);
         int seqNo = 0;
         for (R registration : orderedRegistrations) {

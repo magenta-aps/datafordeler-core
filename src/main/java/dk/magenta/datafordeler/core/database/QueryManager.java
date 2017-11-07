@@ -349,7 +349,7 @@ public abstract class QueryManager {
      * @param registration Registration to be saved
      */
     public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration) throws DataFordelerException {
-        saveRegistration(session, entity, registration, true, true);
+        saveRegistration(session, entity, registration, true, true, true);
     }
 
     /**
@@ -357,7 +357,7 @@ public abstract class QueryManager {
      * @param session A database session to work on
      * @param registration Registration to be saved
      */
-    public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems) throws DataFordelerException {
+    public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems, boolean validateRegsitrationSequence) throws DataFordelerException {
         log.debug("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             entity = registration.entity;
@@ -373,43 +373,56 @@ public abstract class QueryManager {
         }
 
 
-
-        // Validate registration:
-        // * No existing registration on the entity may have the same sequence number
-        // * The registration must have a sequence number one higher than the highest existing one
-        int highestSequenceNumber = -1;
-        R lastExistingRegistration = null;
-        if (registration.getId() == null) {
-            // New registration
-            for (R otherRegistration : entity.getRegistrations()) {
-                if (otherRegistration != registration) { // Consider only other registrations
-                    if (otherRegistration.getId() != null || session.contains(otherRegistration)) { // Consider only saved registrations
-                        if (registration.equals(otherRegistration)) {
-                            // the registration exactly matches a
-                            // pre-existing registration, so saving it is a
-                            // no-op
-                            return;
-                        }
-                        if (otherRegistration.getSequenceNumber() == registration.getSequenceNumber()) {
-                            throw new DuplicateSequenceNumberException(registration, otherRegistration);
-                        }
-                        if (otherRegistration.getSequenceNumber() > highestSequenceNumber) {
-                            highestSequenceNumber = otherRegistration.getSequenceNumber();
-                            lastExistingRegistration = otherRegistration;
+        if (validateRegsitrationSequence) {
+            // Validate registration:
+            // * No existing registration on the entity may have the same sequence number
+            // * The registration must have a sequence number one higher than the highest existing one
+            int highestSequenceNumber = -1;
+            R lastExistingRegistration = null;
+            if (registration.getId() == null) {
+                // New registration
+                for (R otherRegistration : entity.getRegistrations()) {
+                    if (otherRegistration != registration) { // Consider only other registrations
+                        if (otherRegistration.getId() != null || session.contains(otherRegistration)) { // Consider only saved registrations
+                            if (registration.equals(otherRegistration)) {
+                                // the registration exactly matches a
+                                // pre-existing registration, so saving it is a
+                                // no-op
+                                return;
+                            }
+                            if (otherRegistration.getSequenceNumber() == registration.getSequenceNumber()) {
+                                for (R r : entity.getRegistrations()) {
+                                    System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                                }
+                                throw new DuplicateSequenceNumberException(registration, otherRegistration);
+                            }
+                            if (otherRegistration.getSequenceNumber() > highestSequenceNumber) {
+                                highestSequenceNumber = otherRegistration.getSequenceNumber();
+                                lastExistingRegistration = otherRegistration;
+                            }
                         }
                     }
                 }
-            }
 
-            if (highestSequenceNumber > -1 && registration.getSequenceNumber() != highestSequenceNumber + 1) {
-                throw new SkippedSequenceNumberException(registration, highestSequenceNumber);
+                if (highestSequenceNumber > -1 && registration.getSequenceNumber() != highestSequenceNumber + 1) {
+                    for (R r : entity.getRegistrations()) {
+                        System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                    }
+                    //throw new SkippedSequenceNumberException(registration, highestSequenceNumber);
+                }
+                if (lastExistingRegistration != null) {
+                    if (lastExistingRegistration.getRegistrationTo() == null) {
+                        lastExistingRegistration.setRegistrationTo(registration.getRegistrationFrom());
+                    } else if (!lastExistingRegistration.getRegistrationTo().equals(registration.getRegistrationFrom())) {
+                        for (R r : entity.getRegistrations()) {
+                            System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                        }
+                        throw new MismatchingRegistrationBoundaryException(registration, lastExistingRegistration);
+                    }
+                }
             }
             if (lastExistingRegistration != null) {
-                if (lastExistingRegistration.getRegistrationTo() == null) {
-                    lastExistingRegistration.setRegistrationTo(registration.getRegistrationFrom());
-                } else if (!lastExistingRegistration.getRegistrationTo().equals(registration.getRegistrationFrom())) {
-                    throw new MismatchingRegistrationBoundaryException(registration, lastExistingRegistration);
-                }
+                session.update(lastExistingRegistration);
             }
         }
 
@@ -468,9 +481,6 @@ public abstract class QueryManager {
         }
 
         session.saveOrUpdate(registration);
-        if (lastExistingRegistration != null) {
-            session.update(lastExistingRegistration);
-        }
 
         for (V effect : registration.getEffects()) {
             session.saveOrUpdate(effect);

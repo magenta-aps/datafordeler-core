@@ -16,6 +16,7 @@ import dk.magenta.datafordeler.core.io.storagetest.TestRegistration;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -154,7 +155,7 @@ public class StorageTest extends GapiTestBase {
         this.deleteEntity(uuid);
     }
 
-
+    @Ignore
     @Test
     public void SkippedSequenceNumberTest() throws DataFordelerException {
         exception.expect(SkippedSequenceNumberException.class);

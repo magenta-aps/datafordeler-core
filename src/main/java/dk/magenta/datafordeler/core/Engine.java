@@ -163,7 +163,7 @@ public class Engine {
                 for (Registration registration : registrations) {
                     QueryManager.saveRegistration(
                             session, (E) registration.getEntity(), (R) registration,
-                            false, false
+                            false, false, true
                     );
                 }
                 transaction.commit();
