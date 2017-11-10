@@ -6,6 +6,7 @@ import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.http.StatusLine;
@@ -191,10 +192,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {
-        String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
-        return this.parseRegistration(data, importMetadata);
-    }
+    public List<? extends Registration> parseRegistration(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
 
     /**
      * Parse incoming data into a Registration (data coming from within a request envelope)
@@ -202,30 +200,8 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(String registrationData, ImportMetadata importMetadata) throws DataFordelerException {
-        try {
-            return this.parseRegistration(this.getObjectMapper().readTree(registrationData), importMetadata);
-        } catch (IOException e) {
-            throw new DataStreamException(e);
-        }
-    }
+    public List<? extends Registration> parseRegistration(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
 
-    public List<? extends Registration> parseRegistration(JsonNode registrationData, ImportMetadata importMetadata) throws DataFordelerException {
-        return null;
-    }
-
-
-
-    public Map<String, List<? extends Registration>> parseRegistrationList(JsonNode registrationData, ImportMetadata importMetadata) throws DataFordelerException {
-        HashMap<String, List<? extends Registration>> registrationMap = new HashMap<>();
-        Iterator<String> keyIterator = registrationData.fieldNames();
-        while (keyIterator.hasNext()) {
-            String key = keyIterator.next();
-            List<? extends Registration> registrations = this.parseRegistration(registrationData.get(key), importMetadata);
-            registrationMap.put(key, registrations);
-        }
-        return registrationMap;
-    }
 
     public boolean handlesOwnSaves() {
         return false;

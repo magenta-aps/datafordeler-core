@@ -130,6 +130,7 @@ public class CommandTest extends GapiTestBase {
             Assert.assertNotNull(getResponseNode.get("received").asText());
             Thread.sleep(1000);
         }
+        System.out.println("status: "+status);
         Assert.assertTrue("running".equals(status) || "successful".equals(status));
 
         HttpEntity<String> httpDeleteEntity = new HttpEntity<String>("", headers);

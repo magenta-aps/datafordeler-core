@@ -155,13 +155,14 @@ public class DemoEntityManager extends EntityManager {
 
     /** Registration parsing **/
 
-    public List<Registration> parseRegistration(InputStream registrationData) throws DataFordelerException {
-        String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
-        return this.parseRegistration(data, "utf-8");
-        // return this.objectMapper.readValue(registrationData, this.managedRegistrationClass);
+    public List<Registration> parseRegistration(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {
+        try {
+            return this.parseRegistration(objectMapper.readTree(registrationData), importMetadata);
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
     }
 
-    @Override
     public List<Registration> parseRegistration(JsonNode jsonNode, ImportMetadata importMetadata) throws ParseException {
         try {
             Registration r = this.objectMapper.treeToValue(jsonNode, this.managedRegistrationClass);

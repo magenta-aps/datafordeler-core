@@ -11,6 +11,7 @@ import org.apache.http.StatusLine;
 import org.apache.logging.log4j.util.Strings;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.net.ssl.TrustManager;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,6 +72,7 @@ public class FtpCommunicator implements Communicator {
 
     protected FTPClient performConnect(URI uri) throws IOException, DataStreamException {
         FTPClient ftpClient = this.useFtps ? new FTPSClient(true) : new FTPClient();
+
         String host = uri.getHost();
         int port = uri.getPort() != -1 ? uri.getPort() : (this.useFtps ? 990 : 21);
         setupProxy(ftpClient);

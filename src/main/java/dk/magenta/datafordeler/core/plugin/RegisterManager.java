@@ -142,10 +142,13 @@ public abstract class RegisterManager {
      * @throws DataFordelerException
      */
     public ItemInputStream<? extends PluginSourceData> pullEvents(URI eventInterface, EntityManager entityManager) throws DataFordelerException {
+        return this.parseEventResponse(this.pullRawData(eventInterface, entityManager), entityManager);
+    }
+
+    public InputStream pullRawData(URI eventInterface, EntityManager entityManager) throws DataFordelerException {
         this.getLog().info("Pulling events from "+eventInterface+", for entityManager "+entityManager);
         Communicator eventCommunicator = this.getEventFetcher();
-        InputStream responseBody = eventCommunicator.fetch(eventInterface);
-        return this.parseEventResponse(responseBody, entityManager);
+        return eventCommunicator.fetch(eventInterface);
     }
 
     public boolean pullsEventsCommonly() {

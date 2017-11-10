@@ -77,8 +77,9 @@ public class CommandWatcher {
     private synchronized List<Command> getCommands() {
         Session session = this.sessionManager.getSessionFactory().openSession();
         try {
-            Query<Command> query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.status = :status", Command.class);
-            query.setParameter("status", Command.Status.QUEUED);
+            Query<Command> query = session.createQuery("select c from dk.magenta.datafordeler.core.command.Command c where c.status = :queued or c.status = :cancel", Command.class);
+            query.setParameter("queued", Command.Status.QUEUED);
+            query.setParameter("cancel", Command.Status.CANCEL);
             List<Command> commands = query.getResultList();
             return commands;
         } catch (PersistenceException e) {
@@ -97,45 +98,56 @@ public class CommandWatcher {
     public void run() {
         List<Command> commands = this.getCommands();
         if (commands != null && !commands.isEmpty()) {
-            this.log.info("Found " + commands.size() + " queued commands");
+            this.log.info("Found " + commands.size() + " commands");
             for (Command command : commands) {
-                CommandHandler commandHandler = this.getHandler(command.getCommandName());
-                try {
-                    command.setStatus(Command.Status.PROCESSING);
-                    this.saveCommand(command);
-                    Worker worker = commandHandler.doHandleCommand(command);
-                    workers.put(command.getId(), worker);
-
-                    worker.setCallback(new Worker.WorkerCallback() {
-                        @Override
-                        public void onComplete(boolean cancelled) {
-                            super.onComplete(cancelled);
-                            if (cancelled) {
-                                command.setStatus(Command.Status.CANCELLED);
-                            } else {
-                                command.setStatus(Command.Status.SUCCESS);
-                            }
-                            CommandWatcher.this.commandComplete(command);
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            super.onError(e);
-                            command.setStatus(Command.Status.FAILED);
-                            while (e.getCause() != null) {
-                                e = e.getCause();
-                            }
-                            command.setErrorMessage(e.getMessage());
-                            CommandWatcher.this.commandComplete(command);
-                        }
-                    });
-                    this.log.info("Worker " + worker.getId() + " obtained, executing");
-                    this.futures.put(command.getId(), this.threadPoolExecutor.submit(worker));
-
-                } catch (DataFordelerException e) {
-                    e.printStackTrace();
+                switch (command.getStatus()) {
+                    case QUEUED:
+                        this.startCommand(command);
+                        break;
+                    case CANCEL:
+                        this.cancelCommand(command);
+                        break;
                 }
             }
+        }
+    }
+
+    private void startCommand(Command command) {
+        CommandHandler commandHandler = this.getHandler(command.getCommandName());
+        try {
+            command.setStatus(Command.Status.PROCESSING);
+            this.saveCommand(command);
+            Worker worker = commandHandler.doHandleCommand(command);
+            workers.put(command.getId(), worker);
+
+            worker.setCallback(new Worker.WorkerCallback() {
+                @Override
+                public void onComplete(boolean cancelled) {
+                    super.onComplete(cancelled);
+                    if (cancelled) {
+                        command.setStatus(Command.Status.CANCELLED);
+                    } else {
+                        command.setStatus(Command.Status.SUCCESS);
+                    }
+                    CommandWatcher.this.commandComplete(command);
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    super.onError(e);
+                    command.setStatus(Command.Status.FAILED);
+                    while (e.getCause() != null) {
+                        e = e.getCause();
+                    }
+                    command.setErrorMessage(e.getMessage());
+                    CommandWatcher.this.commandComplete(command);
+                }
+            });
+            this.log.info("Worker " + worker.getId() + " obtained, executing");
+            this.futures.put(command.getId(), this.threadPoolExecutor.submit(worker));
+
+        } catch (DataFordelerException e) {
+            e.printStackTrace();
         }
     }
 

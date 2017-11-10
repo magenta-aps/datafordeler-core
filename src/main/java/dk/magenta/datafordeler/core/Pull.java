@@ -11,11 +11,18 @@ import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.quartz.JobDataMap;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Scanner;
 
 /**
  * Created by lars on 29-05-17.
@@ -69,6 +76,8 @@ public class Pull extends Worker implements Runnable {
             } else {
                 for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
                     this.log.info("Pulling data for "+entityManager.getClass().getSimpleName());
+
+                    /*
                     ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
                     if (stream != null) {
                         this.doPull(importMetadata, stream);
@@ -76,7 +85,20 @@ public class Pull extends Worker implements Runnable {
                         this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
                     } else {
                         skip = true;
-                    }
+                    }*/
+
+                    InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager);
+
+                    Session session = this.engine.sessionManager.getSessionFactory().openSession();
+                    Transaction transaction = session.beginTransaction();
+                    importMetadata.setSession(session);
+
+                    entityManager.parseRegistration(stream, importMetadata);
+
+                    session.flush();
+                    session.clear();
+                    transaction.commit();
+                    session.close();
                 }
             }
 
@@ -104,17 +126,24 @@ public class Pull extends Worker implements Runnable {
     }
 
     private void doPull(ImportMetadata importMetadata, ItemInputStream<? extends PluginSourceData> eventStream) throws DataStreamException, IOException {
-
+        this.log.info("doPull");
         int count = 0;
         try {
             PluginSourceData event;
+            Plugin plugin = this.registerManager.getPlugin();
             while ((event = eventStream.next()) != null && !this.doCancel) {
-                if (!this.engine.handleEvent(event, this.registerManager.getPlugin(), importMetadata)) {
+                boolean success = this.engine.handleEvent(event, plugin, importMetadata);
+                log.info("Success: "+success);
+                if (!success) {
                     this.log.warn("Worker " + this.getId() + " failed handling event " + event.getId() + ", not processing further events");
                     eventStream.close();
                     break;
                 }
                 count++;
+//                if (count >= 30) {
+//                    log.info("Stopping after 30 events");
+//                    break;
+//                }
             }
 
         } catch (IOException e) {

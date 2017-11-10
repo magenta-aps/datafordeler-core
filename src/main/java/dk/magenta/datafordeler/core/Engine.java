@@ -146,7 +146,7 @@ public class Engine {
                 if (entityManager == null) {
                     throw new EntityManagerNotFoundException(schema);
                 }
-                registrations = entityManager.parseRegistration(event.getData(), importMetadata);
+                registrations = entityManager.parseRegistration(event, importMetadata);
             }
 /*
             for (Registration registration : registrations) {
@@ -158,16 +158,17 @@ public class Engine {
             }*/
 
             if (!entityManager.handlesOwnSaves()) {
-                session = sessionManager.getSessionFactory().openSession();
-                Transaction transaction = session.beginTransaction();
+                session = importMetadata.getSession();
+                //session = sessionManager.getSessionFactory().openSession();
+                //Transaction transaction = session.beginTransaction();
                 for (Registration registration : registrations) {
                     QueryManager.saveRegistration(
                             session, (E) registration.getEntity(), (R) registration,
                             false, false
                     );
                 }
-                transaction.commit();
-                session.close();
+                //transaction.commit();
+                //session.close();
             }
 
             receipt = new Receipt(event.getId(), eventReceived);
@@ -180,20 +181,20 @@ public class Engine {
                 session.close();
             }
         } catch (Exception e) {
-            if (session != null) {
+            /*if (session != null) {
                 session.close();
-            }
+            }*/
             throw e;
         }
         if (entityManager == null) {
             log.error("No EntityManager found for event; cannot send receipt");
         } else {
-            try {
+            /*try {
                entityManager.sendReceipt(receipt);
             } catch (IOException e) {
                 log.error("Failed sending receipt", e);
                 e.printStackTrace();
-            }
+            }*/
         }
         return success;
     }

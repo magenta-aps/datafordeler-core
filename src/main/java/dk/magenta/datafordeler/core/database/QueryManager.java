@@ -7,6 +7,7 @@ import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
+import org.hibernate.exception.ConstraintViolationException;
 
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
@@ -43,6 +44,32 @@ public abstract class QueryManager {
         } catch (NoResultException e) {
             return null;
         }
+    }
+
+    private static DoubleHashMap<String, UUID, Identification> identifications = new DoubleHashMap<>();
+
+    public static Identification getOrCreateIdentification(Session session, UUID uuid, String domain) {
+        if (!identifications.containsKey(domain)) {
+            org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
+            databaseQuery.setParameter("domain", domain);
+            for (Identification identification : databaseQuery.getResultList()) {
+                identifications.put(domain, identification.getUuid(), identification);
+            }
+        }
+        Identification identification = identifications.get(domain, uuid);
+        if (identification == null) {
+            //identification = getIdentification(session, uuid);
+            if (identification == null) {
+                identification = new Identification(uuid, domain);
+                session.save(identification);
+                identifications.put(domain, uuid, identification);
+            }
+        }
+        return identification;
+    }
+
+    public static void clearCache() {
+        identifications.clear();
     }
 
     /**
@@ -420,11 +447,11 @@ public abstract class QueryManager {
         }
 
         Identification existing;
-        if (entity.getIdentification() != null && entity.getIdentification().getId() != null) {
-            existing = session.get(Identification.class, entity.getIdentification().getId());
-        } else {
-            existing = getIdentification(session, entity.getUUID());
-        }
+        //if (entity.getIdentification() != null && entity.getIdentification().getId() != null) {
+        //    existing = session.get(Identification.class, entity.getIdentification().getId());
+        //} else {
+            existing = getOrCreateIdentification(session, entity.getUUID(), entity.getDomain());
+        //}
         if (existing != null && existing != entity.getIdentification()) {
             log.debug("identification "+entity.getUUID()+" already exist");
             entity.setIdentifikation(existing);

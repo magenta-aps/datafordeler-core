@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.StringJoiner;
 
 /**
  * Convenience class for measuring several tasks being run in sequence, possibly
@@ -64,6 +65,14 @@ public class Stopwatch {
      */
     public String formatTotal(String key) {
         return key + ": " + this.getTotal(key) + "ms";
+    }
+
+    public String formatAllTotal() {
+        StringJoiner sj = new StringJoiner("\n");
+        for (String key : this.results.keySet()) {
+            sj.add(this.formatTotal(key));
+        }
+        return sj.toString();
     }
 
 }

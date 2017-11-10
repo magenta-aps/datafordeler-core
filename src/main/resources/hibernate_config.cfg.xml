@@ -4,20 +4,20 @@
   <session-factory>
 
     <!-- Secondary hibernate configuration file, for plugin configurations -->
-
-    <!--<property name="connection.url">jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE</property>-->
-    <!--<property name="connection.driver_class">org.h2.Driver</property>-->
-    <!--<property name="connection.username">test</property>-->
-    <!--<property name="connection.password">test</property>-->
-    <!--<property name="hibernate.show_sql">false</property>-->
-    <!--<property name="hibernate.hbm2ddl.auto">create-drop</property>-->
+    <!--
+    <property name="connection.url">jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE</property>
+    <property name="connection.driver_class">org.h2.Driver</property>
+    <property name="connection.username">test</property>
+    <property name="connection.password">test</property>
+    -->
 
     <property name="connection.url">jdbc:postgresql://localhost:5432/datafordeler</property>
     <property name="connection.driver_class">org.postgresql.Driver</property>
     <property name="connection.username">test</property>
     <property name="connection.password">test</property>
+
     <property name="hibernate.show_sql">false</property>
-    <property name="hibernate.hbm2ddl.auto">create-drop</property>
+    <property name="hibernate.hbm2ddl.auto">update</property>
 
     <property name="hibernate.c3p0.min_size">5</property>
     <property name="hibernate.c3p0.max_size">200</property>

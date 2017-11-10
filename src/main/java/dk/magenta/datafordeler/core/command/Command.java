@@ -25,11 +25,21 @@ import java.time.OffsetDateTime;
 public final class Command extends DatabaseEntry {
 
     public enum Status {
-        QUEUED,
-        PROCESSING,
-        SUCCESS,
-        FAILED,
-        CANCELLED
+        QUEUED(0),
+        PROCESSING(1),
+        SUCCESS(2),
+        FAILED(3),
+        CANCEL(4),
+        CANCELLED(5);
+
+        private int value;
+        Status(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return this.value;
+        }
     }
 
     @Column(nullable = false)
