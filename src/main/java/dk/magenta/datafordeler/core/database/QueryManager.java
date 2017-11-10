@@ -46,7 +46,7 @@ public abstract class QueryManager {
         }
     }
 
-    
+
     private static DoubleHashMap<String, UUID, Identification> identifications = new DoubleHashMap<>();
 
     public static Identification getOrCreateIdentification(Session session, UUID uuid, String domain) {
@@ -482,19 +482,12 @@ public abstract class QueryManager {
         }
 
         Identification existing;
-<<<<<<< HEAD
         //if (entity.getIdentification() != null && entity.getIdentification().getId() != null) {
         //    existing = session.get(Identification.class, entity.getIdentification().getId());
         //} else {
             existing = getOrCreateIdentification(session, entity.getUUID(), entity.getDomain());
         //}
-=======
-        if (entity.getIdentification() != null && entity.getIdentification().getId() != null) {
-            existing = session.get(Identification.class, entity.getIdentification().getId());
-        } else {
-            existing = getOrCreateIdentification(session, entity.getUUID(), entity.getDomain());
-        }
->>>>>>> development
+
         if (existing != null && existing != entity.getIdentification()) {
             log.debug("identification "+entity.getUUID()+" exist");
             entity.setIdentifikation(existing);
