@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.command;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -60,7 +61,7 @@ public class CommandService {
     private DafoUserManager dafoUserManager;
 
     // For debugging purposes - make sure this is set to false when running in production
-    private static boolean DEBUG_DISABLE_SECURITY = true;
+    private static boolean DEBUG_DISABLE_SECURITY = false;
 
     public static boolean getDebugDisableSecurity() {
         return DEBUG_DISABLE_SECURITY;
@@ -219,7 +220,7 @@ public class CommandService {
                 throw new InvalidClientInputException("No handler found for command");
             } else {
                 this.checkRole(command, handler, SystemRoleType.ReadCommandRole, loggerHelper);
-                ObjectNode output = handler.getCommandStatus(command);
+                JsonNode output = handler.getCommandStatus(command);
                 list.add(output);
                 loggerHelper.info("Status on job id " + command.getId() + " is " + output);
             }

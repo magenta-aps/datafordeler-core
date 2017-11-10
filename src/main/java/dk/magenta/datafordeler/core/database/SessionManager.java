@@ -45,7 +45,6 @@ public class SessionManager {
             managedClasses.add(dk.magenta.datafordeler.core.database.RecordCollection.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.RecordData.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.LastUpdated.class);
-            managedClasses.add(dk.magenta.datafordeler.core.command.Command.class);
 
             for (Class cls : managedClasses) {
                 this.log.info("Located hardcoded data class "+cls.getCanonicalName());

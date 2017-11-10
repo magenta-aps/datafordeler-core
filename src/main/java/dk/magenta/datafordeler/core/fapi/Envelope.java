@@ -25,7 +25,6 @@ public class Envelope {
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-        this.requestTimestamp = OffsetDateTime.now();
     }
 
     @JsonProperty
@@ -103,6 +102,7 @@ public class Envelope {
 
     public void addUserData(DafoUserDetails user) {
         this.setUsername(user.toString());
+        this.setRequestTimestamp(user.getCreationTime());
     }
 
     public void addRequestData(HttpServletRequest request) {
@@ -110,7 +110,9 @@ public class Envelope {
     }
 
     public void close() {
-        this.setResponseTimestamp(OffsetDateTime.now());
+        if (this.requestTimestamp != null) {
+            this.setResponseTimestamp(OffsetDateTime.now());
+        }
     }
 
     public String toLogString(String queryString) {
@@ -120,7 +122,9 @@ public class Envelope {
             path,
             queryString == null ? "<empty>" : queryString,
             results.size(),
-            requestTimestamp.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            requestTimestamp == null ?
+                "<null>" :
+                requestTimestamp.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
             responseTimestamp == null ?
                 "<null>" :
                 responseTimestamp.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),

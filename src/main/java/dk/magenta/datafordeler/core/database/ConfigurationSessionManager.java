@@ -36,6 +36,7 @@ public class ConfigurationSessionManager {
             configuration.configure(smConfig.getSecondaryHibernateConfigurationFile());
 
             Set<Class> managedClasses = new HashSet<>();
+            managedClasses.add(dk.magenta.datafordeler.core.command.Command.class);
 
             for (Class cls : managedClasses) {
                 this.log.info("Located hardcoded data class "+cls.getCanonicalName());

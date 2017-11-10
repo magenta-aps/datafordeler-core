@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.database;
 import dk.magenta.datafordeler.core.util.Equality;
 
 import javax.persistence.Column;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.time.OffsetDateTime;
@@ -41,7 +42,8 @@ public class RecordData extends DatabaseEntry implements Comparable<RecordData> 
     }
 
 
-    @Column(length = 1048576) // 1 MB
+    @Lob
+    @Column
     private String sourceData;
 
     public String getSourceData() {

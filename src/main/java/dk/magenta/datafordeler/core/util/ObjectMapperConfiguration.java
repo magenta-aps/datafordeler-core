@@ -5,7 +5,10 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import dk.magenta.datafordeler.core.database.Identification;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -22,6 +25,8 @@ import java.time.format.DateTimeFormatter;
  */
 @Configuration
 public class ObjectMapperConfiguration {
+    @Value("${spring.jackson.serialization.indent-output:false}")
+    private boolean indent;
 
     /**
      * Creates a module to serialize and deserialize objects of type "java.time.OffsetDateTime"
@@ -60,9 +65,39 @@ public class ObjectMapperConfiguration {
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, indent);
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.registerModule(this.getOffsetDateTimeModule());
         return objectMapper;
     }
 
+    /**
+     * Creates a module to serialize and deserialize objects of type "java.time.OffsetDateTime"
+     * @return The created module
+     */
+    private SimpleModule getIdentificationModule() {
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Identification.class, new JsonSerializer<Identification>
+            () {
+            @Override
+            public void serialize(Identification id, JsonGenerator gen,
+                SerializerProvider prov) throws IOException {
+                gen.writeString(id.getDomain() + id.getUuid());
+            }
+        });
+        return module;
+    }
+
+    /**
+     * ObjectMapper configuration; add serializers here
+     */
+    @Bean()
+    public CsvMapper csvMapper() {
+        CsvMapper csvMapper = new CsvMapper();
+        csvMapper.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
+        csvMapper.registerModule(new JavaTimeModule());
+        csvMapper.registerModule(this.getOffsetDateTimeModule());
+        csvMapper.registerModule(this.getIdentificationModule());
+        return csvMapper;
+    }
 }

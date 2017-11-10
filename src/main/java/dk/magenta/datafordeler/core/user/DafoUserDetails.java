@@ -4,6 +4,7 @@ import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.role.SystemRole;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -11,6 +12,16 @@ import java.util.Collection;
  * Created by jubk on 12-06-2017.
  */
 public abstract class DafoUserDetails {
+
+  private final OffsetDateTime creationTime;
+
+  public DafoUserDetails(OffsetDateTime creationTime) {
+    this.creationTime = creationTime;
+  }
+
+  public DafoUserDetails() {
+    this.creationTime = OffsetDateTime.now();
+  }
 
   public abstract String getNameQualifier();
   public abstract String getIdentity();
@@ -76,5 +87,9 @@ public abstract class DafoUserDetails {
     } else {
       return "[" + getIdentity() + "]@[" + getNameQualifier() + "]";
     }
+  }
+
+  public OffsetDateTime getCreationTime() {
+    return creationTime;
   }
 }
