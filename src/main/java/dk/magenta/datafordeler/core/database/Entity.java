@@ -46,7 +46,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     protected Identification identification;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
-    @OrderBy("sequenceNumber") // Refers to sequenceNumber in Registration class
+    @OrderBy("registrationFrom asc") // Refers to sequenceNumber in Registration class
     @Filters({
             @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="(registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null)"),
             @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="(registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO+")")
@@ -98,13 +98,15 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         this.identification.setDomain(domain);
     }
 
-    @OrderBy("registrationFrom")
+    @OrderBy("registrationFrom asc")
     @JsonProperty(access = JsonProperty.Access.READ_ONLY, value = "registreringer")
     @XmlElement(name="registreringer")
     @JacksonXmlProperty(localName = "registreringer")
     @JacksonXmlElementWrapper(useWrapping = false)
     public List<R> getRegistrations() {
-        return this.registrations;
+        ArrayList<R> registrations = new ArrayList<>(this.registrations);
+        Collections.sort(registrations);
+        return registrations;
     }
 
     /**

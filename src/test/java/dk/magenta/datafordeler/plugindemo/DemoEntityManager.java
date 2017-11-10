@@ -12,6 +12,7 @@ import dk.magenta.datafordeler.core.exception.ParseException;
 import dk.magenta.datafordeler.core.exception.WrongSubclassException;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.plugin.Communicator;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
@@ -158,6 +159,15 @@ public class DemoEntityManager extends EntityManager {
     public List<Registration> parseRegistration(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         try {
             return this.parseRegistration(objectMapper.readTree(registrationData), importMetadata);
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
+    }
+
+    @Override
+    public List<? extends Registration> parseRegistration(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {
+        try {
+            return this.parseRegistration(objectMapper.readTree(registrationData.getData()), importMetadata);
         } catch (IOException e) {
             throw new DataStreamException(e);
         }

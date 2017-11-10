@@ -137,6 +137,7 @@ public class Pull extends Worker implements Runnable {
             this.log.info("Worker " + this.getId() + " removing lock for " + this.registerManager.getClass().getCanonicalName() + " ("+this.registerManager.hashCode()+") on " + OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 
         } catch (Throwable e) {
+            e.printStackTrace();
             this.log.error(e);
             this.onError(e);
             throw new RuntimeException(e);

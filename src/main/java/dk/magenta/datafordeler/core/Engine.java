@@ -190,12 +190,12 @@ public class Engine {
         if (entityManager == null) {
             log.error("No EntityManager found for event; cannot send receipt");
         } else {
-            /*try {
+            try {
                entityManager.sendReceipt(receipt);
             } catch (IOException e) {
                 log.error("Failed sending receipt", e);
                 e.printStackTrace();
-            }*/
+            }
         }
         return success;
     }

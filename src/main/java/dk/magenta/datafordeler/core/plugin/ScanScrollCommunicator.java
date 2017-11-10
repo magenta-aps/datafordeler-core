@@ -54,16 +54,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
     }
 
-
-    private byte[] delimiter = new byte[]{'\n'};
-
-    public byte[] getDelimiter() {
-        return this.delimiter;
-    }
-
-    public void setDelimiter(byte[] delimiter) {
-        this.delimiter = delimiter;
-    }
+    public static char delimiter = '\n';
 
 
     private int throttle = 1000;
