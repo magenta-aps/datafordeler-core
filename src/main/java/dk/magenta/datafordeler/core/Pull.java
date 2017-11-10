@@ -93,12 +93,18 @@ public class Pull extends Worker implements Runnable {
                     Transaction transaction = session.beginTransaction();
                     importMetadata.setSession(session);
 
-                    entityManager.parseRegistration(stream, importMetadata);
-
-                    session.flush();
-                    session.clear();
-                    transaction.commit();
-                    session.close();
+                    try {
+                        entityManager.parseRegistration(stream, importMetadata);
+                        session.flush();
+                        session.clear();
+                        transaction.commit();
+                    } catch (Exception e) {
+                        transaction.rollback();
+                        e.printStackTrace();
+                        throw e;
+                    } finally {
+                        session.close();
+                    }
                 }
             }
 

@@ -146,6 +146,7 @@ public class Engine {
                 if (entityManager == null) {
                     throw new EntityManagerNotFoundException(schema);
                 }
+                log.info("entityManager: "+entityManager.getClass().getCanonicalName());
                 registrations = entityManager.parseRegistration(event, importMetadata);
             }
 /*
@@ -159,16 +160,23 @@ public class Engine {
 
             if (!entityManager.handlesOwnSaves()) {
                 session = importMetadata.getSession();
-                //session = sessionManager.getSessionFactory().openSession();
-                //Transaction transaction = session.beginTransaction();
+                boolean createSession = (session == null);
+                Transaction transaction = null;
+                if (createSession) {
+                    session = sessionManager.getSessionFactory().openSession();
+                    transaction = session.beginTransaction();
+                }
                 for (Registration registration : registrations) {
                     QueryManager.saveRegistration(
                             session, (E) registration.getEntity(), (R) registration,
                             false, false
                     );
                 }
-                //transaction.commit();
-                //session.close();
+                if (createSession) {
+                    transaction.commit();
+                    session.close();
+                    session = null;
+                }
             }
 
             receipt = new Receipt(event.getId(), eventReceived);
