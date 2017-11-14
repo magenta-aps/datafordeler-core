@@ -36,19 +36,12 @@ public class CommandWatcher {
     @Autowired
     private SessionManager sessionManager;
 
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Autowired
     private List<CommandHandler> commandHandlers;
 
     private HashMap<String, CommandHandler> mappedHandlers;
 
     private HashMap<Long, Worker> workers = new HashMap<>();
-    private HashMap<Long, Future> futures = new HashMap<>();
-
-    private ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
     /**
      * Run bean initialization
@@ -144,7 +137,7 @@ public class CommandWatcher {
                 }
             });
             this.log.info("Worker " + worker.getId() + " obtained, executing");
-            this.futures.put(command.getId(), this.threadPoolExecutor.submit(worker));
+            worker.start();
 
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -170,14 +163,11 @@ public class CommandWatcher {
 
             } else {
                 worker.end();
+                this.log.info("Waiting for command " + command.getId() + " to end");
                 try {
-                    this.log.info("Waiting for command " + command.getId() + " to end");
-                    Future future = this.futures.get(command.getId());
-                    future.get();
-                    this.log.info("Command ended");
-                } catch (InterruptedException | ExecutionException e) {
+                    worker.join();
+                } catch (InterruptedException e) {
                     this.log.error(e);
-                    e.printStackTrace();
                 }
             }
             command.setHandled();

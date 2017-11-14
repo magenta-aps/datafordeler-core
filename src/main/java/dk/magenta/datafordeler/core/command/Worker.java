@@ -17,6 +17,7 @@ public abstract class Worker extends Thread implements Runnable {
 
     public void end() {
         this.doCancel = true;
+        this.interrupt();
     }
 
     public void setCallback(WorkerCallback callback) {

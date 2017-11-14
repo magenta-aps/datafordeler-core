@@ -69,8 +69,20 @@ public abstract class QueryManager {
         return identification;
     }
 
-    public static void clearCache() {
+    /**
+    * On transaction rollback, we must clear a number of optimization caches to avoid invalid references
+     */
+    public static void clearCaches() {
         identifications.clear();
+        for (HashMap map : caches) {
+            map.clear();
+        }
+    }
+
+    private static List<HashMap> caches = new ArrayList<>();
+
+    public static void addCache(HashMap map) {
+        caches.add(map);
     }
 
     /**

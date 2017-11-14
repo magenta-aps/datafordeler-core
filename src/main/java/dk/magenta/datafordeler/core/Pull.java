@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.command.Worker;
+import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
@@ -12,17 +13,13 @@ import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.quartz.JobDataMap;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.Scanner;
 
 /**
  * Created by lars on 29-05-17.
@@ -62,6 +59,7 @@ public class Pull extends Worker implements Runnable {
      * Fetches and processes outstanding events from the Register
      * Basically PULL
      * */
+    @Override
     public void run() {
         try {
             if (runningPulls.keySet().contains(this.registerManager)) {
@@ -89,6 +87,9 @@ public class Pull extends Worker implements Runnable {
                 }
             } else {
                 for (EntityManager entityManager : this.registerManager.getEntityManagers()) {
+                    if (this.doCancel) {
+                        break;
+                    }
                     this.log.info("Pulling data for "+entityManager.getClass().getSimpleName());
 
                     /*
@@ -114,9 +115,13 @@ public class Pull extends Worker implements Runnable {
                             session.getTransaction().commit();
                         } catch (Exception e) {
                             session.getTransaction().rollback();
-                            e.printStackTrace();
-                            throw e;
+                            if (this.doCancel) {
+                                break;
+                            } else {
+                                throw e;
+                            }
                         } finally {
+                            QueryManager.clearCaches();
                             session.close();
                         }
                     }
@@ -155,17 +160,12 @@ public class Pull extends Worker implements Runnable {
             Plugin plugin = this.registerManager.getPlugin();
             while ((event = eventStream.next()) != null && !this.doCancel) {
                 boolean success = this.engine.handleEvent(event, plugin, importMetadata);
-                log.info("Success: "+success);
                 if (!success) {
                     this.log.warn("Worker " + this.getId() + " failed handling event " + event.getId() + ", not processing further events");
                     eventStream.close();
                     break;
                 }
                 count++;
-//                if (count >= 30) {
-//                    log.info("Stopping after 30 events");
-//                    break;
-//                }
             }
 
         } catch (IOException e) {

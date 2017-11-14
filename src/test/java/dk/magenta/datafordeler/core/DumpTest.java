@@ -89,7 +89,7 @@ public class DumpTest extends GapiTestBase {
      */
     @Before
     public void setUp() throws Exception {
-        QueryManager.clearCache();
+        QueryManager.clearCaches();
 
         List<String> entityNames = engine.pluginManager.getPlugins().stream()
             .flatMap(
