@@ -4,8 +4,11 @@ import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
 
 import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.nio.file.FileSystems;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.net.ftp.FTPClient;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.*;
@@ -24,9 +27,17 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -198,6 +209,27 @@ public class FtpCommunicatorTest {
 
     }
 
+    private static SSLSocketFactory getTrustAllSSLSocketFactory() {
+        TrustManager[] trustManager = new TrustManager[] { new X509TrustManager() {
+            public X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            }
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            }
+        } };
+        SSLContext sslContext = null;
+        try {
+            sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustManager, new SecureRandom());
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        }
+        return sslContext.getSocketFactory();
+    }
 
     private void ftpTransferTest(int port, List<File> tempFiles, String path, String contents) throws Exception {
         String username = "test";
@@ -210,6 +242,7 @@ public class FtpCommunicatorTest {
                 FtpCommunicatorTest.this.startServer(username, password, port, tempFiles);
                 try {
                     FtpCommunicator ftpCommunicator = new FtpCommunicator(username, password, true);
+                    ftpCommunicator.setSslSocketFactory(getTrustAllSSLSocketFactory());
                     InputStream inputStream = ftpCommunicator.fetch(new URI("ftp://localhost:" + port + "/" + path));
                     String data = new Scanner(inputStream, "UTF-8").useDelimiter("\\A").next();
                     inputStream.close();

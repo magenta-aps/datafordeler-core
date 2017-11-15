@@ -27,6 +27,10 @@
             <id>central</id>
             <url>http://central.maven.org/maven2/</url>
         </repository>
+        <repository>
+            <id>novus</id>
+            <url>http://repo.novus.com/releases/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -295,6 +299,13 @@
             <groupId>org.thymeleaf</groupId>
             <artifactId>thymeleaf</artifactId>
             <version>RELEASE</version>
+        </dependency>
+
+        <!-- FTP4J -->
+        <dependency>
+            <groupId>it.sauronsoftware</groupId>
+            <artifactId>ftp4j</artifactId>
+            <version>1.6</version>
         </dependency>
 
     </dependencies>
