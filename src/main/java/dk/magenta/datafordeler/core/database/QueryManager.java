@@ -59,20 +59,25 @@ public abstract class QueryManager {
         }
         Identification identification = identifications.get(domain, uuid);
         if (identification == null) {
-            identification = getIdentification(session, uuid);
+            //identification = getIdentification(session, uuid);
             if (identification == null) {
                 identification = new Identification(uuid, domain);
                 session.save(identification);
+                identifications.put(domain, uuid, identification);
             }
-            identifications.put(domain, uuid, identification);
         }
         return identification;
+    }
+
+    public static boolean hasIdentification(UUID uuid, String domain) {
+        return identifications.get(domain, uuid) != null;
     }
 
     /**
     * On transaction rollback, we must clear a number of optimization caches to avoid invalid references
      */
     public static void clearCaches() {
+        System.out.println("Clearing caches");
         identifications.clear();
         for (HashMap map : caches) {
             map.clear();

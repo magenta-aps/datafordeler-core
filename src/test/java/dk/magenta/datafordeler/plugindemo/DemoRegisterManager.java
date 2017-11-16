@@ -139,7 +139,6 @@ public class DemoRegisterManager extends RegisterManager {
 
     @Override
     public URI getEventInterface(EntityManager entityManager) {
-        System.out.println("getEventInterface has port "+this.getBaseEndpoint()+" on "+this.hashCode());
         return expandBaseURI(this.getBaseEndpoint(), "/getNewEvents");
     }
 
