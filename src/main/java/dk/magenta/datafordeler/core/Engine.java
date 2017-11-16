@@ -220,7 +220,7 @@ public class Engine {
             this.log.info("Registered plugin {} has schedule '{}'",
                 plugin.getClass().getCanonicalName(), schedule);
 
-            if (schedule != null) {
+            if (schedule != null && !schedule.isEmpty()) {
                 this.setupPullSchedule(registerManager, schedule, false);
             }
         }
@@ -237,14 +237,15 @@ public class Engine {
      * @param cronSchedule A valid cron schedule, six items, space-separated
      * @param dummyRun For test purposes. If false, no pull will actually be run.
      */
-    public void setupPullSchedule(RegisterManager registerManager,
-        String cronSchedule,
-        boolean dummyRun) {
-        setupPullSchedule(
-            registerManager,
-            CronScheduleBuilder.cronSchedule(cronSchedule),
-            dummyRun
-        );
+    public void setupPullSchedule(RegisterManager registerManager, String cronSchedule, boolean dummyRun) {
+        ScheduleBuilder scheduleBuilder;
+        try {
+             scheduleBuilder = CronScheduleBuilder.cronSchedule(cronSchedule);
+        } catch (RuntimeException e) {
+            this.log.error(e);
+            return;
+        }
+        setupPullSchedule(registerManager, scheduleBuilder, dummyRun);
     }
 
     /**

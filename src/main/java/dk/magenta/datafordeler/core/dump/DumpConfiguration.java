@@ -113,7 +113,7 @@ public class DumpConfiguration extends DatabaseEntry implements Configuration {
     }
 
     public CronScheduleBuilder getSchedule() {
-        if (schedule == null)
+        if (schedule == null || schedule.isEmpty())
             return null;
 
         ArrayList<String> parts =
