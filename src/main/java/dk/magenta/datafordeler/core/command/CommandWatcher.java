@@ -107,40 +107,42 @@ public class CommandWatcher {
 
     private void startCommand(Command command) {
         CommandHandler commandHandler = this.getHandler(command.getCommandName());
-        try {
-            command.setStatus(Command.Status.PROCESSING);
-            this.saveCommand(command);
-            Worker worker = commandHandler.doHandleCommand(command);
-            workers.put(command.getId(), worker);
+        if (commandHandler.accept(command)) {
+            try {
+                command.setStatus(Command.Status.PROCESSING);
+                this.saveCommand(command);
+                Worker worker = commandHandler.doHandleCommand(command);
+                workers.put(command.getId(), worker);
 
-            worker.setCallback(new Worker.WorkerCallback() {
-                @Override
-                public void onComplete(boolean cancelled) {
-                    super.onComplete(cancelled);
-                    if (cancelled) {
-                        command.setStatus(Command.Status.CANCELLED);
-                    } else {
-                        command.setStatus(Command.Status.SUCCESS);
+                worker.setCallback(new Worker.WorkerCallback() {
+                    @Override
+                    public void onComplete(boolean cancelled) {
+                        super.onComplete(cancelled);
+                        if (cancelled) {
+                            command.setStatus(Command.Status.CANCELLED);
+                        } else {
+                            command.setStatus(Command.Status.SUCCESS);
+                        }
+                        CommandWatcher.this.commandComplete(command);
                     }
-                    CommandWatcher.this.commandComplete(command);
-                }
 
-                @Override
-                public void onError(Throwable e) {
-                    super.onError(e);
-                    command.setStatus(Command.Status.FAILED);
-                    while (e.getCause() != null) {
-                        e = e.getCause();
+                    @Override
+                    public void onError(Throwable e) {
+                        super.onError(e);
+                        command.setStatus(Command.Status.FAILED);
+                        while (e.getCause() != null) {
+                            e = e.getCause();
+                        }
+                        command.setErrorMessage(e.getMessage());
+                        CommandWatcher.this.commandComplete(command);
                     }
-                    command.setErrorMessage(e.getMessage());
-                    CommandWatcher.this.commandComplete(command);
-                }
-            });
-            this.log.info("Worker " + worker.getId() + " obtained, executing");
-            worker.start();
+                });
+                this.log.info("Worker " + worker.getId() + " obtained, executing");
+                worker.start();
 
-        } catch (DataFordelerException e) {
-            e.printStackTrace();
+            } catch (DataFordelerException e) {
+                e.printStackTrace();
+            }
         }
     }
 

@@ -79,21 +79,28 @@ public class PullCommandHandler extends CommandHandler {
         return "pull";
     }
 
+    public boolean accept(Command command) {
+        return this.engine.isPullEnabled();
+    }
+
     @Override
     public Worker doHandleCommand(Command command) throws DataFordelerException {
-        this.getLog().info("Handling command '"+command.getCommandName()+"'");
+        if (this.accept(command)) {
+            this.getLog().info("Handling command '" + command.getCommandName() + "'");
 
-        PullCommandData commandData = this.getCommandData(command.getCommandBody());
-        Plugin plugin = this.getPlugin(commandData);
-        this.getLog().info("Pulling with plugin "+plugin.getClass().getCanonicalName());
+            PullCommandData commandData = this.getCommandData(command.getCommandBody());
+            Plugin plugin = this.getPlugin(commandData);
+            this.getLog().info("Pulling with plugin " + plugin.getClass().getCanonicalName());
 
-        Pull pull = new Pull(engine, plugin);
-        pull.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            public void uncaughtException(Thread th, Throwable ex) {
-                PullCommandHandler.this.getLog().error("Pull failed", ex);
-            }
-        });
-        return pull;
+            Pull pull = new Pull(engine, plugin);
+            pull.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                public void uncaughtException(Thread th, Throwable ex) {
+                    PullCommandHandler.this.getLog().error("Pull failed", ex);
+                }
+            });
+            return pull;
+        }
+        return null;
     }
 
     public PullCommandData getCommandData(String commandBody)

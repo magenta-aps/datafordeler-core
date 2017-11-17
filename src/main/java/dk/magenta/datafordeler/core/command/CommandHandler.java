@@ -35,6 +35,8 @@ public abstract class CommandHandler {
         return Collections.singletonList(this.getHandledCommand());
     }
 
+    public abstract boolean accept(Command command);
+
     /**
      * Return a Worker subclass object that will handle the given Command. This worker runs as a thread started by CommandWatcher
      * @param command

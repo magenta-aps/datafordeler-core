@@ -49,6 +49,9 @@ public class Engine {
     @Value("${dafo.cron.enabled:true}")
     private boolean cronEnabled;
 
+    @Value("${dafo.pull.enabled:true}")
+    private boolean pullEnabled;
+
     Logger log = LogManager.getLogger(Engine.class);
 
     @Autowired(required = false)
@@ -63,11 +66,13 @@ public class Engine {
      */
     @PostConstruct
     public void init() {
-        if (this.cronEnabled) {
-            this.setupSchedules();
-        }
+        this.setupPullSchedules();
+        this.setupDumpSchedules();
     }
 
+    public boolean isPullEnabled() {
+        return this.pullEnabled;
+    }
 
     /** Push **/
 
@@ -204,24 +209,23 @@ public class Engine {
     /**
      * Sets the schedule for the registerManager, based on the schedule defined in same
      */
-    public void setupSchedules() {
-        List<Plugin> plugins = this.pluginManager.getPlugins();
-        if (plugins.isEmpty()) {
-            this.log.warn("No plugins registered!");
-        }
+    public void setupPullSchedules() {
+        if (this.pullEnabled) {
+            List<Plugin> plugins = this.pluginManager.getPlugins();
+            if (plugins.isEmpty()) {
+                this.log.warn("No plugins registered!");
+            }
+            for (Plugin plugin : plugins) {
+                RegisterManager registerManager = plugin.getRegisterManager();
+                String schedule = registerManager.getPullCronSchedule();
+                this.log.info("Registered plugin {} has schedule '{}'",
+                        plugin.getClass().getCanonicalName(), schedule);
 
-        for (Plugin plugin : plugins) {
-            RegisterManager registerManager = plugin.getRegisterManager();
-            String schedule = registerManager.getPullCronSchedule();
-            this.log.info("Registered plugin {} has schedule '{}'",
-                plugin.getClass().getCanonicalName(), schedule);
-
-            if (schedule != null && !schedule.isEmpty()) {
-                this.setupPullSchedule(registerManager, schedule, false);
+                if (schedule != null && !schedule.isEmpty()) {
+                    this.setupPullSchedule(registerManager, schedule, false);
+                }
             }
         }
-
-        this.setupDumpSchedules();
     }
 
 
