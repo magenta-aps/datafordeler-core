@@ -166,7 +166,7 @@ public class Engine {
                 }
                 for (Registration registration : registrations) {
                     QueryManager.saveRegistration(
-                            session, (E) registration.getEntity(), (R) registration,
+                            session, null, (R) registration,
                             false, false, true
                     );
                 }
