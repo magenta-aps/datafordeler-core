@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.configuration.Configuration;
 import dk.magenta.datafordeler.core.database.DatabaseEntry;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 
@@ -22,7 +23,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "command", indexes = {@Index(name="status", columnList = "status")})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public final class Command extends DatabaseEntry {
+public final class Command extends DatabaseEntry implements Configuration {
 
     public enum Status {
         QUEUED(0),

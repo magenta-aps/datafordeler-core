@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.command;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.database.SessionManager;
+import dk.magenta.datafordeler.core.database.ConfigurationSessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,10 +18,6 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Created by lars on 06-06-17.
@@ -34,7 +29,7 @@ public class CommandWatcher {
     private Logger log = LogManager.getLogger(CommandWatcher.class);
 
     @Autowired
-    private SessionManager sessionManager;
+    private ConfigurationSessionManager sessionManager;
 
     @Autowired
     private List<CommandHandler> commandHandlers;
