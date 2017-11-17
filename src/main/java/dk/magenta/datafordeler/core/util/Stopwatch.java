@@ -3,8 +3,7 @@ package dk.magenta.datafordeler.core.util;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Convenience class for measuring several tasks being run in sequence, possibly
@@ -69,9 +68,18 @@ public class Stopwatch {
 
     public String formatAllTotal() {
         StringJoiner sj = new StringJoiner("\n");
-        for (String key : this.results.keySet()) {
-            sj.add(this.formatTotal(key));
+        List<Map.Entry<String, Long>> list = new LinkedList<Map.Entry<String, Long>>(this.results.entrySet());
+        Collections.sort( list, new Comparator<Map.Entry<String, Long>>() {
+            public int compare(Map.Entry<String, Long> o1, Map.Entry<String, Long> o2) {
+                return (o1.getValue()).compareTo( o2.getValue() );
+            }
+        });
+        for (Map.Entry<String, Long> entry : list) {
+            sj.add(this.formatTotal(entry.getKey()));
         }
+        /*for (String key : this.results.keySet()) {
+            sj.add(this.formatTotal(key));
+        }*/
         return sj.toString();
     }
 

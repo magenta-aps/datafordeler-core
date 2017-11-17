@@ -178,14 +178,10 @@ public class Engine {
             log.error("Error handling event", e);
             receipt = new Receipt(event.getId(), eventReceived, e);
             success = false;
+        } finally {
             if (session != null) {
                 session.close();
             }
-        } catch (Exception e) {
-            /*if (session != null) {
-                session.close();
-            }*/
-            throw e;
         }
         if (entityManager == null) {
             log.error("No EntityManager found for event; cannot send receipt");

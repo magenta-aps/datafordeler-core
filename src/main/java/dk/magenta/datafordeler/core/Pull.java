@@ -105,16 +105,11 @@ public class Pull extends Worker implements Runnable {
                     InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager);
                     if (stream != null) {
                         Session session = this.engine.sessionManager.getSessionFactory().openSession();
-                        session.beginTransaction();
                         importMetadata.setSession(session);
 
                         try {
                             entityManager.parseRegistration(stream, importMetadata);
-                            session.flush();
-                            session.clear();
-                            session.getTransaction().commit();
                         } catch (Exception e) {
-                            session.getTransaction().rollback();
                             if (this.doCancel) {
                                 break;
                             } else {
