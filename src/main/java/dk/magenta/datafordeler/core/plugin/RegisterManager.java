@@ -152,7 +152,7 @@ public abstract class RegisterManager {
     }
 
     public boolean pullsEventsCommonly() {
-        return false;
+        return true;
     }
 
     public ItemInputStream<? extends PluginSourceData> pullEvents() throws DataFordelerException {

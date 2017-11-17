@@ -112,29 +112,8 @@ public class DumpConfiguration extends DatabaseEntry implements Configuration {
         return Charset.forName(this.charset);
     }
 
-    public CronScheduleBuilder getSchedule() {
-        if (schedule == null || schedule.isEmpty())
-            return null;
-
-        ArrayList<String> parts =
-            new ArrayList<>(Arrays.asList(schedule.split(" +")));
-
-        // the fancy_cronfield doesn't include seconds
-        if (parts.size() == 5) {
-            parts.add(0, "0");
-        }
-
-        // quartz doesn't accept stars for day-of-week
-        if (parts.get(5).equals("*")) {
-            parts.set(5, "?");
-        }
-
-        String s = String.join(" ", parts);
-
-        log.info("Reformatted cronjob specification: " + s);
-        return CronScheduleBuilder.cronSchedule(
-            s
-        );
+    public String getSchedule() {
+        return this.schedule;
     }
 
     public void setSchedule(String schedule) {

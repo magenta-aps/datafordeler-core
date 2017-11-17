@@ -12,8 +12,6 @@ import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import dk.magenta.datafordeler.core.exception.PluginNotFoundException;
 import dk.magenta.datafordeler.core.plugin.Plugin;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -64,12 +62,6 @@ public class PullCommandHandler extends CommandHandler {
 
     @Autowired
     private SessionManager sessionManager;
-
-    private Logger log = LogManager.getLogger(PullCommandHandler.class);
-
-    protected Logger getLog() {
-        return this.log;
-    }
 
     @Autowired
     private ObjectMapper objectMapper;

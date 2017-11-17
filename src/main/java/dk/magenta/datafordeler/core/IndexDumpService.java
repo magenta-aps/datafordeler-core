@@ -161,25 +161,4 @@ public class IndexDumpService {
 
         response.getOutputStream().write(info.getData());
     }
-
-    /**
-     * Unauthenticated request handler that allows notifying the DAFO of a
-     * dump configuration change. The main downside to having allowing
-     * unauthenticated requests is that it makes us somewhat vulnerable to
-     * DoS attacks -- constantly triggering this handler might prevent dumps
-     * form running.
-     *
-     * We reload the data from the database, rather than data given in the
-     * request.
-     *
-     * The result is
-     *
-     * @param request The HTTP request, as filled in by Spring.
-     * @return Either "success!" or "failure!" depending on whether the
-     * reload worked.
-     */
-    @RequestMapping(path="notify", produces="text/plain")
-    public String text(HttpServletRequest request) {
-        return engine.setupDumpSchedules() ? "success!\n" : "failure!\n";
-    }
 }

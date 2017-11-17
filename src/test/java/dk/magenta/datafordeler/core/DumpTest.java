@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
+import dk.magenta.datafordeler.core.dump.Dump;
 import dk.magenta.datafordeler.core.dump.DumpConfiguration;
 import dk.magenta.datafordeler.core.dump.DumpConfiguration.Format;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
@@ -262,7 +263,7 @@ public class DumpTest extends GapiTestBase {
 
         // first dump
         for (DumpConfiguration config : configs) {
-            new Dump(this.engine, config).run();
+            new Dump(this.engine, sessionManager, config).run();
         }
 
         Session session = sessionManager.getSessionFactory().openSession();
@@ -310,7 +311,7 @@ public class DumpTest extends GapiTestBase {
 
         // second dump
         for (DumpConfiguration config : configs) {
-            new Dump(this.engine, config).run();
+            new Dump(this.engine, sessionManager, config).run();
         }
 
         session = sessionManager.getSessionFactory().openSession();
@@ -358,7 +359,7 @@ public class DumpTest extends GapiTestBase {
 
         // first dump
         for (DumpConfiguration config : configs) {
-            new Dump(this.engine, config).run();
+            new Dump(this.engine, sessionManager, config).run();
         }
 
         session = sessionManager.getSessionFactory().openSession();
@@ -386,7 +387,7 @@ public class DumpTest extends GapiTestBase {
 
         // second dump
         for (DumpConfiguration config : configs) {
-            new Dump(this.engine, config).run();
+            new Dump(this.engine, sessionManager, config).run();
         }
 
         session = sessionManager.getSessionFactory().openSession();
@@ -410,7 +411,7 @@ public class DumpTest extends GapiTestBase {
 
         Session session = sessionManager.getSessionFactory().openSession();
 
-        new Dump(this.engine, new DumpConfiguration(
+        new Dump(this.engine, sessionManager, new DumpConfiguration(
             "duuump-whatever",
             "/demo/postnummer/1/rest/search",
             DumpConfiguration.Format.csv,

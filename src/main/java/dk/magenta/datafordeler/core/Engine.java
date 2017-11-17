@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core;
 
+import dk.magenta.datafordeler.core.dump.Dump;
+import dk.magenta.datafordeler.core.dump.Dump.Task;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.dump.DumpConfiguration;
 import dk.magenta.datafordeler.core.exception.*;
@@ -46,8 +48,8 @@ public class Engine {
     @Autowired
     ConfigurationSessionManager configurationSessionManager;
 
-    @Value("${dafo.cron.enabled:true}")
-    private boolean cronEnabled;
+    @Value("${dafo.dump.enabled:true}")
+    private boolean dumpEnabled;
 
     @Value("${dafo.pull.enabled:true}")
     private boolean pullEnabled;
@@ -73,6 +75,8 @@ public class Engine {
     public boolean isPullEnabled() {
         return this.pullEnabled;
     }
+
+    public boolean isDumpEnabled() { return this.dumpEnabled; }
 
     /** Push **/
 
@@ -240,7 +244,7 @@ public class Engine {
     public void setupPullSchedule(RegisterManager registerManager, String cronSchedule, boolean dummyRun) {
         ScheduleBuilder scheduleBuilder;
         try {
-             scheduleBuilder = CronScheduleBuilder.cronSchedule(cronSchedule);
+             scheduleBuilder = makeSchedule(cronSchedule);
         } catch (RuntimeException e) {
             this.log.error(e);
             return;
@@ -295,6 +299,11 @@ public class Engine {
     }
 
     public boolean setupDumpSchedules() {
+        if (!dumpEnabled) {
+            log.info("Scheduled dump jobs disabled for this server!");
+            return false;
+        }
+
         Session session =
             configurationSessionManager.getSessionFactory().openSession();
 
@@ -329,7 +338,9 @@ public class Engine {
                 scheduler.unscheduleJob(this.pullTriggerKeys.get(triggerID));
             }
 
-            CronScheduleBuilder scheduleBuilder = config.getSchedule();
+            CronScheduleBuilder scheduleBuilder = makeSchedule(
+                config.getSchedule()
+            );
 
             if (scheduleBuilder != null) {
                 this.log.info("Setting up dump with schedule {}",
@@ -348,6 +359,7 @@ public class Engine {
 
                 JobDataMap jobData = new JobDataMap();
                 jobData.put(Dump.Task.DATA_ENGINE, this);
+                jobData.put(Task.DATA_SESSIONMANAGER, this.sessionManager);
                 jobData.put(Dump.Task.DATA_CONFIG, config);
                 jobData.put(Dump.Task.DATA_DUMMYRUN, dummyRun);
                 JobDetail job = JobBuilder.newJob(Dump.Task.class)
@@ -364,6 +376,31 @@ public class Engine {
             this.log.error("failed to schedule dump!", e);
             return false;
         }
+    }
+
+    private CronScheduleBuilder makeSchedule(String schedule) {
+        if (schedule == null || schedule.isEmpty())
+            return null;
+
+        ArrayList<String> parts =
+            new ArrayList<>(Arrays.asList(schedule.split(" +")));
+
+        // the fancy_cronfield doesn't include seconds
+        if (parts.size() == 5) {
+            parts.add(0, "0");
+        }
+
+        // quartz doesn't accept stars for day-of-week
+        if (parts.get(5).equals("*")) {
+            parts.set(5, "?");
+        }
+
+        String s = String.join(" ", parts);
+
+        log.info("Reformatted cronjob specification: " + s);
+        return CronScheduleBuilder.cronSchedule(
+            s
+        );
     }
 
     private void stopScheduler() {
