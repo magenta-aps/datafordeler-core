@@ -120,12 +120,17 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         throw new HttpStatusException(response.getStatusLine(), startUri);
                     }
 
+                    /*
+                    String postResponseContent = InputStreamReader.readInputStream(content);
+                    outputStream.write(postResponseContent.getBytes("UTF-8"));
+                    outputStream.flush();
+                    responseNode = objectMapper.readTree(postResponseContent);
+                    */
 
                     responseNode = objectMapper.readTree(content);
 
                     String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
                     while (scrollId != null) {
-
                         InputStream getResponseData;
 
                         URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
@@ -186,8 +191,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             }
                         } else {
                             // Reached the end
-                            log.info("Closing outputstream");
-                            outputStream.close();
+                            break;
                         }
 
                     }
@@ -196,11 +200,8 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                     throw new RuntimeException(e);
                 } finally {
                     try {
+                        log.info("Closing outputstream");
                         outputStream.close();
-                    } catch (IOException e1) {
-                    }
-                    try {
-                        inputStream.close();
                     } catch (IOException e1) {
                     }
                     ScanScrollCommunicator.this.fetches.remove(inputStream);
