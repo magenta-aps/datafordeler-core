@@ -324,8 +324,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         StringJoiner s = new StringJoiner("\n");
         s.add(indentString + this.getClass().getSimpleName()+"["+this.hashCode()+"] {");
         if (this.entity != null) {
-            Identification identification = this.entity.getIdentification();
-            s.add(subIndentString + "entity: " + identification.getUuid()+" @ "+identification.getDomain());
+            s.add(subIndentString + "entity: " + entity.getUUID()+" @ "+entity.getDomain());
         } else {
             s.add(subIndentString + "entity: NULL");
         }

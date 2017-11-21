@@ -93,6 +93,12 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
         this.lastUpdated = lastUpdated;
     }
 
+    public void setUpdated(OffsetDateTime lastUpdated) {
+        if (this.lastUpdated == null || (lastUpdated != null && lastUpdated.isAfter(this.lastUpdated))) {
+            this.setLastUpdated(lastUpdated);
+        }
+    }
+
     /**
      * Obtain contained data as a Map
      * Used for serializing DataItems merged into one wrapper

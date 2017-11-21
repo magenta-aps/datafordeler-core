@@ -25,6 +25,24 @@ public abstract class QueryManager {
 
     public static final String ENTITY = "e";
 
+    private static Identification getIdentificationFromCache(Session session, UUID uuid, String domain) {
+        if (!identifications.containsKey(domain)) {
+            log.info("Loading identifications for domain "+domain);
+            org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
+            databaseQuery.setParameter("domain", domain);
+            for (Identification identification : databaseQuery.getResultList()) {
+                identifications.put(domain, identification.getUuid(), identification.getId());
+            }
+            log.info("Identifications loaded");
+        }
+        Long id = identifications.get(domain, uuid);
+        if (id != null) {
+            return session.get(Identification.class, id);
+        }
+        return null;
+    }
+
+
     /**
      * Get one Identification object based on a UUID
      * @param session Database session to work from
@@ -33,12 +51,10 @@ public abstract class QueryManager {
      */
     public static Identification getIdentification(Session session, UUID uuid) {
         log.trace("Get Identification from UUID " + uuid);
-        //Identification identification = session.get(Identification.class, uuid);
-        //log.info(identification);
         org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
         databaseQuery.setParameter("uuid", uuid);
         logQuery(databaseQuery);
-
+        databaseQuery.setCacheable(true);
         try {
             return databaseQuery.getSingleResult();
         } catch (NoResultException e) {
@@ -47,31 +63,23 @@ public abstract class QueryManager {
     }
 
 
-    private static DoubleHashMap<String, UUID, Identification> identifications = new DoubleHashMap<>();
+    private static DoubleHashMap<String, UUID, Long> identifications = new DoubleHashMap<>();
 
     public static Identification getOrCreateIdentification(Session session, UUID uuid, String domain) {
-        if (!identifications.containsKey(domain)) {
-            log.info("Loading identifications for domain "+domain);
-            org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
-            databaseQuery.setParameter("domain", domain);
-            for (Identification identification : databaseQuery.getResultList()) {
-                identifications.put(domain, identification.getUuid(), identification);
-            }
-        }
-        Identification identification = identifications.get(domain, uuid);
+        Identification identification = getIdentificationFromCache(session, uuid, domain);
         if (identification == null) {
             log.debug("Didn't find identification for domain "+domain+"/"+uuid+" in cache");
-            //identification = getIdentification(session, uuid);
+            identification = getIdentification(session, uuid);
             if (identification == null) {
                 log.debug("Creating new");
                 identification = new Identification(uuid, domain);
                 session.save(identification);
-                identifications.put(domain, uuid, identification);
+                identifications.put(domain, uuid, identification.getId());
             } else {
                 log.debug("found it in db");
             }
         } else {
-            log.debug("Identification for domain "+domain+"/"+uuid+" found in cache");
+            log.debug("Identification for "+domain+"/"+uuid+" found in cache: "+identification.getId());
         }
         return identification;
     }
@@ -84,7 +92,6 @@ public abstract class QueryManager {
     * On transaction rollback, we must clear a number of optimization caches to avoid invalid references
      */
     public static void clearCaches() {
-        System.out.println("Clearing caches");
         identifications.clear();
         for (HashMap map : caches) {
             map.clear();
@@ -205,15 +212,11 @@ public abstract class QueryManager {
      * @return
      */
     public static <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
-        log.trace("Get Entity of class " + eClass.getCanonicalName() + " by uuid "+uuid);
-        org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid = :uuid", eClass);
-        databaseQuery.setParameter("uuid", uuid);
-        logQuery(databaseQuery);
-        try {
-            return databaseQuery.getSingleResult();
-        } catch (NoResultException e) {
-            return null;
+        Identification identification = getIdentification(session, uuid);
+        if (identification != null) {
+            return getEntity(session, identification, eClass);
         }
+        return null;
     }
 
     public static <E extends Entity> E getEntity(Session session, Identification identification, Class<E> eClass) {
@@ -221,6 +224,7 @@ public abstract class QueryManager {
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " where " + ENTITY + ".identification = :identification", eClass);
         databaseQuery.setParameter("identification", identification);
         logQuery(databaseQuery);
+        databaseQuery.setCacheable(true);
         try {
             return databaseQuery.getSingleResult();
         } catch (NoResultException e) {
@@ -410,8 +414,9 @@ public abstract class QueryManager {
         if (entity == null && registration.entity != null) {
             E existingEntity = getEntity(session, registration.entity.getUUID(), (Class<E>) registration.entity.getClass());
             if (existingEntity != null) {
-                log.info("There is an existing entity with uuid " + existingEntity.getUUID().toString() + ", using that");
+                System.out.println("Entity "+existingEntity.getUUID()+" has Identification "+System.identityHashCode(existingEntity.getIdentification()));
                 entity = existingEntity;
+                log.info("There is an existing entity with uuid " + existingEntity.getUUID().toString() + ", using that");
             } else {
                 entity = registration.entity;
                 log.info("No existing entity with uuid "+entity.getUUID().toString()+" "+registration.entity.getClass());
@@ -514,15 +519,14 @@ public abstract class QueryManager {
         //}
 
         if (existing != null && existing != entity.getIdentification()) {
-            log.info("identification "+entity.getUUID()+" exist");
             entity.setIdentifikation(existing);
             session.saveOrUpdate(existing);
             session.saveOrUpdate(entity);
-        } else if (existing == null) {
+        }/* else if (existing == null) {
             log.info("identification "+entity.getUUID()+" does not already exist or is already assigned");
             session.saveOrUpdate(entity.getIdentification());
             session.saveOrUpdate(entity);
-        }
+        }*/
 
 
 

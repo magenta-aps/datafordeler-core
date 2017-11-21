@@ -50,7 +50,7 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     @JsonIgnore
     protected R registration;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Filter(name = DataItem.FILTER_RECORD_AFTER, condition="(lastUpdated > :"+DataItem.FILTERPARAM_RECORD_AFTER+")")
     protected Set<D> dataItems;
 

@@ -53,9 +53,13 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     })
     protected List<R> registrations;
 
+    @Transient
+    private UUID uuid;
+    @Transient
+    private String domain;
+
     public Entity() {
         this.registrations = new ArrayList<R>();
-        this.identification = new Identification();
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
@@ -65,7 +69,9 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     public Entity(UUID uuid, String domain) {
-        this(new Identification(uuid, domain));
+        this();
+        this.uuid = uuid;
+        this.domain = domain;
     }
 
     @JsonIgnore
@@ -75,7 +81,10 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
 
     @JsonProperty("UUID")
     public UUID getUUID() {
-        return this.identification.getUuid();
+        if (this.identification != null) {
+            return this.identification.getUuid();
+        }
+        return this.uuid;
     }
 
     public void setIdentifikation(Identification identification) {
@@ -84,18 +93,23 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
 
     @JsonProperty("uuid")
     public void setUUID(UUID uuid) {
-        this.identification.setUuid(uuid);
+        this.uuid = uuid;
+        //this.identification.setUuid(uuid);
     }
 
     @JsonProperty("domaene")
     public String getDomain() {
-        return this.identification.getDomain();
+        if (this.identification != null) {
+            return this.identification.getDomain();
+        }
+        return this.domain;
     }
 
 
     @JsonProperty("domaene")
     public void setDomain(String domain) {
-        this.identification.setDomain(domain);
+        this.domain = domain;
+        //this.identification.setDomain(domain);
     }
 
     @OrderBy("registrationFrom asc")
