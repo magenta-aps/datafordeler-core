@@ -17,6 +17,7 @@ import org.quartz.JobDataMap;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -77,7 +78,7 @@ public class Pull extends Worker implements Runnable {
             boolean skip = false;
             if (this.registerManager.pullsEventsCommonly()) {
                 this.log.info("Pulling data for "+this.registerManager.getClass().getSimpleName());
-                ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents();
+                ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(importMetadata);
                 if (stream != null) {
                     this.doPull(importMetadata, stream);
                     // Done. Write last-updated timestamp
@@ -102,7 +103,7 @@ public class Pull extends Worker implements Runnable {
                         skip = true;
                     }*/
 
-                    InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager);
+                    InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager, importMetadata);
                     if (stream != null) {
                         Session session = this.engine.sessionManager.getSessionFactory().openSession();
                         importMetadata.setSession(session);

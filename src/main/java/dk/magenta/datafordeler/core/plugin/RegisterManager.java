@@ -5,6 +5,7 @@ import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
+import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import dk.magenta.datafordeler.core.util.ListHashMap;
@@ -126,8 +127,8 @@ public abstract class RegisterManager {
      * @return
      * @throws DataFordelerException
      */
-    private ItemInputStream<? extends PluginSourceData> pullEvents(EntityManager entityManager) throws DataFordelerException {
-        return this.pullEvents(this.getEventInterface(entityManager), entityManager);
+    private ItemInputStream<? extends PluginSourceData> pullEvents(EntityManager entityManager, ImportMetadata importMetadata) throws DataFordelerException {
+        return this.pullEvents(this.getEventInterface(entityManager), entityManager, importMetadata);
     }
 
     /**
@@ -141,11 +142,11 @@ public abstract class RegisterManager {
      * @return
      * @throws DataFordelerException
      */
-    public ItemInputStream<? extends PluginSourceData> pullEvents(URI eventInterface, EntityManager entityManager) throws DataFordelerException {
-        return this.parseEventResponse(this.pullRawData(eventInterface, entityManager), entityManager);
+    public ItemInputStream<? extends PluginSourceData> pullEvents(URI eventInterface, EntityManager entityManager, ImportMetadata importMetadata) throws DataFordelerException {
+        return this.parseEventResponse(this.pullRawData(eventInterface, entityManager, importMetadata), entityManager);
     }
 
-    public InputStream pullRawData(URI eventInterface, EntityManager entityManager) throws DataFordelerException {
+    public InputStream pullRawData(URI eventInterface, EntityManager entityManager, ImportMetadata importMetadata) throws DataFordelerException {
         this.getLog().info("Pulling events from "+eventInterface+", for entityManager "+entityManager);
         Communicator eventCommunicator = this.getEventFetcher();
         return eventCommunicator.fetch(eventInterface);
@@ -155,7 +156,7 @@ public abstract class RegisterManager {
         return false;
     }
 
-    public ItemInputStream<? extends PluginSourceData> pullEvents() throws DataFordelerException {
+    public ItemInputStream<? extends PluginSourceData> pullEvents(ImportMetadata importMetadata) throws DataFordelerException {
         /*HashMap<EntityManager, ItemInputStream<? extends PluginSourceData>> streams = new HashMap<>();
         for (EntityManager entityManager : this.getEntityManagers()) {
             streams.put(entityManager, this.pullEvents(this.getEventInterface(entityManager), entityManager));

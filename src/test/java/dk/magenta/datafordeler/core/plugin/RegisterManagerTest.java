@@ -209,7 +209,7 @@ public class RegisterManagerTest extends PluginTestBase {
         ExpectorCallback eventCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/getNewEvents", body, eventCallback);
 
-        ItemInputStream<? extends PluginSourceData> dataStream = this.plugin.getRegisterManager().pullEvents();
+        ItemInputStream<? extends PluginSourceData> dataStream = this.plugin.getRegisterManager().pullEvents(null);
 
         PluginSourceData data;
         int eventCounter = 0;

@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.io;
 
 import org.hibernate.Session;
 
+import java.net.URI;
 import java.time.OffsetDateTime;
 
 public class ImportMetadata {
@@ -9,6 +10,8 @@ public class ImportMetadata {
     public ImportMetadata() {
         this.importTime = OffsetDateTime.now();
     }
+
+
 
     private OffsetDateTime importTime;
 
@@ -30,5 +33,17 @@ public class ImportMetadata {
 
     public void setSession(Session session) {
         this.session = session;
+    }
+
+
+
+    private URI currentURI;
+
+    public URI getCurrentURI() {
+        return this.currentURI;
+    }
+
+    public void setCurrentURI(URI currentURI) {
+        this.currentURI = currentURI;
     }
 }
