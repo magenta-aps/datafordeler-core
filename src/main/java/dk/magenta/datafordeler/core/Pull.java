@@ -1,8 +1,10 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.command.Worker;
+import dk.magenta.datafordeler.core.database.InterruptedPull;
 import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
+import dk.magenta.datafordeler.core.exception.ImportInterruptedException;
 import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
@@ -56,6 +58,8 @@ public class Pull extends Worker implements Runnable {
         this(engine, plugin.getRegisterManager());
     }
 
+    private ImportMetadata importMetadata = null;
+
     /**
      * Fetches and processes outstanding events from the Register
      * Basically PULL
@@ -64,25 +68,25 @@ public class Pull extends Worker implements Runnable {
     public void run() {
         try {
             if (runningPulls.keySet().contains(this.registerManager)) {
-                throw new SimilarJobRunningException("Another pull job is already running for RegisterManager "+this.registerManager.getClass().getCanonicalName()+" ("+this.registerManager.hashCode()+")");
+                throw new SimilarJobRunningException("Another pull job is already running for RegisterManager " + this.registerManager.getClass().getCanonicalName() + " (" + this.registerManager.hashCode() + ")");
             }
 
-            this.log.info("Worker "+this.getId()+" adding lock for " + this.registerManager.getClass().getCanonicalName() + " ("+this.registerManager.hashCode()+")");
+            this.log.info("Worker " + this.getId() + " adding lock for " + this.registerManager.getClass().getCanonicalName() + " (" + this.registerManager.hashCode() + ")");
             runningPulls.put(this.registerManager, this);
 
-            this.log.info("Worker "+this.getId()+" fetching events with " + this.registerManager.getClass().getCanonicalName());
+            this.log.info("Worker " + this.getId() + " fetching events with " + this.registerManager.getClass().getCanonicalName());
 
-            ImportMetadata importMetadata = new ImportMetadata();
+            this.importMetadata = new ImportMetadata();
 
             boolean error = false;
             boolean skip = false;
             if (this.registerManager.pullsEventsCommonly()) {
-                this.log.info("Pulling data for "+this.registerManager.getClass().getSimpleName());
-                ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(importMetadata);
+                this.log.info("Pulling data for " + this.registerManager.getClass().getSimpleName());
+                ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.importMetadata);
                 if (stream != null) {
-                    this.doPull(importMetadata, stream);
-                    // Done. Write last-updated timestamp
-                    this.registerManager.setLastUpdated(null, importMetadata.getImportTime());
+                    this.doPull(this.importMetadata, stream);
+                    // Done. Write last-updated timestamp.
+                    this.registerManager.setLastUpdated(null, this.importMetadata.getImportTime());
                 } else {
                     skip = true;
                 }
@@ -91,7 +95,7 @@ public class Pull extends Worker implements Runnable {
                     if (this.doCancel) {
                         break;
                     }
-                    this.log.info("Pulling data for "+entityManager.getClass().getSimpleName());
+                    this.log.info("Pulling data for " + entityManager.getClass().getSimpleName());
 
                     /*
                     ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
@@ -103,13 +107,13 @@ public class Pull extends Worker implements Runnable {
                         skip = true;
                     }*/
 
-                    InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager, importMetadata);
+                    InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager, this.importMetadata);
                     if (stream != null) {
                         Session session = this.engine.sessionManager.getSessionFactory().openSession();
-                        importMetadata.setSession(session);
+                        this.importMetadata.setSession(session);
 
                         try {
-                            entityManager.parseRegistration(stream, importMetadata);
+                            entityManager.parseRegistration(stream, this.importMetadata);
                         } catch (Exception e) {
                             if (this.doCancel) {
                                 break;
@@ -136,7 +140,25 @@ public class Pull extends Worker implements Runnable {
             }
             this.onComplete();
 
-            this.log.info("Worker " + this.getId() + " removing lock for " + this.registerManager.getClass().getCanonicalName() + " ("+this.registerManager.hashCode()+") on " + OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+            this.log.info("Worker " + this.getId() + " removing lock for " + this.registerManager.getClass().getCanonicalName() + " (" + this.registerManager.hashCode() + ") on " + OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        } catch (ImportInterruptedException e) {
+            String prefix = "Worker " + this.getId() + ": ";
+            this.log.info(prefix + "Pull interrupted");
+
+            if (e.getChunk() != null && e.getFiles() != null) {
+                InterruptedPull interruptedPull = new InterruptedPull();
+                interruptedPull.setChunk(e.getChunk());
+                interruptedPull.setFiles(e.getFiles());
+                interruptedPull.setStartTime(importMetadata.getImportTime());
+                interruptedPull.setInterruptTime(OffsetDateTime.now());
+                Session session = this.engine.configurationSessionManager.getSessionFactory().openSession();
+                session.beginTransaction();
+                session.save(interruptedPull);
+                session.getTransaction().commit();
+                session.close();
+            }
+
+            this.onComplete();
 
         } catch (Throwable e) {
             e.printStackTrace();
@@ -145,6 +167,13 @@ public class Pull extends Worker implements Runnable {
             throw new RuntimeException(e);
         } finally {
             runningPulls.remove(this.registerManager);
+        }
+    }
+
+    @Override
+    public void end() {
+        if (this.importMetadata != null) {
+            this.importMetadata.setStop();
         }
     }
 

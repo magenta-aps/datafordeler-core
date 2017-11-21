@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
+import dk.magenta.datafordeler.core.io.ImportInputStream;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
 import it.sauronsoftware.ftp4j.*;
 import it.sauronsoftware.ftp4j.connectors.HTTPTunnelConnector;
@@ -118,7 +119,7 @@ public class FtpCommunicator implements Communicator {
      * and marks the fetched files as fetched when the returned InputStream is closed.
      */
     @Override
-    public InputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
+    public ImportInputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
         try {
             FTPClient ftpClient = performConnect(uri);
 
@@ -155,9 +156,9 @@ public class FtpCommunicator implements Communicator {
                         }
                     }
                 });
-                return inputCloser;
+                return new ImportInputStream(inputCloser, currentFiles);
             } else {
-                return new ByteArrayInputStream("".getBytes());
+                return new ImportInputStream(new ByteArrayInputStream("".getBytes()));
             }
         } catch (FTPException | FTPIllegalReplyException | FTPAbortedException | FTPDataTransferException | FTPListParseException e) {
             e.printStackTrace();
@@ -220,7 +221,6 @@ public class FtpCommunicator implements Communicator {
                 result.add(path);
             }
         }
-        System.out.println("Files to download: "+result);
         return result;
     }
 

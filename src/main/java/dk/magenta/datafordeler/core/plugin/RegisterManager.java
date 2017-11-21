@@ -152,9 +152,7 @@ public abstract class RegisterManager {
         return eventCommunicator.fetch(eventInterface);
     }
 
-    public boolean pullsEventsCommonly() {
-        return true;
-    }
+    public abstract boolean pullsEventsCommonly();
 
     public ItemInputStream<? extends PluginSourceData> pullEvents(ImportMetadata importMetadata) throws DataFordelerException {
         /*HashMap<EntityManager, ItemInputStream<? extends PluginSourceData>> streams = new HashMap<>();

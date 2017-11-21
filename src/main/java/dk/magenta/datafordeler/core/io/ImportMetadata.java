@@ -46,4 +46,15 @@ public class ImportMetadata {
     public void setCurrentURI(URI currentURI) {
         this.currentURI = currentURI;
     }
+
+
+    private boolean stop = false;
+
+    public boolean getStop() {
+        return this.stop;
+    }
+
+    public void setStop() {
+        this.stop = true;
+    }
 }
