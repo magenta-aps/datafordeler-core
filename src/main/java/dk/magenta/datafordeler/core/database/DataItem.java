@@ -82,7 +82,9 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
         return this.recordSet;
     }
 
-    @Column
+    public static final String DB_FIELD_LAST_UPDATED = "lastUpdated";
+
+    @Column(name = DB_FIELD_LAST_UPDATED)
     private OffsetDateTime lastUpdated;
 
     public OffsetDateTime getLastUpdated() {

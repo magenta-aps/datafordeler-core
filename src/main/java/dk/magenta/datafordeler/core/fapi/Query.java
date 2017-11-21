@@ -218,7 +218,7 @@ public abstract class Query<E extends Entity> {
     public LookupDefinition getLookupDefinition() {
         LookupDefinition lookupDefinition = new LookupDefinition(this, this.getDataClass());
         if (this.recordAfter != null) {
-            lookupDefinition.put("recordSet.records.timestamp", this.recordAfter, OffsetDateTime.class, LookupDefinition.Operator.GT);
+            lookupDefinition.put(DataItem.DB_FIELD_LAST_UPDATED, this.recordAfter, OffsetDateTime.class, LookupDefinition.Operator.GT);
         }
         return lookupDefinition;
     }
