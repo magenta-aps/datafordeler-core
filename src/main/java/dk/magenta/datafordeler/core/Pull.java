@@ -151,6 +151,8 @@ public class Pull extends Worker implements Runnable {
     private void doPull(ImportMetadata importMetadata, ItemInputStream<? extends PluginSourceData> eventStream) throws DataStreamException, IOException {
         this.log.info("doPull");
         int count = 0;
+        long last_time = System.currentTimeMillis();
+
         try {
             PluginSourceData event;
             Plugin plugin = this.registerManager.getPlugin();
@@ -161,7 +163,17 @@ public class Pull extends Worker implements Runnable {
                     eventStream.close();
                     break;
                 }
+
                 count++;
+
+                if (count % 100 == 0) {
+                    long now = System.currentTimeMillis();
+                    log.info(
+                        "%d: %fms per event",
+                        count, (now - last_time) / 100.0
+                    );
+                    last_time = now;
+                }
             }
 
         } catch (IOException e) {

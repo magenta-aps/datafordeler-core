@@ -1,9 +1,11 @@
-package dk.magenta.datafordeler.core;
+package dk.magenta.datafordeler.core.dump;
 
+import dk.magenta.datafordeler.core.AbstractTask;
+import dk.magenta.datafordeler.core.Engine;
 import dk.magenta.datafordeler.core.command.Worker;
 import dk.magenta.datafordeler.core.database.DumpInfo;
 import dk.magenta.datafordeler.core.database.QueryManager;
-import dk.magenta.datafordeler.core.dump.DumpConfiguration;
+import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.HttpNotFoundException;
 import dk.magenta.datafordeler.core.util.MockInternalServletRequest;
 import org.apache.logging.log4j.LogManager;
@@ -25,15 +27,19 @@ import java.util.Map;
  */
 public class Dump extends Worker {
 
+    private final SessionManager sessionManager;
+
     public static class Task extends AbstractTask<Dump> {
 
         public static final String DATA_ENGINE = "engine";
+        public static final String DATA_SESSIONMANAGER = "sessionManager";
         public static final String DATA_CONFIG = "config";
 
         @Override
         protected Dump createWorker(JobDataMap dataMap) {
             return new Dump(
                 (Engine) dataMap.get(DATA_ENGINE),
+                (SessionManager) dataMap.get(DATA_SESSIONMANAGER),
                 (DumpConfiguration) dataMap.get(DATA_CONFIG)
             );
         }
@@ -45,18 +51,25 @@ public class Dump extends Worker {
     private final DumpConfiguration config;
     private final OffsetDateTime timestamp;
 
-    public Dump(Engine engine, DumpConfiguration config) {
+    public Dump(
+        Engine engine,
+        SessionManager sessionManager,
+        DumpConfiguration config
+    ) {
         this.engine = engine;
+        this.sessionManager = sessionManager;
         this.config = config;
         this.timestamp = OffsetDateTime.now();
     }
 
     public Dump(
         Engine engine,
+        SessionManager sessionManager,
         DumpConfiguration config,
         OffsetDateTime timestamp
     ) {
         this.engine = engine;
+        this.sessionManager = sessionManager;
         this.config = config;
         this.timestamp = timestamp;
     }
@@ -66,9 +79,7 @@ public class Dump extends Worker {
      * DUMP
      */
     public void run() {
-        Session session =
-            this.engine.sessionManager.getSessionFactory()
-                .openSession();
+        Session session = sessionManager.getSessionFactory().openSession();
 
         try {
             this.log.info("Worker {} is executing dump {} of {} for {}",
