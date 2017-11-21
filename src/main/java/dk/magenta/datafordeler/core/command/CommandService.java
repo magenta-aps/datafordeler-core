@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.PluginManager;
+import dk.magenta.datafordeler.core.database.ConfigurationSessionManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -46,7 +47,7 @@ public class CommandService {
     private Logger log = LoggerFactory.getLogger(CommandService.class);
 
     @Autowired
-    private SessionManager sessionManager;
+    private ConfigurationSessionManager sessionManager;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -61,7 +62,7 @@ public class CommandService {
     private DafoUserManager dafoUserManager;
 
     // For debugging purposes - make sure this is set to false when running in production
-    private static boolean DEBUG_DISABLE_SECURITY = false;
+    private static boolean DEBUG_DISABLE_SECURITY = true;
 
     public static boolean getDebugDisableSecurity() {
         return DEBUG_DISABLE_SECURITY;
