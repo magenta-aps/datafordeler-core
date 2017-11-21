@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.database;
 
+import dk.magenta.datafordeler.core.command.Command;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.SessionFactory;
@@ -25,7 +26,7 @@ public class ConfigurationSessionManager {
 
     public ConfigurationSessionManager(SessionManagerConfiguration smConfig) {
         try {
-            this.log.info("Initialize SessionManager");
+            this.log.info("Initialize ConfigurationSessionManager");
             // Create the SessionFactory from hibernate.cfg.xml
 
             // Create empty configuration object
@@ -36,7 +37,7 @@ public class ConfigurationSessionManager {
             configuration.configure(smConfig.getSecondaryHibernateConfigurationFile());
 
             Set<Class> managedClasses = new HashSet<>();
-            managedClasses.add(dk.magenta.datafordeler.core.command.Command.class);
+            managedClasses.add(Command.class);
 
             for (Class cls : managedClasses) {
                 this.log.info("Located hardcoded data class "+cls.getCanonicalName());

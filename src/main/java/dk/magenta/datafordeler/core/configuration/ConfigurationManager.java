@@ -32,8 +32,8 @@ public abstract class ConfigurationManager<C extends Configuration> {
             this.getLog().info("No configuration object exists, create one.");
             this.configuration = this.createConfiguration();
             session.persist(this.configuration);
-        } finally {
             transaction.commit();
+        } finally {
             session.close();
         }
     }
