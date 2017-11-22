@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.user;
 
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
+import dk.magenta.datafordeler.core.util.MockInternalServletRequest;
 import org.opensaml.saml2.core.Assertion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,10 @@ public class DafoUserManager {
    */
   public DafoUserDetails getUserFromRequest(HttpServletRequest request)
       throws InvalidTokenException {
+
+    if (request instanceof MockInternalServletRequest) {
+      return ((MockInternalServletRequest) request).getUserDetails();
+    }
 
     // If an authorization header starting with "SAML " is provided, use it to create a
     // SAML token based user.

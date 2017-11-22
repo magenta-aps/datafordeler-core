@@ -12,6 +12,10 @@ public class InvalidClientInputException extends DataFordelerException {
         super(message);
     }
 
+    public InvalidClientInputException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     @Override
     public String getCode() {
         return "datafordeler.http.invalid-client-input";

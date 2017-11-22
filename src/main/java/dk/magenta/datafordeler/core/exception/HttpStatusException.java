@@ -14,6 +14,7 @@ public class HttpStatusException extends DataFordelerException {
     private URI uri;
 
     public HttpStatusException(StatusLine statusLine, URI uri) {
+        super("Got HTTP error "+statusLine.getStatusCode()+(uri != null ? (" when accessing "+uri.toString()):""));
         this.statusLine = statusLine;
         this.uri = uri;
     }

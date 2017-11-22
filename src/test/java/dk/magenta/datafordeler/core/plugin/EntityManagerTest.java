@@ -5,6 +5,7 @@ import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.exception.*;
+import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.testutil.CallbackController;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
@@ -16,9 +17,7 @@ import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityReference;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistrationReference;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +58,19 @@ public class EntityManagerTest extends PluginTestBase {
 
     @LocalServerPort
     private int port;
+
+
+    @Before
+    public void before() {
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
+        registerManager.setPort(this.port);
+    }
+
+    @After
+    public void after() {
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
+        registerManager.setPort(Application.servicePort);
+    }
 
     @Test
     public void testLinks() {
@@ -107,6 +119,7 @@ public class EntityManagerTest extends PluginTestBase {
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
         RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", this.port, "/test/get/"+checksum, null, null));
+        ImportMetadata importMetadata = new ImportMetadata();
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
@@ -117,7 +130,7 @@ public class EntityManagerTest extends PluginTestBase {
         ExpectorCallback lookupCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/get/" + checksum, full, lookupCallback);
 
-        List<? extends Registration> registrations = entityManager.fetchRegistration(reference);
+        List<? extends Registration> registrations = entityManager.fetchRegistration(reference, importMetadata);
         Assert.assertNotNull(registrations);
         Assert.assertFalse(registrations.isEmpty());
         Registration registration = registrations.get(0);
@@ -134,6 +147,7 @@ public class EntityManagerTest extends PluginTestBase {
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
         RegistrationReference reference = new DemoRegistrationReference(new URI("http",null, "localhost", this.port, "/test/get/"+checksum, null, null));
+        ImportMetadata importMetadata = new ImportMetadata();
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
@@ -146,7 +160,7 @@ public class EntityManagerTest extends PluginTestBase {
         this.callbackController.addCallbackResponse(otherEndpoint, full, lookupCallback);
 
         exception.expect(FailedReferenceException.class);
-        List<? extends Registration> registration = entityManager.fetchRegistration(reference);
+        List<? extends Registration> registration = entityManager.fetchRegistration(reference, importMetadata);
 
 
         this.callbackController.removeCallback(otherEndpoint);
@@ -179,6 +193,7 @@ public class EntityManagerTest extends PluginTestBase {
         String checksum = this.hash(UUID.randomUUID().toString());
         String uuid = UUID.randomUUID().toString();
         RegistrationReference reference = new OtherRegistrationReference(new URI("http",null, "localhost", this.port, "/test/get/"+checksum, null, null));
+        ImportMetadata importMetadata = new ImportMetadata();
 
         String template = this.getPayload("/referencelookuptest.json");
         String full = template
@@ -190,7 +205,7 @@ public class EntityManagerTest extends PluginTestBase {
         this.callbackController.addCallbackResponse("/test/get/" + UUID.randomUUID().toString(), full, lookupCallback);
 
         exception.expect(WrongSubclassException.class);
-        List<? extends Registration> registration = entityManager.fetchRegistration(reference);
+        List<? extends Registration> registration = entityManager.fetchRegistration(reference, importMetadata);
     }
 
 

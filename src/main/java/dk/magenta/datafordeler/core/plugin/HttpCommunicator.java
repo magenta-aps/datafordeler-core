@@ -91,4 +91,11 @@ public class HttpCommunicator implements Communicator {
         return builder.build();
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

@@ -14,7 +14,9 @@ import dk.magenta.datafordeler.core.testutil.OrderedRunner;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityReference;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +44,25 @@ public class ListChecksumTest extends GapiTestBase {
     @LocalServerPort
     int port;
 
+    @Before
+    public void before() {
+        Plugin plugin = this.pluginManager.getPluginForSchema("Postnummer");
+        DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
+        registerManager.setPort(this.port);
+    }
+
+    @After
+    public void after() {
+        Plugin plugin = this.pluginManager.getPluginForSchema("Postnummer");
+        DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
+        registerManager.setPort(Application.servicePort);
+    }
+
     @Test
     @Order(order=1)
     public void listAllChecksumsTest() throws DataFordelerException, IOException {
         Plugin plugin = pluginManager.getPluginForSchema("Postnummer");
         DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
-        registerManager.setPort(port);
-        EntityManager entityManager = plugin.getEntityManager("Postnummer");
         ExpectorCallback listChecksumsCallback = new ExpectorCallback();
         String response = this.getPayload("/listchecksums_response.json");
         this.callbackController.addCallbackResponse("/test/listChecksums", response, listChecksumsCallback);

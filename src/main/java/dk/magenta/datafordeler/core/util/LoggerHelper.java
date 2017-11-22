@@ -56,28 +56,27 @@ public class LoggerHelper {
     info("Query result - " + result.toLogString(queryString));
   }
 
-  public void trace(String msg) {
-    logger.trace(prefix + msg);
+  public void trace(String msg, Object... args) {
+    logger.trace(prefix + msg, args);
   }
 
-  public void debug(String msg) {
-    logger.debug(prefix + msg);
+  public void debug(String msg, Object... args) {
+    logger.debug(prefix + msg, args);
   }
 
-  public void info(String msg) {
-    logger.info(prefix + msg);
+  public void info(String msg, Object... args) {
+    logger.info(prefix + msg, args);
   }
 
-  public void warn(String msg) {
-    logger.warn(prefix + msg);
+  public void warn(String msg, Object... args) {
+    logger.warn(prefix + msg, args);
   }
 
-  public void error(String msg) {
-    logger.error(prefix + msg);
+  public void error(String msg, Object... args) {
+    logger.error(prefix + msg, args);
   }
 
   public void error(String msg, Throwable exception) {
     logger.error(prefix + msg, exception);
   }
-
 }

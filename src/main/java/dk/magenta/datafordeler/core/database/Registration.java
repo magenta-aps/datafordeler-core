@@ -55,6 +55,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.registrationFrom = registreringFra;
         this.registrationTo = registrationTo;
         this.sequenceNumber = sequenceNumber;
+        this.setLastImportTime();
     }
 
     public Registration(LocalDate registreringFra, LocalDate registrationTo, int sequenceNumber) {
@@ -108,7 +109,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "registration")
     @Filters({
             @Filter(name = Effect.FILTER_EFFECT_FROM, condition="(effectTo >= :"+Effect.FILTERPARAM_EFFECT_FROM+" OR effectTo is null)"),
             @Filter(name = Effect.FILTER_EFFECT_TO, condition="(effectFrom < :"+Effect.FILTERPARAM_EFFECT_TO+" or effectFrom is null)")
@@ -149,6 +150,18 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         return null;
     }
 
+    public List<V> getEffectsAt(OffsetDateTime time) {
+        List<V> effects = new ArrayList<>();
+        for (V effect : this.effects) {
+            OffsetDateTime from = effect.getEffectFrom();
+            OffsetDateTime to = effect.getEffectTo();
+            if ((from == null || from.isBefore(time) || from.isEqual(time)) && (to == null || to.isAfter(time) || to.isEqual(time))) {
+                effects.add(effect);
+            }
+        }
+        return effects;
+    }
+
     public V getEffect(LocalDateTime effectFrom, LocalDateTime effectTo) {
         return this.getEffect(
                 effectFrom != null ? OffsetDateTime.of(effectFrom, ZoneOffset.UTC) : null,
@@ -168,6 +181,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
      */
     public void addEffect(V effect) {
         if (!this.effects.contains(effect)) {
+            effect.setRegistration(this);
             this.effects.add(effect);
         }
     }
@@ -183,6 +197,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     @JsonProperty(value = "virkninger", access = JsonProperty.Access.WRITE_ONLY)
     public void setEffects(Collection<V> effects) {
         this.effects = new ArrayList<V>(effects);
+        this.wireEffects();
     }
 
     protected abstract V createEmptyEffect(OffsetDateTime effectFrom, OffsetDateTime effectTo);
@@ -274,6 +289,22 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
 
+    @Column(nullable = true, insertable = true, updatable = true)
+    protected OffsetDateTime lastImportTime;
+
+    @JsonProperty("sidstImporteret")
+    public OffsetDateTime getLastImportTime() {
+        return this.lastImportTime;
+    }
+
+    public void setLastImportTime(OffsetDateTime lastImportTime) {
+        this.lastImportTime = lastImportTime;
+    }
+
+    public void setLastImportTime() {
+        this.setLastImportTime(OffsetDateTime.now());
+    }
+
     /**
      * Pretty-print contained data
      * @return Compiled string output
@@ -293,8 +324,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         StringJoiner s = new StringJoiner("\n");
         s.add(indentString + this.getClass().getSimpleName()+"["+this.hashCode()+"] {");
         if (this.entity != null) {
-            Identification identification = this.entity.getIdentification();
-            s.add(subIndentString + "entity: " + identification.getUuid()+" @ "+identification.getDomain());
+            s.add(subIndentString + "entity: " + entity.getUUID()+" @ "+entity.getDomain());
         } else {
             s.add(subIndentString + "entity: NULL");
         }
@@ -325,10 +355,17 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         if (this.registrationFrom == null && oDateTime == null) return 0;
         if (oDateTime == null) return 1;
         if (this.registrationFrom == null) return -1;
-        return this.registrationFrom.compareTo(oDateTime);
+        return this.registrationFrom.toInstant().compareTo(oDateTime.toInstant());
     }
 
-
+    public boolean equals(Registration o) {
+        return o != null &&
+            compareTo(o) == 0 &&
+            getSequenceNumber() == o.getSequenceNumber() &&
+            (getRegisterChecksum() == o.getRegisterChecksum() ||
+                getRegisterChecksum()
+                    .equalsIgnoreCase(o.getRegisterChecksum()));
+    }
 
     public R split(OffsetDateTime splitTime) {
         //Registration newReg = this.entity.createRegistration();

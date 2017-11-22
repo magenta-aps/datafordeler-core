@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.util.Equality;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
@@ -47,7 +46,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     protected Identification identification;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
-    @OrderBy("sequenceNumber") // Refers to sequenceNumber in Registration class
+    @OrderBy("registrationFrom asc") // Refers to sequenceNumber in Registration class
     @Filters({
             @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="(registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null)"),
             @Filter(name = Registration.FILTER_REGISTRATION_TO, condition="(registrationFrom < :"+Registration.FILTERPARAM_REGISTRATION_TO+")")
@@ -55,12 +54,12 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     protected List<R> registrations;
 
     @Transient
-    @JsonIgnore
-    private Query filter = null;
+    private UUID uuid;
+    @Transient
+    private String domain;
 
     public Entity() {
         this.registrations = new ArrayList<R>();
-        this.identification = new Identification();
         this.log = LoggerFactory.getLogger(this.getClass());
     }
 
@@ -70,7 +69,9 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
     public Entity(UUID uuid, String domain) {
-        this(new Identification(uuid, domain));
+        this();
+        this.uuid = uuid;
+        this.domain = domain;
     }
 
     @JsonIgnore
@@ -80,7 +81,10 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
 
     @JsonProperty("UUID")
     public UUID getUUID() {
-        return this.identification.getUuid();
+        if (this.identification != null) {
+            return this.identification.getUuid();
+        }
+        return this.uuid;
     }
 
     public void setIdentifikation(Identification identification) {
@@ -89,27 +93,34 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
 
     @JsonProperty("uuid")
     public void setUUID(UUID uuid) {
-        this.identification.setUuid(uuid);
+        this.uuid = uuid;
+        //this.identification.setUuid(uuid);
     }
 
     @JsonProperty("domaene")
     public String getDomain() {
-        return this.identification.getDomain();
+        if (this.identification != null) {
+            return this.identification.getDomain();
+        }
+        return this.domain;
     }
 
 
     @JsonProperty("domaene")
     public void setDomain(String domain) {
-        this.identification.setDomain(domain);
+        this.domain = domain;
+        //this.identification.setDomain(domain);
     }
 
-    @OrderBy("registrationFrom")
+    @OrderBy("registrationFrom asc")
     @JsonProperty(access = JsonProperty.Access.READ_ONLY, value = "registreringer")
     @XmlElement(name="registreringer")
     @JacksonXmlProperty(localName = "registreringer")
     @JacksonXmlElementWrapper(useWrapping = false)
     public List<R> getRegistrations() {
-        return this.registrations;
+        ArrayList<R> registrations = new ArrayList<>(this.registrations);
+        Collections.sort(registrations);
+        return registrations;
     }
 
     /**
@@ -128,6 +139,17 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     public R getRegistration(OffsetDateTime registrationFrom) {
         for (R registration : this.registrations) {
             if (registration.getRegistrationFrom() == null ? registrationFrom == null : registration.getRegistrationFrom().equals(registrationFrom)) {
+                return registration;
+            }
+        }
+        return null;
+    }
+
+    public R getRegistrationAt(OffsetDateTime time) {
+        for (R registration : this.registrations) {
+            OffsetDateTime from = registration.getRegistrationFrom();
+            OffsetDateTime to = registration.getRegistrationTo();
+            if ((from == null || from.isBefore(time) || from.isEqual(time)) && (to == null || to.isAfter(time) || to.isEqual(time))) {
                 return registration;
             }
         }
@@ -246,14 +268,15 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         // If the last existing registration ends before our requested end, create a new registration there
         OffsetDateTime requestedEndTime = registrationTo == null ? OffsetDateTime.MAX : registrationTo;
         if (latestEnd != null && latestEnd.isBefore(requestedEndTime)) {
-            log.debug("Last registrations ended before our requested end, create missing registration at "+(latestEnd.isEqual(OffsetDateTime.MIN) ? registrationFrom : latestEnd)+" - "+registrationTo);
+            log.debug(this.getUUID()+" Last registration ended before our requested end, create missing registration at "+(latestEnd.isEqual(OffsetDateTime.MIN) ? registrationFrom : latestEnd)+" - "+registrationTo);
             R registration = this.createRegistration();
             registration.setRegistrationFrom(latestEnd.isEqual(OffsetDateTime.MIN) ? registrationFrom : latestEnd);
             registration.setRegistrationTo(registrationTo);
             registrations.add(registration);
         }
 
-        orderedRegistrations = new ArrayList<>(this.getRegistrations());
+        //orderedRegistrations = new ArrayList<>(this.getRegistrations()); // hvorfor ikke registrations???
+        orderedRegistrations = new ArrayList<>(registrations); // hvorfor ikke registrations???
         Collections.sort(orderedRegistrations);
         int seqNo = 0;
         for (R registration : orderedRegistrations) {

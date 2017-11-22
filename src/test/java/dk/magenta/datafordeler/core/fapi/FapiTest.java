@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -20,6 +22,8 @@ import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.IOUtils;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.Assert;
@@ -29,11 +33,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.w3c.dom.Document;
 
 import javax.xml.namespace.QName;
@@ -52,13 +54,16 @@ import java.util.Arrays;
 import java.util.StringJoiner;
 import java.util.UUID;
 
-import static org.mockito.Mockito.when;
-
 /**
  * Created by lars on 20-04-17.
  */
 @RunWith(OrderedRunner.class)
 @ContextConfiguration(classes = Application.class)
+@TestPropertySource(
+    properties = {
+        "dafo.testing=true",
+    }
+)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class FapiTest {
 
@@ -73,9 +78,6 @@ public class FapiTest {
 
     @Autowired
     private SessionManager sessionManager;
-
-    @Autowired
-    private QueryManager queryManager;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -286,6 +288,54 @@ public class FapiTest {
     }
 
     @Test
+    @Order(order = 13)
+    public void restLookupCSVByUUIDTest() throws IOException,
+        DataFordelerException {
+        this.setupUser();
+        UUID uuid = this.addTestObject();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "text/csv");
+            HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
+            ResponseEntity<String> resp = this.restTemplate
+                .exchange("/demo/postnummer/1/rest/" + uuid.toString(),
+                    HttpMethod.GET, httpEntity, String.class);
+            Assert.assertEquals(200, resp.getStatusCode().value());
+            Assert.assertEquals(new MediaType("text", "csv"),
+                resp.getHeaders().getContentType());
+            Assert.assertEquals(getResourceAsString("/rest-get-1.csv"),
+                resp.getBody().replaceAll(uuid.toString(), "UUID"));
+
+        } finally {
+            this.removeTestObject(uuid);
+        }
+    }
+
+    @Test
+    @Order(order = 13)
+    public void restLookupTSVByUUIDTest() throws IOException,
+        DataFordelerException {
+        this.setupUser();
+        UUID uuid = this.addTestObject();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "text/tsv");
+            HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
+            ResponseEntity<String> resp = this.restTemplate
+                .exchange("/demo/postnummer/1/rest/" + uuid.toString(),
+                    HttpMethod.GET, httpEntity, String.class);
+            Assert.assertEquals(200, resp.getStatusCode().value());
+            Assert.assertEquals(
+                getResourceAsString("/rest-get-1.csv")
+                    .replaceAll(",", "\t"),
+                resp.getBody().replaceAll(uuid.toString(), "UUID"));
+
+        } finally {
+            this.removeTestObject(uuid);
+        }
+    }
+
+    @Test
     @Order(order=9)
     public void soapLookupXMLByParametersTest() throws IOException, SOAPException, DataFordelerException {
         this.setupSoap();
@@ -344,6 +394,130 @@ public class FapiTest {
     }
 
     @Test
+    @Order(order=12)
+    public void restLookupCSVByParametersTest() throws IOException,
+        DataFordelerException {
+        this.setupUser();
+
+        UUID uuid1 = this.addTestObject();
+        UUID uuid2 = this.addTestObject();
+
+        try {
+            MediaType mediaType =
+                new MediaType("text", "csv", Charsets.UTF_8);
+
+            Assert.assertEquals(
+                getResourceAsString("/rest-search-1.csv"),
+                getRegistrationFilterRequest(
+                    "/demo/postnummer/1/rest/search?postnr=8000",
+                    null, null, null,
+                    null, mediaType.toString()
+                ).getBody()
+                    .replaceAll(uuid1.toString(), "UUID#1")
+                    .replaceAll(uuid2.toString(), "UUID#2")
+            );
+
+            Assert.assertEquals(
+                getResourceAsString("/rest-search-2.csv"),
+                getRegistrationFilterRequest(
+                    "/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=1",
+                    null, null, null,
+                    null, mediaType.toString()).getBody()
+                    .replaceAll(uuid1.toString(), "UUID#1")
+                    .replaceAll(uuid2.toString(), "UUID#2"));
+
+            Assert.assertEquals(
+                getResourceAsString("/rest-search-3.csv"),
+                getRegistrationFilterRequest(
+                    "/demo/postnummer/1/rest/search?postnr=8000&page=2&pageSize=1",
+                    null, null, null,
+                    null, mediaType.toString()).getBody()
+                    .replaceAll(uuid1.toString(), "UUID#1")
+                    .replaceAll(uuid2.toString(), "UUID#2"));
+
+            Assert.assertEquals(
+                getResourceAsString("/rest-search-4.csv"),
+                getRegistrationFilterRequest(
+                    "/demo/postnummer/1/rest/search?postnr=8000",
+                    "2017-04-01T00:00:00+01:00",
+                    "2017-04-01T15:06:21+01:00",
+                    "2016-06-01T00:00:00+01:00",
+                    "2017-06-01T00:00:00+01:00",
+                    mediaType.toString()).getBody()
+                    .replaceAll(uuid1.toString(), "UUID#1")
+                    .replaceAll(uuid2.toString(), "UUID#2"));
+        } finally {
+            this.removeTestObject(uuid1);
+            this.removeTestObject(uuid2);
+        }
+    }
+
+    @Test
+    @Order(order=12)
+    public void restLookupTSVByParametersTest() throws IOException,
+        DataFordelerException {
+        this.setupUser();
+
+        UUID uuid1 = this.addTestObject();
+        UUID uuid2 = this.addTestObject();
+
+        try {
+            MediaType mediaType =
+                new MediaType("text", "tsv");
+
+            Assert.assertEquals(
+                getResourceAsString("/rest-search-1.csv")
+                    .replaceAll(",", "\t"),
+                getRegistrationFilterRequest(
+                    "/demo/postnummer/1/rest/search?postnr=8000",
+                    null, null, null,
+                    null,
+                    mediaType.toString()
+                ).getBody()
+                    .replaceAll(uuid1.toString(), "UUID#1")
+                    .replaceAll(uuid2.toString(), "UUID#2")
+            );
+
+            Assert.assertEquals(
+                getResourceAsString("/rest-search-2.csv")
+                    .replaceAll(",", "\t"),
+                getRegistrationFilterRequest(
+                    "/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=1",
+                    null, null, null,
+                    null, mediaType.toString()).getBody()
+                    .replaceAll(uuid1.toString(), "UUID#1")
+                    .replaceAll(",", "\t")
+                    .replaceAll(uuid2.toString(), "UUID#2"));
+
+            Assert.assertEquals(
+                getResourceAsString("/rest-search-3.csv")
+                    .replaceAll(",", "\t"),
+                getRegistrationFilterRequest(
+                    "/demo/postnummer/1/rest/search?postnr=8000&page=2&pageSize=1",
+                    null, null, null,
+                    null, mediaType.toString()).getBody()
+                    .replaceAll(uuid1.toString(), "UUID#1")
+                    .replaceAll(uuid2.toString(), "UUID#2"));
+
+            Assert.assertEquals(
+                getResourceAsString("/rest-search-4.csv")
+                    .replaceAll(",", "\t"),
+                getRegistrationFilterRequest(
+                    "/demo/postnummer/1/rest/search?postnr=8000",
+                    "2017-04-01T00:00:00+01:00",
+                    "2017-04-01T15:06:21+01:00",
+                    "2016-06-01T00:00:00+01:00",
+                    "2017-06-01T00:00:00+01:00",
+                    mediaType.toString()).getBody()
+                    .replaceAll(uuid1.toString(), "UUID#1")
+                    .replaceAll(uuid2.toString(), "UUID#2"));
+        } finally {
+            this.removeTestObject(uuid1);
+            this.removeTestObject(uuid2);
+        }
+    }
+
+    @Test
     @Order(order=11)
     public void restLookupXMLByUUIDTest() throws IOException, DataFordelerException {
         this.setupUser();
@@ -365,10 +539,30 @@ public class FapiTest {
         }
     }
 
-
     private void testRegistrationFilter(String urlBase, int[][] expected, String registerFrom, String registerTo, String effectFrom, String effectTo) throws IOException {
+        ResponseEntity<String> resp = getRegistrationFilterRequest(urlBase,
+            registerFrom, registerTo, effectFrom,
+            effectTo, MediaType.APPLICATION_JSON_VALUE);
+        JsonNode jsonBody = objectMapper.readTree(resp.getBody());
+
+        ArrayNode list = (ArrayNode) jsonBody.get("results");
+        Assert.assertEquals(expected.length, list.size());
+        int i = 0;
+        for (JsonNode entity : list) {
+            JsonNode registrations = entity.get("registreringer");
+            Assert.assertEquals(expected[i].length, registrations.size());
+            for (int j = 0; j < expected[i].length; j++) {
+                Assert.assertEquals(expected[i][j], registrations.get(j).get("virkninger").size());
+            }
+            i++;
+        }
+    }
+
+    private ResponseEntity<String> getRegistrationFilterRequest(String urlBase,
+        String registerFrom, String registerTo, String effectFrom,
+        String effectTo, String mediaType) {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Accept","application/json");
+        headers.set("Accept", mediaType);
         HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
 
         StringBuilder sb = new StringBuilder();
@@ -395,19 +589,7 @@ public class FapiTest {
         ResponseEntity<String> resp = this.restTemplate.exchange(sb.toString(), HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(200, resp.getStatusCode().value());
         System.out.println(resp.getBody());
-        JsonNode jsonBody = objectMapper.readTree(resp.getBody());
-
-        ArrayNode list = (ArrayNode) jsonBody.get("results");
-        Assert.assertEquals(expected.length, list.size());
-        int i = 0;
-        for (JsonNode entity : list) {
-            JsonNode registrations = entity.get("registreringer");
-            Assert.assertEquals(expected[i].length, registrations.size());
-            for (int j = 0; j < expected[i].length; j++) {
-                Assert.assertEquals(expected[i][j], registrations.get(j).get("virkninger").size());
-            }
-            i++;
-        }
+        return resp;
     }
 
     private void setupSoap() {
@@ -463,12 +645,12 @@ public class FapiTest {
         demoData4.addEffect(demoEffect4);
 
         Session session = sessionManager.getSessionFactory().openSession();
-        long existing = queryManager.count(session, DemoEntity.class, null);
+        long existing = QueryManager.count(session, DemoEntity.class, null);
         System.out.println(existing+" entities already exist");
         Transaction transaction = session.beginTransaction();
         try {
-            queryManager.saveRegistration(session, demoEntity, demoRegistration);
-            queryManager.saveRegistration(session, demoEntity, demoRegistration2);
+            QueryManager.saveRegistration(session, demoEntity, demoRegistration);
+            QueryManager.saveRegistration(session, demoEntity, demoRegistration2);
             try {
                 transaction.commit();
             } catch (Exception e) {}
@@ -482,7 +664,7 @@ public class FapiTest {
         Session session = sessionManager.getSessionFactory().openSession();
         try {
             Transaction transaction = session.beginTransaction();
-            DemoEntity entity = queryManager.getEntity(session, uuid, DemoEntity.class);
+            DemoEntity entity = QueryManager.getEntity(session, uuid, DemoEntity.class);
             session.delete(entity);
             transaction.commit();
             System.out.println("Test object "+uuid.toString()+" removed");
@@ -502,5 +684,13 @@ public class FapiTest {
         TestUserDetails testUserDetails = new TestUserDetails();
         testUserDetails.addUserProfile(testUserProfile);
         when(dafoUserManager.getFallbackUser()).thenReturn(testUserDetails);
+    }
+
+    private static String getResourceAsString(String resourceName)
+        throws IOException {
+        return IOUtils.toString(
+            FapiTest.class.getResourceAsStream(resourceName),
+            Charsets.UTF_8
+        );
     }
 }

@@ -7,7 +7,7 @@ import java.io.IOException;
  */
 public class DataStreamException extends DataFordelerException {
 
-    public DataStreamException(IOException cause) {
+    public DataStreamException(Exception cause) {
         super(cause);
     }
 

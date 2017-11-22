@@ -7,6 +7,7 @@ import org.hibernate.cfg.Configuration;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import javax.annotation.PreDestroy;
 import java.util.HashSet;
@@ -33,7 +34,7 @@ public class SessionManager {
 
             this.log.info("Loading configuration from hibernate.cfg.xml");
             Properties props = System.getProperties();
-            configuration.configure(smConfig.getHibernateConfigurationFile());
+            configuration.configure(smConfig.getPrimaryHibernateConfigurationFile());
 
             Set<Class> managedClasses = new HashSet<>();
             managedClasses.add(dk.magenta.datafordeler.core.database.Identification.class);
@@ -43,7 +44,7 @@ public class SessionManager {
             managedClasses.add(dk.magenta.datafordeler.core.database.DataItem.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.RecordCollection.class);
             managedClasses.add(dk.magenta.datafordeler.core.database.RecordData.class);
-            managedClasses.add(dk.magenta.datafordeler.core.command.Command.class);
+            managedClasses.add(dk.magenta.datafordeler.core.database.LastUpdated.class);
 
             for (Class cls : managedClasses) {
                 this.log.info("Located hardcoded data class "+cls.getCanonicalName());
@@ -51,6 +52,7 @@ public class SessionManager {
 
             ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
             componentProvider.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));
+            componentProvider.addExcludeFilter(new AssignableTypeFilter(dk.magenta.datafordeler.core.configuration.Configuration.class));
 
             Set<BeanDefinition> components = componentProvider.findCandidateComponents("dk.magenta.datafordeler");
             ClassLoader cl = Thread.currentThread().getContextClassLoader();

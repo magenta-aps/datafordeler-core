@@ -1,6 +1,6 @@
 package dk.magenta.datafordeler.core.configuration;
 
-import dk.magenta.datafordeler.core.database.SessionManager;
+import dk.magenta.datafordeler.core.database.ConfigurationSessionManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -32,8 +32,8 @@ public abstract class ConfigurationManager<C extends Configuration> {
             this.getLog().info("No configuration object exists, create one.");
             this.configuration = this.createConfiguration();
             session.persist(this.configuration);
-        } finally {
             transaction.commit();
+        } finally {
             session.close();
         }
     }
@@ -54,7 +54,7 @@ public abstract class ConfigurationManager<C extends Configuration> {
      * Return a session manager
      * @return
      */
-    protected abstract SessionManager getSessionManager();
+    protected abstract ConfigurationSessionManager getSessionManager();
 
     /**
      * Retrieve the configuration object from the database

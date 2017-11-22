@@ -1,18 +1,17 @@
 package dk.magenta.datafordeler.core.command;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.Engine;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.Pull;
+import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import dk.magenta.datafordeler.core.exception.PluginNotFoundException;
 import dk.magenta.datafordeler.core.plugin.Plugin;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -61,11 +60,8 @@ public class PullCommandHandler extends CommandHandler {
     @Autowired
     private PluginManager pluginManager;
 
-    private Logger log = LogManager.getLogger(PullCommandHandler.class);
-
-    protected Logger getLog() {
-        return this.log;
-    }
+    @Autowired
+    private SessionManager sessionManager;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -75,23 +71,28 @@ public class PullCommandHandler extends CommandHandler {
         return "pull";
     }
 
+    public boolean accept(Command command) {
+        return this.engine.isPullEnabled();
+    }
+
     @Override
     public Worker doHandleCommand(Command command) throws DataFordelerException {
-        this.getLog().info("Handling command '"+command.getCommandName()+"'");
+        if (this.accept(command)) {
+            this.getLog().info("Handling command '" + command.getCommandName() + "'");
 
-        PullCommandData commandData = this.getCommandData(command.getCommandBody());
-        Plugin plugin = this.getPlugin(commandData);
-        this.getLog().info("Pulling with plugin "+plugin.getClass().getCanonicalName());
+            PullCommandData commandData = this.getCommandData(command.getCommandBody());
+            Plugin plugin = this.getPlugin(commandData);
+            this.getLog().info("Pulling with plugin " + plugin.getClass().getCanonicalName());
 
-        Thread.UncaughtExceptionHandler exceptionHandler = new Thread.UncaughtExceptionHandler() {
-            public void uncaughtException(Thread th, Throwable ex) {
-                PullCommandHandler.this.getLog().error("Pull failed", ex);
-            }
-        };
-
-        Pull pull = new Pull(engine, plugin);
-        pull.setUncaughtExceptionHandler(exceptionHandler);
-        return pull;
+            Pull pull = new Pull(engine, plugin);
+            pull.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                public void uncaughtException(Thread th, Throwable ex) {
+                    PullCommandHandler.this.getLog().error("Pull failed", ex);
+                }
+            });
+            return pull;
+        }
+        return null;
     }
 
     public PullCommandData getCommandData(String commandBody)
@@ -101,8 +102,9 @@ public class PullCommandHandler extends CommandHandler {
             this.getLog().info("Command data parsed");
             return commandData;
         } catch (IOException e) {
-            this.getLog().error("Unable to parse command data '"+commandBody+"'");
-            throw new InvalidClientInputException("Unable to parse command data");
+            InvalidClientInputException ex = new InvalidClientInputException("Unable to parse command data '"+commandBody+"'");
+            this.getLog().error(ex);
+            throw ex;
         }
     }
 
@@ -115,12 +117,7 @@ public class PullCommandHandler extends CommandHandler {
         return plugin;
     }
 
-    public String getCommandStatus(Command command) {
-        try {
-            return this.objectMapper.writeValueAsString(command);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public ObjectNode getCommandStatus(Command command) {
+        return objectMapper.valueToTree(command);
     }
 }

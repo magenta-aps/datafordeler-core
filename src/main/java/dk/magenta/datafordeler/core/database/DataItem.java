@@ -82,7 +82,9 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
         return this.recordSet;
     }
 
-    @Column
+    public static final String DB_FIELD_LAST_UPDATED = "lastUpdated";
+
+    @Column(name = DB_FIELD_LAST_UPDATED)
     private OffsetDateTime lastUpdated;
 
     public OffsetDateTime getLastUpdated() {
@@ -91,6 +93,12 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
 
     public void setLastUpdated(OffsetDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
+    }
+
+    public void setUpdated(OffsetDateTime lastUpdated) {
+        if (this.lastUpdated == null || (lastUpdated != null && lastUpdated.isAfter(this.lastUpdated))) {
+            this.setLastUpdated(lastUpdated);
+        }
     }
 
     /**

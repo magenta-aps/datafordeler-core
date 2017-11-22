@@ -10,11 +10,11 @@ import dk.magenta.datafordeler.core.testutil.CallbackController;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.KeyExpectorCallback;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
+import dk.magenta.datafordeler.plugindemo.DemoPlugin;
+import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityReference;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +30,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -54,6 +51,9 @@ public class RegisterManagerTest extends PluginTestBase {
     @Autowired
     protected CallbackController callbackController;
 
+    @Autowired
+    private DemoPlugin plugin;
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
@@ -64,11 +64,23 @@ public class RegisterManagerTest extends PluginTestBase {
         }
     }
 
+    @Before
+    public void before() {
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
+        registerManager.setPort(this.port);
+    }
+
+    @After
+    public void after() {
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
+        registerManager.setPort(Application.servicePort);
+    }
+
     @Test
     public void testLinks() throws URISyntaxException {
-        System.out.println("AppConfig.servicePort: "+ Application.servicePort);
         EntityManager entityManager = this.plugin.getEntityManager(DemoEntity.schema);
-        RegisterManager registerManager = this.plugin.getRegisterManager();
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
+
         Assert.assertEquals(entityManager, registerManager.getEntityManager(DemoEntity.class));
         Assert.assertEquals(entityManager, registerManager.getEntityManager(DemoEntity.schema));
         Assert.assertEquals(entityManager, registerManager.getEntityManager(new URI("http://localhost:" + this.port)));
@@ -87,7 +99,7 @@ public class RegisterManagerTest extends PluginTestBase {
 
     @Test
     public void testGetHandledURISubstrings() {
-        RegisterManager registerManager = this.plugin.getRegisterManager();
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
         Assert.assertTrue(registerManager.getHandledURISubstrings().contains("http://localhost:" + this.port));
         Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:" + (this.port + 1)));
         Assert.assertFalse(registerManager.getHandledURISubstrings().contains("http://localhost:" + this.port + "/foobar"));
@@ -95,7 +107,7 @@ public class RegisterManagerTest extends PluginTestBase {
 
     @Test
     public void listChecksumsByTimestampTest() throws DataFordelerException, IOException {
-        RegisterManager registerManager = this.plugin.getRegisterManager();
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
 
         KeyExpectorCallback listChecksumsCallback = new KeyExpectorCallback("from", "2017-01-01");
         String response = this.getPayload("/listchecksums_date_response.json");
@@ -133,7 +145,7 @@ public class RegisterManagerTest extends PluginTestBase {
 
     @Test
     public void listChecksumsByTimestampTest2() throws DataFordelerException, IOException {
-        RegisterManager registerManager = this.plugin.getRegisterManager();
+        DemoRegisterManager registerManager = (DemoRegisterManager) this.plugin.getRegisterManager();
 
         KeyExpectorCallback listChecksumsCallback = new KeyExpectorCallback("from", "2017-01-01");
         String response = this.getPayload("/listchecksums_date_response.json");
@@ -185,7 +197,7 @@ public class RegisterManagerTest extends PluginTestBase {
     public void testPullEvents() throws DataFordelerException, IOException, InterruptedException, ExecutionException, TimeoutException {
 
         String checksum = this.hash(UUID.randomUUID().toString());
-        String reference = "http://localhost:" + Application.servicePort + "/test/get/" + checksum;
+        String reference = "http://localhost:" + port + "/test/get/" + checksum;
         String uuid = UUID.randomUUID().toString();
         String full = this.getPayload("/referencelookuptest.json")
                 .replace("%{checksum}", checksum)
@@ -197,8 +209,7 @@ public class RegisterManagerTest extends PluginTestBase {
         ExpectorCallback eventCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/getNewEvents", body, eventCallback);
 
-        List<ItemInputStream<? extends PluginSourceData>> dataStreams = this.plugin.getRegisterManager().pullEvents();
-        ItemInputStream<? extends PluginSourceData> dataStream = dataStreams.get(0);
+        ItemInputStream<? extends PluginSourceData> dataStream = this.plugin.getRegisterManager().pullEvents(null);
 
         PluginSourceData data;
         int eventCounter = 0;
@@ -208,7 +219,6 @@ public class RegisterManagerTest extends PluginTestBase {
             Assert.assertEquals(reference, data.getReference());
         }
         Assert.assertEquals(1, eventCounter);
-
 
         this.callbackController.removeCallback("/test/get/" + checksum);
         this.callbackController.removeCallback("/test/getNewEvents");

@@ -3,18 +3,21 @@ package dk.magenta.datafordeler.core.fapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
-import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,14 +28,13 @@ import javax.annotation.Resource;
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Created by lars on 19-04-17.
@@ -49,16 +51,16 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     private SessionManager sessionManager;
 
     @Autowired
-    private QueryManager queryManager;
-
-    @Autowired
     private DafoUserManager dafoUserManager;
 
     @Resource(name="wsContext")
     WebServiceContext context;
 
     // For debugging purposes - make sure this is set to false when running in production
-    private static boolean DEBUG_DISABLE_SECURITY = false;
+    private static boolean DEBUG_DISABLE_SECURITY = true;
+
+    @Autowired
+    private CsvMapper csvMapper;
 
     public static boolean getDebugDisableSecurity() {
         return DEBUG_DISABLE_SECURITY;
@@ -108,15 +110,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      */
     public SessionManager getSessionManager() {
         return this.sessionManager;
-    }
-
-
-    /**
-     * Obtains the autowired QueryManager
-     * @return QueryManager instance
-     */
-    protected QueryManager getQueryManager() {
-        return this.queryManager;
     }
 
     protected OutputWrapper<E> getOutputWrapper() {
@@ -212,6 +205,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
                 }
                 envelope.close();
                 loggerHelper.logResult(envelope);
+
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
                 throw new InvalidClientInputException(e.getMessage());
@@ -223,9 +217,46 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         } finally {
             session.close();
         }
+
         return envelope;
     }
 
+    /**
+     * Handle a lookup-by-UUID request in REST, returning CSV text.
+     * @see #getRest(String, MultiValueMap, HttpServletRequest)
+     */
+    @WebMethod(exclude = true)
+    @RequestMapping(path="/{id}", produces = {
+        "text/csv",
+        "text/tsv",
+    })
+    public void getRestCSV(@PathVariable("id") String id,
+        @RequestParam MultiValueMap<String, String> requestParams,
+        HttpServletRequest request, HttpServletResponse response)
+        throws Exception {
+        Session session = sessionManager.getSessionFactory().openSession();
+        try {
+            DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
+            loggerHelper.info(
+                "Incoming CSV REST request for " + this.getServiceName() +
+                    " with id " + id
+            );
+            this.checkAndLogAccess(loggerHelper);
+            Q query = this.getQuery(requestParams, true);
+            this.applyAreaRestrictionsToQuery(query, user);
+
+            E entity = this.searchById(id, query, session);
+
+            sendAsCSV(Stream.of(entity), request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.log.error("Error in REST getById", e);
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
 
     /**
      * Handle a lookup-by-UUID request in SOAP. This method is called by the Servlet
@@ -316,7 +347,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             envelope.addQueryData(query);
             envelope.addUserData(user);
             envelope.addRequestData(request);
-            Set<E> results = this.searchByQuery(query, session);
+            List<E> results = this.searchByQuery(query, session);
             if (outputWrapper != null) {
                 envelope.setResults(outputWrapper.wrapResults(results));
             } else {
@@ -339,6 +370,41 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         return envelope;
     }
 
+    /**
+     * Handle a lookup-by-parameters request in REST, outputting CSV text.
+     * @see #searchRest(MultiValueMap, HttpServletRequest)
+     */
+    @WebMethod(exclude = true)
+    @RequestMapping(path="/search", produces = {
+        "text/csv",
+        "text/tsv",
+    })
+    public void searchRestCSV(@RequestParam MultiValueMap<String, String>
+        requestParams, HttpServletRequest request,
+        HttpServletResponse response) throws DataFordelerException, IOException {
+        Session session = sessionManager.getSessionFactory().openSession();
+        try {
+            DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
+            loggerHelper.info(
+                "Incoming CSV REST request for " + this.getServiceName() +
+                    " with query " + requestParams.toString()
+            );
+
+            this.checkAndLogAccess(loggerHelper);
+            Q query = this.getQuery(requestParams, false);
+            this.applyAreaRestrictionsToQuery(query, user);
+
+            sendAsCSV(this.searchByQueryAsStream(query, session),
+                request, response);
+        } catch (IOException | DataFordelerException e) {
+            e.printStackTrace();
+            this.log.error("Error in REST search", e);
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
 
     /**
      * Handle a lookup-by-parameters request in SOAP. This method is called by the Servlet
@@ -362,7 +428,7 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             envelope.addQueryData(query);
             envelope.addUserData(user);
             envelope.addRequestData(request);
-            Set<E> results = this.searchByQuery(query, session);
+            List<E> results = this.searchByQuery(query, session);
             if (outputWrapper != null) {
                 envelope.setResult(outputWrapper.wrapResults(results));
             } else {
@@ -413,10 +479,25 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     //@WebMethod(exclude = true)
     //protected abstract Set<E> searchByQuery(Q query);
     @WebMethod(exclude = true) // Non-soap methods must have this
-    protected Set<E> searchByQuery(Q query, Session session) throws DataFordelerException {
-        this.applyQuery(session, query);
-        Set<E> entities = new HashSet<>(this.getQueryManager().getAllEntities(session, query, this.getEntityClass()));
-        return entities;
+    protected List<E> searchByQuery(Q query, Session session) throws DataFordelerException {
+        query.applyFilters(session);
+        return QueryManager.getAllEntities(session, query,
+            this.getEntityClass());
+    }
+
+    /**
+     * Perform a search for Entities by a Query object
+     * @param query Query objects to search by
+     * @return Found Entities
+     */
+    //@WebMethod(exclude = true)
+    //protected abstract Set<E> searchByQuery(Q query);
+    @WebMethod(exclude = true) // Non-soap methods must have this
+    protected Stream<E> searchByQueryAsStream(Q query, Session session) throws
+        DataFordelerException {
+        query.applyFilters(session);
+        return QueryManager.getAllEntitiesAsStream(session, query,
+            this.getEntityClass());
     }
 
     /**
@@ -440,44 +521,85 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @WebMethod(exclude = true)
     protected E searchById(UUID uuid, Q query, Session session) {
         E entity = null;
-        this.applyQuery(session, query);
-        entity = this.queryManager.getEntity(session, uuid, this.getEntityClass());
+        query.applyFilters(session);
+        entity = QueryManager.getEntity(session, uuid, this.getEntityClass());
         if (entity != null) {
             entity.forceLoad(session);
         }
         return entity;
     }
 
+    protected void sendAsCSV(Stream<E> entities, HttpServletRequest request,
+        HttpServletResponse response)
+        throws IOException, HttpNotFoundException {
+        List<MediaType> acceptedTypes = MediaType.parseMediaTypes
+            (request.getHeader("Accept"));
 
-    /**
-     * Put Query parameters into the Hibernate session. Subclasses should override this and call this method, then
-     * put their own Query-subclass-specific parameters in as well
-     * @param session Hibernate session in use
-     * @param query Query object constructed from a request
-     */
-    protected void applyQuery(Session session, Q query) {
-        if (query != null) {
-            if (query.getRegistrationFrom() != null) {
-                Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
-                filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, query.getRegistrationFrom());
-            }
-            if (query.getRegistrationTo() != null) {
-                Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
-                filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, query.getRegistrationTo());
-            }
-            if (query.getEffectFrom() != null) {
-                Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
-                filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, query.getEffectFrom());
-            }
-            if (query.getEffectTo() != null) {
-                Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
-                filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, query.getEffectTo());
-            }
-            if (query.getRecordAfter() != null) {
-                Filter filter = session.enableFilter(DataItem.FILTER_RECORD_AFTER);
-                filter.setParameter(DataItem.FILTERPARAM_RECORD_AFTER, query.getRecordAfter());
-            }
+        Iterator<Map<String, Object>> dataIter =
+            entities.map(Entity::getRegistrations).flatMap(
+                List::stream
+            ).flatMap(
+                r -> ((Registration) r).getEffects().stream()
+            ).map(
+                obj -> {
+                    Effect e = (Effect) obj;
+                    Registration r = e.getRegistration();
+                    Map<String, Object> data = e.getData();
+
+                    data.put("effectFrom",
+                        e.getEffectFrom());
+                    data.put("effectTo",
+                        e.getEffectTo());
+                    data.put("registrationFrom",
+                        r.getRegistrationFrom());
+                    data.put("registrationTo",
+                        r.getRegistrationFrom());
+                    data.put("sequenceNumber",
+                        r.getSequenceNumber());
+                    data.put("uuid", r.getEntity().getUUID());
+
+                    return data;
+                }
+            ).iterator();
+
+        if (!dataIter.hasNext()) {
+            response.sendError(HttpStatus.NO_CONTENT.value());
+            return;
+        }
+
+        CsvSchema.Builder builder =
+            new CsvSchema.Builder();
+
+        Map<String, Object> first = dataIter.next();
+        ArrayList<String> keys =
+            new ArrayList<>(first.keySet());
+        Collections.sort(keys);
+
+        for (int i = 0; i < keys.size(); i++) {
+            builder.addColumn(new CsvSchema.Column(
+                i, keys.get(i),
+                CsvSchema.ColumnType.NUMBER_OR_STRING
+            ));
+        }
+
+        CsvSchema schema =
+            builder.build().withHeader();
+
+        System.err.println(response.getHeaderNames());
+        if (acceptedTypes.contains(new MediaType("text", "tsv"))) {
+            schema = schema.withColumnSeparator('\t');
+            response.setContentType("text/tsv");
+        } else {
+            response.setContentType("text/csv");
+        }
+
+        SequenceWriter writer =
+            csvMapper.writer(schema).writeValues(response.getOutputStream());
+
+        writer.write(first);
+
+        while (dataIter.hasNext()) {
+            writer.write(dataIter.next());
         }
     }
-
 }

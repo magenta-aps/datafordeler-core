@@ -1,7 +1,11 @@
 package dk.magenta.datafordeler.core;
 
+import dk.magenta.datafordeler.core.dump.Dump;
+import dk.magenta.datafordeler.core.dump.Dump.Task;
 import dk.magenta.datafordeler.core.database.*;
+import dk.magenta.datafordeler.core.dump.DumpConfiguration;
 import dk.magenta.datafordeler.core.exception.*;
+import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
@@ -17,8 +21,15 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerExecutionChain;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,15 +43,24 @@ public class Engine {
     PluginManager pluginManager;
 
     @Autowired
-    QueryManager queryManager;
-
-    @Autowired
     SessionManager sessionManager;
 
-    @Value("${dafo.cron.enabled:true}")
-    private boolean cronEnabled;
+    @Autowired
+    ConfigurationSessionManager configurationSessionManager;
+
+    @Value("${dafo.dump.enabled:true}")
+    private boolean dumpEnabled;
+
+    @Value("${dafo.pull.enabled:true}")
+    private boolean pullEnabled;
 
     Logger log = LogManager.getLogger(Engine.class);
+
+    @Autowired(required = false)
+    private RequestMappingHandlerMapping handlerMapping;
+
+    @Autowired(required = false)
+    private RequestMappingHandlerAdapter handlerAdapter;
 
     /**
      * Run bean initialization
@@ -48,40 +68,20 @@ public class Engine {
      */
     @PostConstruct
     public void init() {
-        List<Plugin> plugins = this.pluginManager.getPlugins();
-        if (plugins.isEmpty()) {
-            this.log.info("Registered NO plugins");
-        } else {
-            for (Plugin plugin : plugins) {
-                this.log.info("Registered plugin " + plugin.getClass().getCanonicalName());
-                String schedule = plugin.getRegisterManager().getPullCronSchedule();
-                if (schedule != null) {
-                    this.log.info("    Has CRON schedule " + schedule);
-                }
-                /*Session session = this.sessionManager.getSessionFactory().openSession();
-                try {
-                    this.synchronize(session, plugin, null);
-                } catch (DataFordelerException e) {
-                    e.printStackTrace();
-                }*/
-            }
-
-            if (this.cronEnabled) {
-                for (Plugin plugin : plugins) {
-                    String schedule = plugin.getRegisterManager().getPullCronSchedule();
-                    if (schedule != null) {
-                        this.setupPullSchedule(plugin.getRegisterManager());
-                    }
-                }
-            }
-        }
+        this.setupPullSchedules();
+        this.setupDumpSchedules();
     }
 
+    public boolean isPullEnabled() {
+        return this.pullEnabled;
+    }
+
+    public boolean isDumpEnabled() { return this.dumpEnabled; }
 
     /** Push **/
 
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event) {
-        return this.handleEvent(event, null);
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event, ImportMetadata importMetadata) {
+        return this.handleEvent(event, null, importMetadata);
     }
 
     /**
@@ -90,7 +90,7 @@ public class Engine {
      * When a registration is at hand, it is saved and a receipt is sent to the entitymanager that handles the registration
      * @param event Event to be handled
      * */
-    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event, Plugin plugin) {
+    public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event, Plugin plugin, ImportMetadata importMetadata) {
         log.info("Handling event '" + event.getId() + "'");
         OffsetDateTime eventReceived = OffsetDateTime.now();
         Receipt receipt;
@@ -129,7 +129,7 @@ public class Engine {
                 try {
                     RegistrationReference reference = entityManager.parseReference(referenceURI);
                     log.info("Parsed reference: " + entityManager.getRegistrationInterface(reference));
-                    registrations = entityManager.fetchRegistration(reference);
+                    registrations = entityManager.fetchRegistration(reference, importMetadata);
                     log.info("Referenced registration fetched");
                 } catch (IOException e) {
                     throw new DataStreamException(e);
@@ -148,20 +148,37 @@ public class Engine {
                 if (entityManager == null) {
                     throw new EntityManagerNotFoundException(schema);
                 }
-                registrations = entityManager.parseRegistration(event.getData());
+                log.info("entityManager: "+entityManager.getClass().getCanonicalName());
+                registrations = entityManager.parseRegistration(event, importMetadata);
             }
-
-            if (!entityManager.handlesOwnSaves()) {
+/*
+            for (Registration registration : registrations) {
                 session = sessionManager.getSessionFactory().openSession();
                 Transaction transaction = session.beginTransaction();
-                for (Registration registration : registrations) {
-                    queryManager.saveRegistration(
-                            session, (E) registration.getEntity(), (R) registration,
-                            false, false
-                    );
-                }
+                queryManager.saveRegistration(session, registration.getEntity(), registration, true, true);
                 transaction.commit();
                 session.close();
+            }*/
+
+            if (!entityManager.handlesOwnSaves()) {
+                session = importMetadata.getSession();
+                boolean createSession = (session == null);
+                Transaction transaction = null;
+                if (createSession) {
+                    session = sessionManager.getSessionFactory().openSession();
+                    transaction = session.beginTransaction();
+                }
+                for (Registration registration : registrations) {
+                    QueryManager.saveRegistration(
+                            session, null, (R) registration,
+                            false, false, true
+                    );
+                }
+                if (createSession) {
+                    transaction.commit();
+                    session.close();
+                    session = null;
+                }
             }
 
             receipt = new Receipt(event.getId(), eventReceived);
@@ -170,14 +187,10 @@ public class Engine {
             log.error("Error handling event", e);
             receipt = new Receipt(event.getId(), eventReceived, e);
             success = false;
+        } finally {
             if (session != null) {
                 session.close();
             }
-        } catch (Exception e) {
-            if (session != null) {
-                session.close();
-            }
-            throw e;
         }
         if (entityManager == null) {
             log.error("No EntityManager found for event; cannot send receipt");
@@ -199,14 +212,29 @@ public class Engine {
 
     /**
      * Sets the schedule for the registerManager, based on the schedule defined in same
-     * @param registerManager Registermanager to run pull jobs on
      */
-    public void setupPullSchedule(RegisterManager registerManager) {
-        this.setupPullSchedule(registerManager, registerManager.getPullCronSchedule(), false);
+    public void setupPullSchedules() {
+        if (this.pullEnabled) {
+            List<Plugin> plugins = this.pluginManager.getPlugins();
+            if (plugins.isEmpty()) {
+                this.log.warn("No plugins registered!");
+            }
+            for (Plugin plugin : plugins) {
+                RegisterManager registerManager = plugin.getRegisterManager();
+                String schedule = registerManager.getPullCronSchedule();
+                this.log.info("Registered plugin {} has schedule '{}'",
+                        plugin.getClass().getCanonicalName(), schedule);
+
+                if (schedule != null && !schedule.isEmpty()) {
+                    this.setupPullSchedule(registerManager, schedule, false);
+                }
+            }
+        }
     }
 
 
     private Scheduler scheduler = null;
+
     /**
      * Sets the schedule for the registerManager, given a cron string
      * @param registerManager Registermanager to run pull jobs on
@@ -214,28 +242,43 @@ public class Engine {
      * @param dummyRun For test purposes. If false, no pull will actually be run.
      */
     public void setupPullSchedule(RegisterManager registerManager, String cronSchedule, boolean dummyRun) {
+        ScheduleBuilder scheduleBuilder;
+        try {
+             scheduleBuilder = makeSchedule(cronSchedule);
+        } catch (RuntimeException e) {
+            this.log.error(e);
+            return;
+        }
+        setupPullSchedule(registerManager, scheduleBuilder, dummyRun);
+    }
+
+    /**
+     * Sets the schedule for the registerManager, given a schedule
+     * @param registerManager Registermanager to run pull jobs on
+     * @param scheduleBuilder The schedule to use
+     * @param dummyRun For test purposes. If false, no pull will actually be run.
+     */
+    public void setupPullSchedule(RegisterManager registerManager,
+        ScheduleBuilder scheduleBuilder,
+        boolean dummyRun) {
         String registerManagerId = registerManager.getClass().getName() + registerManager.hashCode();
 
         try {
             if (scheduler == null) {
                 this.scheduler = StdSchedulerFactory.getDefaultScheduler();
             }
-            if (cronSchedule != null) {
-                this.log.info("Setting up cron with schedule " + cronSchedule + " to pull from "+registerManager.getClass().getCanonicalName());
+            if (scheduleBuilder != null) {
                 this.pullTriggerKeys.put(registerManagerId, TriggerKey.triggerKey("pullTrigger", registerManagerId));
                 // Set up new schedule, or replace existing
                 Trigger pullTrigger = TriggerBuilder.newTrigger()
                         .withIdentity(this.pullTriggerKeys.get(registerManagerId))
-                        .withSchedule(
-                                CronScheduleBuilder.cronSchedule(cronSchedule)
-                        ).build();
+                        .withSchedule(scheduleBuilder).build();
 
                 JobDataMap jobData = new JobDataMap();
-                jobData.put(PullTask.DATA_ENGINE, this);
-                jobData.put(PullTask.DATA_REGISTERMANAGER, registerManager);
-                jobData.put(PullTask.DATA_DUMMYRUN, dummyRun);
-                jobData.put(PullTask.DATA_SCHEDULE, cronSchedule);
-                JobDetail job = JobBuilder.newJob(PullTask.class)
+                jobData.put(Pull.Task.DATA_ENGINE, this);
+                jobData.put(Pull.Task.DATA_REGISTERMANAGER, registerManager);
+                jobData.put(AbstractTask.DATA_DUMMYRUN, dummyRun);
+                JobDetail job = JobBuilder.newJob(Pull.Task.class)
                         .withIdentity("pullTask-"+registerManagerId)
                         .setJobData(jobData)
                         .build();
@@ -251,8 +294,113 @@ public class Engine {
             }
 
         } catch (SchedulerException e) {
-
+            this.log.error("failed to schedule pull!", e);
         }
+    }
+
+    public boolean setupDumpSchedules() {
+        if (!dumpEnabled) {
+            log.info("Scheduled dump jobs disabled for this server!");
+            return false;
+        }
+
+        Session session =
+            configurationSessionManager.getSessionFactory().openSession();
+
+        try {
+            return QueryManager.getAllItemsAsStream(session,
+                DumpConfiguration.class)
+                .allMatch(
+                    c -> setupDumpSchedule(c, false)
+                );
+        } finally {
+            session.close();
+        }
+    }
+
+    /**
+     * Sets the schedule for dumps
+     * @param config The dump configuration
+     * @param dummyRun For test purposes. If false, no pull will actually be run.
+     */
+    boolean setupDumpSchedule(DumpConfiguration config, boolean
+        dummyRun) {
+        try {
+            if (scheduler == null) {
+                this.scheduler = StdSchedulerFactory.getDefaultScheduler();
+            }
+
+            String triggerID = String.format("DUMP-%d", config.getId());
+
+            // Remove old schedule
+            if (this.pullTriggerKeys.containsKey(triggerID)) {
+                this.log.info("Removing schedule for dump");
+                scheduler.unscheduleJob(this.pullTriggerKeys.get(triggerID));
+            }
+
+            CronScheduleBuilder scheduleBuilder = makeSchedule(
+                config.getSchedule()
+            );
+
+            if (scheduleBuilder != null) {
+                this.log.info("Setting up dump with schedule {}",
+                    scheduleBuilder);
+                this.pullTriggerKeys.put(triggerID,
+                    TriggerKey.triggerKey("dumpTrigger", triggerID));
+
+                // Set up new schedule, or replace existing
+                Trigger dumpTrigger = TriggerBuilder.newTrigger()
+                    .withIdentity(this.pullTriggerKeys.get(triggerID))
+                    .withSchedule(
+                        scheduleBuilder
+                    ).build();
+                this.log.info("The trigger is {}",
+                    dumpTrigger);
+
+                JobDataMap jobData = new JobDataMap();
+                jobData.put(Dump.Task.DATA_ENGINE, this);
+                jobData.put(Task.DATA_SESSIONMANAGER, this.sessionManager);
+                jobData.put(Dump.Task.DATA_CONFIG, config);
+                jobData.put(Dump.Task.DATA_DUMMYRUN, dummyRun);
+                JobDetail job = JobBuilder.newJob(Dump.Task.class)
+                    .withIdentity(triggerID)
+                    .setJobData(jobData)
+                    .build();
+
+                scheduler.scheduleJob(job, Collections.singleton(dumpTrigger), true);
+                scheduler.start();
+            }
+
+            return true;
+        } catch (Exception e) {
+            this.log.error("failed to schedule dump!", e);
+            return false;
+        }
+    }
+
+    private CronScheduleBuilder makeSchedule(String schedule) {
+        if (schedule == null || schedule.isEmpty())
+            return null;
+
+        ArrayList<String> parts =
+            new ArrayList<>(Arrays.asList(schedule.split(" +")));
+
+        // the fancy_cronfield doesn't include seconds
+        if (parts.size() == 5) {
+            parts.add(0, "0");
+        }
+
+        // quartz doesn't accept stars for day-of-week
+        if (parts.get(5).equals("*")) {
+            parts.set(5, "?");
+        }
+
+        String s = String.join(" ", parts);
+
+        log.info("Reformatted cronjob specification: " + s);
+        return CronScheduleBuilder.cronSchedule(
+            s
+        );
     }
 
     private void stopScheduler() {
@@ -287,11 +435,12 @@ public class Engine {
         ItemInputStream<? extends EntityReference> entityReferences = registerManager.listRegisterChecksums(null, from);
         EntityReference<E, P> entityReference;
         ArrayList<R> newRegistrations = new ArrayList<R>();
+        ImportMetadata importMetadata = new ImportMetadata();
         try {
             while ((entityReference = entityReferences.next()) != null) {
                 Class<E> entityClass = entityReference.getEntityClass();
                 EntityManager entityManager = registerManager.getEntityManager(entityClass);
-                E entity = this.queryManager.getEntity(session, entityReference.getObjectId(), entityClass);
+                E entity = QueryManager.getEntity(session, entityReference.getObjectId(), entityClass);
                 HashSet<String> knownChecksums = new HashSet<>();
                 if (entity != null) {
                     for (Object oRegistration : entity.getRegistrations()) {
@@ -313,9 +462,10 @@ public class Engine {
                 }
 
                 for (P registrationReference : missingRegistrationReferences) {
-                    List<? extends Registration> registrations = entityManager.fetchRegistration(registrationReference);
+                    List<? extends Registration> registrations = entityManager.fetchRegistration(registrationReference, importMetadata);
                     for (Registration registration : registrations) {
-                        queryManager.saveRegistration(session, entity, (R) registration);
+                        registration.setLastImportTime(importMetadata.getImportTime());
+                        QueryManager.saveRegistration(session, entity, (R) registration);
                         newRegistrations.add((R) registration);
                     }
                 }
@@ -326,5 +476,27 @@ public class Engine {
             this.log.error("Synchronization with plugin "+plugin.getClass().getCanonicalName()+" failed", e);
         }
         return newRegistrations;
+    }
+
+    public void handleRequest(HttpServletRequest request,
+        HttpServletResponse response) throws Exception {
+
+        HandlerExecutionChain chain =
+            handlerMapping.getHandler(request);
+
+        log.info("HANDLER for {} is {}", request.getRequestURI(), chain);
+        for (HandlerInterceptor interceptor : chain.getInterceptors()) {
+            log.info("INTERCEPTOR is {}", interceptor);
+        }
+
+        if (chain == null || chain.getHandler() == null) {
+            throw new HttpNotFoundException("No handler found for " +
+                request.getRequestURI());
+        }
+
+        // we merely propagate any exception thrown here
+        HandlerMethod method = (HandlerMethod) chain.getHandler();
+
+        handlerAdapter.handle(request, response, method);
     }
 }

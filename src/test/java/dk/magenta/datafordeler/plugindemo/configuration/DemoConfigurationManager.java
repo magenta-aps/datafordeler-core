@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.plugindemo.configuration;
 
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
+import dk.magenta.datafordeler.core.database.ConfigurationSessionManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +17,7 @@ import javax.annotation.PostConstruct;
 public class DemoConfigurationManager extends ConfigurationManager<DemoConfiguration> {
 
     @Autowired
-    SessionManager sessionManager;
+    ConfigurationSessionManager sessionManager;
 
     private Logger log = LogManager.getLogger(DemoConfigurationManager.class);
 
@@ -41,7 +42,7 @@ public class DemoConfigurationManager extends ConfigurationManager<DemoConfigura
     }
 
     @Override
-    protected SessionManager getSessionManager() {
+    protected ConfigurationSessionManager getSessionManager() {
         return this.sessionManager;
     }
 

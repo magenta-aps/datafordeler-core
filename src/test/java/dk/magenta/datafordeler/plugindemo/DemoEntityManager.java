@@ -11,6 +11,8 @@ import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.ParseException;
 import dk.magenta.datafordeler.core.exception.WrongSubclassException;
 import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.io.ImportMetadata;
+import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.plugin.Communicator;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
@@ -154,16 +156,28 @@ public class DemoEntityManager extends EntityManager {
 
     /** Registration parsing **/
 
-    public List<Registration> parseRegistration(InputStream registrationData) throws DataFordelerException {
-        String data = new Scanner(registrationData,"UTF-8").useDelimiter("\\A").next();
-        return this.parseRegistration(data, "utf-8");
-        // return this.objectMapper.readValue(registrationData, this.managedRegistrationClass);
+    public List<Registration> parseRegistration(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {
+        try {
+            return this.parseRegistration(objectMapper.readTree(registrationData), importMetadata);
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
     }
 
     @Override
-    public List<Registration> parseRegistration(JsonNode jsonNode) throws ParseException {
+    public List<? extends Registration> parseRegistration(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         try {
-            return Collections.singletonList(this.objectMapper.treeToValue(jsonNode, this.managedRegistrationClass));
+            return this.parseRegistration(objectMapper.readTree(registrationData.getData()), importMetadata);
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
+    }
+
+    public List<Registration> parseRegistration(JsonNode jsonNode, ImportMetadata importMetadata) throws ParseException {
+        try {
+            Registration r = this.objectMapper.treeToValue(jsonNode, this.managedRegistrationClass);
+            r.setLastImportTime();
+            return Collections.singletonList(r);
         } catch (JsonProcessingException e) {
             throw new ParseException(e.getMessage());
         }

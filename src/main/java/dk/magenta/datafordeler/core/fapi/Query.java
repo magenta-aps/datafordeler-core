@@ -1,13 +1,16 @@
 package dk.magenta.datafordeler.core.fapi;
 
-import dk.magenta.datafordeler.core.database.Entity;
-import dk.magenta.datafordeler.core.database.LookupDefinition;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
+import org.hibernate.Filter;
+import org.hibernate.Session;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,6 +49,8 @@ public abstract class Query<E extends Entity> {
 
     @QueryField(queryName = "recordAfter", type = QueryField.FieldType.STRING)
     protected OffsetDateTime recordAfter = null;
+
+    private List<String> kommunekodeRestriction = new ArrayList<>();
 
     public Query() {
     }
@@ -144,7 +149,6 @@ public abstract class Query<E extends Entity> {
 
     public void setRegistrationFrom(String registrationFrom) throws DateTimeParseException {
         this.registrationFrom = parseDateTime(registrationFrom);
-        System.out.println("Set registrationFrom to "+this.registrationFrom);
     }
 
     public OffsetDateTime getRegistrationTo() {
@@ -195,6 +199,13 @@ public abstract class Query<E extends Entity> {
         this.recordAfter = parseDateTime(recordAfter);
     }
 
+    public void addKommunekodeRestriction(String kommunekode) {
+        this.kommunekodeRestriction.add(kommunekode);
+    }
+    public List<String> getKommunekodeRestriction() {
+        return this.kommunekodeRestriction;
+    }
+
 
     public abstract Map<String, Object> getSearchParameters();
 
@@ -207,7 +218,7 @@ public abstract class Query<E extends Entity> {
     public LookupDefinition getLookupDefinition() {
         LookupDefinition lookupDefinition = new LookupDefinition(this, this.getDataClass());
         if (this.recordAfter != null) {
-            lookupDefinition.put("recordSet.records.timestamp", this.recordAfter, OffsetDateTime.class, LookupDefinition.Operator.GT);
+            lookupDefinition.put(DataItem.DB_FIELD_LAST_UPDATED, this.recordAfter, OffsetDateTime.class, LookupDefinition.Operator.GT);
         }
         return lookupDefinition;
     }
@@ -377,5 +388,35 @@ public abstract class Query<E extends Entity> {
      * @return
      */
     public abstract Class getDataClass();
+
+
+
+    /**
+     * Put Query parameters into the Hibernate session. Subclasses should override this and call this method, then
+     * put their own Query-subclass-specific parameters in as well
+     * @param session Hibernate session in use
+     */
+    public void applyFilters(Session session) {
+        if (this.getRegistrationFrom() != null) {
+            Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
+            filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFrom());
+        }
+        if (this.getRegistrationTo() != null) {
+            Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
+            filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationTo());
+        }
+        if (this.getEffectFrom() != null) {
+            Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
+            filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
+        }
+        if (this.getEffectTo() != null) {
+            Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
+            filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
+        }
+        if (this.getRecordAfter() != null) {
+            Filter filter = session.enableFilter(DataItem.FILTER_RECORD_AFTER);
+            filter.setParameter(DataItem.FILTERPARAM_RECORD_AFTER, this.getRecordAfter());
+        }
+    }
 
 }

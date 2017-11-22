@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.command;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
@@ -17,7 +18,7 @@ import java.util.List;
 @Component
 public abstract class CommandHandler {
 
-    private Logger log = LogManager.getLogger(CommandHandler.class);
+    private Logger log = LogManager.getLogger(this.getClass());
 
     /**
      * Return the command name that this handler answers to. Must be unique among CommandHandlers; no two CommandHandler classes may return the same string
@@ -33,6 +34,8 @@ public abstract class CommandHandler {
     public List<String> getHandledCommands() {
         return Collections.singletonList(this.getHandledCommand());
     }
+
+    public abstract boolean accept(Command command);
 
     /**
      * Return a Worker subclass object that will handle the given Command. This worker runs as a thread started by CommandWatcher
@@ -51,7 +54,7 @@ public abstract class CommandHandler {
      * @param command
      * @return
      */
-    public abstract String getCommandStatus(Command command);
+    public abstract JsonNode getCommandStatus(Command command);
 
 
     /**

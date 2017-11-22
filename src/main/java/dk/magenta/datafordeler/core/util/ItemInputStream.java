@@ -102,7 +102,7 @@ public class ItemInputStream<T> extends ObjectInputStream {
             });
             t.start();
 
-            return new ItemInputStream<T>(inputStream);
+            return new ItemInputStream<T>(new BufferedInputStream(inputStream));
 
         } catch (IOException e) {
             e.printStackTrace();

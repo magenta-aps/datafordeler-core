@@ -1,7 +1,5 @@
 package dk.magenta.datafordeler.core.command;
 
-import dk.magenta.datafordeler.core.exception.DataFordelerException;
-
 /**
  * Created by lars on 29-05-17.
  * Command job superclass. Subclasses execute jobs in the run() method,
@@ -11,7 +9,7 @@ public abstract class Worker extends Thread implements Runnable {
 
     public static class WorkerCallback {
         public void onComplete(boolean cancelled){}
-        public void onError(DataFordelerException e) {}
+        public void onError(Throwable e) {}
     }
 
     protected boolean doCancel = false;
@@ -19,6 +17,7 @@ public abstract class Worker extends Thread implements Runnable {
 
     public void end() {
         this.doCancel = true;
+        this.interrupt();
     }
 
     public void setCallback(WorkerCallback callback) {
@@ -33,7 +32,7 @@ public abstract class Worker extends Thread implements Runnable {
         }
     }
 
-    protected void onError(DataFordelerException e) {
+    protected void onError(Throwable e) {
         if (this.callback != null) {
             try {
                 this.callback.onError(e);
@@ -44,4 +43,6 @@ public abstract class Worker extends Thread implements Runnable {
     public boolean isDoCancel() {
         return doCancel;
     }
+
+    public abstract void run();
 }

@@ -18,7 +18,7 @@ public class SamlDafoUserDetails extends DafoUserDetails {
   public static String ON_BEHALF_OF_CLAIM_URL = "https://data.gl/claims/on-behalf-of";
 
   private HashMap<String, UserProfile> userProfiles = new HashMap<>();
-  private HashMap<String, Collection<UserProfile>> systemRoles = new HashMap<>();
+  private HashMap<String, ArrayList<UserProfile>> systemRoles = new HashMap<>();
 
   private Assertion sourceAssertion;
 
@@ -42,7 +42,9 @@ public class SamlDafoUserDetails extends DafoUserDetails {
       if (systemRoles.containsKey(systemRole)) {
         systemRoles.get(systemRole).add(userprofile);
       } else {
-        systemRoles.put(systemRole, Collections.singletonList(userprofile));
+        ArrayList<UserProfile> list = new ArrayList<>();
+        list.add(userprofile);
+        systemRoles.put(systemRole, list);
       }
     }
   }
