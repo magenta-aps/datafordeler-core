@@ -46,4 +46,16 @@ public class ImportMetadata {
     public void setCurrentURI(URI currentURI) {
         this.currentURI = currentURI;
     }
+
+
+
+    private boolean transactionInProgress;
+
+    public boolean isTransactionInProgress() {
+        return this.transactionInProgress;
+    }
+
+    public void setTransactionInProgress(boolean transactionInProgress) {
+        this.transactionInProgress = transactionInProgress;
+    }
 }
