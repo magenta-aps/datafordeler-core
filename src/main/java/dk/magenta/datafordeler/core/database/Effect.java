@@ -270,4 +270,9 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         return other;
     }
 
+    public String toCompactString() {
+        R registration = this.registration;
+        return registration.registrationFrom + "|" + registration.registrationTo + "|" + this.effectFrom + "|" + this.effectTo;
+    }
+
 }
