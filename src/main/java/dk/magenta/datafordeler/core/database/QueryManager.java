@@ -26,6 +26,15 @@ public abstract class QueryManager {
     public static final String ENTITY = "e";
 
     private static Identification getIdentificationFromCache(Session session, UUID uuid, String domain) {
+        if (!identifications.containsKey(domain)) {
+            log.info("Loading identifications for domain "+domain);
+            org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
+            databaseQuery.setParameter("domain", domain);
+            for (Identification identification : databaseQuery.getResultList()) {
+                identifications.put(domain, identification.getUuid(), identification.getId());
+            }
+            log.info("Identifications loaded");
+        }
         Long id = identifications.get(domain, uuid);
         if (id != null) {
             return session.get(Identification.class, id);
@@ -61,19 +70,22 @@ public abstract class QueryManager {
         Identification identification;
         identification = getIdentificationFromCache(session, uuid, domain);
         if (identification == null) {
-            //log.info("Didn't find identification for "+domain+"/"+uuid+" in cache");
-            identification = getIdentification(session, uuid);
+            log.debug("Didn't find identification for "+domain+"/"+uuid+" in cache");
+            if (hasIdentification(uuid, domain)) {
+                log.debug("Cache for "+domain+"/"+uuid+" had a broken DB link");
+                identification = getIdentification(session, uuid);
+            }
             if (identification == null) {
-                //log.info("Creating new for "+domain+"/"+uuid);
+                log.debug("Creating new for "+domain+"/"+uuid);
                 identification = new Identification(uuid, domain);
                 session.save(identification);
                 identifications.put(domain, uuid, identification.getId());
             } else {
-                //log.info("Identification for "+domain+"/"+uuid+" found in database: "+identification.getId());
+                log.debug("Identification for "+domain+"/"+uuid+" found in database: "+identification.getId());
                 identifications.put(domain, uuid, identification.getId());
             }
         } else {
-            //log.info("Identification for "+domain+"/"+uuid+" found in cache: "+identification.getId());
+            log.debug("Identification for "+domain+"/"+uuid+" found in cache: "+identification.getId());
         }
         return identification;
     }
