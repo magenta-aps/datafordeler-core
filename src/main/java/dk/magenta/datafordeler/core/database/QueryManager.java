@@ -26,15 +26,6 @@ public abstract class QueryManager {
     public static final String ENTITY = "e";
 
     private static Identification getIdentificationFromCache(Session session, UUID uuid, String domain) {
-        if (!identifications.containsKey(domain)) {
-            log.info("Loading identifications for domain "+domain);
-            org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
-            databaseQuery.setParameter("domain", domain);
-            for (Identification identification : databaseQuery.getResultList()) {
-                identifications.put(domain, identification.getUuid(), identification.getId());
-            }
-            log.info("Identifications loaded");
-        }
         Long id = identifications.get(domain, uuid);
         if (id != null) {
             return session.get(Identification.class, id);
@@ -50,7 +41,7 @@ public abstract class QueryManager {
      * @return
      */
     public static Identification getIdentification(Session session, UUID uuid) {
-        log.trace("Get Identification from UUID " + uuid);
+        //log.info("Get Identification from UUID " + uuid);
         org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
         databaseQuery.setParameter("uuid", uuid);
         logQuery(databaseQuery);
@@ -58,6 +49,7 @@ public abstract class QueryManager {
         try {
             return databaseQuery.getSingleResult();
         } catch (NoResultException e) {
+            //log.info("not found");
             return null;
         }
     }
@@ -66,20 +58,22 @@ public abstract class QueryManager {
     private static DoubleHashMap<String, UUID, Long> identifications = new DoubleHashMap<>();
 
     public static Identification getOrCreateIdentification(Session session, UUID uuid, String domain) {
-        Identification identification = getIdentificationFromCache(session, uuid, domain);
+        Identification identification;
+        identification = getIdentificationFromCache(session, uuid, domain);
         if (identification == null) {
-            log.debug("Didn't find identification for domain "+domain+"/"+uuid+" in cache");
+            //log.info("Didn't find identification for "+domain+"/"+uuid+" in cache");
             identification = getIdentification(session, uuid);
             if (identification == null) {
-                log.debug("Creating new");
+                //log.info("Creating new for "+domain+"/"+uuid);
                 identification = new Identification(uuid, domain);
                 session.save(identification);
                 identifications.put(domain, uuid, identification.getId());
             } else {
-                log.debug("found it in db");
+                //log.info("Identification for "+domain+"/"+uuid+" found in database: "+identification.getId());
+                identifications.put(domain, uuid, identification.getId());
             }
         } else {
-            log.debug("Identification for "+domain+"/"+uuid+" found in cache: "+identification.getId());
+            //log.info("Identification for "+domain+"/"+uuid+" found in cache: "+identification.getId());
         }
         return identification;
     }
@@ -409,7 +403,7 @@ public abstract class QueryManager {
      * @param session A database session to work on
      * @param registration Registration to be saved
      */
-    public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems, boolean validateRegsitrationSequence) throws DataFordelerException {
+    public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems, boolean validateRegistrationSequence) throws DataFordelerException {
         log.debug("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             E existingEntity = getEntity(session, registration.entity.getUUID(), (Class<E>) registration.entity.getClass());
@@ -427,7 +421,7 @@ public abstract class QueryManager {
         }
 
 
-        if (validateRegsitrationSequence) {
+        if (validateRegistrationSequence) {
             // Validate registration:
             // * No existing registration on the entity may have the same sequence number
             // * The registration must have a sequence number one higher than the highest existing one
@@ -481,7 +475,6 @@ public abstract class QueryManager {
         }
 
         registration.setEntity(entity);
-        entity.addRegistration(registration);
 
         // Normalize references: setting them to existing Identification entries if possible
         // If no existing Identification exists, keep the one we have and save it to the session
