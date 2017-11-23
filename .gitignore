@@ -19,5 +19,7 @@ hs_err_pid*
 
 # Local settings
 /local_settings.bat
+/local_settings.properties
+/local
 
 lib/
