@@ -66,7 +66,6 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
 
     @JsonIgnore
     @OneToOne(cascade = CascadeType.ALL)
-    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL)
     private RecordCollection recordSet = null;
 
     public void addRecordData(RecordData recordData) {
