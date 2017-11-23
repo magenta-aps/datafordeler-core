@@ -49,6 +49,18 @@ public class ImportMetadata {
 
 
 
+    private boolean stop = false;
+
+    public boolean getStop() {
+        return this.stop;
+    }
+
+    public void setStop() {
+        this.stop = true;
+    }
+
+
+    
     private boolean transactionInProgress;
 
     public boolean isTransactionInProgress() {

@@ -27,17 +27,17 @@ public class ConfigurationSessionManager {
     public ConfigurationSessionManager(SessionManagerConfiguration smConfig) {
         try {
             this.log.info("Initialize ConfigurationSessionManager");
-            // Create the SessionFactory from hibernate.cfg.xml
 
             // Create empty configuration object
             Configuration configuration = new Configuration();
 
             this.log.info("Loading configuration from "+smConfig.getSecondaryHibernateConfigurationFile());
-            Properties props = System.getProperties();
             configuration.configure(smConfig.getSecondaryHibernateConfigurationFile());
 
             Set<Class> managedClasses = new HashSet<>();
             managedClasses.add(Command.class);
+            managedClasses.add(InterruptedPull.class);
+            managedClasses.add(InterruptedPullFile.class);
 
             for (Class cls : managedClasses) {
                 this.log.info("Located hardcoded data class "+cls.getCanonicalName());
