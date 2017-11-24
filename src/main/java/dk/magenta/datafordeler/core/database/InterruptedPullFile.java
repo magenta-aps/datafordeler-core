@@ -17,7 +17,7 @@ public class InterruptedPullFile extends DatabaseEntry {
     @ManyToOne(targetEntity = InterruptedPull.class, optional = false)
     private InterruptedPull interruptedPull;
 
-    @Column(length = 1024, nullable = false)
+    @Column(length = 1024, nullable = false, name = "filename")
     private String file;
 
     public String getFile() {

@@ -25,7 +25,7 @@ public abstract class QueryManager {
 
     public static final String ENTITY = "e";
 
-    private static Identification getIdentificationFromCache(Session session, UUID uuid, String domain) {
+    private static void initializeCache(Session session, String domain) {
         if (!identifications.containsKey(domain)) {
             log.info("Loading identifications for domain "+domain);
             org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
@@ -35,6 +35,11 @@ public abstract class QueryManager {
             }
             log.info("Identifications loaded");
         }
+    }
+
+
+    private static Identification getIdentificationFromCache(Session session, UUID uuid, String domain) {
+        initializeCache(session, domain);
         Long id = identifications.get(domain, uuid);
         if (id != null) {
             return session.get(Identification.class, id);
@@ -71,7 +76,7 @@ public abstract class QueryManager {
         identification = getIdentificationFromCache(session, uuid, domain);
         if (identification == null) {
             log.debug("Didn't find identification for "+domain+"/"+uuid+" in cache");
-            if (hasIdentification(uuid, domain)) {
+            if (hasIdentification(session, uuid, domain)) {
                 log.debug("Cache for "+domain+"/"+uuid+" had a broken DB link");
                 identification = getIdentification(session, uuid);
             }
@@ -90,7 +95,8 @@ public abstract class QueryManager {
         return identification;
     }
 
-    public static boolean hasIdentification(UUID uuid, String domain) {
+    public static boolean hasIdentification(Session session, UUID uuid, String domain) {
+        initializeCache(session, domain);
         return identifications.get(domain, uuid) != null;
     }
 
