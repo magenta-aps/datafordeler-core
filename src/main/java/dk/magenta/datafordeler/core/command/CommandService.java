@@ -124,7 +124,8 @@ public class CommandService {
                                         // * has a target that matches the command requested (e.g. "pull")
                                         commandRole.getCommandName().equalsIgnoreCase(commandName) &&
                                         // * has a details map that validates the command body
-                                        commandData.containsAll(commandRole.getDetails())
+                                        (commandData == null && (commandRole.getDetails() == null || commandRole.getDetails().isEmpty())) ||
+                                        (commandData != null && commandData.containsAll(commandRole.getDetails()))
                                 ) {
                             return commandRole;
                         }
@@ -141,7 +142,7 @@ public class CommandService {
         CommandData commandData = handler.getCommandData(command.getCommandBody());
         SystemRole requiredRole = this.findMatchingRole(roleType, command.getCommandName(), commandData);
         if (requiredRole == null) {
-            loggerHelper.info("No Command Role exists for [SystemRoleType:"+roleType.name()+", Command: "+command.getCommandName()+", CommandData: "+commandData.toString()+"]");
+            loggerHelper.info("No Command Role exists for [SystemRoleType:"+roleType.name()+", Command: "+command.getCommandName()+", CommandData: "+commandData+"]");
             throw new AccessDeniedException("No Command Role exists for command '"+command.getCommandName()+"' with data '"+commandData+"'");
         }
         // Check that the user has this SystemRole
