@@ -24,6 +24,17 @@ public class ConfigurationSessionManager {
 
     private Logger log = LogManager.getLogger(ConfigurationSessionManager.class);
 
+    private static HashSet<Class> managedClasses = new HashSet<>();
+    static {
+        managedClasses.add(Command.class);
+        managedClasses.add(InterruptedPull.class);
+        managedClasses.add(InterruptedPullFile.class);
+    }
+    public static Set<Class> getManagedClasses() {
+        return managedClasses;
+    }
+
+
     public ConfigurationSessionManager(SessionManagerConfiguration smConfig) {
         try {
             this.log.info("Initialize ConfigurationSessionManager");
@@ -34,10 +45,7 @@ public class ConfigurationSessionManager {
             this.log.info("Loading configuration from "+smConfig.getSecondaryHibernateConfigurationFile());
             configuration.configure(smConfig.getSecondaryHibernateConfigurationFile());
 
-            Set<Class> managedClasses = new HashSet<>();
-            managedClasses.add(Command.class);
-            managedClasses.add(InterruptedPull.class);
-            managedClasses.add(InterruptedPullFile.class);
+            Set<Class> managedClasses = new HashSet<>(ConfigurationSessionManager.managedClasses);
 
             for (Class cls : managedClasses) {
                 this.log.info("Located hardcoded data class "+cls.getCanonicalName());

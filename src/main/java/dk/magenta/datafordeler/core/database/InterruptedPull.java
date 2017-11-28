@@ -1,5 +1,8 @@
 package dk.magenta.datafordeler.core.database;
 
+import dk.magenta.datafordeler.core.plugin.EntityManager;
+import dk.magenta.datafordeler.core.plugin.Plugin;
+
 import javax.persistence.*;
 import javax.persistence.Entity;
 import java.io.File;
@@ -11,6 +14,35 @@ import java.util.List;
 @Entity
 @Table(name="interrupted_pull")
 public class InterruptedPull extends DatabaseEntry {
+
+
+    @Column
+    private String plugin;
+
+    public String getPlugin() {
+        return this.plugin;
+    }
+
+    public void setPlugin(String plugin) {
+        this.plugin = plugin;
+    }
+
+    public void setPlugin(Plugin plugin) {
+        this.plugin = plugin.getName();
+    }
+
+
+    @Column
+    private String schema;
+
+    public String getSchema() {
+        return this.schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
+
 
 
     @Column
@@ -39,7 +71,7 @@ public class InterruptedPull extends DatabaseEntry {
 
 
 
-    @OneToMany(targetEntity = InterruptedPullFile.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(targetEntity = InterruptedPullFile.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "interruptedPull")
     private List<InterruptedPullFile> files = new ArrayList<>();
 
     public List<InterruptedPullFile> getFiles() {

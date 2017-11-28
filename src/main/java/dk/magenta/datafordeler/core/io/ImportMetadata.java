@@ -70,4 +70,16 @@ public class ImportMetadata {
     public void setTransactionInProgress(boolean transactionInProgress) {
         this.transactionInProgress = transactionInProgress;
     }
+
+
+
+    private long startChunk = 0;
+
+    public long getStartChunk() {
+        return this.startChunk;
+    }
+
+    public void setStartChunk(long startChunk) {
+        this.startChunk = startChunk;
+    }
 }

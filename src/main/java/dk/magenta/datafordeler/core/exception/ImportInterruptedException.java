@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.exception;
 
+import dk.magenta.datafordeler.core.plugin.EntityManager;
+
 import java.io.File;
 import java.util.List;
 
@@ -7,6 +9,16 @@ public class ImportInterruptedException extends DataFordelerException {
 
     public ImportInterruptedException(InterruptedException cause) {
         super(cause);
+    }
+
+    private EntityManager entityManager;
+
+    public EntityManager getEntityManager() {
+        return this.entityManager;
+    }
+
+    public void setEntityManager(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
 
     private Long chunk = null;

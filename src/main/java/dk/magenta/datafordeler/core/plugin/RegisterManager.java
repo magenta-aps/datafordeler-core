@@ -5,6 +5,7 @@ import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
+import dk.magenta.datafordeler.core.io.ImportInputStream;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
@@ -13,10 +14,12 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.web.util.UriUtils;
 
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -150,6 +153,20 @@ public abstract class RegisterManager {
         this.getLog().info("Pulling events from "+eventInterface+", for entityManager "+entityManager);
         Communicator eventCommunicator = this.getEventFetcher();
         return eventCommunicator.fetch(eventInterface);
+    }
+
+    public ImportInputStream getCacheStream(List<File> cacheFiles) throws IOException {
+        InputStream inputStream = null;
+        for (File file : cacheFiles) {
+            Path filePath = Paths.get(file.toURI());
+            InputStream newInputStream = Files.newInputStream(filePath);
+            if (inputStream == null) {
+                inputStream = newInputStream;
+            } else {
+                inputStream = new SequenceInputStream(inputStream, newInputStream);
+            }
+        }
+        return new ImportInputStream(inputStream, cacheFiles);
     }
 
     public abstract boolean pullsEventsCommonly();

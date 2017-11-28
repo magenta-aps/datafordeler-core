@@ -9,19 +9,22 @@ import javax.persistence.Table;
 @Table(name="interrupted_pull_file")
 public class InterruptedPullFile extends DatabaseEntry {
 
-    public InterruptedPullFile(InterruptedPull interruptedPull, String file) {
+    public InterruptedPullFile() {
+    }
+
+    public InterruptedPullFile(InterruptedPull interruptedPull, String filename) {
         this.interruptedPull = interruptedPull;
-        this.file = file;
+        this.filename = filename;
     }
 
     @ManyToOne(targetEntity = InterruptedPull.class, optional = false)
     private InterruptedPull interruptedPull;
 
-    @Column(length = 1024, nullable = false, name = "filename")
-    private String file;
+    @Column(length = 1024)
+    private String filename;
 
-    public String getFile() {
-        return this.file;
+    public String getFilename() {
+        return this.filename;
     }
 
 }
