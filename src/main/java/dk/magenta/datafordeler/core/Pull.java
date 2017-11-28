@@ -26,7 +26,6 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by lars on 29-05-17.
@@ -86,9 +85,9 @@ public class Pull extends Worker implements Runnable {
             InterruptedPull interruptedPull = this.getLastInterrupt();
             if (interruptedPull != null) {
                 this.log.info("A prior pull (started at "+interruptedPull.getStartTime()+") was interrupted at "+interruptedPull.getInterruptTime()+". Resuming.");
-                EntityManager entityManager = this.registerManager.getEntityManager(interruptedPull.getSchema());
+                EntityManager entityManager = this.registerManager.getEntityManager(interruptedPull.getSchemaName());
                 if (entityManager == null) {
-                    this.log.error("Unknown schema: "+interruptedPull.getSchema()+". Cannot resume");
+                    this.log.error("Unknown schema: "+interruptedPull.getSchemaName()+". Cannot resume");
                 } else {
                     ArrayList<File> files = new ArrayList<>();
                     for (InterruptedPullFile interruptedPullFile : interruptedPull.getFiles()) {
@@ -212,7 +211,7 @@ public class Pull extends Worker implements Runnable {
             interruptedPull.setFiles(exception.getFiles());
             interruptedPull.setStartTime(this.importMetadata.getImportTime());
             interruptedPull.setInterruptTime(OffsetDateTime.now());
-            interruptedPull.setSchema(exception.getEntityManager().getSchema());
+            interruptedPull.setSchemaName(exception.getEntityManager().getSchema());
             interruptedPull.setPlugin(this.registerManager.getPlugin());
             Session session = this.engine.configurationSessionManager.getSessionFactory().openSession();
             session.beginTransaction();

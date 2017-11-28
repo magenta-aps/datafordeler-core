@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core.database;
 
-import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 
 import javax.persistence.*;
@@ -33,14 +32,14 @@ public class InterruptedPull extends DatabaseEntry {
 
 
     @Column
-    private String schema;
+    private String schemaName;
 
-    public String getSchema() {
-        return this.schema;
+    public String getSchemaName() {
+        return this.schemaName;
     }
 
-    public void setSchema(String schema) {
-        this.schema = schema;
+    public void setSchemaName(String schemaName) {
+        this.schemaName = schemaName;
     }
 
 
