@@ -50,6 +50,7 @@ public class SessionManager {
 
             ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
             componentProvider.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));
+            componentProvider.addExcludeFilter(new AssignableTypeFilter(dk.magenta.datafordeler.core.configuration.Configuration.class));
 
             for (Class cls : ConfigurationSessionManager.getManagedClasses()) {
                 componentProvider.addExcludeFilter(new AssignableTypeFilter(cls));
