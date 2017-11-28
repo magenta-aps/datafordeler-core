@@ -9,6 +9,9 @@ import javax.persistence.Table;
 @Table(name="interrupted_pull_file")
 public class InterruptedPullFile extends DatabaseEntry {
 
+    public InterruptedPullFile() {
+    }
+
     public InterruptedPullFile(InterruptedPull interruptedPull, String filename) {
         this.interruptedPull = interruptedPull;
         this.filename = filename;

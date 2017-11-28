@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.plugin.EntityManager;
+import dk.magenta.datafordeler.core.plugin.Plugin;
 
 import javax.persistence.*;
 import javax.persistence.Entity;
@@ -16,18 +17,30 @@ public class InterruptedPull extends DatabaseEntry {
 
 
     @Column
-    private String entityManager;
+    private String plugin;
 
-    public String getEntityManager() {
-        return this.entityManager;
+    public String getPlugin() {
+        return this.plugin;
     }
 
-    public void setEntityManager(String entityManager) {
-        this.entityManager = entityManager;
+    public void setPlugin(String plugin) {
+        this.plugin = plugin;
     }
 
-    public void setEntityManager(EntityManager entityManager) {
-        this.entityManager = entityManager.getClass().getCanonicalName();
+    public void setPlugin(Plugin plugin) {
+        this.plugin = plugin.getName();
+    }
+
+
+    @Column
+    private String schema;
+
+    public String getSchema() {
+        return this.schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
     }
 
 
