@@ -15,8 +15,6 @@ import javax.persistence.NoResultException;
  */
 public abstract class ConfigurationManager<C extends Configuration> {
 
-    private C configuration;
-
     /**
      * Locate Configuration object, or create one if none found.
      * Subclasses MUST call this in their initialization routines
@@ -26,12 +24,11 @@ public abstract class ConfigurationManager<C extends Configuration> {
         Transaction transaction = session.beginTransaction();
         Class<C> configurationClass = this.getConfigurationClass();
         try {
-            this.configuration = session.createQuery("select c from " + configurationClass.getSimpleName() + " c", configurationClass).getSingleResult();
+            session.createQuery("select c from " + configurationClass.getSimpleName() + " c", configurationClass).getSingleResult();
             this.getLog().info("Loaded configuration object");
         } catch (NoResultException e) {
             this.getLog().info("No configuration object exists, create one.");
-            this.configuration = this.createConfiguration();
-            session.persist(this.configuration);
+            session.persist(this.createConfiguration());
             transaction.commit();
         } finally {
             session.close();
