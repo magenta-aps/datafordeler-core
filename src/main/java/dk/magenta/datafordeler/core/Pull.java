@@ -76,6 +76,9 @@ public class Pull extends Worker implements Runnable {
 
             this.log.info("Worker " + this.getId() + " fetching events with " + this.registerManager.getClass().getCanonicalName());
 
+
+
+
             this.importMetadata = new ImportMetadata();
 
             boolean error = false;
@@ -151,6 +154,7 @@ public class Pull extends Worker implements Runnable {
                 interruptedPull.setFiles(e.getFiles());
                 interruptedPull.setStartTime(importMetadata.getImportTime());
                 interruptedPull.setInterruptTime(OffsetDateTime.now());
+                interruptedPull.setEntityManager(e.getEntityManager());
                 Session session = this.engine.configurationSessionManager.getSessionFactory().openSession();
                 session.beginTransaction();
                 session.save(interruptedPull);
