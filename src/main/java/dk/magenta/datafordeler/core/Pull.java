@@ -26,6 +26,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.StringJoiner;
 
 /**
  * Created by lars on 29-05-17.
@@ -97,6 +98,11 @@ public class Pull extends Worker implements Runnable {
                     if (cacheStream == null) {
                         this.log.error("Got no stream from cache");
                     } else {
+                        StringJoiner sj = new StringJoiner("\n");
+                        for (File file : files) {
+                            sj.add(file.getAbsolutePath());
+                        }
+                        this.log.info("Got stream from files: \n" + sj.toString());
                         this.importMetadata = new ImportMetadata();
                         this.importMetadata.setImportTime(interruptedPull.getStartTime());
                         this.importMetadata.setStartChunk(interruptedPull.getChunk());
@@ -158,6 +164,7 @@ public class Pull extends Worker implements Runnable {
                         } finally {
                             QueryManager.clearCaches();
                             session.close();
+                            stream.close();
                         }
                     }
                 }
