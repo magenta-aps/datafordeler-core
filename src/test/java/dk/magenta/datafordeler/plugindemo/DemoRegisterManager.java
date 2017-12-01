@@ -190,16 +190,25 @@ public class DemoRegisterManager extends RegisterManager {
     }
 
     @Override
-    public void setLastUpdated(EntityManager entityManager, OffsetDateTime timestamp) {
-        Session session = this.getSessionManager().getSessionFactory().openSession();
+    public void setLastUpdated(EntityManager entityManager, ImportMetadata importMetadata) {
+        boolean inTransaction = importMetadata.isTransactionInProgress();
+        Session session = importMetadata.getSession();
+        if (!inTransaction) {
+            session.beginTransaction();
+            importMetadata.setTransactionInProgress(true);
+        }
         if (entityManager == null) {
             for (EntityManager e : this.entityManagers) {
-                e.setLastUpdated(session, timestamp);
+                e.setLastUpdated(session, importMetadata.getImportTime());
             }
         } else {
-            entityManager.setLastUpdated(session, timestamp);
+            entityManager.setLastUpdated(session, importMetadata.getImportTime());
         }
-        session.close();
+
+        if (!inTransaction) {
+            session.getTransaction().commit();
+            importMetadata.setTransactionInProgress(false);
+        }
     }
 
 
