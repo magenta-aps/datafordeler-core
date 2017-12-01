@@ -426,7 +426,6 @@ public abstract class QueryManager {
         if (entity == null && registration.entity != null) {
             E existingEntity = getEntity(session, registration.entity.getUUID(), (Class<E>) registration.entity.getClass());
             if (existingEntity != null) {
-                System.out.println("Entity "+existingEntity.getUUID()+" has Identification "+System.identityHashCode(existingEntity.getIdentification()));
                 entity = existingEntity;
                 log.info("There is an existing entity with uuid " + existingEntity.getUUID().toString() + ", using that");
             } else {
@@ -457,8 +456,9 @@ public abstract class QueryManager {
                                 return;
                             }
                             if (otherRegistration.getSequenceNumber() == registration.getSequenceNumber()) {
+                                log.error("Duplicate sequence number");
                                 for (R r : entity.getRegistrations()) {
-                                    System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                                    log.error((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
                                 }
                                 throw new DuplicateSequenceNumberException(registration, otherRegistration);
                             }
@@ -471,8 +471,9 @@ public abstract class QueryManager {
                 }
 
                 if (highestSequenceNumber > -1 && registration.getSequenceNumber() != highestSequenceNumber + 1) {
+                    log.warn("Skipped sequence number");
                     for (R r : entity.getRegistrations()) {
-                        System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                        log.warn((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
                     }
                     //throw new SkippedSequenceNumberException(registration, highestSequenceNumber);
                 }
@@ -480,8 +481,9 @@ public abstract class QueryManager {
                     if (lastExistingRegistration.getRegistrationTo() == null) {
                         lastExistingRegistration.setRegistrationTo(registration.getRegistrationFrom());
                     } else if (!lastExistingRegistration.getRegistrationTo().equals(registration.getRegistrationFrom())) {
+                        log.error("Mismatching registration boundary");
                         for (R r : entity.getRegistrations()) {
-                            System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                            log.error((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
                         }
                         throw new MismatchingRegistrationBoundaryException(registration, lastExistingRegistration);
                     }
