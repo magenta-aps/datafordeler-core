@@ -110,6 +110,7 @@ public class Pull extends Worker implements Runnable {
 
                         try {
                             entityManager.parseRegistration(stream, importMetadata);
+                            this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
                         } catch (Exception e) {
                             if (this.doCancel) {
                                 break;
