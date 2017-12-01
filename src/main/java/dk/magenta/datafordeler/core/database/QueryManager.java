@@ -25,7 +25,21 @@ public abstract class QueryManager {
 
     public static final String ENTITY = "e";
 
+    private static void initializeCache(Session session, String domain) {
+        if (!identifications.containsKey(domain)) {
+            log.info("Loading identifications for domain "+domain);
+            org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
+            databaseQuery.setParameter("domain", domain);
+            for (Identification identification : databaseQuery.getResultList()) {
+                identifications.put(domain, identification.getUuid(), identification.getId());
+            }
+            log.info("Identifications loaded");
+        }
+    }
+
+
     private static Identification getIdentificationFromCache(Session session, UUID uuid, String domain) {
+        initializeCache(session, domain);
         Long id = identifications.get(domain, uuid);
         if (id != null) {
             return session.get(Identification.class, id);
@@ -61,24 +75,28 @@ public abstract class QueryManager {
         Identification identification;
         identification = getIdentificationFromCache(session, uuid, domain);
         if (identification == null) {
-            //log.info("Didn't find identification for "+domain+"/"+uuid+" in cache");
-            identification = getIdentification(session, uuid);
+            log.debug("Didn't find identification for "+domain+"/"+uuid+" in cache");
+            if (hasIdentification(session, uuid, domain)) {
+                log.debug("Cache for "+domain+"/"+uuid+" had a broken DB link");
+                identification = getIdentification(session, uuid);
+            }
             if (identification == null) {
-                //log.info("Creating new for "+domain+"/"+uuid);
+                log.debug("Creating new for "+domain+"/"+uuid);
                 identification = new Identification(uuid, domain);
                 session.save(identification);
                 identifications.put(domain, uuid, identification.getId());
             } else {
-                //log.info("Identification for "+domain+"/"+uuid+" found in database: "+identification.getId());
+                log.debug("Identification for "+domain+"/"+uuid+" found in database: "+identification.getId());
                 identifications.put(domain, uuid, identification.getId());
             }
         } else {
-            //log.info("Identification for "+domain+"/"+uuid+" found in cache: "+identification.getId());
+            log.debug("Identification for "+domain+"/"+uuid+" found in cache: "+identification.getId());
         }
         return identification;
     }
 
-    public static boolean hasIdentification(UUID uuid, String domain) {
+    public static boolean hasIdentification(Session session, UUID uuid, String domain) {
+        initializeCache(session, domain);
         return identifications.get(domain, uuid) != null;
     }
 
@@ -408,7 +426,6 @@ public abstract class QueryManager {
         if (entity == null && registration.entity != null) {
             E existingEntity = getEntity(session, registration.entity.getUUID(), (Class<E>) registration.entity.getClass());
             if (existingEntity != null) {
-                System.out.println("Entity "+existingEntity.getUUID()+" has Identification "+System.identityHashCode(existingEntity.getIdentification()));
                 entity = existingEntity;
                 log.info("There is an existing entity with uuid " + existingEntity.getUUID().toString() + ", using that");
             } else {
@@ -439,8 +456,9 @@ public abstract class QueryManager {
                                 return;
                             }
                             if (otherRegistration.getSequenceNumber() == registration.getSequenceNumber()) {
+                                log.error("Duplicate sequence number");
                                 for (R r : entity.getRegistrations()) {
-                                    System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                                    log.error((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
                                 }
                                 throw new DuplicateSequenceNumberException(registration, otherRegistration);
                             }
@@ -453,8 +471,9 @@ public abstract class QueryManager {
                 }
 
                 if (highestSequenceNumber > -1 && registration.getSequenceNumber() != highestSequenceNumber + 1) {
+                    log.warn("Skipped sequence number");
                     for (R r : entity.getRegistrations()) {
-                        System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                        log.warn((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
                     }
                     //throw new SkippedSequenceNumberException(registration, highestSequenceNumber);
                 }
@@ -462,8 +481,9 @@ public abstract class QueryManager {
                     if (lastExistingRegistration.getRegistrationTo() == null) {
                         lastExistingRegistration.setRegistrationTo(registration.getRegistrationFrom());
                     } else if (!lastExistingRegistration.getRegistrationTo().equals(registration.getRegistrationFrom())) {
+                        log.error("Mismatching registration boundary");
                         for (R r : entity.getRegistrations()) {
-                            System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                            log.error((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
                         }
                         throw new MismatchingRegistrationBoundaryException(registration, lastExistingRegistration);
                     }

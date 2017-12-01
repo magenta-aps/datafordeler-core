@@ -49,6 +49,18 @@ public class ImportMetadata {
 
 
 
+    private boolean stop = false;
+
+    public boolean getStop() {
+        return this.stop;
+    }
+
+    public void setStop() {
+        this.stop = true;
+    }
+
+
+    
     private boolean transactionInProgress;
 
     public boolean isTransactionInProgress() {
@@ -57,5 +69,17 @@ public class ImportMetadata {
 
     public void setTransactionInProgress(boolean transactionInProgress) {
         this.transactionInProgress = transactionInProgress;
+    }
+
+
+
+    private long startChunk = 0;
+
+    public long getStartChunk() {
+        return this.startChunk;
+    }
+
+    public void setStartChunk(long startChunk) {
+        this.startChunk = startChunk;
     }
 }

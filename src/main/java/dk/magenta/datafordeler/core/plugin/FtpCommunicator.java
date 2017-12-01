@@ -1,11 +1,15 @@
 package dk.magenta.datafordeler.core.plugin;
 
+import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
+import dk.magenta.datafordeler.core.io.ImportInputStream;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
 import it.sauronsoftware.ftp4j.*;
 import it.sauronsoftware.ftp4j.connectors.HTTPTunnelConnector;
 import org.apache.http.StatusLine;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -28,6 +32,8 @@ public class FtpCommunicator implements Communicator {
 
     public static final String DONE_FILE_ENDING = ".done";
 
+    private static Logger log = LogManager.getLogger(FtpCommunicator.class);
+
     protected String username;
     protected String password;
     protected boolean useFtps;
@@ -35,16 +41,20 @@ public class FtpCommunicator implements Communicator {
     private Path localCopyFolder;
     private SSLSocketFactory sslSocketFactory;
     private boolean keepFiles = false;
+    private boolean markLocalFiles = true;
+    private boolean markRemoteFiles = true;
 
     public FtpCommunicator(String username, String password, boolean useFtps) throws DataStreamException {
-        this(username, password, useFtps, null, null, false);
+        this(username, password, useFtps, null, null, false, true, true);
     }
     public FtpCommunicator(String username, String password, boolean useFtps,
-        String proxyString, String localCopyFolder, boolean keepFiles) throws DataStreamException {
+        String proxyString, String localCopyFolder, boolean keepFiles, boolean markLocalFiles, boolean markRemoteFiles) throws DataStreamException {
         this.username = username;
         this.password = password;
         this.useFtps = useFtps;
         this.proxyString = proxyString;
+        System.out.println("this.proxyString: "+this.proxyString);
+
 
         if (localCopyFolder != null) {
             this.localCopyFolder = Paths.get(localCopyFolder);
@@ -55,9 +65,9 @@ public class FtpCommunicator implements Communicator {
                 throw new DataStreamException("Unable to create temporary folder", e);
             }
         }
-        System.out.println("localCopyFolder: "+this.localCopyFolder.toString());
-
         this.keepFiles = keepFiles;
+        this.markLocalFiles = markLocalFiles;
+        this.markRemoteFiles = markRemoteFiles;
     }
 
     public void setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
@@ -72,10 +82,12 @@ public class FtpCommunicator implements Communicator {
     }
 
     protected void setupProxy(FTPClient ftpClient) throws DataStreamException {
-        if (!Strings.isEmpty(proxyString)) {
-            System.out.println("Setting proxy to "+proxyString);
+        if (Strings.isEmpty(this.proxyString)) {
+            log.info("No proxy");
+        } else {
+            log.info("Using proxy "+this.proxyString);
             try {
-                URI proxyURI = new URI(proxyString);
+                URI proxyURI = new URI(this.proxyString);
                 HTTPTunnelConnector connector = new HTTPTunnelConnector(
                     proxyURI.getHost(), proxyURI.getPort()
                 );
@@ -92,6 +104,7 @@ public class FtpCommunicator implements Communicator {
         if (this.useFtps) {
             ftpClient.setSecurity(FTPClient.SECURITY_FTPS);
         }
+        log.info("Connecting to "+uri.toString());
         setupProxy(ftpClient);
         if (this.sslSocketFactory != null) {
             ftpClient.setSSLSocketFactory(this.sslSocketFactory);
@@ -118,7 +131,7 @@ public class FtpCommunicator implements Communicator {
      * and marks the fetched files as fetched when the returned InputStream is closed.
      */
     @Override
-    public InputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
+    public ImportInputStream fetch(URI uri) throws HttpStatusException, DataStreamException {
         try {
             FTPClient ftpClient = performConnect(uri);
 
@@ -132,6 +145,7 @@ public class FtpCommunicator implements Communicator {
             for (String path : downloadPaths) {
                 String fileName = path.substring(path.lastIndexOf('/') + 1);
                 File outputFile = Files.createFile(Paths.get(localCopyFolder.toString(), fileName)).toFile();
+                log.info("Downloading "+path+" to "+outputFile.getAbsolutePath());
                 ftpClient.download(path, outputFile);
                 currentFiles.add(outputFile);
             }
@@ -155,9 +169,9 @@ public class FtpCommunicator implements Communicator {
                         }
                     }
                 });
-                return inputCloser;
+                return new ImportInputStream(inputCloser, currentFiles);
             } else {
-                return new ByteArrayInputStream("".getBytes());
+                return new ImportInputStream(new ByteArrayInputStream("".getBytes()));
             }
         } catch (FTPException | FTPIllegalReplyException | FTPAbortedException | FTPDataTransferException | FTPListParseException e) {
             e.printStackTrace();
@@ -171,9 +185,9 @@ public class FtpCommunicator implements Communicator {
     }
 
     protected void onStreamClose(FTPClient ftpClient, List<File> localFiles, URI uri, List<String> remoteFiles) {
-        this.deleteLocalFiles(localFiles);
         this.markRemotefilesDone(ftpClient, uri, remoteFiles);
         this.markLocalFilesDone(localFiles);
+        this.deleteLocalFiles(localFiles);
     }
 
     @Override
@@ -183,8 +197,8 @@ public class FtpCommunicator implements Communicator {
 
     protected Set<String> getLocalFilenameList() throws IOException {
         Set<String> knownFiles = new HashSet<>();
-        DirectoryStream<Path> directoryStream = Files.newDirectoryStream(localCopyFolder);
-        for(Path path : directoryStream) {
+        DirectoryStream<Path> directoryStream = Files.newDirectoryStream(this.localCopyFolder);
+        for (Path path : directoryStream) {
             if(Files.isRegularFile(path)) {
                 knownFiles.add(path.getFileName().toString());
             }
@@ -214,13 +228,12 @@ public class FtpCommunicator implements Communicator {
     protected List<String> filterFilesToDownload(List<String> paths) throws IOException {
         Set<String> knownFiles = getLocalFilenameList();
         List<String> result = new ArrayList<>();
-        for(String path : paths) {
+        for (String path : paths) {
             String fileName = path.substring(path.lastIndexOf('/') + 1);
             if (!knownFiles.contains(fileName) && !knownFiles.contains(fileName + DONE_FILE_ENDING)) {
                 result.add(path);
             }
         }
-        System.out.println("Files to download: "+result);
         return result;
     }
 
@@ -233,30 +246,34 @@ public class FtpCommunicator implements Communicator {
     }
 
     private void markLocalFilesDone(List<File> localFiles) {
-        for (File file : localFiles) {
-            String filename = file.getName();
-            if (!filename.endsWith(DONE_FILE_ENDING)) {
-                String doneFileName = filename + DONE_FILE_ENDING;
-                try {
-                    Files.move(
-                            Paths.get(file.toURI()),
-                            Paths.get(file.getParent(), doneFileName)
-                    );
-                } catch (IOException e) {
-                    e.printStackTrace();
+        if (this.markLocalFiles) {
+            for (File file : localFiles) {
+                String filename = file.getName();
+                if (!filename.endsWith(DONE_FILE_ENDING)) {
+                    String doneFileName = filename + DONE_FILE_ENDING;
+                    try {
+                        Files.move(
+                                Paths.get(file.toURI()),
+                                Paths.get(file.getParent(), doneFileName)
+                        );
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
     }
 
     private void markRemotefilesDone(FTPClient ftpClient, URI folder, List<String> remoteFiles) {
-        try {
-            ftpClient.changeDirectory(folder.getPath());
-            for (String file : remoteFiles){
-                ftpClient.rename(file,file + DONE_FILE_ENDING);
+        if (this.markRemoteFiles) {
+            try {
+                ftpClient.changeDirectory(folder.getPath());
+                for (String file : remoteFiles) {
+                    ftpClient.rename(file, file + DONE_FILE_ENDING);
+                }
+            } catch (IOException | FTPIllegalReplyException | FTPException e) {
+                e.printStackTrace();
             }
-        } catch (IOException | FTPIllegalReplyException | FTPException e) {
-            e.printStackTrace();
         }
     }
 }

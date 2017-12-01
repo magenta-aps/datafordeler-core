@@ -1,8 +1,11 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.command.Worker;
+import dk.magenta.datafordeler.core.database.InterruptedPull;
+import dk.magenta.datafordeler.core.database.InterruptedPullFile;
 import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
+import dk.magenta.datafordeler.core.exception.ImportInterruptedException;
 import dk.magenta.datafordeler.core.exception.SimilarJobRunningException;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
@@ -13,14 +16,17 @@ import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.quartz.JobDataMap;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.StringJoiner;
 
 /**
  * Created by lars on 29-05-17.
@@ -56,6 +62,8 @@ public class Pull extends Worker implements Runnable {
         this(engine, plugin.getRegisterManager());
     }
 
+    private ImportMetadata importMetadata = null;
+
     /**
      * Fetches and processes outstanding events from the Register
      * Basically PULL
@@ -64,21 +72,68 @@ public class Pull extends Worker implements Runnable {
     public void run() {
         try {
             if (runningPulls.keySet().contains(this.registerManager)) {
-                throw new SimilarJobRunningException("Another pull job is already running for RegisterManager "+this.registerManager.getClass().getCanonicalName()+" ("+this.registerManager.hashCode()+")");
+                throw new SimilarJobRunningException("Another pull job is already running for RegisterManager " + this.registerManager.getClass().getCanonicalName() + " (" + this.registerManager.hashCode() + ")");
             }
 
-            this.log.info("Worker "+this.getId()+" adding lock for " + this.registerManager.getClass().getCanonicalName() + " ("+this.registerManager.hashCode()+")");
+            this.log.info("Worker " + this.getId() + " adding lock for " + this.registerManager.getClass().getCanonicalName() + " (" + this.registerManager.hashCode() + ")");
             runningPulls.put(this.registerManager, this);
 
-            this.log.info("Worker "+this.getId()+" fetching events with " + this.registerManager.getClass().getCanonicalName());
+            this.log.info("Worker " + this.getId() + " fetching events with " + this.registerManager.getClass().getCanonicalName());
 
-            ImportMetadata importMetadata = new ImportMetadata();
+
+
+            // See if there's a prior pull that was interrupted, and resume it.
+            InterruptedPull interruptedPull = this.getLastInterrupt();
+            if (interruptedPull != null) {
+                this.log.info("A prior pull (started at "+interruptedPull.getStartTime()+") was interrupted at "+interruptedPull.getInterruptTime()+". Resuming.");
+                EntityManager entityManager = this.registerManager.getEntityManager(interruptedPull.getSchemaName());
+                if (entityManager == null) {
+                    this.log.error("Unknown schema: "+interruptedPull.getSchemaName()+". Cannot resume");
+                } else {
+                    ArrayList<File> files = new ArrayList<>();
+                    for (InterruptedPullFile interruptedPullFile : interruptedPull.getFiles()) {
+                        files.add(new File(interruptedPullFile.getFilename()));
+                    }
+                    InputStream cacheStream = this.registerManager.getCacheStream(files);
+                    if (cacheStream == null) {
+                        this.log.error("Got no stream from cache");
+                    } else {
+                        StringJoiner sj = new StringJoiner("\n");
+                        for (File file : files) {
+                            sj.add(file.getAbsolutePath());
+                        }
+                        this.log.info("Got stream from files: \n" + sj.toString());
+                        this.importMetadata = new ImportMetadata();
+                        this.importMetadata.setImportTime(interruptedPull.getStartTime());
+                        this.importMetadata.setStartChunk(interruptedPull.getChunk());
+                        this.deleteInterrupt(interruptedPull);
+
+                        Session session = this.engine.sessionManager.getSessionFactory().openSession();
+                        this.importMetadata.setSession(session);
+                        try {
+                            this.log.info("Resuming at chunk "+interruptedPull.getChunk()+"...");
+                            entityManager.parseRegistration(cacheStream, this.importMetadata);
+                        } catch (Exception e) {
+                            if (!this.doCancel) {
+                                throw e;
+                            }
+                        } finally {
+                            QueryManager.clearCaches();
+                            session.close();
+                        }
+                    }
+                }
+            }
+
+
+
+            this.importMetadata = new ImportMetadata();
 
             boolean error = false;
             boolean skip = false;
             if (this.registerManager.pullsEventsCommonly()) {
-                this.log.info("Pulling data for "+this.registerManager.getClass().getSimpleName());
-                ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(importMetadata);
+                this.log.info("Pulling data for " + this.registerManager.getClass().getSimpleName());
+                ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.importMetadata);
                 if (stream != null) {
                     this.doPull(importMetadata, stream);
                     // Done. Write last-updated timestamp.
@@ -94,22 +149,12 @@ public class Pull extends Worker implements Runnable {
                     if (this.doCancel) {
                         break;
                     }
-                    this.log.info("Pulling data for "+entityManager.getClass().getSimpleName());
+                    this.log.info("Pulling data for " + entityManager.getClass().getSimpleName());
 
-                    /*
-                    ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.registerManager.getEventInterface(entityManager), entityManager);
-                    if (stream != null) {
-                        this.doPull(importMetadata, stream);
-                        // Done. Write last-updated timestamp
-                        this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
-                    } else {
-                        skip = true;
-                    }*/
-
-                    InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager, importMetadata);
+                    InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager, this.importMetadata);
                     if (stream != null) {
                         Session session = this.engine.sessionManager.getSessionFactory().openSession();
-                        importMetadata.setSession(session);
+                        this.importMetadata.setSession(session);
 
                         try {
                             entityManager.parseRegistration(stream, importMetadata);
@@ -123,6 +168,7 @@ public class Pull extends Worker implements Runnable {
                         } finally {
                             QueryManager.clearCaches();
                             session.close();
+                            stream.close();
                         }
                     }
                 }
@@ -140,7 +186,16 @@ public class Pull extends Worker implements Runnable {
             }
             this.onComplete();
 
-            this.log.info("Worker " + this.getId() + " removing lock for " + this.registerManager.getClass().getCanonicalName() + " ("+this.registerManager.hashCode()+") on " + OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+            this.log.info("Worker " + this.getId() + " removing lock for " + this.registerManager.getClass().getCanonicalName() + " (" + this.registerManager.hashCode() + ") on " + OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        } catch (ImportInterruptedException e) {
+            String prefix = "Worker " + this.getId() + ": ";
+            this.log.info(prefix + "Pull interrupted");
+
+            if (e.getChunk() != null && e.getFiles() != null) {
+                this.saveInterrupt(e);
+            }
+
+            this.onComplete();
 
         } catch (Throwable e) {
             e.printStackTrace();
@@ -149,6 +204,57 @@ public class Pull extends Worker implements Runnable {
             throw new RuntimeException(e);
         } finally {
             runningPulls.remove(this.registerManager);
+        }
+    }
+
+    @Override
+    public void end() {
+        if (this.importMetadata != null) {
+            this.importMetadata.setStop();
+        }
+    }
+
+    private void saveInterrupt(ImportInterruptedException exception) {
+        if (this.importMetadata != null) {
+            this.log.info("Saving interrupt");
+            InterruptedPull interruptedPull = new InterruptedPull();
+            interruptedPull.setChunk(exception.getChunk());
+            interruptedPull.setFiles(exception.getFiles());
+            interruptedPull.setStartTime(this.importMetadata.getImportTime());
+            interruptedPull.setInterruptTime(OffsetDateTime.now());
+            interruptedPull.setSchemaName(exception.getEntityManager().getSchema());
+            interruptedPull.setPlugin(this.registerManager.getPlugin());
+            Session session = this.engine.configurationSessionManager.getSessionFactory().openSession();
+            session.beginTransaction();
+            session.save(interruptedPull);
+            session.getTransaction().commit();
+            session.close();
+        }
+    }
+
+    private InterruptedPull getLastInterrupt() {
+        Session session = this.engine.configurationSessionManager.getSessionFactory().openSession();
+        HashMap<String, Object> filter = new HashMap<>();
+        filter.put("plugin", this.registerManager.getPlugin().getName());
+        InterruptedPull interruptedPull = QueryManager.getItem(session, InterruptedPull.class, filter);
+        if (interruptedPull != null) {
+            interruptedPull.getFiles();
+        }
+        session.close();
+        return interruptedPull;
+    }
+
+    private void deleteInterrupt(InterruptedPull interruptedPull) {
+        this.log.info("Deleting interrupt");
+        Session session = this.engine.configurationSessionManager.getSessionFactory().openSession();
+        Transaction transaction = session.beginTransaction();
+        try {
+            session.delete(interruptedPull);
+            transaction.commit();
+        } catch (Exception e) {
+            transaction.rollback();
+        } finally {
+            session.close();
         }
     }
 
