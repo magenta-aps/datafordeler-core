@@ -274,10 +274,18 @@ public abstract class RegisterManager {
         return sj.toString();
     }
 
-    public void setLastUpdated(EntityManager entityManager, OffsetDateTime timestamp) {
-        Session session = this.getSessionManager().getSessionFactory().openSession();
-        entityManager.setLastUpdated(session, timestamp);
-        session.close();
+    public void setLastUpdated(EntityManager entityManager, ImportMetadata importMetadata) {
+        boolean inTransaction = importMetadata.isTransactionInProgress();
+        Session session = importMetadata.getSession();
+        if (!inTransaction) {
+            session.beginTransaction();
+            importMetadata.setTransactionInProgress(true);
+        }
+        entityManager.setLastUpdated(session, importMetadata.getImportTime());
+        if (!inTransaction) {
+            session.getTransaction().commit();
+            importMetadata.setTransactionInProgress(false);
+        }
     }
 
 }
