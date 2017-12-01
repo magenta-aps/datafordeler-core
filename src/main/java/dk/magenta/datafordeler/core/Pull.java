@@ -154,7 +154,8 @@ public class Pull extends Worker implements Runnable {
                         this.importMetadata.setSession(session);
 
                         try {
-                            entityManager.parseRegistration(stream, this.importMetadata);
+                            entityManager.parseRegistration(stream, importMetadata);
+                            this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
                         } catch (Exception e) {
                             if (this.doCancel) {
                                 break;
