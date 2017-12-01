@@ -135,9 +135,11 @@ public class Pull extends Worker implements Runnable {
                 this.log.info("Pulling data for " + this.registerManager.getClass().getSimpleName());
                 ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.importMetadata);
                 if (stream != null) {
-                    this.doPull(this.importMetadata, stream);
-                    // Done. Write last-updated timestamp.
-                    this.registerManager.setLastUpdated(null, this.importMetadata.getImportTime());
+                    this.doPull(importMetadata, stream);
+                    Session session = this.engine.sessionManager.getSessionFactory().openSession();
+                    importMetadata.setSession(session);
+                    this.registerManager.setLastUpdated(null, importMetadata);
+                    session.close();
                 } else {
                     skip = true;
                 }
@@ -155,7 +157,7 @@ public class Pull extends Worker implements Runnable {
 
                         try {
                             entityManager.parseRegistration(stream, importMetadata);
-                            this.registerManager.setLastUpdated(entityManager, importMetadata.getImportTime());
+                            this.registerManager.setLastUpdated(entityManager, importMetadata);
                         } catch (Exception e) {
                             if (this.doCancel) {
                                 break;
