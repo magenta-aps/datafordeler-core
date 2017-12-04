@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
@@ -135,18 +134,6 @@ public abstract class EntityManager {
         }
         return responses;
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.io.ImportInputStream;
@@ -25,8 +24,9 @@ import java.util.*;
 /**
  * Created by lars on 08-06-17.
  *
- * En klasse til at hente filer vha. FTP
- * Efter filer er hentet markeres de også med en filendelse, så de ikke hentes næste gang.
+ * A class to fetch files by FTP. Files are fetched to a local folder, and an ImportInputStream is returned
+ * for the fetched files.
+ * Files are optionally kept and optionally marked to help determine what has already been imported.
  */
 public class FtpCommunicator implements Communicator {
 
@@ -47,13 +47,25 @@ public class FtpCommunicator implements Communicator {
     public FtpCommunicator(String username, String password, boolean useFtps) throws DataStreamException {
         this(username, password, useFtps, null, null, false, true, true);
     }
+
+    /**
+     * Construct an instance
+     * @param username Login username
+     * @param password Login password
+     * @param useFtps Connect with FTPS
+     * @param proxyString Optional proxy
+     * @param localCopyFolder Optional folder to hold fetched files in. If unset, a temporary folder will be created
+     * @param keepFiles Flag to keep fetched files after stream close
+     * @param markLocalFiles Flag to mark local files with the ".done" extension after stream close
+     * @param markRemoteFiles Flag to mark remote files with the ".done" extension after stream close
+     * @throws DataStreamException
+     */
     public FtpCommunicator(String username, String password, boolean useFtps,
         String proxyString, String localCopyFolder, boolean keepFiles, boolean markLocalFiles, boolean markRemoteFiles) throws DataStreamException {
         this.username = username;
         this.password = password;
         this.useFtps = useFtps;
         this.proxyString = proxyString;
-        System.out.println("this.proxyString: "+this.proxyString);
 
 
         if (localCopyFolder != null) {
@@ -127,8 +139,7 @@ public class FtpCommunicator implements Communicator {
     }
 
     /**
-     * Fetches all yet-unfetched files from the folder denoted by the uri,
-     * and marks the fetched files as fetched when the returned InputStream is closed.
+     * Fetches all yet-unfetched files from the folder denoted by the uri.
      */
     @Override
     public ImportInputStream fetch(URI uri) throws HttpStatusException, DataStreamException {

@@ -10,6 +10,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Entity that stores data about an interrupted Pull. When a running Pull is interrupted,
+ * it should result in a new InterruptedPull being stored to the database, describing:
+ * * Which schema was being precessed (so the relevant EntityManager can be found)
+ * * Which file(s) were being imported, so the resumed pull can run on the same data.
+ * * Which chunk (offset) was being handled at the time of interruption. On interrupt,
+ * the processing of this chunk would be rolled back, and so resuming should start by
+ * processing this chunk from the beginning.
+ */
 @Entity
 @Table(name="interrupted_pull")
 public class InterruptedPull extends DatabaseEntry {

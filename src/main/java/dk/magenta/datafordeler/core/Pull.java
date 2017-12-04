@@ -30,11 +30,17 @@ import java.util.StringJoiner;
 
 /**
  * Created by lars on 29-05-17.
- * A Runnable that performs a pull with a given RegisterManager
+ * A Runnable that performs a pull with a given RegisterManager.
+ * As a Worker subclass, it is started by the run() method and halted with the end() method.
+ * If halted with end(), it signals the called-upon EntityManager to cleanly cease,
+ * and report back a point that can be used for resuming.
  */
 public class Pull extends Worker implements Runnable {
+
     /**
      * Created by lars on 06-04-17.
+     * Helper class to construct a Pull from data embedded in a JobDataMap,
+     * which is used to set up jobs running on a CRON
      */
     public static class Task extends AbstractTask<Pull> {
         public static final String DATA_ENGINE = "engine";
@@ -65,8 +71,13 @@ public class Pull extends Worker implements Runnable {
     private ImportMetadata importMetadata = null;
 
     /**
-     * Fetches and processes outstanding events from the Register
-     * Basically PULL
+     * Fetches data from the remote register, at first checking whether a previous Pull for the plugin was interrupted,
+     * and in that case resuming it, before fetching for each EntityManager is succession.
+     * How the data is fetched, parsed and inserted in the database is ultimately up to each plugin. This method just oversees the workflow by:
+     * * Looping over EntityManagers in the plugin, and for each:
+     * * Calling on the EntityManager to fetch data as an inputstream
+     * * Calling on the EntityManager to parse the stream and save the result to the database
+     * * In case of an orderly interruption (such as an aborted command), store how far in the process went. It is up to the EntityManager to measure and report these figures.
      * */
     @Override
     public void run() {
@@ -207,6 +218,11 @@ public class Pull extends Worker implements Runnable {
         }
     }
 
+    /**
+     * Ask a running Pull to stop. It's up to the called EntityManagers to actually respect this flag.
+     * During its run, an EntityManager must regularly check for this flag, and throw an ImportInterruptedException
+     * when it is set.
+     */
     @Override
     public void end() {
         if (this.importMetadata != null) {
@@ -214,6 +230,10 @@ public class Pull extends Worker implements Runnable {
         }
     }
 
+    /**
+     * With an interruption, save the state (cached files, offset) to the database, so the pull can be resumed later
+     * @param exception
+     */
     private void saveInterrupt(ImportInterruptedException exception) {
         if (this.importMetadata != null) {
             this.log.info("Saving interrupt");
@@ -232,6 +252,10 @@ public class Pull extends Worker implements Runnable {
         }
     }
 
+    /**
+     * Get data on last interrupted pull from the database
+     * @return
+     */
     private InterruptedPull getLastInterrupt() {
         Session session = this.engine.configurationSessionManager.getSessionFactory().openSession();
         HashMap<String, Object> filter = new HashMap<>();
@@ -244,6 +268,10 @@ public class Pull extends Worker implements Runnable {
         return interruptedPull;
     }
 
+    /**
+     * When an interrupted pull is being resumed, it should be cleared from the database
+     * @param interruptedPull
+     */
     private void deleteInterrupt(InterruptedPull interruptedPull) {
         this.log.info("Deleting interrupt");
         Session session = this.engine.configurationSessionManager.getSessionFactory().openSession();
