@@ -179,7 +179,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
+    public List<? extends Registration> parseData(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
 
     /**
      * Parse incoming data into a Registration (data coming from within a request envelope)
@@ -187,7 +187,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
+    public List<? extends Registration> parseData(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
 
 
     public boolean handlesOwnSaves() {
@@ -225,7 +225,7 @@ public abstract class EntityManager {
             throw new FailedReferenceException(reference, e);
         }
 
-        return this.parseRegistration(
+        return this.parseData(
             registrationData,
             importMetadata
         );

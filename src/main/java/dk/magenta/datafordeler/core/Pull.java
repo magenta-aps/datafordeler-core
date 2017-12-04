@@ -123,7 +123,7 @@ public class Pull extends Worker implements Runnable {
                         this.importMetadata.setSession(session);
                         try {
                             this.log.info("Resuming at chunk "+interruptedPull.getChunk()+"...");
-                            entityManager.parseRegistration(cacheStream, this.importMetadata);
+                            entityManager.parseData(cacheStream, this.importMetadata);
                         } catch (Exception e) {
                             if (!this.doCancel) {
                                 throw e;
@@ -168,7 +168,7 @@ public class Pull extends Worker implements Runnable {
                         this.importMetadata.setSession(session);
 
                         try {
-                            entityManager.parseRegistration(stream, importMetadata);
+                            entityManager.parseData(stream, importMetadata);
                             this.registerManager.setLastUpdated(entityManager, importMetadata);
                         } catch (Exception e) {
                             if (this.doCancel) {
