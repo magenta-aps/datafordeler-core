@@ -3,7 +3,8 @@ package dk.magenta.datafordeler.core.exception;
 import java.net.URI;
 
 /**
- * Created by lars on 07-03-17.
+ * Exception to be thrown when attempting to find an EntityManager (e.g. from a schema),
+ * and none are found
  */
 public class EntityManagerNotFoundException extends DataFordelerException {
     @Override

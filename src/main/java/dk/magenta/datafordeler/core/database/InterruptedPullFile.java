@@ -5,6 +5,9 @@ import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+/**
+ * Single file entry for InterruptedPull
+ */
 @Entity
 @Table(name="interrupted_pull_file")
 public class InterruptedPullFile extends DatabaseEntry {

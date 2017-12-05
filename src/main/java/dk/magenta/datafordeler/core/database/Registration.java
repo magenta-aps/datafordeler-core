@@ -24,8 +24,7 @@ import java.util.*;
 import dk.magenta.datafordeler.core.database.Entity;
 
 /**
- * Created by lars on 20-02-17.
- * A Registration defines the time range in which a piece of data is “registered”,
+ * A Registration defines the time range in which a piece of data is "registered",
  * that is, when did it enter into the records of our data source, and when was it 
  * supplanted by more recent data.
  * A Registration points to exactly one Entity, and may have any number of Effects

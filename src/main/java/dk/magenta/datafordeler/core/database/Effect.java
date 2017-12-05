@@ -26,7 +26,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
 /**
- * Created by lars on 20-02-17.
  * An Effect defines the time range in which a piece of data has effect.
  * An Effect points to exactly one Registration, but may have any number of DataItems
  * associated.

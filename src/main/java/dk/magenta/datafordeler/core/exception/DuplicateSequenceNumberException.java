@@ -3,7 +3,7 @@ package dk.magenta.datafordeler.core.exception;
 import dk.magenta.datafordeler.core.database.Registration;
 
 /**
- * Created by lars on 10-05-17.
+ * Exception to be thrown when two registrations on the same entity has the same sequence number
  */
 public class DuplicateSequenceNumberException extends InvalidDataInputException {
 

@@ -6,6 +6,9 @@ import javax.persistence.Table;
 import java.util.Collection;
 import java.util.HashSet;
 
+/**
+ * A collection of RecordData objects
+ */
 @javax.persistence.Entity
 @Table(name = "record_collection")
 public class RecordCollection extends DatabaseEntry {

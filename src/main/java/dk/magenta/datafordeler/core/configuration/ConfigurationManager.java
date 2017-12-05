@@ -8,7 +8,6 @@ import org.hibernate.Transaction;
 import javax.persistence.NoResultException;
 
 /**
- * Created by lars on 06-04-17.
  * Plugin configurations are stored in separate database tables, each with only one
  * row. On loading the program, the Configuration object is retrieved from the database, or
  * if one doesn’t exist (such as on the first run), created and saved.

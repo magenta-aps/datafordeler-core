@@ -149,7 +149,7 @@ public class Engine {
                     throw new EntityManagerNotFoundException(schema);
                 }
                 log.info("entityManager: "+entityManager.getClass().getCanonicalName());
-                registrations = entityManager.parseRegistration(event, importMetadata);
+                registrations = entityManager.parseData(event, importMetadata);
             }
 /*
             for (Registration registration : registrations) {

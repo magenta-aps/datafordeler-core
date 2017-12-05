@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.command;
 
 /**
- * Created by lars on 29-05-17.
  * Command job superclass. Subclasses execute jobs in the run() method,
  * but should respect the setting of doCancel, which means to stop the run
  */

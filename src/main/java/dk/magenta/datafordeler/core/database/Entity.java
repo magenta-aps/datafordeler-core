@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Created by lars on 20-02-17.
- * An Entity represents a top-level item in the database as well as in service 
+ * An Entity represents a top-level item in the database as well as in service
  * output, such as a Person or a Company (to be implemented as subclasses in plugins)
  * Entities usually hold very little data on their own, but links to a series of 
  * bitemporality objects (Registrations, and further down Effects), that in turn 

@@ -156,24 +156,24 @@ public class DemoEntityManager extends EntityManager {
 
     /** Registration parsing **/
 
-    public List<Registration> parseRegistration(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {
+    public List<Registration> parseData(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         try {
-            return this.parseRegistration(objectMapper.readTree(registrationData), importMetadata);
+            return this.parseData(objectMapper.readTree(registrationData), importMetadata);
         } catch (IOException e) {
             throw new DataStreamException(e);
         }
     }
 
     @Override
-    public List<? extends Registration> parseRegistration(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {
+    public List<? extends Registration> parseData(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         try {
-            return this.parseRegistration(objectMapper.readTree(registrationData.getData()), importMetadata);
+            return this.parseData(objectMapper.readTree(registrationData.getData()), importMetadata);
         } catch (IOException e) {
             throw new DataStreamException(e);
         }
     }
 
-    public List<Registration> parseRegistration(JsonNode jsonNode, ImportMetadata importMetadata) throws ParseException {
+    public List<Registration> parseData(JsonNode jsonNode, ImportMetadata importMetadata) throws ParseException {
         try {
             Registration r = this.objectMapper.treeToValue(jsonNode, this.managedRegistrationClass);
             r.setLastImportTime();
@@ -183,7 +183,7 @@ public class DemoEntityManager extends EntityManager {
         }
     }
 
-    public List<Registration> parseRegistration(String registrationData, String charsetName) throws DataFordelerException {
+    public List<Registration> parseData(String registrationData, String charsetName) throws DataFordelerException {
         this.getLog().info("Parsing registration data");
         try {
             return Collections.singletonList(this.objectMapper.readValue(registrationData.getBytes(charsetName), this.managedRegistrationClass));

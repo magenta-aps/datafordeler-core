@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Created by lars on 29-05-17.
  * A CommandHandler for executing pulls. The command interface delegates to this
  * when it receives a "pull" command
  */
