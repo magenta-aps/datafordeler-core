@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by lars on 29-05-17.
  * Webservice that receives commands on POST requests, checks job status on GET
  * requests, and cancels jobs on DELETE requests.
  * The basic idea is that a POST request will parsed, and if successful, a row will be put in the Command table.

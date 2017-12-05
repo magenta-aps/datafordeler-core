@@ -5,20 +5,25 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.time.OffsetDateTime;
 
+/**
+ * A database entry for storing the timestamp of the last successful import
+ * of an EntityManager. This is done so the next import can request the source
+ * for changes happened after this timestamp
+ */
 @Entity
 @Table(name = "last_updated")
 public class LastUpdated extends DatabaseEntry {
 
     public static final String DB_FIELD_PLUGIN = "plugin";
-    @Column
+    @Column(name = DB_FIELD_PLUGIN)
     private String plugin;
 
     public static final String DB_FIELD_SCHEMA_NAME = "schemaName";
-    @Column
+    @Column(name = DB_FIELD_SCHEMA_NAME)
     private String schemaName;
 
     public static final String DB_FIELD_TIMESTAMP = "timestamp";
-    @Column
+    @Column(name = DB_FIELD_TIMESTAMP)
     private OffsetDateTime timestamp;
 
 

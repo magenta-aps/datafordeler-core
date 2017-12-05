@@ -11,11 +11,10 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import javax.annotation.PreDestroy;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 
 /**
- * A bean to obtain Sessions with. Autowire this in, and obtain sessions with
+ * A bean to obtain Sessions with. This should be autowired in, and sessions obtained with
  * sessionManager.getSessionFactory().openSession();
  */
 public class SessionManager {

@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by lars on 06-06-17.
  * Bean that looks for newly issued commands in the command table, and executes them as they are found
  */
 @Component

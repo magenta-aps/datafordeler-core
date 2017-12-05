@@ -1,7 +1,7 @@
 package dk.magenta.datafordeler.core.exception;
 
 /**
- * Created by lars on 16-02-17.
+ * Superclass for all custom exceptions in DAFO, specifying that they must implement a getCode method
  */
 public abstract class DataFordelerException extends Exception {
 

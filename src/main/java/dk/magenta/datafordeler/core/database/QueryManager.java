@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * Created by lars on 22-02-17.
+ * Collection of static methods for accessing the database
  */
 public abstract class QueryManager {
 
@@ -604,7 +604,6 @@ public abstract class QueryManager {
                 }*/
             }
         }
-
 
     }
 

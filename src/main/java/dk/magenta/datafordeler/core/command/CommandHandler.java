@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Created by lars on 29-05-17.
  * Superclass for command handlers.
  */
 @Component

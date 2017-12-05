@@ -4,7 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Created by jubk on 01-07-2017.
+ * Exception to be thrown when a resource cannot be found and a HTTP 404 should be sent to
+ * the user
  */
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class HttpNotFoundException extends DataFordelerException {

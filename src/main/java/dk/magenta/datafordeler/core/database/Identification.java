@@ -8,8 +8,7 @@ import javax.persistence.Table;
 import java.util.UUID;
 
 /**
- * Created by lars on 20-02-17.
- * Identifier for Entity objects, easing cross-referencing. A reference need not 
+ * Identifier for Entity objects, easing cross-referencing. A reference need not
  * locate the referenced Entity in the database (it may not even exist yet), but only
  * locate/generate the relevant Identification based on data that it should know.
  * Each UUID used here should be generated from identifying data, such as Person 

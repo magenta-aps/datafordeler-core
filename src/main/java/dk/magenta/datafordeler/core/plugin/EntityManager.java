@@ -21,8 +21,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- * Created by lars on 13-03-17.
- *
  * Entity (and associates) specific manager. Subclass in plugins
  * A plugin can have any number of Entity classes, each needing their own way of handling.
  * An EntityManager basically specifies how to parse raw input data into the bitemporal data

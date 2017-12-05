@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 
 /**
- * Created by lars on 29-05-17.
  * Command descriptor, holding data about an issued command
  */
 @Entity
