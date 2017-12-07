@@ -26,6 +26,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
 /**
+ * Created by lars on 20-02-17.
  * An Effect defines the time range in which a piece of data has effect.
  * An Effect points to exactly one Registration, but may have any number of DataItems
  * associated.
@@ -51,6 +52,14 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Filter(name = DataItem.FILTER_RECORD_AFTER, condition="(lastUpdated > :"+DataItem.FILTERPARAM_RECORD_AFTER+")")
+    @JoinTable(
+        joinColumns = @JoinColumn(name = "effects_id", referencedColumnName = "id"),
+        inverseJoinColumns = @JoinColumn(name = "dataitems_id", referencedColumnName = "id"),
+        indexes = {
+            @Index(columnList = "effects_id"),
+            @Index(columnList = "dataitems_id")
+        }
+    )
     protected Set<D> dataItems;
 
     @Column(nullable = true, insertable = true, updatable = false)
