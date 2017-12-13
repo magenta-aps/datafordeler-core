@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ImportInterruptedException extends DataFordelerException {
 
-    public ImportInterruptedException(InterruptedException cause) {
+    public ImportInterruptedException(Exception cause) {
         super(cause);
     }
 
