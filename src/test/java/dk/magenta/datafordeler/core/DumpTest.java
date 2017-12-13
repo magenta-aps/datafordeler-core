@@ -12,6 +12,7 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.TaskListener;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
+import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
@@ -19,6 +20,7 @@ import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import org.apache.commons.io.Charsets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -47,7 +49,9 @@ import org.springframework.test.context.TestPropertySource;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -84,6 +88,9 @@ public class DumpTest extends GapiTestBase {
 
     @LocalServerPort
     private int port;
+
+    private static final OffsetDateTime FROM_TIME =
+        OffsetDateTime.parse("2001-01-01T00:00:00+00:00");
 
     /**
      * Perform some sanity checks before each test.
@@ -147,19 +154,15 @@ public class DumpTest extends GapiTestBase {
 
     private void createOneEntity(int postalcode, String cityname)
         throws DataFordelerException {
-        final OffsetDateTime from =
-            OffsetDateTime.parse("2001-01-01T00:00:00+00:00");
-        final OffsetDateTime split =
-            OffsetDateTime.parse("2011-01-01T00:00:00+00:00");
 
         DemoEntity entity = new DemoEntity(
             new UUID(0, Integer.parseInt(Integer.toString(postalcode), 16)),
             "http://example.com"
         );
-        DemoRegistration registration = new DemoRegistration(from, null, 0);
+        DemoRegistration registration = new DemoRegistration(FROM_TIME, null, 0);
         entity.addRegistration(registration);
 
-        DemoEffect effect1 = new DemoEffect(registration, from, null);
+        DemoEffect effect1 = new DemoEffect(registration, FROM_TIME, null);
         effect1.setDataItems(Arrays.asList(
             new DemoData(postalcode, cityname)
         ));
@@ -274,11 +277,16 @@ public class DumpTest extends GapiTestBase {
         List<DumpData> dumpDatas =
             QueryManager.getAllItems(session, DumpData.class);
 
-        Assert.assertEquals("After one run",
-            configs.size(), dumps.size());
+        TriConsumer<String, List<DumpConfiguration>, List<DumpInfo>> check =
+            (message, configList, dumpList) -> Assert.assertEquals(message,
+                configList.stream()
+                    .map(DumpConfiguration::getFormat)
+                    .collect(Collectors.toList()),
+                dumpList.stream()
+                    .map(DumpInfo::getFormat)
+                    .collect(Collectors.toList()));
 
-        Assert.assertEquals("After one run",
-            configs.size(), dumpDatas.size());
+        check.accept("After one run", configs, dumps);
 
         Assert.assertArrayEquals("Dump contents",
             new String[]{
@@ -318,13 +326,9 @@ public class DumpTest extends GapiTestBase {
 
         dumps = QueryManager.getAllItems(session, DumpInfo.class);
 
-        Assert.assertEquals("After two runs",
-            configs.size(), dumps.size());
-
         dumpDatas = QueryManager.getAllItems(session, DumpData.class);
 
-        Assert.assertEquals("After two runs",
-            configs.size(), dumpDatas.size());
+        check.accept("After two runs", configs, dumps);
 
         session.close();
     }
@@ -370,6 +374,14 @@ public class DumpTest extends GapiTestBase {
         Assert.assertEquals("After one run",
             configs.size(), dumps.size());
 
+        OffsetDateTimeAdapter adapter = new OffsetDateTimeAdapter();
+        OffsetDateTime localFrom = FROM_TIME.withOffsetSameInstant(
+            ZoneOffset.systemDefault().getRules()
+                .getOffset(Instant.from(FROM_TIME))
+        );
+
+        final String localString = adapter.marshal(localFrom);
+
         Assert.assertArrayEquals("Dump contents",
             Arrays.stream(DumpConfiguration.Format.values()).map(
                 s -> {
@@ -381,7 +393,11 @@ public class DumpTest extends GapiTestBase {
                     }
                 }
             ).toArray(),
-            dumps.stream().map(DumpInfo::getStringData).toArray());
+            dumps.stream().map(DumpInfo::getStringData).map(
+                s -> s
+                    .replace(localString, "XXX")
+                    .replace("\"XXX\"", "XXX")
+            ).toArray());
 
         session.close();
 

@@ -99,7 +99,7 @@ def escape_conf_path(path):
 
 
 def expand_template():
-    CONF_FILE = os.path.join(BASE_DIR, "conf", "yajsw_wrapper.conf.template")
+    CONF_FILE = os.path.join(BASE_DIR, "conf", "yajsw.conf.template")
 
     f = open(CONF_FILE, 'r')
     template = f.read()
