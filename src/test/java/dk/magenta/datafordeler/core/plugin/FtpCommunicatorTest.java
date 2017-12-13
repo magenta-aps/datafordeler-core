@@ -254,7 +254,7 @@ public class FtpCommunicatorTest {
                 return true;
             }
         });
-        future.get(10, TimeUnit.SECONDS);
+        future.get(30, TimeUnit.SECONDS);
         executorService.shutdownNow();
         this.stopServer();
     }
