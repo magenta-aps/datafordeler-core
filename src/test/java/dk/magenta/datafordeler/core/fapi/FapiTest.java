@@ -728,7 +728,7 @@ public class FapiTest {
                     OffsetDateTime dateTime = OffsetDateTime.parse(token, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
                     dateTime = dateTime.atZoneSameInstant(zone).toOffsetDateTime();
                     token = dateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-                    if (UTCisWithoutQuotes && zone.getId().equals("UTC")) {
+                    if (UTCisWithoutQuotes && zone.normalized().equals(ZoneOffset.UTC)) {
                         quoted = false;
                     }
                 } catch (DateTimeParseException e) {
