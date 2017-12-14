@@ -585,7 +585,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         CsvSchema schema =
             builder.build().withHeader();
 
-        System.err.println(response.getHeaderNames());
         if (acceptedTypes.contains(new MediaType("text", "tsv"))) {
             schema = schema.withColumnSeparator('\t');
             response.setContentType("text/tsv");

@@ -499,7 +499,8 @@ public class FapiTest {
                     null, mediaType.toString()).getBody()
                     .replaceAll(uuid1.toString(), "UUID#1")
                     .replaceAll(",", "\t")
-                    .replaceAll(uuid2.toString(), "UUID#2"));
+                    .replaceAll(uuid2.toString(), "UUID#2")
+            );
 
             Assert.assertEquals(
                     updateTimestamps(getResourceAsString("/rest-search-3.csv"))
@@ -509,7 +510,8 @@ public class FapiTest {
                     null, null, null,
                     null, mediaType.toString()).getBody()
                     .replaceAll(uuid1.toString(), "UUID#1")
-                    .replaceAll(uuid2.toString(), "UUID#2"));
+                    .replaceAll(uuid2.toString(), "UUID#2")
+            );
 
             Assert.assertEquals(
                     updateTimestamps(getResourceAsString("/rest-search-4.csv"), systemZone)
@@ -522,7 +524,8 @@ public class FapiTest {
                     "2017-06-01T00:00:00+01:00",
                     mediaType.toString()).getBody()
                     .replaceAll(uuid1.toString(), "UUID#1")
-                    .replaceAll(uuid2.toString(), "UUID#2"));
+                    .replaceAll(uuid2.toString(), "UUID#2")
+            );
         } finally {
             this.removeTestObject(uuid1);
             this.removeTestObject(uuid2);
@@ -538,7 +541,7 @@ public class FapiTest {
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/xml");
-            HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
+            HttpEntity<String> httpEntity = new HttpEntity<>("", headers);
             ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/" + uuid.toString(), HttpMethod.GET, httpEntity, String.class);
             Assert.assertEquals(200, resp.getStatusCode().value());
 
@@ -575,13 +578,12 @@ public class FapiTest {
         String effectTo, String mediaType) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", mediaType);
-        HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
+        HttpEntity<String> httpEntity = new HttpEntity<>("", headers);
 
         StringBuilder sb = new StringBuilder();
         sb.append(urlBase);
         if (registerFrom != null || registerTo != null || effectFrom != null || effectTo != null) {
             ParameterMap parameters = new ParameterMap();
-            StringJoiner sj = new StringJoiner("&");
             if (registerFrom != null) {
                 parameters.add(Query.PARAM_REGISTRATION_FROM[0], registerFrom);
             }
@@ -704,6 +706,7 @@ public class FapiTest {
         );
     }
 
+    private static boolean UTCisWithoutQuotes = true;
     private static Pattern quotePattern = Pattern.compile("^\"(.*)\"$");
     private static String updateTimestamps(String input) {
         return updateTimestamps(input, systemZone);
@@ -725,6 +728,9 @@ public class FapiTest {
                     OffsetDateTime dateTime = OffsetDateTime.parse(token, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
                     dateTime = dateTime.atZoneSameInstant(zone).toOffsetDateTime();
                     token = dateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                    if (UTCisWithoutQuotes && zone.getId().equals("UTC")) {
+                        quoted = false;
+                    }
                 } catch (DateTimeParseException e) {
                     // pass
                 }
