@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.fapi;
 
+import static org.mockito.Matchers.booleanThat;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,10 +51,14 @@ import java.net.URI;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by lars on 20-04-17.
@@ -88,6 +94,8 @@ public class FapiTest {
     private SOAPMessage soapMessage;
     private SOAPPart soapPart;
     private SOAPEnvelope soapEnvelope;
+
+    private static ZoneId systemZone = ZoneOffset.systemDefault();
 
     @Test
     @Order(order=1)
@@ -303,8 +311,10 @@ public class FapiTest {
             Assert.assertEquals(200, resp.getStatusCode().value());
             Assert.assertEquals(new MediaType("text", "csv"),
                 resp.getHeaders().getContentType());
-            Assert.assertEquals(getResourceAsString("/rest-get-1.csv"),
-                resp.getBody().replaceAll(uuid.toString(), "UUID"));
+            Assert.assertEquals(
+                    updateTimestamps(getResourceAsString("/rest-get-1.csv")),
+                    resp.getBody().replaceAll(uuid.toString(), "UUID")
+            );
 
         } finally {
             this.removeTestObject(uuid);
@@ -320,15 +330,16 @@ public class FapiTest {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "text/tsv");
-            HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
+            HttpEntity<String> httpEntity = new HttpEntity<>("", headers);
             ResponseEntity<String> resp = this.restTemplate
                 .exchange("/demo/postnummer/1/rest/" + uuid.toString(),
                     HttpMethod.GET, httpEntity, String.class);
             Assert.assertEquals(200, resp.getStatusCode().value());
             Assert.assertEquals(
-                getResourceAsString("/rest-get-1.csv")
+                    updateTimestamps(getResourceAsString("/rest-get-1.csv"))
                     .replaceAll(",", "\t"),
-                resp.getBody().replaceAll(uuid.toString(), "UUID"));
+                    resp.getBody().replaceAll(uuid.toString(), "UUID")
+            );
 
         } finally {
             this.removeTestObject(uuid);
@@ -407,7 +418,7 @@ public class FapiTest {
                 new MediaType("text", "csv", Charsets.UTF_8);
 
             Assert.assertEquals(
-                getResourceAsString("/rest-search-1.csv"),
+                    updateTimestamps(getResourceAsString("/rest-search-1.csv")),
                 getRegistrationFilterRequest(
                     "/demo/postnummer/1/rest/search?postnr=8000",
                     null, null, null,
@@ -418,7 +429,7 @@ public class FapiTest {
             );
 
             Assert.assertEquals(
-                getResourceAsString("/rest-search-2.csv"),
+                    updateTimestamps(getResourceAsString("/rest-search-2.csv")),
                 getRegistrationFilterRequest(
                     "/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=1",
                     null, null, null,
@@ -427,7 +438,7 @@ public class FapiTest {
                     .replaceAll(uuid2.toString(), "UUID#2"));
 
             Assert.assertEquals(
-                getResourceAsString("/rest-search-3.csv"),
+                    updateTimestamps(getResourceAsString("/rest-search-3.csv")),
                 getRegistrationFilterRequest(
                     "/demo/postnummer/1/rest/search?postnr=8000&page=2&pageSize=1",
                     null, null, null,
@@ -436,7 +447,7 @@ public class FapiTest {
                     .replaceAll(uuid2.toString(), "UUID#2"));
 
             Assert.assertEquals(
-                getResourceAsString("/rest-search-4.csv"),
+                    updateTimestamps(getResourceAsString("/rest-search-4.csv")),
                 getRegistrationFilterRequest(
                     "/demo/postnummer/1/rest/search?postnr=8000",
                     "2017-04-01T00:00:00+01:00",
@@ -461,12 +472,13 @@ public class FapiTest {
         UUID uuid1 = this.addTestObject();
         UUID uuid2 = this.addTestObject();
 
+
         try {
             MediaType mediaType =
                 new MediaType("text", "tsv");
 
             Assert.assertEquals(
-                getResourceAsString("/rest-search-1.csv")
+                    updateTimestamps(getResourceAsString("/rest-search-1.csv"))
                     .replaceAll(",", "\t"),
                 getRegistrationFilterRequest(
                     "/demo/postnummer/1/rest/search?postnr=8000",
@@ -479,7 +491,7 @@ public class FapiTest {
             );
 
             Assert.assertEquals(
-                getResourceAsString("/rest-search-2.csv")
+                    updateTimestamps(getResourceAsString("/rest-search-2.csv"))
                     .replaceAll(",", "\t"),
                 getRegistrationFilterRequest(
                     "/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=1",
@@ -490,7 +502,7 @@ public class FapiTest {
                     .replaceAll(uuid2.toString(), "UUID#2"));
 
             Assert.assertEquals(
-                getResourceAsString("/rest-search-3.csv")
+                    updateTimestamps(getResourceAsString("/rest-search-3.csv"))
                     .replaceAll(",", "\t"),
                 getRegistrationFilterRequest(
                     "/demo/postnummer/1/rest/search?postnr=8000&page=2&pageSize=1",
@@ -500,7 +512,7 @@ public class FapiTest {
                     .replaceAll(uuid2.toString(), "UUID#2"));
 
             Assert.assertEquals(
-                getResourceAsString("/rest-search-4.csv")
+                    updateTimestamps(getResourceAsString("/rest-search-4.csv"), systemZone)
                     .replaceAll(",", "\t"),
                 getRegistrationFilterRequest(
                     "/demo/postnummer/1/rest/search?postnr=8000",
@@ -645,8 +657,6 @@ public class FapiTest {
         demoData4.addEffect(demoEffect4);
 
         Session session = sessionManager.getSessionFactory().openSession();
-        long existing = QueryManager.count(session, DemoEntity.class, null);
-        System.out.println(existing+" entities already exist");
         Transaction transaction = session.beginTransaction();
         try {
             QueryManager.saveRegistration(session, demoEntity, demoRegistration);
@@ -692,5 +702,40 @@ public class FapiTest {
             FapiTest.class.getResourceAsStream(resourceName),
             Charsets.UTF_8
         );
+    }
+
+    private static Pattern quotePattern = Pattern.compile("^\"(.*)\"$");
+    private static String updateTimestamps(String input) {
+        return updateTimestamps(input, systemZone);
+    }
+    private static String updateTimestamps(String input, ZoneId zone) {
+        String[] lines = input.split("\n", -1);
+        StringJoiner output = new StringJoiner("\n");
+        for (String line : lines) {
+            String[] tokens = line.split(",");
+            StringJoiner lineOutput = new StringJoiner(",");
+            for (String token : tokens) {
+                Matcher m = quotePattern.matcher(token);
+                boolean quoted = false;
+                if (m.find()) {
+                    token = m.group(1);
+                    quoted = true;
+                }
+                try {
+                    OffsetDateTime dateTime = OffsetDateTime.parse(token, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                    dateTime = dateTime.atZoneSameInstant(zone).toOffsetDateTime();
+                    token = dateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                } catch (DateTimeParseException e) {
+                    // pass
+                }
+                if (quoted) {
+                    token = "\"" + token + "\"";
+                }
+
+                lineOutput.add(token);
+            }
+            output.add(lineOutput.toString());
+        }
+        return output.toString();
     }
 }
