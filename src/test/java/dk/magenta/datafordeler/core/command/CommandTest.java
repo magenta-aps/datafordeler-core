@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
-import dk.magenta.datafordeler.core.testutil.TestUserDetails;
-import dk.magenta.datafordeler.core.user.DafoUserManager;
-import dk.magenta.datafordeler.core.user.UserProfile;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
+import dk.magenta.datafordeler.core.testutil.TestUserDetails;
+import dk.magenta.datafordeler.core.user.DafoUserManager;
+import dk.magenta.datafordeler.core.user.UserProfile;
 import dk.magenta.datafordeler.plugindemo.DemoPlugin;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
@@ -27,15 +27,11 @@ import org.springframework.http.*;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
 import static org.mockito.Mockito.when;
 
-/**
- * Created by lars on 06-06-17.
- */
 @RunWith(OrderedRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

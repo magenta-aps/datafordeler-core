@@ -8,9 +8,6 @@ import javax.persistence.Table;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by lars on 21-02-17.
- */
 @javax.persistence.Entity
 @Table(name="test_data")
 public class TestData extends DataItem<TestEffect, TestData> {

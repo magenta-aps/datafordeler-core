@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by lars on 11-01-17.
  * Container for SystemRoles in a plugin. Plugins need to return one of these in
  * the getRolesDefinition method, and define relevant roles in the subclass
  */

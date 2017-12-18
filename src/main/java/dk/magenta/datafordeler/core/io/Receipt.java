@@ -4,9 +4,6 @@ import dk.magenta.datafordeler.core.exception.DataFordelerException;
 
 import java.time.OffsetDateTime;
 
-/**
- * Created by lars on 16-02-17.
- */
 public class Receipt {
 
     public enum Status {

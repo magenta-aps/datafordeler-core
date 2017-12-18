@@ -11,7 +11,6 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import javax.annotation.PreDestroy;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 
 /**

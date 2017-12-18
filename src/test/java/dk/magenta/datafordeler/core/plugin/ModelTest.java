@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import dk.magenta.datafordeler.core.Application;
-import dk.magenta.datafordeler.core.database.DataItem;
 import dk.magenta.datafordeler.core.database.Effect;
 import dk.magenta.datafordeler.core.database.Identification;
 import dk.magenta.datafordeler.plugindemo.model.DemoData;
@@ -20,9 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Created by lars on 02-06-17.
- */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = Application.class)
 public class ModelTest {

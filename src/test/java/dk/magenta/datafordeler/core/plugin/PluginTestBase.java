@@ -12,9 +12,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.StringJoiner;
 
-/**
- * Created by lars on 15-05-17.
- */
 public abstract class PluginTestBase {
 
     @Autowired
@@ -31,7 +28,7 @@ public abstract class PluginTestBase {
     }
 
     protected String hash(String input) {
-        MessageDigest md = null;
+        MessageDigest md;
         try {
             md = MessageDigest.getInstance("SHA-256");
             md.update(input.getBytes());

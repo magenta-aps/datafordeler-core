@@ -7,8 +7,6 @@ import java.io.Serializable;
 import java.util.StringJoiner;
 
 /**
- * Created by lars on 15-02-17.
- *
  * A generic envelope for an io, containing the payload in parseable strings,
  * as well as metadata on the type of payload (schema)
  */

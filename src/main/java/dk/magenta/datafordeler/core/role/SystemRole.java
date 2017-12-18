@@ -3,9 +3,6 @@ package dk.magenta.datafordeler.core.role;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by lars on 12-01-17.
- */
 public abstract class SystemRole {
     private SystemRole parent;
     private SystemRoleType type;

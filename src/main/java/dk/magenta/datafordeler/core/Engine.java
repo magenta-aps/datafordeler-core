@@ -1,8 +1,8 @@
 package dk.magenta.datafordeler.core;
 
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.dump.Dump;
 import dk.magenta.datafordeler.core.dump.Dump.Task;
-import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.dump.DumpConfiguration;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
@@ -64,7 +64,6 @@ public class Engine {
 
     /**
      * Run bean initialization
-     *
      */
     @PostConstruct
     public void init() {
@@ -77,8 +76,6 @@ public class Engine {
     }
 
     public boolean isDumpEnabled() { return this.dumpEnabled; }
-
-    /** Push **/
 
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event, ImportMetadata importMetadata) {
         return this.handleEvent(event, null, importMetadata);
@@ -206,8 +203,9 @@ public class Engine {
     }
 
 
-    /** Pull **/
-
+    /**
+     * Pull
+     */
     private HashMap<String, TriggerKey> pullTriggerKeys = new HashMap<>();
 
     /**

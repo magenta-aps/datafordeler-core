@@ -8,9 +8,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-/**
- * Created by lars on 06-04-17.
- */
 @Entity
 @Table(name="demo_config")
 public class DemoConfiguration implements Configuration {

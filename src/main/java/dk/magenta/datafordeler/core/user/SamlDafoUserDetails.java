@@ -9,9 +9,6 @@ import org.opensaml.xml.schema.XSString;
 
 import java.util.*;
 
-/**
- * Created by jubk on 13-06-2017.
- */
 public class SamlDafoUserDetails extends DafoUserDetails {
 
   public static String USERPROFILE_CLAIM_URL = "https://data.gl/claims/userprofile";

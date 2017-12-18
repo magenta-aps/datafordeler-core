@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.StringJoiner;
 
 /**
- * Created by lars on 29-05-17.
  * A Runnable that performs a pull with a given RegisterManager.
  * As a Worker subclass, it is started by the run() method and halted with the end() method.
  * If halted with end(), it signals the called-upon EntityManager to cleanly cease,
@@ -38,7 +37,6 @@ import java.util.StringJoiner;
 public class Pull extends Worker implements Runnable {
 
     /**
-     * Created by lars on 06-04-17.
      * Helper class to construct a Pull from data embedded in a JobDataMap,
      * which is used to set up jobs running on a CRON
      */

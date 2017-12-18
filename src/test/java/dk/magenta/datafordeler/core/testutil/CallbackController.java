@@ -16,9 +16,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by lars on 29-03-17.
- */
 @Controller
 @RequestMapping("/test")
 public class CallbackController {

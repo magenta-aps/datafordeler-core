@@ -7,9 +7,6 @@ import dk.magenta.datafordeler.core.database.Identification;
 import javax.persistence.Table;
 import java.util.UUID;
 
-/**
- * Created by lars on 12-01-17.
- */
 @javax.persistence.Entity
 @Table(name="demo_entity")
 public class DemoEntity extends Entity<DemoEntity, DemoRegistration> {

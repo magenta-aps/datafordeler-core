@@ -18,9 +18,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-/**
- * Created by jubk on 01-07-2017.
- */
 public class RootMatchingServletController extends ServletController {
 
   private static final Logger log = LogUtils.getL7dLogger(ServletController.class);

@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * Created by lars on 12-01-17.
- */
 public class DemoRolesDefinition extends RolesDefinition {
 
     public static ReadServiceRole READ_SERVICE_ROLE = new ReadServiceRole(

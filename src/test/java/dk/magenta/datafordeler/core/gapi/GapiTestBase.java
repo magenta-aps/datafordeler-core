@@ -21,9 +21,6 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 
-/**
- * Created by lars on 10-02-17.
- */
 // @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class GapiTestBase {
 

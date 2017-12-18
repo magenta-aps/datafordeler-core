@@ -17,7 +17,6 @@ import java.util.Map;
  * Query object specifying a search, with basic filter parameters
  * Subclasses should specify further searchable parameters, annotated with @QueryField.
  * SOAP clients should pass a serialized instance of a Query class to the SOAP interface
- * Created by lars on 19-04-17.
  */
 public abstract class Query<E extends Entity> {
 

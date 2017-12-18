@@ -22,8 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by lars on 27-06-17.
- * A special Communicator that fetches data over a HTTP connection by the 
+ * A special Communicator that fetches data over a HTTP connection by the
  * scan-scroll pattern: We specify the query in a POST, then get a handle back 
  * that we can use in a series of subsequent GET requests to get all the data 
  * (which tends to be a lot).

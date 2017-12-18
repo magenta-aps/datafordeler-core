@@ -1,9 +1,5 @@
 package dk.magenta.datafordeler.core.fapi;
 
-/**
- * Created by lars on 08-05-17.
- */
-
 import org.w3c.dom.NodeList;
 
 import javax.xml.namespace.QName;
@@ -15,7 +11,6 @@ import javax.xml.ws.handler.soap.SOAPMessageContext;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 
 public class SoapHandler implements SOAPHandler<SOAPMessageContext> {
 

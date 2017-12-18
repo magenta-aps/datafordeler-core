@@ -4,9 +4,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-/**
- * Created by lars on 29-03-17.
- */
 public class KeyExpectorCallback extends ExpectorCallback implements Callback, Future<Boolean> {
 
     private String expectedKey;

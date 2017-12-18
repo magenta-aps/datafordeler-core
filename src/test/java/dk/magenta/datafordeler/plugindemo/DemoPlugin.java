@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.plugindemo;
 
-import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 import dk.magenta.datafordeler.core.plugin.AreaRestrictionDefinition;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -12,9 +11,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
-/**
- * Created by lars on 12-01-17.
- */
 @Component
 public class DemoPlugin extends Plugin {
 

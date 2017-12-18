@@ -2,9 +2,6 @@ package dk.magenta.datafordeler.core.exception;
 
 import java.net.URI;
 
-/**
- * Created by lars on 07-03-17.
- */
 public class PluginNotFoundException extends DataFordelerException {
     @Override
     public String getCode() {

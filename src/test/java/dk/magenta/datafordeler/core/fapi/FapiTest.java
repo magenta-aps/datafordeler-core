@@ -1,9 +1,5 @@
 package dk.magenta.datafordeler.core.fapi;
 
-import static org.mockito.Matchers.booleanThat;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.when;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -60,9 +56,8 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by lars on 20-04-17.
- */
+import static org.mockito.Mockito.when;
+
 @RunWith(OrderedRunner.class)
 @ContextConfiguration(classes = Application.class)
 @TestPropertySource(
