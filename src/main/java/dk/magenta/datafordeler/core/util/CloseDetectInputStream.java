@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by lars on 08-06-17.
  * InputStream that can execute callbacks when it is closed.
  */
 public class CloseDetectInputStream extends InputStream {

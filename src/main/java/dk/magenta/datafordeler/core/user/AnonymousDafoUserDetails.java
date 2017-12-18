@@ -3,9 +3,6 @@ package dk.magenta.datafordeler.core.user;
 import java.util.Collection;
 import java.util.Collections;
 
-/**
- * Created by jubk on 13-06-2017.
- */
 public class AnonymousDafoUserDetails extends DafoUserDetails {
 
   @Override

@@ -18,7 +18,6 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Created by lars on 24-02-17.
  * Configures the Jackson ObjectMapper (serializer and deserializer for JSON)
  * The standard configuration in Jackson can handle most of what we need out of
  * the box; we only need to add special cases here, like OffsetDateTime

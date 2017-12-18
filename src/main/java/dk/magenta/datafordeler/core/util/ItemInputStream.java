@@ -12,7 +12,6 @@ import java.io.*;
 import java.util.Map;
 
 /**
- * Created by lars on 16-02-17.
  * A type-specific ObjectInputStream, that should only contain objects of
  * the specific type.
  * Contains static methods for deserializing an InputStream of JSON data into

@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Created by alexander on 12-07-17.
- */
 public abstract class OutputWrapper<E extends Entity> {
 
     public abstract Object wrapResult(E input);

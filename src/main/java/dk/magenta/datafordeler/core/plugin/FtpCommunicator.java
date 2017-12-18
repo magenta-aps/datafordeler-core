@@ -22,8 +22,6 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * Created by lars on 08-06-17.
- *
  * A class to fetch files by FTP. Files are fetched to a local folder, and an ImportInputStream is returned
  * for the fetched files.
  * Files are optionally kept and optionally marked to help determine what has already been imported.

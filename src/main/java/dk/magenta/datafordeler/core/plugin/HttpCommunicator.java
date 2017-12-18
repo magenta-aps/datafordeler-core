@@ -20,7 +20,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 /**
- * Created by lars on 13-03-17.
  * Very basic Communicator that fetches a resource over HTTP,
  * and/or sends a payload on a POST request. Takes optional 
  * username and password for authentication, and holds cookies

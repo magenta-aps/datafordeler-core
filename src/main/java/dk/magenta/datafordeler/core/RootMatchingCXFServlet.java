@@ -8,9 +8,6 @@ import org.apache.cxf.transport.servlet.servicelist.ServiceListGeneratorServlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 
-/**
- * Created by jubk on 01-07-2017.
- */
 public class RootMatchingCXFServlet extends CXFServlet{
 
   protected DestinationRegistry destinationRegistry;

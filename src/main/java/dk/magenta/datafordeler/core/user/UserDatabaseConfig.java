@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 
-/**
- * Created by jubk on 21-06-2017.
- */
 @Component
 public class UserDatabaseConfig {
 

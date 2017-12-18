@@ -1,15 +1,11 @@
 package dk.magenta.datafordeler.core.role;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.HashMap;
 
-/**
- * Created by jubk on 16-03-2017.
- */
 public class RolesTest {
   private static ReadServiceRole serviceRole;
   private static ReadEntityRole entityRole;

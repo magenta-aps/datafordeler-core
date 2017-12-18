@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Created by lars on 03-04-17.
- */
 public class DemoEntityReference extends EntityReference<DemoEntity, DemoRegistrationReference> implements Serializable {
 
     @JsonProperty

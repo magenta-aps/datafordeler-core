@@ -2,9 +2,6 @@ package dk.magenta.datafordeler.core.exception;
 
 import dk.magenta.datafordeler.core.plugin.Plugin;
 
-/**
- * Created by lars on 20-04-17.
- */
 public class InvalidPluginDefinitionException extends DataFordelerException {
 
     private Plugin plugin;

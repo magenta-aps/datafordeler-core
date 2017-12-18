@@ -10,6 +10,8 @@
     <property name="connection.username">test</property>
     <property name="connection.password">test</property>
     -->
+    <property name="connection.username">test</property>
+    <property name="connection.password">test</property>
 
     <property name="connection.url">jdbc:postgresql://localhost:5432/datafordeler</property>
     <property name="connection.driver_class">org.postgresql.Driver</property>

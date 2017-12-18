@@ -6,7 +6,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * Created by lars on 13-06-17.
  * A LookupDefinition is a way of defining how to look up entities based on the data hierarchy within them.
  * Since the data in an entity is spread out over multiple tables, it is difficult to do a database select
  * on a field when you don't know where it is. So, DataItem subclasses and Query subclasses should implement

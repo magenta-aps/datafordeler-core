@@ -2,9 +2,6 @@ package dk.magenta.datafordeler.core.exception;
 
 import dk.magenta.datafordeler.core.database.Registration;
 
-/**
- * Created by lars on 10-05-17.
- */
 public class SkippedSequenceNumberException extends InvalidDataInputException {
 
     private Registration registration;

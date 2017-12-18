@@ -5,9 +5,6 @@ import dk.magenta.datafordeler.core.database.RegistrationReference;
 
 import java.net.URI;
 
-/**
- * Created by lars on 13-03-17.
- */
 public class DemoRegistrationReference implements RegistrationReference {
 
     private URI uri;

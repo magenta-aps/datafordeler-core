@@ -37,7 +37,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * Created by lars on 19-04-17.
  * Service container to be subclassed for each Entity class, serving REST and SOAP
  */
 @RequestMapping("/fapi_service_with_no_requestmapping")

@@ -14,10 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * Created by lars on 12-01-17.
- */
-
 @Component()
 public class PluginManager {
 

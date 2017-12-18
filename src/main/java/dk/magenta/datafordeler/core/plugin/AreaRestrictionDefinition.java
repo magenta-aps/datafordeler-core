@@ -5,9 +5,6 @@ import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 
 import java.util.*;
 
-/**
- * Created by lars on 11-01-17.
- */
 public abstract class AreaRestrictionDefinition {
 
     protected Map<String, AreaRestrictionType> areaRestrictionTypes = new HashMap<>();

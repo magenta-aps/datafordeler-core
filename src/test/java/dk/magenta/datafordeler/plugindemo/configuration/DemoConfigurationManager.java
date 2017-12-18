@@ -2,7 +2,6 @@ package dk.magenta.datafordeler.plugindemo.configuration;
 
 import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 import dk.magenta.datafordeler.core.database.ConfigurationSessionManager;
-import dk.magenta.datafordeler.core.database.SessionManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +9,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
-/**
- * Created by lars on 06-04-17.
- */
 @Component
 public class DemoConfigurationManager extends ConfigurationManager<DemoConfiguration> {
 

@@ -33,11 +33,11 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-/**
- * Created by lars on 13-03-17.
- */
 @Component
 public class DemoEntityManager extends EntityManager {
 

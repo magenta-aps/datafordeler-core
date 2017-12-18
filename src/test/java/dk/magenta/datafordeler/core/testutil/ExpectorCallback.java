@@ -6,9 +6,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Created by lars on 29-03-17.
- */
 public class ExpectorCallback implements Callback, Future<Boolean> {
 
     private boolean found = false;
