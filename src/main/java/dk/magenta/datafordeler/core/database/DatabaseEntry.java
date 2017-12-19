@@ -21,4 +21,7 @@ public abstract class DatabaseEntry {
         return this.id;
     }
 
+
+    public static final String REF = "_id";
+
 }
