@@ -90,6 +90,17 @@ public abstract class QueryManager {
         }
     }
 
+    public static Identification getIdentification(Session session, UUID uuid, String domain) {
+        Identification identification = getIdentificationFromCache(session, uuid, domain);
+        if (identification == null) {
+            identification = getIdentification(session, uuid);
+            if (identification != null) {
+                identifications.put(domain, uuid, identification.getId());
+            }
+        }
+        return identification;
+    }
+
     /**
      * Determine whether an Identification exists.
      * @param session
