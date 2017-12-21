@@ -191,17 +191,13 @@ public class CommandTest extends GapiTestBase {
         HttpEntity<String> httpGetEntity = new HttpEntity<String>("", headers);
         ResponseEntity<String> getResponse = this.restTemplate.exchange("/command/" + id, HttpMethod.GET, httpGetEntity, String.class);
         Assert.assertNotNull(getResponse);
-        if (!CommandService.getDebugDisableSecurity()) {
-            Assert.assertEquals(403, getResponse.getStatusCodeValue());
-        }
+        Assert.assertEquals(200, getResponse.getStatusCodeValue());
 
         HttpEntity<String> httpDeleteEntity = new HttpEntity<String>("", headers);
         ResponseEntity<String> deleteResponse = this.restTemplate.exchange("/command/"+id, HttpMethod.DELETE, httpDeleteEntity, String.class);
         System.out.println("DELETE Response received: "+deleteResponse.getBody());
         Assert.assertNotNull(deleteResponse);
-        if (!CommandService.getDebugDisableSecurity()) {
-            Assert.assertEquals(403, deleteResponse.getStatusCodeValue());
-        }
+        Assert.assertEquals(200, deleteResponse.getStatusCodeValue());
     }
 
 
@@ -220,9 +216,7 @@ public class CommandTest extends GapiTestBase {
         ResponseEntity<String> postResponse = this.restTemplate.exchange("/command/pull", HttpMethod.POST, httpPostEntity, String.class);
         System.out.println("postResponse: " + postResponse);
         Assert.assertNotNull(postResponse);
-        if (!CommandService.getDebugDisableSecurity()) {
-            Assert.assertEquals(403, postResponse.getStatusCodeValue());
-        }
+        Assert.assertEquals(403, postResponse.getStatusCodeValue());
     }
 
     @Test
@@ -234,9 +228,7 @@ public class CommandTest extends GapiTestBase {
         ResponseEntity<String> postResponse = this.restTemplate.exchange("/command/pull", HttpMethod.POST, httpPostEntity, String.class);
         System.out.println("postResponse: " + postResponse);
         Assert.assertNotNull(postResponse);
-        if (!CommandService.getDebugDisableSecurity()) {
-            Assert.assertEquals(403, postResponse.getStatusCodeValue());
-        }
+        Assert.assertEquals(403, postResponse.getStatusCodeValue());
     }
 
     private String jsonList(List<String> jsonData, String listKey) {
