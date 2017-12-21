@@ -58,13 +58,6 @@ public class CommandService {
     @Autowired
     private DafoUserManager dafoUserManager;
 
-    // For debugging purposes - make sure this is set to false when running in production
-    private static boolean DEBUG_DISABLE_SECURITY = true;
-
-    public static boolean getDebugDisableSecurity() {
-        return DEBUG_DISABLE_SECURITY;
-    }
-
     /**
      * Check that the user in the loggerHelper has access to the required role, and if not, log the attempt and throw an exception
      * @param loggerHelper LoggerHelper object containing user data
@@ -93,9 +86,6 @@ public class CommandService {
      */
     protected void checkAccess(DafoUserDetails dafoUserDetails, SystemRole requiredRole)
             throws AccessDeniedException, AccessRequiredException {
-        if (DEBUG_DISABLE_SECURITY) {
-            return;
-        }
         dafoUserDetails.checkHasSystemRole(requiredRole);
     }
 
@@ -144,6 +134,7 @@ public class CommandService {
         }
         // Check that the user has this SystemRole
         this.checkAndLogAccess(loggerHelper, requiredRole);
+        System.out.println("ROLE OK");
     }
 
 
