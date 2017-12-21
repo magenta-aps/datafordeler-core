@@ -92,9 +92,6 @@ public class TokenTest {
   @Test
   public void testParseValidToken() throws Exception {
     // Skip checks for token age
-    if (FapiService.getDebugDisableSecurity()) {
-      return;
-    }
     doNothing().when(tokenVerifier).verifyTokenAge(anyObject());
     doReturn(true).when(tokenVerifier).checkNotOnOrafter(anyObject());
 
