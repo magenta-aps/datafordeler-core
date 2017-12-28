@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 
+import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
 import java.time.OffsetDateTime;
@@ -45,6 +46,7 @@ public abstract class QueryManager {
             log.info("Loading identifications for domain "+domain);
             org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
             databaseQuery.setParameter("domain", domain);
+            databaseQuery.setFlushMode(FlushModeType.COMMIT);
             for (Identification identification : databaseQuery.getResultList()) {
                 identifications.put(domain, identification.getUuid(), identification.getId());
             }
@@ -82,6 +84,7 @@ public abstract class QueryManager {
         databaseQuery.setParameter("uuid", uuid);
         logQuery(databaseQuery);
         databaseQuery.setCacheable(true);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         try {
             return databaseQuery.getSingleResult();
         } catch (NoResultException e) {
@@ -114,7 +117,7 @@ public abstract class QueryManager {
     }
 
     /**
-     * Quickly get an Identification object, og create on if not found.
+     * Quickly get an Identification object, or create one if not found.
      * First look in the Hibernate L1 cache (fast).
      * If that fails, see if our local cache tells us whether the object even exists in the database (also fast), and if so do a DB lookup (slow).
      * If no object is found, we know that the DB doesn't hold it for us, so create the objects and save it, then put it in the cache.
@@ -173,6 +176,7 @@ public abstract class QueryManager {
     public static <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
         log.trace("Get all Entities of class " + eClass.getCanonicalName());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
         List<E> results = databaseQuery.getResultList();
         return results;
@@ -216,6 +220,7 @@ public abstract class QueryManager {
         if (query.getCount() < Integer.MAX_VALUE) {
             databaseQuery.setMaxResults(query.getCount());
         }
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
         List<E> results = databaseQuery.getResultList();
         return results;
@@ -259,6 +264,7 @@ public abstract class QueryManager {
         if (query.getCount() < Integer.MAX_VALUE) {
             databaseQuery.setMaxResults(query.getCount());
         }
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
         Stream<E> results = databaseQuery.stream();
         return results;
@@ -291,6 +297,7 @@ public abstract class QueryManager {
         log.trace("Get Entity of class " + eClass.getCanonicalName() + " by identification "+identification.getUuid());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " where " + ENTITY + ".identification = :identification", eClass);
         databaseQuery.setParameter("identification", identification);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
         databaseQuery.setCacheable(true);
         try {
