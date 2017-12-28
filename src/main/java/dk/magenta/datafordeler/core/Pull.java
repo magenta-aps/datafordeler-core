@@ -158,6 +158,13 @@ public class Pull extends Worker implements Runnable {
                     if (this.doCancel) {
                         break;
                     }
+
+                    OffsetDateTime lastUpdate = entityManager.getLastUpdated(importMetadata.getSession());
+                    if (lastUpdate != null && importMetadata.getImportTime().toLocalDate().isEqual(lastUpdate.toLocalDate())) {
+                        // We already pulled for this entitymanager today. No need to do a re-pull
+                        continue;
+                    }
+
                     this.log.info("Pulling data for " + entityManager.getClass().getSimpleName());
 
                     InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager, this.importMetadata);
