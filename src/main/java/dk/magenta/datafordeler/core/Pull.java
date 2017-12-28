@@ -159,7 +159,9 @@ public class Pull extends Worker implements Runnable {
                         break;
                     }
 
-                    OffsetDateTime lastUpdate = entityManager.getLastUpdated(importMetadata.getSession());
+                    Session session = this.engine.sessionManager.getSessionFactory().openSession();
+                    OffsetDateTime lastUpdate = entityManager.getLastUpdated(session);
+                    session.close();
                     if (lastUpdate != null && importMetadata.getImportTime().toLocalDate().isEqual(lastUpdate.toLocalDate())) {
                         // We already pulled for this entitymanager today. No need to do a re-pull
                         continue;
@@ -169,7 +171,7 @@ public class Pull extends Worker implements Runnable {
 
                     InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager, this.importMetadata);
                     if (stream != null) {
-                        Session session = this.engine.sessionManager.getSessionFactory().openSession();
+                        session = this.engine.sessionManager.getSessionFactory().openSession();
                         this.importMetadata.setSession(session);
 
                         try {
