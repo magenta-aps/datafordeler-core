@@ -367,7 +367,6 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
     public R split(OffsetDateTime splitTime) {
-        //Registration newReg = this.entity.createRegistration();
         R newReg = (R) this.entity.createRegistration();
         newReg.setRegistrationFrom(splitTime);
         newReg.setRegistrationTo(this.registrationTo);
