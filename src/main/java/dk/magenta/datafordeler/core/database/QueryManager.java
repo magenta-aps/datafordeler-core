@@ -314,6 +314,7 @@ public abstract class QueryManager {
             .createQuery(
                 String.format("SELECT t FROM %s t", tClass.getCanonicalName()),
                 tClass);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         return databaseQuery.getResultList();
     }
 
@@ -324,6 +325,7 @@ public abstract class QueryManager {
             .createQuery(
                 String.format("SELECT t FROM %s t", tClass.getCanonicalName()),
                 tClass);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         return databaseQuery.stream();
     }
 
@@ -336,6 +338,7 @@ public abstract class QueryManager {
         for (String key : filter.keySet()) {
             databaseQuery.setParameter(key, filter.get(key));
         }
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         return databaseQuery.getResultList();
     }
 
