@@ -6,11 +6,11 @@ import dk.magenta.datafordeler.core.util.DoubleHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
