@@ -42,7 +42,7 @@ public abstract class QueryManager {
      * @param domain
      */
     private static void initializeCache(Session session, String domain) {
-        if (!identifications.containsKey(domain)) {
+        /*if (!identifications.containsKey(domain)) {
             log.info("Loading identifications for domain "+domain);
             org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
             databaseQuery.setParameter("domain", domain);
@@ -51,7 +51,7 @@ public abstract class QueryManager {
                 identifications.put(domain, identification.getUuid(), identification.getId());
             }
             log.info("Identifications loaded");
-        }
+        }*/
     }
 
     /**
@@ -131,10 +131,10 @@ public abstract class QueryManager {
         identification = getIdentificationFromCache(session, uuid, domain);
         if (identification == null) {
             log.debug("Didn't find identification for "+domain+"/"+uuid+" in cache");
-            if (hasIdentification(session, uuid, domain)) {
-                log.debug("Cache for "+domain+"/"+uuid+" had a broken DB link");
+            //if (hasIdentification(session, uuid, domain)) {
+            //    log.debug("Cache for "+domain+"/"+uuid+" had a broken DB link");
                 identification = getIdentification(session, uuid);
-            }
+            //}
             if (identification == null) {
                 log.debug("Creating new for "+domain+"/"+uuid);
                 identification = new Identification(uuid, domain);
