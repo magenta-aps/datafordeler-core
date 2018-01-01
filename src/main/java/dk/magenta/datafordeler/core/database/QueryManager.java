@@ -6,11 +6,11 @@ import dk.magenta.datafordeler.core.util.DoubleHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -96,11 +96,11 @@ public abstract class QueryManager {
 
     public static Identification getIdentification(Session session, UUID uuid, String domain) {
         Identification identification = getIdentificationFromCache(session, uuid, domain);
-        if (identification == null && hasIdentification(session, uuid, domain)) {
+        if (identification == null/* && hasIdentification(session, uuid, domain)*/) {
             identification = getIdentification(session, uuid);
-            if (identification != null) {
+            /*if (identification != null) {
                 identifications.put(domain, uuid, identification.getId());
-            }
+            }*/
         }
         return identification;
     }
