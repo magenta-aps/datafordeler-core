@@ -10,6 +10,7 @@ import org.hibernate.Session;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -304,6 +305,22 @@ public abstract class QueryManager {
             return databaseQuery.getSingleResult();
         } catch (NoResultException e) {
             return null;
+        } catch (NonUniqueResultException e) {
+            List<E> entities = databaseQuery.getResultList();
+            OffsetDateTime last = OffsetDateTime.MIN;
+            E newestEntity = null;
+            for (E entity : entities) {
+                for (Object oRegistration : entity.getRegistrations()) {
+                    Registration registration = (Registration) oRegistration;
+                    OffsetDateTime registrationTime = registration.getLastImportTime();
+                    if (registrationTime != null && registrationTime.isAfter(last)) {
+                        last = registrationTime;
+                        newestEntity = entity;
+                        break;
+                    }
+                }
+            }
+            return newestEntity;
         }
     }
 
@@ -314,6 +331,7 @@ public abstract class QueryManager {
             .createQuery(
                 String.format("SELECT t FROM %s t", tClass.getCanonicalName()),
                 tClass);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         return databaseQuery.getResultList();
     }
 
@@ -324,6 +342,7 @@ public abstract class QueryManager {
             .createQuery(
                 String.format("SELECT t FROM %s t", tClass.getCanonicalName()),
                 tClass);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         return databaseQuery.stream();
     }
 
@@ -336,6 +355,7 @@ public abstract class QueryManager {
         for (String key : filter.keySet()) {
             databaseQuery.setParameter(key, filter.get(key));
         }
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         return databaseQuery.getResultList();
     }
 
