@@ -53,7 +53,6 @@ public class UserDatabaseConfig {
       pooledDataSource.setMinPoolSize(5);
       pooledDataSource.setMaxPoolSize(200);
       pooledDataSource.setMaxStatements(50);
-      pooledDataSource.setTestConnectionOnCheckout(true);
       pooledDataSource.setIdleConnectionTestPeriod(3000);
     } catch (PropertyVetoException e) {
         throw new ConfigurationException(e);
