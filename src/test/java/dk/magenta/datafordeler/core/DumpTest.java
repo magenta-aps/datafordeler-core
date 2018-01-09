@@ -55,6 +55,7 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @RunWith(OrderedRunner.class)
@@ -310,7 +311,7 @@ public class DumpTest extends GapiTestBase {
                 "",
                 "",
             },
-            dumps.stream().map(DumpInfo::getStringData).toArray());
+            dumps.stream().map(DumpInfo::getStringData).map(DumpTest::unifyNewlines).toArray());
 
         session.close();
 
@@ -389,12 +390,12 @@ public class DumpTest extends GapiTestBase {
                         return null;
                     }
                 }
-            ).toArray(),
+            ).map(DumpTest::unifyNewlines).toArray(),
             dumps.stream().map(DumpInfo::getStringData).map(
                 s -> s
                     .replace(localString, "XXX")
                     .replace("\"XXX\"", "XXX")
-            ).toArray());
+            ).map(DumpTest::unifyNewlines).toArray());
 
         session.close();
 
@@ -468,6 +469,12 @@ public class DumpTest extends GapiTestBase {
         JsonNode json = objectMapper.readTree(resp.getBody());
 
         Assert.assertNotNull(json);
+    }
+
+    private static Pattern newlinePattern = Pattern.compile("\\R");
+
+    private static String unifyNewlines(String input) {
+        return newlinePattern.matcher(input).replaceAll("\r\n");
     }
 
 }
