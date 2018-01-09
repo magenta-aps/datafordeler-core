@@ -288,7 +288,7 @@ public class DumpTest extends GapiTestBase {
 
         Assert.assertArrayEquals("Dump contents",
             new String[]{
-                "<Envelope>\n"
+                unifyNewlines("<Envelope>\n"
                     + "  <path></path>\n"
                     + "  <terms>https://doc.test.data.gl/terms</terms>\n"
                     + "  <requestTimestamp/>\n"
@@ -297,8 +297,8 @@ public class DumpTest extends GapiTestBase {
                     + "  <page>1</page>\n"
                     + "  <pageSize>10</pageSize>\n"
                     + "  <results/>\n"
-                    + "</Envelope>\n",
-                "{\n"
+                    + "</Envelope>\n"),
+                unifyNewlines("{\n"
                     + "  \"path\" : \"\",\n"
                     + "  \"terms\" : \"https://doc.test.data.gl/terms\",\n"
                     + "  \"requestTimestamp\" : null,\n"
@@ -307,7 +307,7 @@ public class DumpTest extends GapiTestBase {
                     + "  \"page\" : 1,\n"
                     + "  \"pageSize\" : 10,\n"
                     + "  \"results\" : [ ]\n"
-                    + "}",
+                    + "}"),
                 "",
                 "",
             },
