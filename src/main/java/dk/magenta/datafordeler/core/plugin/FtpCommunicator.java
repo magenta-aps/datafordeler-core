@@ -173,7 +173,7 @@ public class FtpCommunicator implements Communicator {
                             try {
                                 ftpClient.disconnect(true);
                             } catch (IOException | FTPIllegalReplyException | FTPException e) {
-                                e.printStackTrace();
+                                FtpCommunicator.this.log.error(e);
                             }
                         }
                     }
@@ -194,7 +194,7 @@ public class FtpCommunicator implements Communicator {
     }
 
     protected void onStreamClose(FTPClient ftpClient, List<File> localFiles, URI uri, List<String> remoteFiles) {
-        this.markRemotefilesDone(ftpClient, uri, remoteFiles);
+        this.markRemoteFilesDone(ftpClient, uri, remoteFiles);
         this.markLocalFilesDone(localFiles);
         this.deleteLocalFiles(localFiles);
     }
@@ -202,6 +202,31 @@ public class FtpCommunicator implements Communicator {
     @Override
     public StatusLine send(URI endpoint, String payload) throws IOException {
         throw new NotImplementedException();
+    }
+
+    public void send(URI endpoint, File payload) throws IOException, DataStreamException {
+        Objects.requireNonNull(payload);
+        if (!payload.exists()) {
+            throw new DataStreamException("File "+payload.getAbsolutePath()+" does not exist");
+        }
+        if (payload.isDirectory()) {
+            for (File sub : payload.listFiles()) {
+                this.send(endpoint, sub);
+            }
+        }
+        FTPClient ftpClient = this.performConnect(endpoint);
+        try {
+            ftpClient.changeDirectory(endpoint.getPath());
+            ftpClient.upload(payload);
+        } catch (FTPIllegalReplyException | FTPException | FTPAbortedException | FTPDataTransferException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                ftpClient.disconnect(true);
+            } catch (FTPIllegalReplyException | FTPException e) {
+                this.log.error(e);
+            }
+        }
     }
 
     protected Set<String> getLocalFilenameList() throws IOException {
@@ -273,7 +298,7 @@ public class FtpCommunicator implements Communicator {
         }
     }
 
-    private void markRemotefilesDone(FTPClient ftpClient, URI folder, List<String> remoteFiles) {
+    private void markRemoteFilesDone(FTPClient ftpClient, URI folder, List<String> remoteFiles) {
         if (this.markRemoteFiles) {
             try {
                 ftpClient.changeDirectory(folder.getPath());
