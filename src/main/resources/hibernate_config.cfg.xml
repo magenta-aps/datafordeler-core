@@ -13,6 +13,7 @@
 
     <property name="hibernate.show_sql">false</property>
     <property name="hibernate.hbm2ddl.auto">update</property>
+    <property name="hibernate.default_schema">dbo</property>
 
     <property name="hibernate.c3p0.min_size">5</property>
     <property name="hibernate.c3p0.max_size">200</property>
