@@ -220,20 +220,20 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
 
-
+    public static final String IO_FIELD_REGISTRATION_FROM = "registreringFra";
 
     @Column(nullable = true, insertable = true, updatable = false)
     protected OffsetDateTime registrationFrom;
 
 
-    @JsonProperty(value = "registreringFra")
+    @JsonProperty(value = IO_FIELD_REGISTRATION_FROM)
     @XmlElement
     @XmlJavaTypeAdapter(type = OffsetDateTime.class, value = OffsetDateTimeAdapter.class)
     public OffsetDateTime getRegistrationFrom() {
         return this.registrationFrom;
     }
 
-    @JsonProperty(value = "registreringFra")
+    @JsonProperty(value = IO_FIELD_REGISTRATION_FROM)
     public void setRegistrationFrom(OffsetDateTime registrationFrom) {
         this.registrationFrom = registrationFrom;
     }
@@ -241,48 +241,53 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
 
+    public static final String IO_FIELD_REGISTRATION_TO = "registreringTil";
+
     @Column(nullable = true, insertable = true, updatable = false)
     protected OffsetDateTime registrationTo;
 
-    @JsonProperty(value = "registreringTil")
+    @JsonProperty(value = IO_FIELD_REGISTRATION_TO)
     @XmlElement
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
     public OffsetDateTime getRegistrationTo() {
         return this.registrationTo;
     }
 
-    @JsonProperty(value = "registreringTil")
+    @JsonProperty(value = IO_FIELD_REGISTRATION_TO)
     public void setRegistrationTo(OffsetDateTime registrationTo) {
         this.registrationTo = registrationTo;
     }
 
 
+    public static final String IO_FIELD_SEQUENCE_NUMBER = "sekvensnummer";
 
     @Column(nullable = false, insertable = true, updatable = false)
     protected int sequenceNumber;
 
-    @JsonProperty(value = "sekvensnummer")
+    @JsonProperty(value = IO_FIELD_SEQUENCE_NUMBER)
     @XmlElement
     public int getSequenceNumber() {
         return this.sequenceNumber;
     }
 
-    @JsonProperty(value = "sekvensnummer")
+    @JsonProperty(value = IO_FIELD_SEQUENCE_NUMBER)
     public void setSequenceNumber(int sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
     }
 
 
+    public static final String IO_FIELD_CHECKSUM = "checksum";
+
     // The checksum as reported by the register
     protected String registerChecksum;
 
-    @JsonProperty("checksum")
+    @JsonProperty(value = IO_FIELD_CHECKSUM)
     public String getRegisterChecksum() {
         return this.registerChecksum;
     }
 
 
-    @JsonProperty("checksum")
+    @JsonProperty(value = IO_FIELD_CHECKSUM)
     public void setRegisterChecksum(String registerChecksum) {
         this.registerChecksum = registerChecksum;
     }

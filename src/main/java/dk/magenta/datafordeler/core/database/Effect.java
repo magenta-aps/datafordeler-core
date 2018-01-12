@@ -61,12 +61,6 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     )
     protected Set<D> dataItems;
 
-    @Column(nullable = true, insertable = true, updatable = false)
-    private OffsetDateTime effectFrom;
-
-    @Column(nullable = true, insertable = true, updatable = false)
-    private OffsetDateTime effectTo;
-
     public Effect() {
         this.dataItems = new HashSet<D>();
     }
@@ -133,32 +127,35 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         }
     }
 
-    @JsonProperty(value = "virkningFra")
-    @XmlElement(name = "virkningFra")
+    public static final String IO_FIELD_EFFECT_FROM = "virkningFra";
+
+    @Column(nullable = true, insertable = true, updatable = false)
+    @JsonProperty(value = IO_FIELD_EFFECT_FROM)
+    @XmlElement(name = IO_FIELD_EFFECT_FROM)
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
+    private OffsetDateTime effectFrom;
+
     public OffsetDateTime getEffectFrom() {
         return this.effectFrom;
     }
 
-    @JsonProperty(value = "virkningFra")
-    @XmlElement(name = "virkningFra")
-    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
     public void setEffectFrom(OffsetDateTime effectFrom) {
         this.effectFrom = effectFrom;
     }
 
 
+    public static final String IO_FIELD_EFFECT_TO = "virkningTil";
 
-    @JsonProperty(value = "virkningTil")
-    @XmlElement(name = "virkningTil")
+    @JsonProperty(value = IO_FIELD_EFFECT_TO)
+    @XmlElement(name = IO_FIELD_EFFECT_TO)
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
+    @Column(nullable = true, insertable = true, updatable = false)
+    private OffsetDateTime effectTo;
+
     public OffsetDateTime getEffectTo() {
         return this.effectTo;
     }
 
-    @JsonProperty(value = "virkningTil")
-    @XmlElement(name = "virkningTil")
-    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
     public void setEffectTo(OffsetDateTime effectTo) {
         this.effectTo = effectTo;
     }
