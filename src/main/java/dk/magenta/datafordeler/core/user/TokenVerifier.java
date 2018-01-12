@@ -137,14 +137,18 @@ public class TokenVerifier {
   }
 
   public void verifyTokenAge(DateTime issueInstant) throws InvalidTokenException {
-    if (!isDateTimeSkewValid(
-        config.getTimeSkewInSeconds(),
-        config.getMaxAssertionTimeInSeconds(),
-        issueInstant
-    )) {
-      throw new InvalidTokenException(
-          "Token is older than " + config.getMaxAssertionTimeInSeconds() + " seconds"
-      );
+    long reference = System.currentTimeMillis();
+    int skewInSec = config.getTimeSkewInSeconds();
+    long forwardInterval = config.getMaxAssertionTimeInSeconds();
+
+    if(issueInstant.isAfter(reference + (skewInSec * 1000))) {
+      throw new InvalidTokenException("Token is issued in the future");
+    }
+
+    // If issueInstant is before the current time minus lifetime of token minus skew it is too
+    // old.
+    if(issueInstant.isBefore(reference - ((skewInSec + forwardInterval) * 1000))) {
+      throw new InvalidTokenException("Token is older than " + forwardInterval + " seconds");
     }
   }
 
