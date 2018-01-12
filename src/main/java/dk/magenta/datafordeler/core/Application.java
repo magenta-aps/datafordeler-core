@@ -28,9 +28,6 @@ import java.net.URLClassLoader;
 import java.util.Properties;
 import java.util.regex.Matcher;
 
-/**
- * Created by lars on 12-01-17.
- */
 @ComponentScan({"dk.magenta.datafordeler", "dk.magenta.datafordeler.core", "dk.magenta.datafordeler.core.gapi", "dk.magenta.datafordeler.core.database", "dk.magenta.datafordeler.core.util"})
 @EntityScan("dk.magenta.datafordeler")
 @ServletComponentScan

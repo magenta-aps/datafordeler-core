@@ -6,9 +6,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-/**
- * Created by jubk on 20-06-2017.
- */
 public class UserProfile {
   public static int INVALID_DATABASE_ID = -1;
 

@@ -8,9 +8,6 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.UnableToInterruptJobException;
 
-/**
- * Created by lars on 06-04-17.
- */
 public class PullTask implements InterruptableJob {
 
     public static final String DATA_ENGINE = "engine";

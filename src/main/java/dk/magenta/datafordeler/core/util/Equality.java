@@ -3,7 +3,6 @@ package dk.magenta.datafordeler.core.util;
 import java.time.OffsetDateTime;
 
 /**
- * Created by lars on 21-03-17.
  * Contains static methods that are useful for comparing objects
  */
 public abstract class Equality {

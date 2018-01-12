@@ -7,7 +7,6 @@ import java.net.URI;
 import java.util.Collection;
 
 /**
- * Created by lars on 11-01-17.
  * Base class for a plugin. Defines which methods must be implemented.
  * A Plugin to DAFO is a separate JAR, drawing on and subclassing Core classes.
  * Upon compilation, the jar is stored in a special folder (configured by dafo.plugins.folder)

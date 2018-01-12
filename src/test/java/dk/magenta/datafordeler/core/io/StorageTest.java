@@ -28,9 +28,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.UUID;
 
-/**
- * Created by lars on 23-02-17.
- */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

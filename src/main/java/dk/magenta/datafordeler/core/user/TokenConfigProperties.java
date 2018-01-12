@@ -2,9 +2,6 @@ package dk.magenta.datafordeler.core.user;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Created by jubk on 19-06-2017.
- */
 @ConfigurationProperties("dafo.tokenvalidation")
 public class TokenConfigProperties {
   private int timeSkewInSeconds = 5;

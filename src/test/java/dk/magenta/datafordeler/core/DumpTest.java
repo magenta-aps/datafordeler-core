@@ -55,11 +55,9 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * Created by lars on 03-04-17.
- */
 @RunWith(OrderedRunner.class)
 @ContextConfiguration(classes = Application.class)
 @PropertySource("classpath:application-test.properties")
@@ -290,7 +288,7 @@ public class DumpTest extends GapiTestBase {
 
         Assert.assertArrayEquals("Dump contents",
             new String[]{
-                "<Envelope>\n"
+                unifyNewlines("<Envelope>\n"
                     + "  <path></path>\n"
                     + "  <terms>https://doc.test.data.gl/terms</terms>\n"
                     + "  <requestTimestamp/>\n"
@@ -299,8 +297,8 @@ public class DumpTest extends GapiTestBase {
                     + "  <page>1</page>\n"
                     + "  <pageSize>10</pageSize>\n"
                     + "  <results/>\n"
-                    + "</Envelope>\n",
-                "{\n"
+                    + "</Envelope>\n"),
+                unifyNewlines("{\n"
                     + "  \"path\" : \"\",\n"
                     + "  \"terms\" : \"https://doc.test.data.gl/terms\",\n"
                     + "  \"requestTimestamp\" : null,\n"
@@ -309,11 +307,11 @@ public class DumpTest extends GapiTestBase {
                     + "  \"page\" : 1,\n"
                     + "  \"pageSize\" : 10,\n"
                     + "  \"results\" : [ ]\n"
-                    + "}",
+                    + "}"),
                 "",
                 "",
             },
-            dumps.stream().map(DumpInfo::getStringData).toArray());
+            dumps.stream().map(DumpInfo::getStringData).map(DumpTest::unifyNewlines).toArray());
 
         session.close();
 
@@ -392,12 +390,12 @@ public class DumpTest extends GapiTestBase {
                         return null;
                     }
                 }
-            ).toArray(),
+            ).map(DumpTest::unifyNewlines).toArray(),
             dumps.stream().map(DumpInfo::getStringData).map(
                 s -> s
                     .replace(localString, "XXX")
                     .replace("\"XXX\"", "XXX")
-            ).toArray());
+            ).map(DumpTest::unifyNewlines).toArray());
 
         session.close();
 
@@ -471,6 +469,12 @@ public class DumpTest extends GapiTestBase {
         JsonNode json = objectMapper.readTree(resp.getBody());
 
         Assert.assertNotNull(json);
+    }
+
+    private static Pattern newlinePattern = Pattern.compile("\\R");
+
+    private static String unifyNewlines(String input) {
+        return newlinePattern.matcher(input).replaceAll("\r\n");
     }
 
 }

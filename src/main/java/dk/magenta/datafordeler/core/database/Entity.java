@@ -44,7 +44,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     @XmlTransient
     protected Identification identification;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "entity")
     @OrderBy("registrationFrom asc") // Refers to sequenceNumber in Registration class
     @Filters({
             @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="(registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null)"),

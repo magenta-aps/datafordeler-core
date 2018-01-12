@@ -4,9 +4,6 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 
 import java.net.URI;
 
-/**
- * Created by lars on 27-06-17.
- */
 public class HttpGetWithEntity extends HttpEntityEnclosingRequestBase {
     public final static String METHOD_NAME = "GET";
 

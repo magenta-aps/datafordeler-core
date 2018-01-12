@@ -18,10 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.stereotype.Component;
 
-import javax.inject.Singleton;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,9 +33,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
 
-/**
- * Created by lars on 05-04-17.
- */
 @Component
 public class DemoRegisterManager extends RegisterManager {
 

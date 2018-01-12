@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 /**
- * Created by lars on 12-06-17.
+ * Map of URL parameters, where each key can have several values
  */
 public class ParameterMap extends ListHashMap<String, String> {
     public ParameterMap() {

@@ -37,7 +37,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * Created by lars on 19-04-17.
  * Service container to be subclassed for each Entity class, serving REST and SOAP
  */
 @RequestMapping("/fapi_service_with_no_requestmapping")
@@ -56,15 +55,8 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
     @Resource(name="wsContext")
     WebServiceContext context;
 
-    // For debugging purposes - make sure this is set to false when running in production
-    private static boolean DEBUG_DISABLE_SECURITY = true;
-
     @Autowired
     private CsvMapper csvMapper;
-
-    public static boolean getDebugDisableSecurity() {
-        return DEBUG_DISABLE_SECURITY;
-    }
 
     private OutputWrapper<E> outputWrapper;
 
@@ -132,9 +124,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
 
     protected void checkAndLogAccess(LoggerHelper loggerHelper)
             throws AccessDeniedException, AccessRequiredException {
-        if (DEBUG_DISABLE_SECURITY) {
-            return;
-        }
         try {
             this.checkAccess(loggerHelper.getUser());
         }
@@ -585,7 +574,6 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
         CsvSchema schema =
             builder.build().withHeader();
 
-        System.err.println(response.getHeaderNames());
         if (acceptedTypes.contains(new MediaType("text", "tsv"))) {
             schema = schema.withColumnSeparator('\t');
             response.setContentType("text/tsv");

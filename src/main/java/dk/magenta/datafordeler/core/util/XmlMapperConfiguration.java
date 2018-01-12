@@ -9,9 +9,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.OffsetDateTime;
 
-/**
- * Created by lars on 24-02-17.
- */
 @Configuration
 public class XmlMapperConfiguration {
 

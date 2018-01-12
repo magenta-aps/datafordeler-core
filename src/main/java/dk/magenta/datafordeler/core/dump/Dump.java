@@ -22,8 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by lars on 29-05-17. A Runnable that performs a dump with a given
- * Query
+ * A Runnable that performs a dump with a given Query
  */
 public class Dump extends Worker {
 

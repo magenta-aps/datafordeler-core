@@ -4,9 +4,6 @@ import dk.magenta.datafordeler.core.database.Registration;
 
 import java.time.format.DateTimeFormatter;
 
-/**
- * Created by lars on 10-05-17.
- */
 public class MismatchingRegistrationBoundaryException extends InvalidDataInputException {
 
     private Registration newRegistration;

@@ -25,7 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- * Created by lars on 05-04-17.
+ * Manager for a Plugin's connection to its data source, through e series of EntityManagers
  */
 public abstract class RegisterManager {
 

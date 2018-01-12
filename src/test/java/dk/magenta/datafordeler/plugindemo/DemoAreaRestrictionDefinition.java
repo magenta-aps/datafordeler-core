@@ -3,18 +3,7 @@ package dk.magenta.datafordeler.plugindemo;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
 import dk.magenta.datafordeler.core.plugin.AreaRestrictionDefinition;
 import dk.magenta.datafordeler.core.plugin.Plugin;
-import dk.magenta.datafordeler.core.plugin.RolesDefinition;
-import dk.magenta.datafordeler.core.role.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-/**
- * Created by lars on 12-01-17.
- */
 public class DemoAreaRestrictionDefinition extends AreaRestrictionDefinition {
 
     private DemoPlugin plugin;

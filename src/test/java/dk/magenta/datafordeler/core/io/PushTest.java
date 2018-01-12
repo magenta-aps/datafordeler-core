@@ -2,7 +2,6 @@ package dk.magenta.datafordeler.core.io;
 
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
-import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import org.junit.After;
@@ -25,9 +24,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Created by lars on 29-03-17.
- */
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
