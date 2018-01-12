@@ -47,16 +47,17 @@ public final class Identification extends DatabaseEntry implements Comparable<Id
 
 
     public static final String DB_FIELD_DOMAIN = "domain";
-    public static final String IO_FIELD_DOMAIN = "domænne";
+    public static final String IO_FIELD_DOMAIN = "domæne";
 
-    @JsonProperty(value = IO_FIELD_DOMAIN)
     @Column(nullable = false, insertable = true, updatable = false, name = DB_FIELD_DOMAIN)
     private String domain;
 
+    @JsonProperty(value = IO_FIELD_DOMAIN)
     public String getDomain() {
         return domain;
     }
 
+    @JsonProperty(value = "domaene")
     public void setDomain(String domaene) {
         this.domain = domaene;
     }
