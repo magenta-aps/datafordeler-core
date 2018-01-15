@@ -114,7 +114,7 @@ public class FapiTest {
         this.setupUser();
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/search", HttpMethod.GET, httpEntity, String.class);
-        Assert.assertEquals(200, resp.getStatusCode().value());
+        Assert.assertEquals(400, resp.getStatusCode().value());
     }
 
     @Test

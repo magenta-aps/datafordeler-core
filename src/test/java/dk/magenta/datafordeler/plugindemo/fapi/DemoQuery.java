@@ -37,6 +37,9 @@ public class DemoQuery extends Query<DemoEntity> {
 
     public void setPostnr(String postnr) {
         this.postnr = postnr;
+        if (postnr != null) {
+            this.increaseDataParamCount();
+        }
     }
 
     public String getBynavn() {
@@ -45,6 +48,9 @@ public class DemoQuery extends Query<DemoEntity> {
 
     public void setBynavn(String bynavn) {
         this.bynavn = bynavn;
+        if (bynavn != null) {
+            this.increaseDataParamCount();
+        }
     }
 
     public String getAktiv() {
@@ -53,6 +59,9 @@ public class DemoQuery extends Query<DemoEntity> {
 
     public void setAktiv(String aktiv) {
         this.aktiv = aktiv;
+        if (aktiv != null) {
+            this.increaseDataParamCount();
+        }
     }
 
     @Override
