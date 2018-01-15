@@ -254,7 +254,7 @@ public class DumpTest extends GapiTestBase {
             .stream(Format.values()).map(f ->
                 new DumpConfiguration(
                     "duuump-" + f.name(),
-                    "/demo/postnummer/1/rest/search",
+                    "/demo/postnummer/1/rest/search?postnr=*",
                     f,
                     Charsets.UTF_8,
                     "* * * * * *",
@@ -351,7 +351,7 @@ public class DumpTest extends GapiTestBase {
             .stream(Format.values()).map(f ->
                 new DumpConfiguration(
                     "duuump-" + f.name(),
-                    "/demo/postnummer/1/rest/search",
+                    "/demo/postnummer/1/rest/search?postnr=*",
                     f,
                     Charsets.UTF_8,
                     "* * * * * *",
@@ -427,7 +427,7 @@ public class DumpTest extends GapiTestBase {
 
         new Dump(this.engine, sessionManager, new DumpConfiguration(
             "duuump-whatever",
-            "/demo/postnummer/1/rest/search",
+            "/demo/postnummer/1/rest/search?postnr=*",
             DumpConfiguration.Format.csv,
             Charsets.UTF_8,
             "* * * * * *",
