@@ -21,12 +21,6 @@ import java.util.UUID;
 @Table(name = "identification", indexes = {@Index(name="uuid", columnList = "uuid"), @Index(name="id", columnList = "uuid, domain")})
 public final class Identification extends DatabaseEntry implements Comparable<Identification> {
 
-    @Column(unique = true, nullable = false, insertable = true, updatable = false)
-    private UUID uuid;
-
-    @Column(nullable = false, insertable = true, updatable = false)
-    private String domain;
-
     public Identification() {
     }
 
@@ -34,6 +28,13 @@ public final class Identification extends DatabaseEntry implements Comparable<Id
         this.uuid = uuid;
         this.domain = domain;
     }
+
+    public static final String DB_FIELD_UUID = "uuid";
+    public static final String IO_FIELD_UUID = "uuid";
+
+    @JsonProperty(value = IO_FIELD_UUID)
+    @Column(unique = true, nullable = false, insertable = true, updatable = false, name = DB_FIELD_UUID)
+    private UUID uuid;
 
     public UUID getUuid() {
         return uuid;
@@ -43,7 +44,15 @@ public final class Identification extends DatabaseEntry implements Comparable<Id
         this.uuid = uuid;
     }
 
-    @JsonProperty(value = "domaene")
+
+
+    public static final String DB_FIELD_DOMAIN = "domain";
+    public static final String IO_FIELD_DOMAIN = "domæne";
+
+    @Column(nullable = false, insertable = true, updatable = false, name = DB_FIELD_DOMAIN)
+    private String domain;
+
+    @JsonProperty(value = IO_FIELD_DOMAIN)
     public String getDomain() {
         return domain;
     }

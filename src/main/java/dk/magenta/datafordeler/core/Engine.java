@@ -483,8 +483,10 @@ public class Engine {
             handlerMapping.getHandler(request);
 
         log.info("HANDLER for {} is {}", request.getRequestURI(), chain);
-        for (HandlerInterceptor interceptor : chain.getInterceptors()) {
-            log.info("INTERCEPTOR is {}", interceptor);
+        if (chain != null) {
+            for (HandlerInterceptor interceptor : chain.getInterceptors()) {
+                log.info("INTERCEPTOR is {}", interceptor);
+            }
         }
 
         if (chain == null || chain.getHandler() == null) {

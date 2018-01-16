@@ -78,7 +78,9 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.identification;
     }
 
-    @JsonProperty("UUID")
+    public static final String IO_FIELD_UUID = "UUID";
+
+    @JsonProperty(value = IO_FIELD_UUID)
     public UUID getUUID() {
         if (this.identification != null) {
             return this.identification.getUuid();
@@ -111,10 +113,12 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         //this.identification.setDomain(domain);
     }
 
+    public static final String IO_FIELD_REGISTRATIONS = "registreringer";
+
     @OrderBy("registrationFrom asc")
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY, value = "registreringer")
-    @XmlElement(name="registreringer")
-    @JacksonXmlProperty(localName = "registreringer")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY, value = IO_FIELD_REGISTRATIONS)
+    @XmlElement(name=IO_FIELD_REGISTRATIONS)
+    @JacksonXmlProperty(localName = IO_FIELD_REGISTRATIONS)
     @JacksonXmlElementWrapper(useWrapping = false)
     public List<R> getRegistrations() {
         ArrayList<R> registrations = new ArrayList<>(this.registrations);

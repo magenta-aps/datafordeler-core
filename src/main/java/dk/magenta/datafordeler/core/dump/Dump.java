@@ -7,6 +7,7 @@ import dk.magenta.datafordeler.core.database.DumpInfo;
 import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.HttpNotFoundException;
+import dk.magenta.datafordeler.core.fapi.ParameterMap;
 import dk.magenta.datafordeler.core.util.MockInternalServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -125,10 +126,21 @@ public class Dump extends Worker {
     private byte[] dump(String requestPath,
         MediaType mediaType, Charset charset)
         throws Exception {
+
+        ParameterMap parameters = ParameterMap.fromPath(requestPath);
+        String basePath = requestPath;
+        if (basePath.contains("?")) {
+            basePath = basePath.substring(0, basePath.indexOf("?"));
+        }
+
         MockInternalServletRequest request =
-            new MockInternalServletRequest("DUMP", requestPath);
+            new MockInternalServletRequest("DUMP", basePath);
         MockHttpServletResponse response =
             new MockHttpServletResponse();
+
+        for (String key : parameters.keySet()) {
+            request.setParameter(key, parameters.getAsArray(key));
+        }
 
         request.addHeader("Accept", mediaType);
         request.addHeader("Accept-Charset", charset);

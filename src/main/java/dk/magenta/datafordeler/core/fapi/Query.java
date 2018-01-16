@@ -196,6 +196,9 @@ public abstract class Query<E extends Entity> {
 
     public void setRecordAfter(String recordAfter) throws DateTimeParseException {
         this.recordAfter = parseDateTime(recordAfter);
+        if (recordAfter != null) {
+            this.increaseDataParamCount();
+        }
     }
 
     public void addKommunekodeRestriction(String kommunekode) {
@@ -240,7 +243,20 @@ public abstract class Query<E extends Entity> {
         }
         if (!limitsOnly) {
             this.setFromParameters(parameterMap);
+            if (this.getDataParamCount() == 0) {
+                throw new InvalidClientInputException("Missing query parameters");
+            }
         }
+    }
+
+    private int dataParamCount = 0;
+
+    protected void increaseDataParamCount() {
+        this.dataParamCount++;
+    }
+
+    protected int getDataParamCount() {
+        return this.dataParamCount;
     }
 
     public abstract void setFromParameters(ParameterMap parameterMap) throws InvalidClientInputException;
