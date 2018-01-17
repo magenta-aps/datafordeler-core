@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.command.ScheduleChangedCommandHandler;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.dump.Dump;
 import dk.magenta.datafordeler.core.dump.DumpConfiguration;
@@ -475,6 +476,28 @@ public class DumpTest extends GapiTestBase {
 
     private static String unifyNewlines(String input) {
         return newlinePattern.matcher(input).replaceAll("\r\n");
+    }
+
+    @Test
+    @Order(order = 5)
+    public void testScheduleParse() throws IOException {
+        ScheduleChangedCommandHandler.ScheduleChangedCommandData data;
+        data = objectMapper.readerFor(ScheduleChangedCommandHandler.ScheduleChangedCommandData.class).readValue(
+                "{\"table\":\"dummy\", \"id\": \"somestring\", \"fields\":[\"field1\"]}"
+        );
+        Assert.assertEquals("dummy", data.table);
+        Assert.assertEquals("somestring", data.id);
+        Assert.assertEquals(1, data.fields.size());
+        Assert.assertEquals("field1", data.fields.get(0));
+
+        data = objectMapper.readerFor(ScheduleChangedCommandHandler.ScheduleChangedCommandData.class).readValue(
+                "{\"table\":\"dummy\", \"id\": 3, \"fields\":[\"field1\", \"field2\"]}"
+        );
+        Assert.assertEquals("dummy", data.table);
+        Assert.assertEquals("3", data.id);
+        Assert.assertEquals(2, data.fields.size());
+        Assert.assertEquals("field1", data.fields.get(0));
+        Assert.assertEquals("field2", data.fields.get(1));
     }
 
 }

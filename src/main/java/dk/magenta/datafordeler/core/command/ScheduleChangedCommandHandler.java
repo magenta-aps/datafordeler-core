@@ -52,7 +52,7 @@ public class ScheduleChangedCommandHandler extends CommandHandler {
         public String table;
 
         @JsonProperty(required = true)
-        public JsonValue id;
+        public String id;
 
         @JsonProperty(required = true)
         public List<String> fields;
