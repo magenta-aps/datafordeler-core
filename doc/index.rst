@@ -8,6 +8,7 @@ Dokumentation for `datafordelermototen. <https://github.com/magenta-aps/dataford
     bitemporality.rst
     plugins.rst
     file-handling.rst
+    pull.rst
 
 
 Formål
