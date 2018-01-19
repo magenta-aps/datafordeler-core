@@ -91,8 +91,10 @@ public class InterruptedPull extends DatabaseEntry {
     }
 
     public void setFiles(Collection<File> files) {
-        for (File file : files) {
-            this.addFile(file);
+        if (files != null) {
+            for (File file : files) {
+                this.addFile(file);
+            }
         }
     }
 
