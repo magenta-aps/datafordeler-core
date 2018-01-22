@@ -26,6 +26,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.StringJoiner;
 
 /**
@@ -100,8 +101,13 @@ public class Pull extends Worker implements Runnable {
                     this.log.error("Unknown schema: "+interruptedPull.getSchemaName()+". Cannot resume");
                 } else {
                     ArrayList<File> files = new ArrayList<>();
+                    HashSet<String> fileNames = new HashSet<>();
                     for (InterruptedPullFile interruptedPullFile : interruptedPull.getFiles()) {
-                        files.add(new File(interruptedPullFile.getFilename()));
+                        String filename = interruptedPullFile.getFilename();
+                        if (!fileNames.contains(filename)) {
+                            files.add(new File(filename));
+                            fileNames.add(filename);
+                        }
                     }
                     InputStream cacheStream = this.registerManager.getCacheStream(files);
                     if (cacheStream == null) {
