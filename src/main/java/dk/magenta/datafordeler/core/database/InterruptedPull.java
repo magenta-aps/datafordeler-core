@@ -87,8 +87,15 @@ public class InterruptedPull extends DatabaseEntry {
     }
 
     public void addFile(File file) {
-        this.files.add(new InterruptedPullFile(this, file.getAbsolutePath()));
+        InterruptedPullFile newFile = new InterruptedPullFile(this, file.getAbsolutePath());
+        for (InterruptedPullFile existing : this.files) {
+            if (existing != null && existing.equals(newFile)) {
+                return;
+            }
+        }
+        this.files.add(newFile);
     }
+
 
     public void setFiles(Collection<File> files) {
         if (files != null) {
