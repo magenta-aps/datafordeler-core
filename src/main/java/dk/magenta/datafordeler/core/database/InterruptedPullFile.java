@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import java.util.Objects;
 
 /**
  * Single file entry for InterruptedPull
@@ -28,6 +29,15 @@ public class InterruptedPullFile extends DatabaseEntry {
 
     public String getFilename() {
         return this.filename;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InterruptedPullFile that = (InterruptedPullFile) o;
+        return Objects.equals(interruptedPull, that.interruptedPull) &&
+                Objects.equals(filename, that.filename);
     }
 
 }
