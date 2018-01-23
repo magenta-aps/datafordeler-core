@@ -15,10 +15,7 @@ import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * An Entity represents a top-level item in the database as well as in service
@@ -204,7 +201,25 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
 
-
+    public void dedupRegistrations(Session session) {
+        ArrayList<R> orderedRegistrations = new ArrayList<>(this.getRegistrations());
+        Collections.sort(orderedRegistrations);
+        R last = null;
+        HashSet<R> toDelete = new HashSet<>();
+        for (R registration : orderedRegistrations) {
+            if (last != null && last.equalTime(registration)) {
+                this.log.info("Registration collision on "+registration.registrationFrom+"|"+registration.registrationTo);
+                registration.mergeInto(last);
+                toDelete.add(registration);
+                this.registrations.remove(registration);
+            } else {
+                last = registration;
+            }
+        }
+        for (R registration : toDelete) {
+            session.delete(registration);
+        }
+    }
 
 
     public List<R> findRegistrations(OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
