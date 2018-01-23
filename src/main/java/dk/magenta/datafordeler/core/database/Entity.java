@@ -201,23 +201,27 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
 
-    public void dedupRegistrations(Session session) {
+    public void dedupRegistrations(Session session, boolean onlyDetect) {
         ArrayList<R> orderedRegistrations = new ArrayList<>(this.getRegistrations());
         Collections.sort(orderedRegistrations);
         R last = null;
         HashSet<R> toDelete = new HashSet<>();
         for (R registration : orderedRegistrations) {
             if (last != null && last.equalTime(registration)) {
-                this.log.info("Registration collision on "+registration.registrationFrom+"|"+registration.registrationTo);
-                registration.mergeInto(last);
-                toDelete.add(registration);
-                this.registrations.remove(registration);
+                this.log.info("Registration collision on entity "+this.getId()+": "+registration.registrationFrom+"|"+registration.registrationTo);
+                if (!onlyDetect) {
+                    registration.mergeInto(last);
+                    toDelete.add(registration);
+                    this.registrations.remove(registration);
+                }
             } else {
                 last = registration;
             }
         }
-        for (R registration : toDelete) {
-            session.delete(registration);
+        if (!onlyDetect) {
+            for (R registration : toDelete) {
+                session.delete(registration);
+            }
         }
     }
 
