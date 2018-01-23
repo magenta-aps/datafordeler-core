@@ -395,7 +395,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
     public void mergeInto(R otherRegistration) {
-        for (V effect : this.getEffects()) {
+        for (V effect : new ArrayList<V>(this.getEffects())) {
             effect.setRegistration(otherRegistration);
         }
     }
