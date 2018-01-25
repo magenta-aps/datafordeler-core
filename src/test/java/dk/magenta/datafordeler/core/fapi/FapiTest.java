@@ -90,6 +90,9 @@ public class FapiTest {
     private SOAPPart soapPart;
     private SOAPEnvelope soapEnvelope;
 
+    private static String veryEarly = "1800-01-01T00:00:00Z";
+    private static String veryLate = "2200-12-31T23:59:59Z";
+
     private static ZoneId systemZone = ZoneOffset.systemDefault();
 
     @Test
@@ -244,7 +247,10 @@ public class FapiTest {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/json");
             HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
-            ResponseEntity<String> resp = this.restTemplate.exchange("/demo/postnummer/1/rest/" + uuid.toString(), HttpMethod.GET, httpEntity, String.class);
+            ResponseEntity<String> resp = this.restTemplate.exchange(
+                    "/demo/postnummer/1/rest/" + uuid.toString()+"?registreringFra="+veryEarly+"&registreringTil="+veryLate,
+                    HttpMethod.GET, httpEntity, String.class
+            );
             Assert.assertEquals(200, resp.getStatusCode().value());
             JsonNode jsonBody = objectMapper.readTree(resp.getBody());
 
@@ -275,16 +281,20 @@ public class FapiTest {
             Assert.assertTrue(registration2.get("registreringTil").isNull());
 
             // Restrict on registrationFrom
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2}}, "2017-06-01T00:00:00+00:00", null, null, null);
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2, 2}}, "2017-05-01T15:06:22+01:00", null, null, null);
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2, 2}}, "2017-05-01T15:06:21+01:00", null, null, null);
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2, 2}}, "2017-05-01T15:06:21+01:00", "2017-05-01T15:06:23+01:00", null, null);
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2}}, "2017-05-15T00:00:00+01:00", "2017-06-01T00:00:00+01:00", null, null);
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2, 2}}, "2017-05-01T15:06:21+01:00", null, "2016-06-01T00:00:00+01:00", "2019-06-01T00:00:00+01:00");
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{1, 1}}, "2017-05-01T15:06:21+01:00", null, "2017-06-01T00:00:00+01:00", "2017-07-01T00:00:00+01:00");
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{0, 0}}, "2017-05-01T15:06:21+01:00", null, "2014-06-01T00:00:00+01:00", "2015-06-01T00:00:00+01:00");
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2}}, null, "2017-04-01T15:06:21+01:00", "2016-06-01T00:00:00+01:00", "2019-06-01T00:00:00+01:00");
-            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{1}}, null, "2017-04-01T15:06:21+01:00", "2016-06-01T00:00:00+01:00", "2017-06-01T00:00:00+01:00");
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2}}, "2017-06-01T00:00:00+00:00", veryLate, veryEarly, veryLate);
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2, 2}}, "2017-05-01T15:06:22+01:00", veryLate, veryEarly, veryLate);
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2, 2}}, "2017-05-01T15:06:21+01:00", veryLate, veryEarly, veryLate);
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2, 2}}, "2017-05-01T15:06:21+01:00", "2017-05-01T15:06:23+01:00", veryEarly, veryLate);
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2}}, "2017-05-15T00:00:00+01:00", "2017-06-01T00:00:00+01:00", veryEarly, veryLate);
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2, 2}}, "2017-05-01T15:06:21+01:00", veryLate, "2016-06-01T00:00:00+01:00", "2019-06-01T00:00:00+01:00");
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{1, 1}}, "2017-05-01T15:06:21+01:00", veryLate, "2017-06-01T00:00:00+01:00", "2017-07-01T00:00:00+01:00");
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{0, 0}}, "2017-05-01T15:06:21+01:00", veryLate, "2014-06-01T00:00:00+01:00", "2015-06-01T00:00:00+01:00");
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{2}}, veryEarly, "2017-04-01T15:06:21+01:00", "2016-06-01T00:00:00+01:00", "2019-06-01T00:00:00+01:00");
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{1}}, veryEarly, "2017-04-01T15:06:21+01:00", "2016-06-01T00:00:00+01:00", "2017-06-01T00:00:00+01:00");
+
+            // Use current timestamp
+            this.testRegistrationFilter("/demo/postnummer/1/rest/" + uuid, new int[][]{{1}}, null, null, null, null);
+
         } finally {
             this.removeTestObject(uuid);
         }
@@ -301,7 +311,8 @@ public class FapiTest {
             headers.set("Accept", "text/csv");
             HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
             ResponseEntity<String> resp = this.restTemplate
-                    .exchange("/demo/postnummer/1/rest/" + uuid.toString(),
+                    .exchange("/demo/postnummer/1/rest/" + uuid.toString() +
+                                    "?registreringFra="+veryEarly+"&registreringTil="+veryLate+"&virkningFra="+veryEarly+"&virkningTil="+veryLate,
                             HttpMethod.GET, httpEntity, String.class);
             Assert.assertEquals(200, resp.getStatusCode().value());
             Assert.assertEquals(new MediaType("text", "csv"),
@@ -333,7 +344,8 @@ public class FapiTest {
             headers.set("Accept", "text/tsv");
             HttpEntity<String> httpEntity = new HttpEntity<>("", headers);
             ResponseEntity<String> resp = this.restTemplate.exchange(
-                    "/demo/postnummer/1/rest/" + uuid.toString(),
+                    "/demo/postnummer/1/rest/" + uuid.toString() +
+                            "?registreringFra="+veryEarly+"&registreringTil="+veryLate+"&virkningFra="+veryEarly+"&virkningTil="+veryLate,
                     HttpMethod.GET, httpEntity, String.class
             );
             Assert.assertEquals(200, resp.getStatusCode().value());
@@ -401,10 +413,48 @@ public class FapiTest {
         UUID uuid1 = this.addTestObject();
         UUID uuid2 = this.addTestObject();
         try {
-            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000", new int[][]{{2, 2}, {2, 2}}, null, null, null, null);
-            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=1", new int[][]{{2, 2}}, null, null, null, null);
-            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000&page=2&pageSize=1", new int[][]{{2, 2}}, null, null, null, null);
-            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000", new int[][]{{1}, {1}}, "2017-04-01T00:00:00+01:00", "2017-04-01T15:06:21+01:00", "2016-06-01T00:00:00+01:00", "2017-06-01T00:00:00+01:00");
+            this.testRegistrationFilter(
+                    "/demo/postnummer/1/rest/search?postnr=8000",
+                    new int[][]{{1}, {1}}, // Expect 2 entities (length of outer array), each with 1 registration (length of sub-arrays), each with 1 effect (contents of sub-arrays)
+                    null, null, null, null // Null values mean "now"
+            );
+
+            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000",
+                    new int[][]{{2, 2}, {2, 2}}, // Expect 2 entities (length of outer array), each with 2 registrations (length of sub-arrays), each with 2 effects (contents of sub-arrays)
+                    veryEarly, veryLate, veryEarly, veryLate // Large timespans that encapsulate all registrations and effects
+            );
+
+            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=1",
+                    new int[][]{{1}}, // Expect one entity (because we set pageSize=1), with one registration, with one effect
+                    null, null, null, null // Null values mean "now"
+            );
+            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=1",
+                    new int[][]{{2, 2}},// Expect one entity, with 2 registrations, each with 2 effects
+                    veryEarly, veryLate, veryEarly, veryLate
+            );
+
+            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=2",
+                    new int[][]{{1}, {1}}, // Expect two entities, each with one registration, with one effect
+                    null, null, null, null // Null values mean "now"
+            );
+            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=2",
+                    new int[][]{{2, 2}, {2, 2}},// Expect two entities, each with 2 registrations, each with 2 effects
+                    veryEarly, veryLate, veryEarly, veryLate
+            );
+
+            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000&page=2&pageSize=1",
+                    new int[][]{{1}}, // Expect one entity (because we set pageSize=1), with one registration, with one effect
+                    null, null, null, null
+            );
+            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000&page=2&pageSize=1",
+                    new int[][]{{2, 2}},// Expect one entity, with 2 registrations, each with 2 effects
+                    veryEarly, veryLate, veryEarly, veryLate
+            );
+
+            this.testRegistrationFilter("/demo/postnummer/1/rest/search?postnr=8000",
+                    new int[][]{{1}, {1}},
+                    "2017-04-01T00:00:00+01:00", "2017-04-01T15:06:21+01:00", "2016-06-01T00:00:00+01:00", "2017-06-01T00:00:00+01:00"
+            );
         } finally {
             this.removeTestObject(uuid1);
             this.removeTestObject(uuid2);
@@ -433,8 +483,9 @@ public class FapiTest {
                     unifyNewlines(
                             getRegistrationFilterRequest(
                                     "/demo/postnummer/1/rest/search?postnr=8000",
-                                    null, null, null,
-                                    null, mediaType.toString()
+                                    veryEarly, veryLate,
+                                    veryEarly,veryLate,
+                                    mediaType.toString()
                             ).getBody()
                                     .replaceAll(uuid1.toString(), "UUID#1")
                                     .replaceAll(uuid2.toString(), "UUID#2")
@@ -450,8 +501,9 @@ public class FapiTest {
                     unifyNewlines(
                             getRegistrationFilterRequest(
                                     "/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=1",
-                                    null, null, null,
-                                    null, mediaType.toString()
+                                    veryEarly, veryLate,
+                                    veryEarly,veryLate,
+                                    mediaType.toString()
                             ).getBody()
                                     .replaceAll(uuid1.toString(), "UUID#1")
                                     .replaceAll(uuid2.toString(), "UUID#2"))
@@ -466,8 +518,9 @@ public class FapiTest {
                     unifyNewlines(
                             getRegistrationFilterRequest(
                                     "/demo/postnummer/1/rest/search?postnr=8000&page=2&pageSize=1",
-                                    null, null, null,
-                                    null, mediaType.toString()
+                                    veryEarly, veryLate,
+                                    veryEarly,veryLate,
+                                    mediaType.toString()
                             ).getBody()
                                     .replaceAll(uuid1.toString(), "UUID#1")
                                     .replaceAll(uuid2.toString(), "UUID#2"))
@@ -506,7 +559,6 @@ public class FapiTest {
         UUID uuid1 = this.addTestObject();
         UUID uuid2 = this.addTestObject();
 
-
         try {
             MediaType mediaType =
                     new MediaType("text", "tsv");
@@ -522,8 +574,8 @@ public class FapiTest {
                     unifyNewlines(
                             getRegistrationFilterRequest(
                                     "/demo/postnummer/1/rest/search?postnr=8000",
-                                    null, null, null,
-                                    null,
+                                    veryEarly, veryLate,
+                                    veryEarly, veryLate,
                                     mediaType.toString()
                             ).getBody()
                                     .replaceAll(uuid1.toString(), "UUID#1")
@@ -541,8 +593,9 @@ public class FapiTest {
                     unifyNewlines(
                             getRegistrationFilterRequest(
                                     "/demo/postnummer/1/rest/search?postnr=8000&page=1&pageSize=1",
-                                    null, null, null,
-                                    null, mediaType.toString()).getBody()
+                                    veryEarly,veryLate,
+                                    veryEarly,veryLate,
+                                    mediaType.toString()).getBody()
                                     .replaceAll(uuid1.toString(), "UUID#1")
                                     .replaceAll(",", "\t")
                                     .replaceAll(uuid2.toString(), "UUID#2")
@@ -559,8 +612,9 @@ public class FapiTest {
                     unifyNewlines(
                             getRegistrationFilterRequest(
                                     "/demo/postnummer/1/rest/search?postnr=8000&page=2&pageSize=1",
-                                    null, null, null,
-                                    null, mediaType.toString()).getBody()
+                                    veryEarly, veryLate,
+                                    veryEarly, veryLate,
+                                    mediaType.toString()).getBody()
                                     .replaceAll(uuid1.toString(), "UUID#1")
                                     .replaceAll(uuid2.toString(), "UUID#2")
                     )
@@ -620,6 +674,7 @@ public class FapiTest {
         JsonNode jsonBody = objectMapper.readTree(resp.getBody());
 
         ArrayNode list = (ArrayNode) jsonBody.get("results");
+        System.out.println("list: "+list);
         Assert.assertEquals(expected.length, list.size());
         int i = 0;
         for (JsonNode entity : list) {

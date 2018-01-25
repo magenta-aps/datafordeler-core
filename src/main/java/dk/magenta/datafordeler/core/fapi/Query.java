@@ -143,11 +143,22 @@ public abstract class Query<E extends Entity> {
     }
 
     public void setRegistrationFrom(OffsetDateTime registrationFrom) {
-        this.registrationFrom = registrationFrom;
+        this.setRegistrationFrom(registrationFrom, null);
     }
 
-    public void setRegistrationFrom(String registrationFrom) throws DateTimeParseException {
-        this.registrationFrom = parseDateTime(registrationFrom);
+    public void setRegistrationFrom(OffsetDateTime registrationFrom, OffsetDateTime fallback) {
+        this.registrationFrom = registrationFrom;
+        if (registrationFrom == null && fallback != null) {
+            this.registrationFrom = fallback;
+        }
+    }
+
+    public void setRegistrationFrom(String registrationFrom) {
+        this.setRegistrationFrom(registrationFrom, null);
+    }
+
+    public void setRegistrationFrom(String registrationFrom, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setRegistrationFrom(parseDateTime(registrationFrom), fallback);
     }
 
     public OffsetDateTime getRegistrationTo() {
@@ -155,11 +166,22 @@ public abstract class Query<E extends Entity> {
     }
 
     public void setRegistrationTo(OffsetDateTime registrationTo) {
-        this.registrationTo = registrationTo;
+        this.setRegistrationTo(registrationTo, null);
     }
 
-    public void setRegistrationTo(String registrationTo) throws DateTimeParseException {
-        this.registrationTo = parseDateTime(registrationTo);
+    public void setRegistrationTo(OffsetDateTime registrationTo, OffsetDateTime fallback) {
+        this.registrationTo = registrationTo;
+        if (registrationTo == null && fallback != null) {
+            this.registrationTo = fallback;
+        }
+    }
+
+    public void setRegistrationTo(String registrationTo) {
+        this.setRegistrationTo(registrationTo, null);
+    }
+
+    public void setRegistrationTo(String registrationTo, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setRegistrationTo(parseDateTime(registrationTo), fallback);
     }
 
     public OffsetDateTime getEffectFrom() {
@@ -167,11 +189,22 @@ public abstract class Query<E extends Entity> {
     }
 
     public void setEffectFrom(OffsetDateTime effectFrom) {
+        this.setEffectFrom(effectFrom, null);
+    }
+
+    public void setEffectFrom(OffsetDateTime effectFrom, OffsetDateTime fallback) {
         this.effectFrom = effectFrom;
+        if (effectFrom == null && fallback != null) {
+            this.effectFrom = fallback;
+        }
     }
 
     public void setEffectFrom(String effectFrom) {
-        this.effectFrom = parseDateTime(effectFrom);
+        this.setEffectFrom(effectFrom, null);
+    }
+
+    public void setEffectFrom(String effectFrom, OffsetDateTime fallback) {
+        this.setEffectFrom(parseDateTime(effectFrom), fallback);
     }
 
     public OffsetDateTime getEffectTo() {
@@ -179,11 +212,22 @@ public abstract class Query<E extends Entity> {
     }
 
     public void setEffectTo(OffsetDateTime effectTo) {
+        this.setEffectTo(effectTo, null);
+    }
+
+    public void setEffectTo(OffsetDateTime effectTo, OffsetDateTime fallback) {
         this.effectTo = effectTo;
+        if (effectTo == null && fallback != null) {
+            this.effectTo = fallback;
+        }
     }
 
     public void setEffectTo(String effectTo) {
-        this.effectTo = parseDateTime(effectTo);
+        this.setEffectTo(effectTo, null);
+    }
+
+    public void setEffectTo(String effectTo, OffsetDateTime fallback) {
+        this.setEffectTo(parseDateTime(effectTo), fallback);
     }
 
     public OffsetDateTime getRecordAfter() {
@@ -233,10 +277,11 @@ public abstract class Query<E extends Entity> {
         this.setPage(parameterMap.getFirstOf(PARAM_PAGE));
         this.setPageSize(parameterMap.getFirstOf(PARAM_PAGESIZE));
         try {
-            this.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM));
-            this.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO));
-            this.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM));
-            this.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO));
+            OffsetDateTime now = OffsetDateTime.now();
+            this.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM), now);
+            this.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO), now);
+            this.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM), now);
+            this.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO), now);
             this.setRecordAfter(parameterMap.getFirstOf(PARAM_RECORD_AFTER));
         } catch (DateTimeParseException e) {
             throw new InvalidClientInputException(e.getMessage());
