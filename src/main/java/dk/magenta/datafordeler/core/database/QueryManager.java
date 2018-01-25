@@ -12,6 +12,7 @@ import org.hibernate.Session;
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -179,7 +180,9 @@ public abstract class QueryManager {
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
+        long start = Instant.now().toEpochMilli();
         List<E> results = databaseQuery.getResultList();
+        log.info("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
         return results;
     }
 
@@ -223,7 +226,9 @@ public abstract class QueryManager {
         }
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
+        long start = Instant.now().toEpochMilli();
         List<E> results = databaseQuery.getResultList();
+        log.info("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
         return results;
     }
 
@@ -302,7 +307,10 @@ public abstract class QueryManager {
         logQuery(databaseQuery);
         databaseQuery.setCacheable(true);
         try {
-            return databaseQuery.getSingleResult();
+            long start = Instant.now().toEpochMilli();
+            E entity = databaseQuery.getSingleResult();
+            log.info("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
+            return entity;
         } catch (NoResultException e) {
             return null;
         } catch (NonUniqueResultException e) {
