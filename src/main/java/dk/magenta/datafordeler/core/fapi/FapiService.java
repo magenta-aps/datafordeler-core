@@ -33,6 +33,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -308,8 +309,9 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
      */
     protected Q getQuery(String registrationFrom, String registrationTo) {
         Q query = this.getEmptyQuery();
-        query.setRegistrationFrom(registrationFrom);
-        query.setRegistrationTo(registrationTo);
+        OffsetDateTime now = OffsetDateTime.now();
+        query.setRegistrationFrom(registrationFrom, now);
+        query.setRegistrationTo(registrationTo, now);
         return query;
     }
 
