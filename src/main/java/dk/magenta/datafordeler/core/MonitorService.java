@@ -32,14 +32,14 @@ public class MonitorService {
         Query query = session.createQuery("select 1 from Identification").setMaxResults(1);
         query.uniqueResult();
         session.close();
-        response.getWriter().println("Primary database connection ok\n");
+        response.getWriter().println("Primary database connection ok");
 
 
         session = configurationSessionManager.getSessionFactory().openSession();
         query = session.createQuery("select 1 from Command").setMaxResults(1);
         query.uniqueResult();
         session.close();
-        response.getWriter().println("Secondary database connection ok\n");
+        response.getWriter().println("Secondary database connection ok");
 
 
         response.setStatus(200);
