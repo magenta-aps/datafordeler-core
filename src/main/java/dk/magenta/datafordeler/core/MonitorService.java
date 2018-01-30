@@ -4,6 +4,7 @@ import dk.magenta.datafordeler.core.database.Identification;
 import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import org.hibernate.Session;
+import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -23,7 +24,8 @@ public class MonitorService {
     @RequestMapping(path="/database")
     public void checkMonitoring(HttpServletRequest request, HttpServletResponse response) {
         Session session = sessionManager.getSessionFactory().openSession();
-        long count = QueryManager.count(session, Identification.class, new HashMap<>());
+        Query query = session.createQuery("select 1 from Identification").setMaxResults(1);
+        query.uniqueResult();
         session.close();
         response.setStatus(200);
     }
