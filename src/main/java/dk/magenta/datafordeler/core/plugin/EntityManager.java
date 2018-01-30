@@ -326,4 +326,11 @@ public abstract class EntityManager {
         lastUpdated.setTimestamp(time);
         session.saveOrUpdate(lastUpdated);
     }
+
+    /**
+     * Should return whether the configuration is set so that pulls are enabled for this entitymanager
+     */
+    public boolean pullEnabled() {
+        return false;
+    }
 }

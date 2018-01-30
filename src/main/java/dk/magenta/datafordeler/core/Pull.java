@@ -163,6 +163,10 @@ public class Pull extends Worker implements Runnable {
                     if (this.doCancel) {
                         break;
                     }
+                    if (!entityManager.pullEnabled()) {
+                        this.log.info("Entitymanager "+entityManager.getClass().getSimpleName()+" is disabled");
+                        continue;
+                    }
 
                     Session session = this.engine.sessionManager.getSessionFactory().openSession();
                     OffsetDateTime lastUpdate = entityManager.getLastUpdated(session);
