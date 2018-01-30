@@ -590,4 +590,12 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             writer.write(dataIter.next());
         }
     }
+
+    @RequestMapping(path="/monitor/database")
+    public String checkMonitoring() {
+        Session session = sessionManager.getSessionFactory().openSession();
+        long count = QueryManager.count(session, this.getEntityClass(), new HashMap<>());
+        session.close();
+        return "";
+    }
 }
