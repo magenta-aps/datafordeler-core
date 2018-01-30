@@ -331,10 +331,6 @@ public abstract class EntityManager {
      * Should return whether the configuration is set so that pulls are enabled for this entitymanager
      */
     public boolean pullEnabled() {
-        try {
-            return this.getRegisterManager().getEventInterface(this) != null;
-        } catch (DataFordelerException e) {
-            return false;
-        }
+        return false;
     }
 }
