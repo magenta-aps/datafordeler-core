@@ -4,6 +4,7 @@ import dk.magenta.datafordeler.core.database.ConfigurationSessionManager;
 import dk.magenta.datafordeler.core.database.Identification;
 import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
+import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
@@ -62,7 +63,7 @@ public class MonitorService {
     }
 
     @RequestMapping(path="/pull")
-    public void checkPulls(HttpServletRequest request, HttpServletResponse response) throws ParseException, IOException {
+    public void checkPulls(HttpServletRequest request, HttpServletResponse response) throws ParseException, IOException, DataFordelerException {
         Session session = sessionManager.getSessionFactory().openSession();
         PrintWriter output = response.getWriter();
         for (Plugin plugin : pluginManager.getPlugins()) {
@@ -75,6 +76,10 @@ public class MonitorService {
                     // have completed their expected pulls within, say, 2 hours
                     // to detect stalled jobs
                     output.println("Inspecting "+entityManager.getClass().getSimpleName());
+                    if (registerManager.getEventInterface(entityManager) == null) {
+                        output.println("    Disabled or no remote URI");
+                        continue;
+                    }
 
                     // When does cron say we should have started last?
                     Instant expectedStart = MonitorService.getTimeBefore(cronExpression, Instant.now());
