@@ -27,13 +27,12 @@ public class MonitorService {
     ConfigurationSessionManager configurationSessionManager;
 
     @RequestMapping(path="/database")
-    public void checkMonitoring(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void checkDatabaseConnections(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Session session = sessionManager.getSessionFactory().openSession();
         Query query = session.createQuery("select 1 from Identification").setMaxResults(1);
         query.uniqueResult();
         session.close();
         response.getWriter().println("Primary database connection ok");
-
 
         session = configurationSessionManager.getSessionFactory().openSession();
         query = session.createQuery("select 1 from Command").setMaxResults(1);
@@ -41,7 +40,7 @@ public class MonitorService {
         session.close();
         response.getWriter().println("Secondary database connection ok");
 
-
         response.setStatus(200);
     }
+
 }
