@@ -290,6 +290,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return registrations;
     }
 
+    @JsonIgnore
     public Set<DataItem> getCurrent() {
         OffsetDateTime now = OffsetDateTime.now();
         R registration = this.getRegistrationAt(now);
