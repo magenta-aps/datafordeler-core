@@ -309,6 +309,22 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return registrations;
     }
 
+    public Set<DataItem> getCurrent() {
+        OffsetDateTime now = OffsetDateTime.now();
+        R registration = this.getRegistrationAt(now);
+        HashSet<DataItem> dataItems = new HashSet<>();
+        if (registration != null) {
+            for (Object effectObject : registration.getEffectsAt(now)) {
+                Effect effect = (Effect) effectObject;
+                for (Object dataObject : effect.getDataItems()) {
+                    DataItem data = (DataItem) dataObject;
+                    dataItems.add(data);
+                }
+            }
+        }
+        return dataItems;
+    }
+
     private static OffsetDateTime nFrom(OffsetDateTime a) {
         if (a == null) return OffsetDateTime.MIN;
         return a;
