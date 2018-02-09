@@ -305,13 +305,14 @@ public class LookupDefinition {
             for (int i = 0; i < list.size(); i++) {
                 if (parameterValueWildcard(list.get(i))) {
                     or.add("cast(" + variablePath + " as string) like :" + parameterPath + "_" + i + " escape '" + LookupDefinition.escape + "'");
+                } else if (!fieldDefinition.getOperatorSign().equals("=")) {
+                    or.add(variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath + "_" + i);
                 } else {
-                    //or.add(variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath + "_" + i);
                     hasNonWildcardItems = true;
                 }
             }
             if (hasNonWildcardItems) {
-                or.add(variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath + "_" + "list");
+                or.add(variablePath + " IN (:" + parameterPath + "_" + "list)");
             }
             if (or.length() > 0) {
                 return "(" + or.toString() + ")";
@@ -403,8 +404,9 @@ public class LookupDefinition {
                         Object item = list.get(i);
                         if (parameterValueWildcard(item)) {
                             map.put(parameterPath + "_" + i, replaceWildcard(item));
+                        } else if (!definition.getOperatorSign().equals("=")) {
+                            map.put(parameterPath + "_" + i, castValue(type, item));
                         } else {
-                            //map.put(parameterPath + "_" + i, castValue(type, item));
                             nonWildcardItems.add(castValue(type, item));
                         }
                     }
