@@ -213,8 +213,13 @@ public abstract class QueryManager {
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
 
         for (String key : extraParameters.keySet()) {
-            log.info(key+" = "+extraParameters.get(key));
-            databaseQuery.setParameter(key, extraParameters.get(key));
+            Object value = extraParameters.get(key);
+            log.info(key+" = "+value);
+            if (value instanceof Collection) {
+                databaseQuery.setParameterList(key, (Collection) value);
+            } else {
+                databaseQuery.setParameter(key, value);
+            }
         }
 
         // Offset & limit
@@ -259,8 +264,13 @@ public abstract class QueryManager {
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
 
         for (String key : extraParameters.keySet()) {
-            log.info(key+" = "+extraParameters.get(key));
-            databaseQuery.setParameter(key, extraParameters.get(key));
+            Object value = extraParameters.get(key);
+            log.info(key+" = "+value);
+            if (value instanceof Collection) {
+                databaseQuery.setParameterList(key, (Collection) value);
+            } else {
+                databaseQuery.setParameter(key, value);
+            }
         }
 
         // Offset & limit
@@ -452,7 +462,12 @@ public abstract class QueryManager {
         query.setParameter(entityIdKey, entity.getId());
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(dataItemKey, ENTITY);
         for (String key : extraParameters.keySet()) {
-            query.setParameter(key, extraParameters.get(key));
+            Object value = extraParameters.get(key);
+            if (value instanceof Collection) {
+                query.setParameterList(key, (Collection) value);
+            } else {
+                query.setParameter(key, value);
+            }
         }
         logQuery(query);
         List<D> results = query.list();
