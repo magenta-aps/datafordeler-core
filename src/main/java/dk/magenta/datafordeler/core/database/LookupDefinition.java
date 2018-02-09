@@ -301,12 +301,17 @@ public class LookupDefinition {
         } else if (value instanceof List) {
             List list = (List) value;
             StringJoiner or = new StringJoiner(" OR ");
+            boolean hasNonWildcardItems = false;
             for (int i = 0; i < list.size(); i++) {
                 if (parameterValueWildcard(list.get(i))) {
                     or.add("cast(" + variablePath + " as string) like :" + parameterPath + "_" + i + " escape '" + LookupDefinition.escape + "'");
                 } else {
-                    or.add(variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath + "_" + i);
+                    //or.add(variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath + "_" + i);
+                    hasNonWildcardItems = true;
                 }
+            }
+            if (hasNonWildcardItems) {
+                or.add(variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath + "_" + "list");
             }
             if (or.length() > 0) {
                 return "(" + or.toString() + ")";
@@ -393,13 +398,18 @@ public class LookupDefinition {
             if (value != null) {
                 if (value instanceof List) {
                     List list = (List) value;
+                    HashSet<Object> nonWildcardItems = new HashSet<>();
                     for (int i=0; i<list.size(); i++) {
                         Object item = list.get(i);
                         if (parameterValueWildcard(item)) {
                             map.put(parameterPath + "_" + i, replaceWildcard(item));
                         } else {
-                            map.put(parameterPath + "_" + i, castValue(type, item));
+                            //map.put(parameterPath + "_" + i, castValue(type, item));
+                            nonWildcardItems.add(castValue(type, item));
                         }
+                    }
+                    if (!nonWildcardItems.isEmpty()) {
+                        map.put(parameterPath + "_" + "list", nonWildcardItems);
                     }
                 } else {
                     if (parameterValueWildcard(value)) {
