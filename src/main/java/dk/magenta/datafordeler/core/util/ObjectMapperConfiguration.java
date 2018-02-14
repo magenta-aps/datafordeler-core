@@ -98,6 +98,7 @@ public class ObjectMapperConfiguration {
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, indent);
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.registerModule(this.getOffsetDateTimeModule());
+        objectMapper.registerModule(this.getLocalDateModule());
         return objectMapper;
     }
 
