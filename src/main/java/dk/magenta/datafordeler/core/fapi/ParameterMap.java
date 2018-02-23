@@ -3,10 +3,7 @@ package dk.magenta.datafordeler.core.fapi;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 
 import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Map of URL parameters, where each key can have several values
@@ -52,5 +49,15 @@ public class ParameterMap extends ListHashMap<String, String> {
     public String[] getAsArray(String key) {
         List<String> values = this.get(key);
         return values.toArray(new String[values.size()]);
+    }
+
+    public List<String> getI(String key) {
+        ArrayList<String> values = new ArrayList<>();
+        for (String k : this.keySet()) {
+            if (k.equalsIgnoreCase(key)) {
+                values.addAll(this.get(k));
+            }
+        }
+        return values;
     }
 }
