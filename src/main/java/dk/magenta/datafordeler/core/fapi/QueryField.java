@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface QueryField {
     enum FieldType {
-        STRING, INT, BOOLEAN
+        STRING, INT, LONG, BOOLEAN
     }
     FieldType type() default FieldType.STRING;
 

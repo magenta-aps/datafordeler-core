@@ -193,15 +193,21 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
+    public static <E extends DatabaseEntry> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
 
         LookupDefinition lookupDefinition = query.getLookupDefinition();
-        String root = "d";
+        String root = lookupDefinition.usingRVDModel() ? "d" : ENTITY;
 
         String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
 
+        String extraJoin = "";
+        if (!lookupDefinition.usingRVDModel()) {
+            extraJoin = lookupDefinition.getHqlJoinString(root, ENTITY);
+        }
+
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
+                " " + extraJoin +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
 
         log.info(queryString);
