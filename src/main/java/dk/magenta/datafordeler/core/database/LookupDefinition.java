@@ -59,9 +59,9 @@ public class LookupDefinition {
     public static final String separator = ".";
     public static final String entityref = "$";
     public static final char escape = '\\';
-    private static final String quotedSeparator = Pattern.quote(separator);
-    private ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
-    private Class<? extends DataItem> dataClass;
+    protected static final String quotedSeparator = Pattern.quote(separator);
+    protected ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
+    protected Class<? extends DataItem> dataClass;
     private int nextId = 0;
 
     public enum Operator {
@@ -80,7 +80,7 @@ public class LookupDefinition {
         }
     }
 
-    private class FieldDefinition {
+    protected class FieldDefinition {
 
         public String path;
         public Object value;
@@ -172,6 +172,14 @@ public class LookupDefinition {
         this.matchNulls = matchNulls;
     }
 
+    public Class<? extends DataItem> getDataClass() {
+        return this.dataClass;
+    }
+
+
+
+
+
     /**
      * Obtain the table join string, including all tables that have been added to the LookupDefinition
      * @param rootKey Root key, denoting the baseline for the join. This is most often the hql identifier
@@ -185,8 +193,8 @@ public class LookupDefinition {
         for (FieldDefinition definition : this.fieldDefinitions) {
             joinTables.addAll(this.getHqlJoinParts(rootKey, definition));
         }
-        String joinString = " JOIN ";
         if (!joinTables.isEmpty()) {
+            String joinString = " JOIN ";
             StringJoiner s = new StringJoiner(joinString);
             for (String table : joinTables) {
                 s.add(table);
@@ -196,7 +204,11 @@ public class LookupDefinition {
         return "";
     }
 
-    private ArrayList<String> getHqlJoinParts(String rootKey, FieldDefinition fieldDefinition) {
+    public boolean usingRVDModel() {
+        return true;
+    }
+
+    protected ArrayList<String> getHqlJoinParts(String rootKey, FieldDefinition fieldDefinition) {
         ArrayList<String> joinTables = new ArrayList<>();
         String path = fieldDefinition.path;
         if (path.contains(separator)) {
@@ -257,7 +269,6 @@ public class LookupDefinition {
                     join = sj.toString();
                 }
                 String where = this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true);
-
                 extraWhere.add(String.format(whereContainer, join, where));
             }
         }
@@ -278,11 +289,11 @@ public class LookupDefinition {
         }
         return strings;
     }
-    private String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition) {
+    protected String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition) {
         return this.getHqlWherePart(rootKey, entityKey, fieldDefinition, false);
     }
 
-    private String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition, boolean joinedTable) {
+    protected String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition, boolean joinedTable) {
         String path = fieldDefinition.path;
         String parameterPath = this.getParameterPath(rootKey, entityKey, path) + "_" + fieldDefinition.id;
         Object value = fieldDefinition.value;
@@ -335,7 +346,7 @@ public class LookupDefinition {
      * @param key dot-spearated path, e.g. foo.bar.baz
      * @return converted path. e.g. (rootKey: "d", entityKey: "e", key: "foo.bar.baz") => "d_foo_bar_baz" or (rootKey: "d", entityKey: "e", key: "$.bar.baz") => "e_bar_baz"
      */
-    private String getVariablePath(String rootKey, String entityKey, String key) {
+    protected String getVariablePath(String rootKey, String entityKey, String key) {
         int separatorIndex = key.indexOf(separator);
         String first = separatorIndex != -1 ? key.substring(0, separatorIndex) : key;
         String object = rootKey;
@@ -354,7 +365,7 @@ public class LookupDefinition {
      * @param key dot-spearated path, e.g. foo.bar.baz
      * @return converted path. e.g. (rootKey: "d", entityKey: "e", key: "foo.bar.baz") => "d_foo_bar_baz" or (rootKey: "d", entityKey: "e", key: "$.bar.baz") => "e_bar_baz"
      */
-    private String getParameterPath(String rootKey, String entityKey, String key) {
+    protected String getParameterPath(String rootKey, String entityKey, String key) {
         //int separatorIndex = key.indexOf(separator);
         //String first = separatorIndex != -1 ? key.substring(0, separatorIndex) : key;
         String object = this.getVariablePath(rootKey, entityKey, key);
@@ -371,7 +382,7 @@ public class LookupDefinition {
      * @param key
      * @return
      */
-    private String getFinal(String key) {
+    protected String getFinal(String key) {
         if (key.contains(separator)) {
             return key.substring(key.lastIndexOf(separator) + 1);
         } else {
