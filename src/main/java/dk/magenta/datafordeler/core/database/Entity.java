@@ -36,7 +36,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.log;
     }
 
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
     @JsonIgnore
     @XmlTransient
     protected Identification identification;
