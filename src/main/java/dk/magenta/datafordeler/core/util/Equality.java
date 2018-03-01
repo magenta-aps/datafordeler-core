@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.util;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 /**
@@ -31,6 +32,15 @@ public abstract class Equality {
      * Compares two nullable OffsetDateTimes for equality
      */
     public static boolean equal(OffsetDateTime a, OffsetDateTime b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return a.isEqual(b);
+    }
+
+    /**
+     * Compares two nullable LocalDates for equality
+     */
+    public static boolean equal(LocalDate a, LocalDate b) {
         if (a == null && b == null) return true;
         if (a == null || b == null) return false;
         return a.isEqual(b);
