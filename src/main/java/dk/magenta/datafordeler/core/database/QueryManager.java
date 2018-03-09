@@ -175,7 +175,7 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
+    public static <E extends DatabaseEntry> List<E> getAllEntities(Session session, Class<E> eClass) {
         log.trace("Get all Entities of class " + eClass.getCanonicalName());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
