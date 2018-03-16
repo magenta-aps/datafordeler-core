@@ -55,6 +55,9 @@ public class Engine {
     @Value("${dafo.pull.enabled:true}")
     private boolean pullEnabled;
 
+    @Value("${dafo.cron.enabled:true}")
+    private boolean cronEnabled;
+
     Logger log = LogManager.getLogger(Engine.class);
 
     @Autowired(required = false)
@@ -77,6 +80,10 @@ public class Engine {
     }
 
     public boolean isDumpEnabled() { return this.dumpEnabled; }
+
+    public boolean isCronEnabled() {
+        return this.cronEnabled;
+    }
 
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> boolean handleEvent(PluginSourceData event, ImportMetadata importMetadata) {
         return this.handleEvent(event, null, importMetadata);
@@ -213,7 +220,7 @@ public class Engine {
      * Sets the schedule for the registerManager, based on the schedule defined in same
      */
     public void setupPullSchedules() {
-        if (this.pullEnabled) {
+        if (this.pullEnabled && this.cronEnabled) {
             List<Plugin> plugins = this.pluginManager.getPlugins();
             if (plugins.isEmpty()) {
                 this.log.warn("No plugins registered!");
@@ -241,14 +248,16 @@ public class Engine {
      * @param dummyRun For test purposes. If false, no pull will actually be run.
      */
     public void setupPullSchedule(RegisterManager registerManager, String cronSchedule, boolean dummyRun) {
-        ScheduleBuilder scheduleBuilder;
-        try {
-             scheduleBuilder = makeSchedule(cronSchedule);
-        } catch (RuntimeException e) {
-            this.log.error(e);
-            return;
+        if (this.pullEnabled && this.cronEnabled) {
+            ScheduleBuilder scheduleBuilder;
+            try {
+                scheduleBuilder = makeSchedule(cronSchedule);
+            } catch (RuntimeException e) {
+                this.log.error(e);
+                return;
+            }
+            setupPullSchedule(registerManager, scheduleBuilder, dummyRun);
         }
-        setupPullSchedule(registerManager, scheduleBuilder, dummyRun);
     }
 
     /**
@@ -260,45 +269,47 @@ public class Engine {
     public void setupPullSchedule(RegisterManager registerManager,
         ScheduleBuilder scheduleBuilder,
         boolean dummyRun) {
-        String registerManagerId = registerManager.getClass().getName() + registerManager.hashCode();
+        if (this.pullEnabled && this.cronEnabled) {
+            String registerManagerId = registerManager.getClass().getName() + registerManager.hashCode();
 
-        try {
-            if (scheduler == null) {
-                this.scheduler = StdSchedulerFactory.getDefaultScheduler();
-            }
-            if (scheduleBuilder != null) {
-                this.pullTriggerKeys.put(registerManagerId, TriggerKey.triggerKey("pullTrigger", registerManagerId));
-                // Set up new schedule, or replace existing
-                Trigger pullTrigger = TriggerBuilder.newTrigger()
-                        .withIdentity(this.pullTriggerKeys.get(registerManagerId))
-                        .withSchedule(scheduleBuilder).build();
-
-                JobDataMap jobData = new JobDataMap();
-                jobData.put(Pull.Task.DATA_ENGINE, this);
-                jobData.put(Pull.Task.DATA_REGISTERMANAGER, registerManager);
-                jobData.put(AbstractTask.DATA_DUMMYRUN, dummyRun);
-                JobDetail job = JobBuilder.newJob(Pull.Task.class)
-                        .withIdentity("pullTask-"+registerManagerId)
-                        .setJobData(jobData)
-                        .build();
-
-                scheduler.scheduleJob(job, Collections.singleton(pullTrigger), true);
-                scheduler.start();
-            } else {
-                // Remove old schedule
-                this.log.info("Removing cron schedule to pull from " + registerManager.getClass().getCanonicalName());
-                if (this.pullTriggerKeys.containsKey(registerManagerId)) {
-                    scheduler.unscheduleJob(this.pullTriggerKeys.get(registerManagerId));
+            try {
+                if (scheduler == null) {
+                    this.scheduler = StdSchedulerFactory.getDefaultScheduler();
                 }
-            }
+                if (scheduleBuilder != null) {
+                    this.pullTriggerKeys.put(registerManagerId, TriggerKey.triggerKey("pullTrigger", registerManagerId));
+                    // Set up new schedule, or replace existing
+                    Trigger pullTrigger = TriggerBuilder.newTrigger()
+                            .withIdentity(this.pullTriggerKeys.get(registerManagerId))
+                            .withSchedule(scheduleBuilder).build();
 
-        } catch (SchedulerException e) {
-            this.log.error("failed to schedule pull!", e);
+                    JobDataMap jobData = new JobDataMap();
+                    jobData.put(Pull.Task.DATA_ENGINE, this);
+                    jobData.put(Pull.Task.DATA_REGISTERMANAGER, registerManager);
+                    jobData.put(AbstractTask.DATA_DUMMYRUN, dummyRun);
+                    JobDetail job = JobBuilder.newJob(Pull.Task.class)
+                            .withIdentity("pullTask-" + registerManagerId)
+                            .setJobData(jobData)
+                            .build();
+
+                    scheduler.scheduleJob(job, Collections.singleton(pullTrigger), true);
+                    scheduler.start();
+                } else {
+                    // Remove old schedule
+                    this.log.info("Removing cron schedule to pull from " + registerManager.getClass().getCanonicalName());
+                    if (this.pullTriggerKeys.containsKey(registerManagerId)) {
+                        scheduler.unscheduleJob(this.pullTriggerKeys.get(registerManagerId));
+                    }
+                }
+
+            } catch (SchedulerException e) {
+                this.log.error("failed to schedule pull!", e);
+            }
         }
     }
 
     public boolean setupDumpSchedules() {
-        if (!dumpEnabled) {
+        if (!dumpEnabled || !this.cronEnabled) {
             log.info("Scheduled dump jobs disabled for this server!");
             return false;
         }
