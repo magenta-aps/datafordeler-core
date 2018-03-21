@@ -11,6 +11,7 @@ import dk.magenta.datafordeler.core.io.Receipt;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
+import dk.magenta.datafordeler.core.util.CronUtil;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -388,24 +389,10 @@ public class Engine {
     }
 
     private CronScheduleBuilder makeSchedule(String schedule) {
-        if (schedule == null || schedule.isEmpty())
+        String s = CronUtil.reformatSchedule(schedule);
+        if (s == null) {
             return null;
-
-        ArrayList<String> parts =
-            new ArrayList<>(Arrays.asList(schedule.split(" +")));
-
-        // the fancy_cronfield doesn't include seconds
-        if (parts.size() == 5) {
-            parts.add(0, "0");
         }
-
-        // quartz doesn't accept stars for day-of-week
-        if (parts.get(5).equals("*")) {
-            parts.set(5, "?");
-        }
-
-        String s = String.join(" ", parts);
-
         log.info("Reformatted cronjob specification: " + s);
         return CronScheduleBuilder.cronSchedule(
             s

@@ -590,4 +590,5 @@ public abstract class FapiService<E extends Entity, Q extends Query> {
             writer.write(dataIter.next());
         }
     }
+
 }
