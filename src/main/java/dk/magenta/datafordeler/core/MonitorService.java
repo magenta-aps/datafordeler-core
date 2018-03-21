@@ -1,8 +1,6 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.database.ConfigurationSessionManager;
-import dk.magenta.datafordeler.core.database.Identification;
-import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
@@ -13,7 +11,6 @@ import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.quartz.CronExpression;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -22,15 +19,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.ParseException;
-import java.time.Duration;
 import java.time.Instant;
-import java.time.MonthDay;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
-import java.time.temporal.TemporalUnit;
 import java.util.Date;
-import java.util.HashMap;
 
 @Controller
 @RequestMapping(path="/monitor")

@@ -77,9 +77,6 @@ public class Stopwatch {
         for (Map.Entry<String, Long> entry : list) {
             sj.add(this.formatTotal(entry.getKey()));
         }
-        /*for (String key : this.results.keySet()) {
-            sj.add(this.formatTotal(key));
-        }*/
         return sj.toString();
     }
 

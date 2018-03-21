@@ -1,17 +1,12 @@
 package dk.magenta.datafordeler.core.user;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-import com.mchange.v2.c3p0.jboss.C3P0PooledDataSource;
 import dk.magenta.datafordeler.core.exception.ConfigurationException;
-import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.naming.NamingException;
-import javax.sql.DataSource;
 import java.beans.PropertyVetoException;
 
 @Component
