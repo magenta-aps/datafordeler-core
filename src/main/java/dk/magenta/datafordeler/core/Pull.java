@@ -90,8 +90,6 @@ public class Pull extends Worker implements Runnable {
 
             this.log.info("Worker " + this.getId() + " fetching events with " + this.registerManager.getClass().getCanonicalName());
 
-
-
             // See if there's a prior pull that was interrupted, and resume it.
             InterruptedPull interruptedPull = this.getLastInterrupt();
             if (interruptedPull != null) {
@@ -100,6 +98,7 @@ public class Pull extends Worker implements Runnable {
                 if (entityManager == null) {
                     this.log.error("Unknown schema: "+interruptedPull.getSchemaName()+". Cannot resume");
                 } else {
+                    this.log.error("Schema: "+interruptedPull.getSchemaName()+". Resuming with entitymanager "+entityManager.getClass().getCanonicalName());
                     ArrayList<File> files = new ArrayList<>();
                     HashSet<String> fileNames = new HashSet<>();
                     for (InterruptedPullFile interruptedPullFile : interruptedPull.getFiles()) {
