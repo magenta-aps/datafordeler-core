@@ -100,6 +100,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
             public void run() {
                 try {
                     JsonNode responseNode;
+                    log.info("Scan-scroll fetching from " + startUri + " with body:\n" + body);
 
                     HttpPost initialPost = new HttpPost(startUri);
                     initialPost.setEntity(new StringEntity(body, "utf-8"));
@@ -156,7 +157,6 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                 m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
                                 if (m.find()) {
                                     scrollId = m.group(1);
-                                    log.info("found next scrollId");
                                 } else {
                                     scrollId = null;
                                     log.info("next scrollId not found");
