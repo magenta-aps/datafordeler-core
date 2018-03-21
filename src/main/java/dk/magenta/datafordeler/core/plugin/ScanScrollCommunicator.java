@@ -119,13 +119,6 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         throw new HttpStatusException(response.getStatusLine(), startUri);
                     }
 
-                    /*
-                    String postResponseContent = InputStreamReader.readInputStream(content);
-                    outputStream.write(postResponseContent.getBytes("UTF-8"));
-                    outputStream.flush();
-                    responseNode = objectMapper.readTree(postResponseContent);
-                    */
-
                     responseNode = objectMapper.readTree(content);
 
                     String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();

@@ -562,9 +562,7 @@ public abstract class QueryManager {
                     if (otherRegistration != registration) { // Consider only other registrations
                         if (otherRegistration.getId() != null || session.contains(otherRegistration)) { // Consider only saved registrations
                             if (registration.equals(otherRegistration)) {
-                                // the registration exactly matches a
-                                // pre-existing registration, so saving it is a
-                                // no-op
+                                // the registration exactly matches a pre-existing registration, so saving it is a no-op
                                 return;
                             }
                             if (otherRegistration.getSequenceNumber() == registration.getSequenceNumber()) {

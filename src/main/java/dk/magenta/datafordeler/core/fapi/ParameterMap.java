@@ -2,8 +2,10 @@ package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.util.ListHashMap;
 
-import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * Map of URL parameters, where each key can have several values
