@@ -193,7 +193,7 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends DatabaseEntry> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
+    public static <E extends IdentifiedEntity> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
 
         LookupDefinition lookupDefinition = query.getLookupDefinition();
@@ -250,7 +250,7 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends Entity, D extends DataItem> Stream<E> getAllEntitiesAsStream(Session session, Query query, Class<E> eClass) {
+    public static <E extends IdentifiedEntity, D extends DataItem> Stream<E> getAllEntitiesAsStream(Session session, Query query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
 
         LookupDefinition lookupDefinition = query.getLookupDefinition();
@@ -299,7 +299,7 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
+    public static <E extends IdentifiedEntity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
         Identification identification = getIdentification(session, uuid);
         if (identification != null) {
             return getEntity(session, identification, eClass);
@@ -315,7 +315,7 @@ public abstract class QueryManager {
      * @param <E>
      * @return
      */
-    public static <E extends Entity> E getEntity(Session session, Identification identification, Class<E> eClass) {
+    public static <E extends IdentifiedEntity> E getEntity(Session session, Identification identification, Class<E> eClass) {
         log.trace("Get Entity of class " + eClass.getCanonicalName() + " by identification "+identification.getUuid());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " where " + ENTITY + ".identification = :identification", eClass);
         databaseQuery.setParameter("identification", identification);
@@ -331,20 +331,7 @@ public abstract class QueryManager {
             return null;
         } catch (NonUniqueResultException e) {
             List<E> entities = databaseQuery.getResultList();
-            OffsetDateTime last = OffsetDateTime.MIN;
-            E newestEntity = null;
-            for (E entity : entities) {
-                for (Object oRegistration : entity.getRegistrations()) {
-                    Registration registration = (Registration) oRegistration;
-                    OffsetDateTime registrationTime = registration.getLastImportTime();
-                    if (registrationTime != null && registrationTime.isAfter(last)) {
-                        last = registrationTime;
-                        newestEntity = entity;
-                        break;
-                    }
-                }
-            }
-            return newestEntity;
+            return (E) entities.get(0).getNewest(new ArrayList<>(entities));
         }
     }
 
