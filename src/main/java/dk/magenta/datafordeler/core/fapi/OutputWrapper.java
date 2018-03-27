@@ -2,13 +2,14 @@ package dk.magenta.datafordeler.core.fapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import dk.magenta.datafordeler.core.database.Entity;
+import dk.magenta.datafordeler.core.database.DatabaseEntry;
+import dk.magenta.datafordeler.core.database.IdentifiedEntity;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public abstract class OutputWrapper<E extends Entity> {
+public abstract class OutputWrapper<E extends IdentifiedEntity> {
 
     public abstract Object wrapResult(E input);
 
@@ -19,8 +20,6 @@ public abstract class OutputWrapper<E extends Entity> {
         }
         return result;
     }
-
-
 
     public static class NodeWrapper {
         private ObjectNode node;

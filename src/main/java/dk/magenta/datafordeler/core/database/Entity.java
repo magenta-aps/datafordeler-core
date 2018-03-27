@@ -27,7 +27,7 @@ import java.util.*;
 @MappedSuperclass
 @Embeddable
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public abstract class Entity<E extends Entity, R extends Registration> extends DatabaseEntry {
+public abstract class Entity<E extends Entity, R extends Registration> extends DatabaseEntry implements IdentifiedEntity {
 
     @Transient
     private Logger log;
@@ -70,6 +70,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         this.domain = domain;
     }
 
+    @Override
     @JsonIgnore
     public Identification getIdentification() {
         return this.identification;
@@ -334,6 +335,27 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     private static OffsetDateTime nTo(OffsetDateTime a) {
         if (a == null) return OffsetDateTime.MAX;
         return a;
+    }
+
+    @Override
+    public IdentifiedEntity getNewest(Collection<IdentifiedEntity> set) {
+        OffsetDateTime last = OffsetDateTime.MIN;
+        IdentifiedEntity newestEntity = null;
+        for (IdentifiedEntity item : set) {
+            if (item instanceof Entity) {
+                Entity entity = (Entity) item;
+                for (Object oRegistration : entity.getRegistrations()) {
+                    Registration registration = (Registration) oRegistration;
+                    OffsetDateTime registrationTime = registration.getLastImportTime();
+                    if (registrationTime != null && registrationTime.isAfter(last)) {
+                        last = registrationTime;
+                        newestEntity = item;
+                        break;
+                    }
+                }
+            }
+        }
+        return newestEntity;
     }
 
 }
