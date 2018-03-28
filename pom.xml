@@ -309,12 +309,6 @@
             <version>1.6</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.0.0</version>
-        </dependency>
-
     </dependencies>
 
     <build>
