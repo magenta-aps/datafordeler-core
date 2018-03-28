@@ -3,10 +3,8 @@ package dk.magenta.datafordeler.core.fapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -17,7 +15,6 @@ import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -209,7 +206,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             try {
                 E entity = this.searchById(id, query, session);
                 if (this.getOutputWrapper() != null) {
-                    envelope.setResult(this.getOutputWrapper().wrapResult(entity));
+                    envelope.setResult(this.getOutputWrapper().wrapResult(entity, query));
                 } else {
                     envelope.setResult(entity);
                 }
@@ -304,7 +301,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             try {
                 E entity = this.searchById(id, query, session);
                 if (outputWrapper != null) {
-                    envelope.setResult(outputWrapper.wrapResult(entity));
+                    envelope.setResult(outputWrapper.wrapResult(entity, query));
                 } else {
                     envelope.setResult(entity);
                 }
@@ -363,9 +360,8 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             envelope.addRequestData(request);
             List<E> results = this.searchByQuery(query, session);
             if (this.getOutputWrapper() != null) {
-                envelope.setResults(this.getOutputWrapper().wrapResults(results));
+                envelope.setResults(this.getOutputWrapper().wrapResults(results, query));
             } else {
-                System.out.println("There is NO outputwrapper");
                 ArrayNode jacksonConverted = objectMapper.valueToTree(results);
                 ArrayList<Object> wrapper = new ArrayList<>();
                 for (JsonNode node : jacksonConverted) {
@@ -445,7 +441,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             envelope.addRequestData(request);
             List<E> results = this.searchByQuery(query, session);
             if (this.getOutputWrapper() != null) {
-                envelope.setResult(this.getOutputWrapper().wrapResults(results));
+                envelope.setResult(this.getOutputWrapper().wrapResults(results, query));
             } else {
                 envelope.setResults(results);
             }
