@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.security;
 
 import dk.magenta.datafordeler.core.Application;
-import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.user.TokenVerifier;
 import org.junit.Test;
 import org.junit.runner.RunWith;

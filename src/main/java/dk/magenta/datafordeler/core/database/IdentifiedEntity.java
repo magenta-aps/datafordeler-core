@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.core.database;
 
-import dk.magenta.datafordeler.core.database.Identification;
 import org.hibernate.Session;
 
 import java.util.Collection;
