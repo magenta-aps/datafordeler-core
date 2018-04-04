@@ -364,11 +364,22 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
     public boolean equals(Registration o) {
         return o != null &&
-            compareTo(o) == 0 &&
-            getSequenceNumber() == o.getSequenceNumber() &&
-            (getRegisterChecksum() == o.getRegisterChecksum() ||
-                getRegisterChecksum()
-                    .equalsIgnoreCase(o.getRegisterChecksum()));
+                compareTo(o) == 0 &&
+                getSequenceNumber() == o.getSequenceNumber() &&
+                (getRegisterChecksum() == o.getRegisterChecksum() ||
+                        getRegisterChecksum()
+                                .equalsIgnoreCase(o.getRegisterChecksum()));
+    }
+
+    public boolean equalTime(Registration o) {
+        if (o == null) return false;
+        if (this.compareTo(o) != 0) return false;
+
+        OffsetDateTime oDateTime = o == null ? null : o.registrationTo;
+        if (this.registrationTo == null) {
+            return (oDateTime == null);
+        }
+        return this.registrationTo.toInstant().compareTo(oDateTime.toInstant()) == 0;
     }
 
     public R split(OffsetDateTime splitTime) {
@@ -381,5 +392,11 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
             newEffect.setRegistration(newReg);
         }
         return newReg;
+    }
+
+    public void mergeInto(R otherRegistration) {
+        for (V effect : new ArrayList<V>(this.getEffects())) {
+            effect.setRegistration(otherRegistration);
+        }
     }
 }
