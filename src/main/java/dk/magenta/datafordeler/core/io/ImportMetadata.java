@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core.io;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.hibernate.Session;
 
 import java.net.URI;
@@ -81,5 +82,17 @@ public class ImportMetadata {
 
     public void setStartChunk(long startChunk) {
         this.startChunk = startChunk;
+    }
+
+
+
+    private ObjectNode importConfiguration = null;
+
+    public ObjectNode getImportConfiguration() {
+        return this.importConfiguration;
+    }
+
+    public void setImportConfiguration(ObjectNode importConfiguration) {
+        this.importConfiguration = importConfiguration;
     }
 }

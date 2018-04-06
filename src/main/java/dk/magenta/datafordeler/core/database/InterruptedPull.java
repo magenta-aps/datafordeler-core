@@ -117,4 +117,17 @@ public class InterruptedPull extends DatabaseEntry {
     public void setChunk(long chunk) {
         this.chunk = chunk;
     }
+
+
+
+    @Column
+    private String importConfiguration;
+
+    public String getImportConfiguration() {
+        return this.importConfiguration;
+    }
+
+    public void setImportConfiguration(String importConfiguration) {
+        this.importConfiguration = importConfiguration;
+    }
 }

@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.command.Worker;
 import dk.magenta.datafordeler.core.database.InterruptedPull;
 import dk.magenta.datafordeler.core.database.InterruptedPullFile;
@@ -57,14 +59,24 @@ public class Pull extends Worker implements Runnable {
 
     private RegisterManager registerManager;
     private Engine engine;
+    private ObjectNode importConfiguration;
 
     public Pull(Engine engine, RegisterManager registerManager) {
+        this(engine, registerManager, null);
+    }
+
+    public Pull(Engine engine, RegisterManager registerManager, ObjectNode importConfiguration) {
         this.engine = engine;
         this.registerManager = registerManager;
+        this.importConfiguration = importConfiguration;
     }
 
     public Pull(Engine engine, Plugin plugin) {
         this(engine, plugin.getRegisterManager());
+    }
+
+    public Pull(Engine engine, Plugin plugin, ObjectNode importConfiguration) {
+        this(engine, plugin.getRegisterManager(), importConfiguration);
     }
 
     private ImportMetadata importMetadata = null;
@@ -120,6 +132,7 @@ public class Pull extends Worker implements Runnable {
                         this.importMetadata = new ImportMetadata();
                         this.importMetadata.setImportTime(interruptedPull.getStartTime());
                         this.importMetadata.setStartChunk(interruptedPull.getChunk());
+                        this.importMetadata.setImportConfiguration((ObjectNode) this.engine.objectMapper.readTree(interruptedPull.getImportConfiguration()));
                         this.deleteInterrupt(interruptedPull);
 
                         Session session = this.engine.sessionManager.getSessionFactory().openSession();
@@ -142,6 +155,7 @@ public class Pull extends Worker implements Runnable {
 
 
             this.importMetadata = new ImportMetadata();
+            this.importMetadata.setImportConfiguration(importConfiguration);
 
             boolean error = false;
             boolean skip = false;
@@ -184,7 +198,9 @@ public class Pull extends Worker implements Runnable {
 
                         try {
                             entityManager.parseData(stream, importMetadata);
-                            this.registerManager.setLastUpdated(entityManager, importMetadata);
+                            if (importMetadata.getImportConfiguration().size() == 0) {
+                                this.registerManager.setLastUpdated(entityManager, importMetadata);
+                            }
                         } catch (Exception e) {
                             if (this.doCancel) {
                                 break;
@@ -259,6 +275,11 @@ public class Pull extends Worker implements Runnable {
             interruptedPull.setInterruptTime(OffsetDateTime.now());
             interruptedPull.setSchemaName(exception.getEntityManager().getSchema());
             interruptedPull.setPlugin(this.registerManager.getPlugin());
+            try {
+                interruptedPull.setImportConfiguration(this.engine.objectMapper.writeValueAsString(this.importConfiguration));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
             Session session = this.engine.configurationSessionManager.getSessionFactory().openSession();
             session.beginTransaction();
             session.save(interruptedPull);
