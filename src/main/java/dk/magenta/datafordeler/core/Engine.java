@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.dump.Dump;
 import dk.magenta.datafordeler.core.dump.Dump.Task;
@@ -48,6 +49,9 @@ public class Engine {
 
     @Autowired
     ConfigurationSessionManager configurationSessionManager;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Value("${dafo.dump.enabled:true}")
     private boolean dumpEnabled;
