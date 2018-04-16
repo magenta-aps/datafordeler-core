@@ -127,9 +127,10 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         }
     }
 
+    public static final String DB_FIELD_EFFECT_FROM = "effectFrom";
     public static final String IO_FIELD_EFFECT_FROM = "virkningFra";
 
-    @Column(nullable = true, insertable = true, updatable = false)
+    @Column(name = DB_FIELD_EFFECT_FROM, nullable = true, insertable = true, updatable = false)
     @JsonProperty(value = IO_FIELD_EFFECT_FROM)
     @XmlElement(name = IO_FIELD_EFFECT_FROM)
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
@@ -144,12 +145,13 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     }
 
 
+    public static final String DB_FIELD_EFFECT_TO = "effectTo";
     public static final String IO_FIELD_EFFECT_TO = "virkningTil";
 
     @JsonProperty(value = IO_FIELD_EFFECT_TO)
     @XmlElement(name = IO_FIELD_EFFECT_TO)
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
-    @Column(nullable = true, insertable = true, updatable = false)
+    @Column(name = DB_FIELD_EFFECT_TO, nullable = true, insertable = true, updatable = false)
     private OffsetDateTime effectTo;
 
     public OffsetDateTime getEffectTo() {
