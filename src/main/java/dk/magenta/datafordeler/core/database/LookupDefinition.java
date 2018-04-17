@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.fapi.Query;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -89,7 +90,8 @@ public class LookupDefinition {
         public Class type;
         public Operator operator = Operator.EQ;
         public int id;
-        public FieldDefinition nextInChain = null;
+        public HashSet<FieldDefinition> anded = new HashSet<>();
+        public HashSet<FieldDefinition> ored = new HashSet<>();
 
         public FieldDefinition(String path, Object value) {
             this(path, value, value != null ? value.getClass() : null, Operator.EQ);
@@ -112,7 +114,7 @@ public class LookupDefinition {
         public String getOperatorSign() {
             return this.operator.toString();
         }
-
+/*
         public FieldDefinition and(FieldDefinition next) {
             FieldDefinition lastInChain = this;
             while (lastInChain.nextInChain != null) {
@@ -120,10 +122,36 @@ public class LookupDefinition {
             }
             lastInChain.nextInChain = next;
             return next;
+        }*/
+        public void and(FieldDefinition other) {
+            this.anded.add(other);
+        }
+        public void or(FieldDefinition other) {
+            this.ored.add(other);
+        }
+
+        public FieldDefinition and(String path, Object value, Class fieldClass) {
+            FieldDefinition other = new FieldDefinition(path, value, fieldClass, Operator.EQ);
+            this.and(other);
+            return other;
         }
 
         public FieldDefinition and(String path, Object value, Class fieldClass, Operator operator) {
-            return this.and(new FieldDefinition(path, value, fieldClass, operator));
+            FieldDefinition other = new FieldDefinition(path, value, fieldClass, operator);
+            this.and(other);
+            return other;
+        }
+
+        public FieldDefinition or(String path, Object value, Class fieldClass) {
+            FieldDefinition other = new FieldDefinition(path, value, fieldClass, Operator.EQ);
+            this.or(other);
+            return other;
+        }
+
+        public FieldDefinition or(String path, Object value, Class fieldClass, Operator operator) {
+            FieldDefinition other = new FieldDefinition(path, value, fieldClass, operator);
+            this.or(other);
+            return other;
         }
 
         private Map<String, Object> getParameterMap(String rootKey, String entityKey) {
@@ -157,8 +185,11 @@ public class LookupDefinition {
                     }
                 }
             }
-            if (this.nextInChain != null) {
-                map.putAll(this.nextInChain.getParameterMap(rootKey, entityKey));
+            for (FieldDefinition other : this.anded) {
+                map.putAll(other.getParameterMap(rootKey, entityKey));
+            }
+            for (FieldDefinition other : this.ored) {
+                map.putAll(other.getParameterMap(rootKey, entityKey));
             }
             return map;
         }
@@ -333,11 +364,12 @@ public class LookupDefinition {
                 StringBuilder where = new StringBuilder();
                 where.append("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
 
+                /*
                 while (fieldDefinition.nextInChain != null) {
                     fieldDefinition = fieldDefinition.nextInChain;
                     where.append(" AND ");
                     where.append("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
-                }
+                }*/
 
                 extraWhere.add(String.format(whereContainer, join, where));
             }
@@ -364,6 +396,7 @@ public class LookupDefinition {
     }
 
     protected String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition, boolean joinedTable) {
+        String where = null;
         String path = fieldDefinition.path;
         String parameterPath = this.getParameterPath(rootKey, entityKey, path) + "_" + fieldDefinition.id;
         Object value = fieldDefinition.value;
@@ -377,7 +410,7 @@ public class LookupDefinition {
 
         if (value == null) {
             if (this.matchNulls) {
-                return variablePath + " is null";
+                where = variablePath + " is null";
             }
         } else if (value instanceof List) {
             List list = (List) value;
@@ -396,16 +429,34 @@ public class LookupDefinition {
                 or.add(variablePath + " IN (:" + parameterPath + "_" + "list)");
             }
             if (or.length() > 0) {
-                return "(" + or.toString() + ")";
+                where = "(" + or.toString() + ")";
             }
         } else {
             if (parameterValueWildcard(value)) {
-                return "cast(" + variablePath + " as string) like :" + parameterPath + " escape '" + LookupDefinition.escape + "'";
+                where = "cast(" + variablePath + " as string) like :" + parameterPath + " escape '" + LookupDefinition.escape + "'";
             } else {
-                return variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath;
+                where = variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath;
             }
         }
-        return null;
+        if (!fieldDefinition.anded.isEmpty()) {
+            StringJoiner and = new StringJoiner(" AND ");
+            and.add(where);
+            for (FieldDefinition other : fieldDefinition.anded) {
+                and.add(this.getHqlWherePart(rootKey, entityKey, other, joinedTable));
+            }
+            where = "(" + and.toString() + ")";
+        }
+        if (!fieldDefinition.ored.isEmpty()) {
+            StringJoiner or = new StringJoiner(" OR ");
+            or.add(where);
+            for (FieldDefinition other : fieldDefinition.ored) {
+                or.add(this.getHqlWherePart(rootKey, entityKey, other, joinedTable));
+            }
+            where = "(" + or.toString() + ")";
+        }
+
+
+        return where;
     }
 
 
