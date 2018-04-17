@@ -222,21 +222,15 @@ public class LookupDefinition {
     }
 
     public FieldDefinition put(String path, Object value, Class fieldClass) {
-        if (value != null) {
-            FieldDefinition fieldDefinition = new FieldDefinition(path, value, fieldClass);
-            this.fieldDefinitions.add(fieldDefinition);
-            return fieldDefinition;
-        }
-        return null;
+        FieldDefinition fieldDefinition = new FieldDefinition(path, value, fieldClass);
+        this.fieldDefinitions.add(fieldDefinition);
+        return fieldDefinition;
     }
 
     public FieldDefinition put(String path, Object value, Class fieldClass, Operator operator) {
-        if (value != null) {
-            FieldDefinition fieldDefinition = new FieldDefinition(path, value, fieldClass, operator);
-            this.fieldDefinitions.add(fieldDefinition);
-            return fieldDefinition;
-        }
-        return null;
+        FieldDefinition fieldDefinition = new FieldDefinition(path, value, fieldClass, operator);
+        this.fieldDefinitions.add(fieldDefinition);
+        return fieldDefinition;
     }
 
     public void putAll(Map<String, Object> map) {
@@ -361,16 +355,7 @@ public class LookupDefinition {
                     join = sj.toString();
                 }
 
-                StringBuilder where = new StringBuilder();
-                where.append("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
-
-                /*
-                while (fieldDefinition.nextInChain != null) {
-                    fieldDefinition = fieldDefinition.nextInChain;
-                    where.append(" AND ");
-                    where.append("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
-                }*/
-
+                String where = "(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")";
                 extraWhere.add(String.format(whereContainer, join, where));
             }
         }
@@ -410,7 +395,11 @@ public class LookupDefinition {
 
         if (value == null) {
             if (this.matchNulls) {
-                where = variablePath + " is null";
+                if (fieldDefinition.operator == Operator.EQ) {
+                    where = variablePath + " is null";
+                } else if (fieldDefinition.operator == Operator.NE) {
+                    where = variablePath + " is not null";
+                }
             }
         } else if (value instanceof List) {
             List list = (List) value;
