@@ -313,6 +313,16 @@ public class LookupDefinition {
                 }
             }
         }
+        if (!fieldDefinition.anded.isEmpty()) {
+            for (FieldDefinition other : fieldDefinition.anded) {
+                joinTables.addAll(this.getHqlJoinParts(rootKey, other));
+            }
+        }
+        if (!fieldDefinition.ored.isEmpty()) {
+            for (FieldDefinition other : fieldDefinition.ored) {
+                joinTables.addAll(this.getHqlJoinParts(rootKey, other));
+            }
+        }
         return joinTables;
     }
 
