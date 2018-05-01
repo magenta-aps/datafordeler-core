@@ -262,6 +262,7 @@ public abstract class QueryManager {
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
 
         log.info(queryString);
+        System.out.println(queryString);
 
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
@@ -272,6 +273,7 @@ public abstract class QueryManager {
         for (String key : extraParameters.keySet()) {
             Object value = extraParameters.get(key);
             log.info(key+" = "+value);
+            System.out.println(key+" = "+value);
             if (value instanceof Collection) {
                 databaseQuery.setParameterList(key, (Collection) value);
             } else {
