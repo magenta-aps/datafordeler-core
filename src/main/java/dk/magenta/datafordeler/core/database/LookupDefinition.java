@@ -66,6 +66,7 @@ public class LookupDefinition {
     protected ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
     protected Class<? extends DataItem> dataClass;
     private int nextId = 0;
+    private boolean definitionsAnded = true;
 
     public enum Operator {
         EQ("="),
@@ -209,6 +210,10 @@ public class LookupDefinition {
         this.putAll(map);
     }
 
+    public void orDefinitions() {
+        this.definitionsAnded = false;
+    }
+
     public void put(String path, Object value) {
         if (value != null) {
             if (value instanceof Collection) {
@@ -350,7 +355,7 @@ public class LookupDefinition {
                 " %s " +
                 " WHERE %s" +
                 ")";
-        StringJoiner extraWhere = new StringJoiner(" AND ");
+        StringJoiner extraWhere = new StringJoiner(this.definitionsAnded ? " AND " : " OR ");
         for (FieldDefinition fieldDefinition : this.fieldDefinitions) {
             if (fieldDefinition.onEntity()) {
                 extraWhere.add("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
