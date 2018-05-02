@@ -14,6 +14,7 @@ public class FieldDefinition {
     public int id;
     public HashSet<FieldDefinition> anded = new HashSet<>();
     public HashSet<FieldDefinition> ored = new HashSet<>();
+    public boolean inverted = false;
     private static int nextId = 0;
 
     public FieldDefinition(String path, Object value) {
@@ -43,6 +44,10 @@ public class FieldDefinition {
     }
     public void or(FieldDefinition other) {
         this.ored.add(other);
+    }
+
+    public void invert() {
+        this.inverted = true;
     }
 
     public FieldDefinition and(String path, Object value, Class fieldClass) {

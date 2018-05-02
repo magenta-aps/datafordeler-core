@@ -234,7 +234,7 @@ public class LookupDefinition {
      */
     public String getHqlWhereString(String dataItemKey, String entityKey, String prefix) {
 
-        String whereContainer = entityKey + " IN (" +
+        String whereContainer = entityKey + " %s IN (" +
                 "SELECT " + entityKey + " FROM " + this.dataClass.getCanonicalName() + " " + dataItemKey +
                 " JOIN " + dataItemKey + ".effects " + effectref +
                 " JOIN " + effectref + ".registration " + registrationref +
@@ -245,7 +245,7 @@ public class LookupDefinition {
         StringJoiner extraWhere = new StringJoiner(this.definitionsAnded ? " AND " : " OR ");
         for (FieldDefinition fieldDefinition : this.fieldDefinitions) {
             if (fieldDefinition.onEntity()) {
-                extraWhere.add("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
+                extraWhere.add("(" + (fieldDefinition.inverted ? "NOT ":"") + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
             } else {
                 List<String> joins = this.getHqlJoinParts(dataItemKey, fieldDefinition);
                 String join = "";
@@ -258,7 +258,8 @@ public class LookupDefinition {
                 }
 
                 String where = "(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")";
-                extraWhere.add(String.format(whereContainer, join, where));
+                String inversion = fieldDefinition.inverted ? "NOT" : "";
+                extraWhere.add(String.format(whereContainer, inversion, join, where));
             }
         }
 
