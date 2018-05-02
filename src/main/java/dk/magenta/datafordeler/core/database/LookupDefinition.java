@@ -2,7 +2,6 @@ package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.fapi.Query;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -65,7 +64,6 @@ public class LookupDefinition {
     protected static final String quotedSeparator = Pattern.quote(separator);
     protected ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
     protected Class<? extends DataItem> dataClass;
-    private int nextId = 0;
     private boolean definitionsAnded = true;
 
     public enum Operator {
@@ -81,118 +79,6 @@ public class LookupDefinition {
         }
         public String toString() {
             return this.name;
-        }
-    }
-
-    public class FieldDefinition {
-
-        public String path;
-        public Object value;
-        public Class type;
-        public Operator operator = Operator.EQ;
-        public int id;
-        public HashSet<FieldDefinition> anded = new HashSet<>();
-        public HashSet<FieldDefinition> ored = new HashSet<>();
-
-        public FieldDefinition(String path, Object value) {
-            this(path, value, value != null ? value.getClass() : null, Operator.EQ);
-        }
-        public FieldDefinition(String path, Object value, Class type) {
-            this(path, value, type, Operator.EQ);
-        }
-        public FieldDefinition(String path, Object value, Class type, Operator operator) {
-            this.path = path;
-            this.value = value;
-            this.type = type;
-            this.operator = operator;
-            this.id = LookupDefinition.this.nextId++;
-        }
-
-        public boolean onEntity() {
-            return this.path.startsWith(entityref);
-        }
-
-        public String getOperatorSign() {
-            return this.operator.toString();
-        }
-/*
-        public FieldDefinition and(FieldDefinition next) {
-            FieldDefinition lastInChain = this;
-            while (lastInChain.nextInChain != null) {
-                lastInChain = lastInChain.nextInChain;
-            }
-            lastInChain.nextInChain = next;
-            return next;
-        }*/
-        public void and(FieldDefinition other) {
-            this.anded.add(other);
-        }
-        public void or(FieldDefinition other) {
-            this.ored.add(other);
-        }
-
-        public FieldDefinition and(String path, Object value, Class fieldClass) {
-            FieldDefinition other = new FieldDefinition(path, value, fieldClass, Operator.EQ);
-            this.and(other);
-            return other;
-        }
-
-        public FieldDefinition and(String path, Object value, Class fieldClass, Operator operator) {
-            FieldDefinition other = new FieldDefinition(path, value, fieldClass, operator);
-            this.and(other);
-            return other;
-        }
-
-        public FieldDefinition or(String path, Object value, Class fieldClass) {
-            FieldDefinition other = new FieldDefinition(path, value, fieldClass, Operator.EQ);
-            this.or(other);
-            return other;
-        }
-
-        public FieldDefinition or(String path, Object value, Class fieldClass, Operator operator) {
-            FieldDefinition other = new FieldDefinition(path, value, fieldClass, operator);
-            this.or(other);
-            return other;
-        }
-
-        private Map<String, Object> getParameterMap(String rootKey, String entityKey) {
-            HashMap<String, Object> map = new HashMap<>();
-            String path = this.path;
-            String parameterPath = LookupDefinition.this.getParameterPath(rootKey, entityKey, path) + "_" + this.id;
-            Object value = this.value;
-            Class type = this.type;
-            if (value != null) {
-                if (value instanceof List) {
-                    List list = (List) value;
-                    HashSet<Object> nonWildcardItems = new HashSet<>();
-                    for (int i=0; i<list.size(); i++) {
-                        Object item = list.get(i);
-                        if (parameterValueWildcard(item)) {
-                            map.put(parameterPath + "_" + i, replaceWildcard(item));
-                        } else if (!this.getOperatorSign().equals("=")) {
-                            map.put(parameterPath + "_" + i, castValue(type, item));
-                        } else {
-                            nonWildcardItems.add(castValue(type, item));
-                        }
-                    }
-                    if (!nonWildcardItems.isEmpty()) {
-                        map.put(parameterPath + "_" + "list", nonWildcardItems);
-                    }
-                } else {
-                    if (parameterValueWildcard(value)) {
-                        map.put(parameterPath, replaceWildcard(value));
-                    } else {
-                        map.put(parameterPath, castValue(type, value));
-                    }
-                }
-            }
-            for (FieldDefinition other : this.anded) {
-                map.putAll(other.getParameterMap(rootKey, entityKey));
-            }
-            for (FieldDefinition other : this.ored) {
-                map.putAll(other.getParameterMap(rootKey, entityKey));
-            }
-            return map;
         }
     }
 
@@ -227,13 +113,14 @@ public class LookupDefinition {
     }
 
     public FieldDefinition put(String path, Object value, Class fieldClass) {
-        FieldDefinition fieldDefinition = new FieldDefinition(path, value, fieldClass);
-        this.fieldDefinitions.add(fieldDefinition);
-        return fieldDefinition;
+        return this.put(new FieldDefinition(path, value, fieldClass));
     }
 
     public FieldDefinition put(String path, Object value, Class fieldClass, Operator operator) {
-        FieldDefinition fieldDefinition = new FieldDefinition(path, value, fieldClass, operator);
+        return this.put(new FieldDefinition(path, value, fieldClass, operator));
+    }
+
+    public FieldDefinition put(FieldDefinition fieldDefinition) {
         this.fieldDefinitions.add(fieldDefinition);
         return fieldDefinition;
     }
@@ -347,7 +234,7 @@ public class LookupDefinition {
      */
     public String getHqlWhereString(String dataItemKey, String entityKey, String prefix) {
 
-        String whereContainer = entityKey + " IN (" +
+        String whereContainer = entityKey + " %s IN (" +
                 "SELECT " + entityKey + " FROM " + this.dataClass.getCanonicalName() + " " + dataItemKey +
                 " JOIN " + dataItemKey + ".effects " + effectref +
                 " JOIN " + effectref + ".registration " + registrationref +
@@ -358,7 +245,7 @@ public class LookupDefinition {
         StringJoiner extraWhere = new StringJoiner(this.definitionsAnded ? " AND " : " OR ");
         for (FieldDefinition fieldDefinition : this.fieldDefinitions) {
             if (fieldDefinition.onEntity()) {
-                extraWhere.add("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
+                extraWhere.add("(" + (fieldDefinition.inverted ? "NOT ":"") + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
             } else {
                 List<String> joins = this.getHqlJoinParts(dataItemKey, fieldDefinition);
                 String join = "";
@@ -371,7 +258,8 @@ public class LookupDefinition {
                 }
 
                 String where = "(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")";
-                extraWhere.add(String.format(whereContainer, join, where));
+                String inversion = fieldDefinition.inverted ? "NOT" : "";
+                extraWhere.add(String.format(whereContainer, inversion, join, where));
             }
         }
 
@@ -471,7 +359,7 @@ public class LookupDefinition {
      * @param key dot-spearated path, e.g. foo.bar.baz
      * @return converted path. e.g. (rootKey: "d", entityKey: "e", key: "foo.bar.baz") => "d_foo_bar_baz" or (rootKey: "d", entityKey: "e", key: "$.bar.baz") => "e_bar_baz"
      */
-    protected String getVariablePath(String rootKey, String entityKey, String key) {
+    protected static String getVariablePath(String rootKey, String entityKey, String key) {
         int separatorIndex = key.indexOf(separator);
         String first = separatorIndex != -1 ? key.substring(0, separatorIndex) : key;
         String object = rootKey;
@@ -496,10 +384,10 @@ public class LookupDefinition {
      * @param key dot-spearated path, e.g. foo.bar.baz
      * @return converted path. e.g. (rootKey: "d", entityKey: "e", key: "foo.bar.baz") => "d_foo_bar_baz" or (rootKey: "d", entityKey: "e", key: "$.bar.baz") => "e_bar_baz"
      */
-    protected String getParameterPath(String rootKey, String entityKey, String key) {
+    public static String getParameterPath(String rootKey, String entityKey, String key) {
         //int separatorIndex = key.indexOf(separator);
         //String first = separatorIndex != -1 ? key.substring(0, separatorIndex) : key;
-        String object = this.getVariablePath(rootKey, entityKey, key);
+        String object = getVariablePath(rootKey, entityKey, key);
         /*if (first.equals(entityref)) {
             object = entityKey;
             key = key.substring(separatorIndex + 1);
@@ -537,7 +425,7 @@ public class LookupDefinition {
         return map;
     }
 
-    private static Object castValue(Class cls, Object value) {
+    public static Object castValue(Class cls, Object value) {
         if (cls == null) {return value;}
         if ((cls == Long.TYPE || cls == Long.class) && !(value instanceof Long)) {
             if (value instanceof Number) {
@@ -557,7 +445,7 @@ public class LookupDefinition {
         return cls.cast(value);
     }
 
-    private static boolean parameterValueWildcard(Object value) {
+    public static boolean parameterValueWildcard(Object value) {
         if (value instanceof String) {
             String stringValue = (String) value;
             //return stringValue.startsWith("*") || stringValue.endsWith("*");
@@ -566,7 +454,7 @@ public class LookupDefinition {
         return false;
     }
 
-    private static String replaceWildcard(Object item) {
+    public static String replaceWildcard(Object item) {
         return ((String) item).replace("%", escape + "%").replace("*", "%");
     }
 
