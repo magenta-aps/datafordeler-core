@@ -289,6 +289,7 @@ public abstract class QueryManager {
             databaseQuery.setMaxResults(query.getCount());
         }
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
+        databaseQuery.setFetchSize(1000);
         logQuery(databaseQuery);
         Stream<E> results = databaseQuery.stream();
         return results;
