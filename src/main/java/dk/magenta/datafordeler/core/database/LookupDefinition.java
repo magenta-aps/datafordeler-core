@@ -65,6 +65,7 @@ public class LookupDefinition {
     protected ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
     protected Class<? extends DataItem> dataClass;
     private boolean definitionsAnded = true;
+    private int definitionId = 0;
 
     public enum Operator {
         EQ("="),
@@ -120,8 +121,9 @@ public class LookupDefinition {
         return this.put(new FieldDefinition(path, value, fieldClass, operator));
     }
 
-    public FieldDefinition put(FieldDefinition fieldDefinition) {
+    public final FieldDefinition put(FieldDefinition fieldDefinition) {
         this.fieldDefinitions.add(fieldDefinition);
+        fieldDefinition.id = this.definitionId++;
         return fieldDefinition;
     }
 
@@ -286,9 +288,9 @@ public class LookupDefinition {
     protected String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition, boolean joinedTable) {
         String where = null;
         String path = fieldDefinition.path;
-        String parameterPath = this.getParameterPath(rootKey, entityKey, path) + "_" + fieldDefinition.id;
+        String parameterPath = LookupDefinition.getParameterPath(rootKey, entityKey, path) + "_" + fieldDefinition.id;
         Object value = fieldDefinition.value;
-        String variablePath = this.getVariablePath(rootKey, entityKey, path);
+        String variablePath = LookupDefinition.getVariablePath(rootKey, entityKey, path);
         if (joinedTable) {
             int lastIndex = variablePath.lastIndexOf(".");
             if (lastIndex != -1) {
@@ -346,7 +348,6 @@ public class LookupDefinition {
             }
             where = "(" + or.toString() + ")";
         }
-
 
         return where;
     }
