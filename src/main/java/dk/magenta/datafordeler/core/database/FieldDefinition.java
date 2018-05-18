@@ -15,7 +15,6 @@ public class FieldDefinition {
     public HashSet<FieldDefinition> anded = new HashSet<>();
     public HashSet<FieldDefinition> ored = new HashSet<>();
     public boolean inverted = false;
-    private static int nextId = 0;
 
     public FieldDefinition(String path, Object value) {
         this(path, value, value != null ? value.getClass() : null, LookupDefinition.Operator.EQ);
@@ -28,7 +27,6 @@ public class FieldDefinition {
         this.value = value;
         this.type = type;
         this.operator = operator;
-        this.id = nextId++;
     }
 
     public boolean onEntity() {
