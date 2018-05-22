@@ -85,7 +85,7 @@ public class ScheduleChangedCommandHandler extends CommandHandler {
     }
 
     public boolean accept(Command command) {
-        if (command != null) {
+        if (command != null && command.getCommandBody() != null) {
             try {
                 switch (ScheduleType.forData(
                         this.getCommandData(command.getCommandBody()))) {
