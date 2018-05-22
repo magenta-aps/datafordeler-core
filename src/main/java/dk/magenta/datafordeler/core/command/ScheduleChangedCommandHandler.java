@@ -87,13 +87,15 @@ public class ScheduleChangedCommandHandler extends CommandHandler {
     public boolean accept(Command command) {
         if (command != null && command.getCommandBody() != null) {
             try {
-                switch (ScheduleType.forData(
-                        this.getCommandData(command.getCommandBody()))) {
-                    case DUMP:
-                        return engine.isDumpEnabled();
+                ScheduleType scheduleType = ScheduleType.forData(this.getCommandData(command.getCommandBody()));
+                if (scheduleType != null) {
+                    switch (scheduleType) {
+                        case DUMP:
+                            return engine.isDumpEnabled();
 
-                    case PULL:
-                        return engine.isPullEnabled();
+                        case PULL:
+                            return engine.isPullEnabled();
+                    }
                 }
             } catch (InvalidClientInputException e) {
                 getLog().warn("failed to determine acceptance", e);
