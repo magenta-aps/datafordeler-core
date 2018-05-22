@@ -19,12 +19,20 @@ import java.time.format.DateTimeFormatter;
 public class OffsetDateTimeAdapter extends XmlAdapter<String, OffsetDateTime> {
     @Override
     public String marshal(OffsetDateTime offsetDateTime) {
-        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(offsetDateTime);
+        return OffsetDateTimeAdapter.toString(offsetDateTime);
+    }
+
+    public static String toString(OffsetDateTime offsetDateTime) {
+        return offsetDateTime != null ? DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(offsetDateTime) : null;
     }
 
     @Override
     public OffsetDateTime unmarshal(String stringRepresentation) {
-        return OffsetDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(stringRepresentation));
+        return OffsetDateTimeAdapter.fromString(stringRepresentation);
+    }
+
+    public static OffsetDateTime fromString(String stringRepresentation) {
+        return stringRepresentation != null ? OffsetDateTime.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(stringRepresentation)) : null;
     }
 
     public StdSerializer<OffsetDateTime> getSerializer() {
