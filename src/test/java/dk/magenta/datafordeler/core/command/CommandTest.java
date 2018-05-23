@@ -99,7 +99,7 @@ public class CommandTest extends GapiTestBase {
         this.callbackController.addCallbackResponse("/test/receipt", "", receiptCallback);
 
 
-        String body = "{\"plugin\":\"Demo\"}";
+        String body = "{\"plugin\":\"Demo\",\"foo\":\"bar\"}";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> httpPostEntity = new HttpEntity<String>(body, headers);
@@ -124,6 +124,7 @@ public class CommandTest extends GapiTestBase {
             status = getResponseNode.get("status").asText();
             Assert.assertEquals("pull", getResponseNode.get("commandName").asText());
             Assert.assertNotNull(getResponseNode.get("received").asText());
+            Assert.assertEquals("bar", getResponseNode.get("commandBody").get("foo").asText());
             Thread.sleep(1000);
         }
         System.out.println("status: "+status);
