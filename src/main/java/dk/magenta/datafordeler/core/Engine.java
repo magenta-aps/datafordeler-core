@@ -14,6 +14,7 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.CronUtil;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
+import dk.magenta.datafordeler.core.util.MonitorLogger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -256,8 +257,9 @@ public class Engine {
             ScheduleBuilder scheduleBuilder;
             try {
                 scheduleBuilder = makeSchedule(cronSchedule);
-            } catch (RuntimeException e) {
+            } catch (Exception e) {
                 this.log.error(e);
+                MonitorLogger.logMonitoredError(e);
                 return;
             }
             setupPullSchedule(registerManager, scheduleBuilder, dummyRun);
@@ -392,15 +394,13 @@ public class Engine {
         }
     }
 
-    private CronScheduleBuilder makeSchedule(String schedule) {
+    private CronScheduleBuilder makeSchedule(String schedule) throws ConfigurationException {
         String s = CronUtil.reformatSchedule(schedule);
         if (s == null) {
             return null;
         }
         log.info("Reformatted cronjob specification: " + s);
-        return CronScheduleBuilder.cronSchedule(
-            s
-        );
+        return CronScheduleBuilder.cronSchedule(s);
     }
 
     private void stopScheduler() {
