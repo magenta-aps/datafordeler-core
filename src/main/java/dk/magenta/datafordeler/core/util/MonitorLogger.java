@@ -9,9 +9,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.OffsetDateTime;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Component
 public class MonitorLogger {
+
+    private Logger log = LogManager.getLogger(MonitorLogger.class);
 
     private static MonitorLogger instance;
 
@@ -47,6 +51,7 @@ public class MonitorLogger {
         }
         this.errorFile = new File(this.getErrorFilePath());
         this.errorFile.createNewFile();
+        this.log.info("Monitor Log file created at "+this.errorFile.getAbsolutePath());
     }
 
     public static File getErrorFile() {
