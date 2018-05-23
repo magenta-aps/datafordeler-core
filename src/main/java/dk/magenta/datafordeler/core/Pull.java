@@ -172,7 +172,7 @@ public class Pull extends Worker implements Runnable {
                     OffsetDateTime lastUpdate = entityManager.getLastUpdated(session);
                     session.close();
                     if (lastUpdate != null && importMetadata.getImportTime().toLocalDate().isEqual(lastUpdate.toLocalDate())) {
-                        this.log.info("Already pulled data for " + entityManager.getClass().getSimpleName()+" at "+importMetadata.getImportTime()+", no need to re-pull today");
+                        this.log.info("Already pulled data for " + entityManager.getClass().getSimpleName()+" at "+lastUpdate+", no need to re-pull today");
                         continue;
                     }
 
