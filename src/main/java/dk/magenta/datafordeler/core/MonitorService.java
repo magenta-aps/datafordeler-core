@@ -7,17 +7,24 @@ import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.CronUtil;
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.quartz.CronExpression;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationPid;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -78,13 +85,13 @@ public class MonitorService {
                         OffsetDateTime lastStartTime = entityManager.getLastUpdated(session);
                         output.println("    Last start was at " + expectedStart.toString());
 
-                        // fail if more than two hours have passed since expectedstart and we are not yet done
+                        // fail if more than three hours have passed since expectedstart and we are not yet done
                         // not yet done = lastStartTime is somewhere before expectedStart
                         if (
-                                Instant.now().plus(2, ChronoUnit.HOURS).isAfter(expectedStart) &&
+                                Instant.now().plus(3, ChronoUnit.HOURS).isAfter(expectedStart) &&
                                         (lastStartTime == null || lastStartTime.toInstant().isBefore(expectedStart))
                                 ) {
-                            output.println("It is more than 2 hours after expected start, and last start has not been updated to be after expected start");
+                            output.println("It is more than 3 hours after expected start, and last start has not been updated to be after expected start");
                             response.setStatus(500);
                         }
                     } else {
@@ -93,6 +100,41 @@ public class MonitorService {
                 }
             }
         }
+    }
+
+    @Value("${dafo.error_file:cache/log/${pid}.err}")
+    private String errorFileConfig;
+
+    @RequestMapping(path="/errors")
+    public void checkErrors(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        PrintWriter output = response.getWriter();
+        String errorFilePath = this.errorFileConfig.replace("${sys:PID}", new ApplicationPid().toString());
+        File errorFile = new File(errorFilePath);
+        String filePath = errorFile.getAbsolutePath();
+        if (!errorFile.exists()) {
+            response.setStatus(500);
+            output.println("Error file "+filePath+" does not exist");
+            return;
+        }
+        if (!errorFile.isFile()) {
+            response.setStatus(500);
+            output.println("Error file "+filePath+" is not a file");
+            return;
+        }
+        if (!errorFile.canRead()) {
+            response.setStatus(500);
+            output.println("Error file "+filePath+" is not readable");
+            return;
+        }
+        if (errorFile.length() > 0) {
+            response.setStatus(500);
+            FileInputStream fileStream = new FileInputStream(errorFile);
+            IOUtils.copy(fileStream, output, Charset.forName("UTF-8"));
+            fileStream.close();
+        } else {
+            response.setStatus(200);
+        }
+        output.close();
     }
 
     // Because org.quartz.CronExpression does not have getTimeBefore implemented

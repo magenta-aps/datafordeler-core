@@ -9,6 +9,9 @@
 
         <!-- Message file location -->
         <Property name="dllfile">C:\Users\jubk\Documents\Java projects\datafordeler\engine\src\main\resources\Win32EventLogAppender.dll</Property>
+
+        <!-- Location of the error file for monitoring. The value *must* match the "dafo.error_file" property in application.properties -->
+        <Property name="monitorfile">D:\datafordeler\datafordeler\core\cache\log\${sys:PID}.err</Property>
     </Properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT" follow="true">
@@ -18,6 +21,9 @@
           eventMessageFile="${dllfile}" categoryMessageFile="${dllfile}">
             <PatternLayout pattern="%-5p [%t] %m%n" />
         </Win32EventLog>
+        <File name="MonitorFile" fileName="${monitorfile}" immediateFlush="true" append="true">
+            <PatternLayout pattern="%-5p %m%n" />
+        </File>
     </Appenders>
     <Loggers>
         <Logger name="org.apache.catalina.startup.DigesterFactory" level="error" />
@@ -29,6 +35,9 @@
         <Logger name="org.hibernate.validator.internal.util.Version" level="warn" />
         <logger name="org.springframework.boot.actuate.endpoint.jmx" level="warn"/>
         <logger name="org.opensaml" level="warn"/>
+        <Logger name="dk.magenta.datafordeler" level="error">
+            <AppenderRef ref="MonitorFile" />
+        </Logger>
         <Root level="info">
             <AppenderRef ref="Console" />
             <AppenderRef ref="Win32EventLog" />

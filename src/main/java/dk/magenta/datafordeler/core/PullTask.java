@@ -36,10 +36,8 @@ public class PullTask implements InterruptableJob {
     }
 
     protected void pull(Engine engine, RegisterManager registerManager) {
-        Thread.UncaughtExceptionHandler exceptionHandler = new Thread.UncaughtExceptionHandler() {
-            public void uncaughtException(Thread th, Throwable ex) {
-                ex.printStackTrace();
-            }
+        Thread.UncaughtExceptionHandler exceptionHandler = (th, ex) -> {
+            log.error(ex);
         };
         this.pull = new Pull(engine, registerManager);
         this.pull.setUncaughtExceptionHandler(exceptionHandler);
