@@ -15,7 +15,6 @@ import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
-import dk.magenta.datafordeler.core.util.MonitorLogger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -244,7 +243,6 @@ public class Pull extends Worker implements Runnable {
             e.printStackTrace();
             this.log.error(e);
             this.onError(e);
-            MonitorLogger.logMonitoredError(e);
             throw new RuntimeException(e);
         } finally {
             runningPulls.remove(this.registerManager);

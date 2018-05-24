@@ -14,7 +14,6 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.CronUtil;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
-import dk.magenta.datafordeler.core.util.MonitorLogger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -259,7 +258,6 @@ public class Engine {
                 scheduleBuilder = makeSchedule(cronSchedule);
             } catch (Exception e) {
                 this.log.error(e);
-                MonitorLogger.logMonitoredError(e);
                 return;
             }
             setupPullSchedule(registerManager, scheduleBuilder, dummyRun);

@@ -1,7 +1,8 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
-import dk.magenta.datafordeler.core.util.MonitorLogger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,6 +34,8 @@ public class MonitorTest {
     @Autowired
     private Engine engine;
 
+    private Logger log = LogManager.getLogger(MonitorTest.class);
+
     @Test
     public void testDatabaseMonitoring() {
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
@@ -53,9 +56,9 @@ public class MonitorTest {
     public void testError() {
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
-        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assert.assertEquals(response.getBody(), HttpStatus.OK, response.getStatusCode());
 
-        MonitorLogger.logMonitoredError(new NullPointerException());
+        log.error(new NullPointerException());
         response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
