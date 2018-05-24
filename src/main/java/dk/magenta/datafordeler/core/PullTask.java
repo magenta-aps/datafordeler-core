@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
-import dk.magenta.datafordeler.core.util.MonitorLogger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.InterruptableJob;
@@ -38,8 +37,7 @@ public class PullTask implements InterruptableJob {
 
     protected void pull(Engine engine, RegisterManager registerManager) {
         Thread.UncaughtExceptionHandler exceptionHandler = (th, ex) -> {
-            ex.printStackTrace();
-            MonitorLogger.logMonitoredError(ex);
+            log.error(ex);
         };
         this.pull = new Pull(engine, registerManager);
         this.pull.setUncaughtExceptionHandler(exceptionHandler);

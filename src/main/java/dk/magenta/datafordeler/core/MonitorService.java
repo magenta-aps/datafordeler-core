@@ -7,12 +7,14 @@ import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.CronUtil;
-import dk.magenta.datafordeler.core.util.MonitorLogger;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.quartz.CronExpression;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationPid;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -100,15 +102,14 @@ public class MonitorService {
         }
     }
 
+    @Value("${dafo.error_file:cache/log/${pid}.err}")
+    private String errorFileConfig;
+
     @RequestMapping(path="/errors")
     public void checkErrors(HttpServletRequest request, HttpServletResponse response) throws IOException {
         PrintWriter output = response.getWriter();
-        File errorFile = MonitorLogger.getErrorFile();
-        if (errorFile == null) {
-            response.setStatus(500);
-            output.println("Error file " + MonitorLogger.getErrorFilePath() + " does not exist");
-            return;
-        }
+        String errorFilePath = this.errorFileConfig.replace("${sys:PID}", new ApplicationPid().toString());
+        File errorFile = new File(errorFilePath);
         String filePath = errorFile.getAbsolutePath();
         if (!errorFile.exists()) {
             response.setStatus(500);
