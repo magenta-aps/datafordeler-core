@@ -35,9 +35,9 @@
         <Logger name="org.hibernate.validator.internal.util.Version" level="warn" />
         <logger name="org.springframework.boot.actuate.endpoint.jmx" level="warn"/>
         <logger name="org.opensaml" level="warn"/>
-        <File name="MonitorFile" fileName="${monitorfile}" immediateFlush="true" append="true">
-            <PatternLayout pattern="%-5p %m%n" />
-        </File>
+        <Logger name="dk.magenta.datafordeler" level="error">
+            <AppenderRef ref="MonitorFile" />
+        </Logger>
         <Root level="info">
             <AppenderRef ref="Console" />
             <AppenderRef ref="Win32EventLog" />
