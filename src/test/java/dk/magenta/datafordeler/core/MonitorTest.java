@@ -63,7 +63,6 @@ public class MonitorTest {
         Assert.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
-
     @Test
     public void testGetTimeBefore() throws ParseException {
         CronExpression expression = new CronExpression("0 0 0 * * ?");
