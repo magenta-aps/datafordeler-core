@@ -8,13 +8,13 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.CronUtil;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.quartz.CronExpression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationPid;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -24,12 +24,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 
 @Controller
 @RequestMapping(path="/monitor")
@@ -135,6 +139,41 @@ public class MonitorService {
             response.setStatus(200);
         }
         output.close();
+    }
+
+    @Autowired
+    private Environment environment;
+
+    @RequestMapping(path="/access")
+    public void checkAccess(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String[] endpoints = new String[]{
+                "/cpr/person/1/rest/1234",
+                "/cpr/person/1/rest/search?personnummer=1234"
+        };
+        String port = environment.getProperty("local.server.port");
+        StringJoiner failures = new StringJoiner("\n");
+        for (String endpoint : endpoints) {
+            try {
+                URL url = new URL("http://localhost:" + port + endpoint);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.connect();
+                int code = connection.getResponseCode();
+                if (code != HttpURLConnection.HTTP_FORBIDDEN) {
+                    failures.add("GET "+endpoint+" : " + code + " " + connection.getResponseMessage());
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if (failures.length() > 0) {
+            response.setStatus(500);
+            response.getWriter().append(failures.toString());
+        } else {
+            response.setStatus(200);
+        }
     }
 
     // Because org.quartz.CronExpression does not have getTimeBefore implemented
