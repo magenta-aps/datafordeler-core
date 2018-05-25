@@ -8,6 +8,19 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import dk.magenta.datafordeler.core.util.CronUtil;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHttpRequest;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.SSLContexts;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.quartz.CronExpression;
@@ -18,16 +31,18 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import javax.net.ssl.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.*;
 import java.nio.charset.Charset;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -145,29 +160,45 @@ public class MonitorService {
     private Environment environment;
 
     @RequestMapping(path="/access")
-    public void checkAccess(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void checkAccess(HttpServletRequest request, HttpServletResponse response) throws IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+        // TODO: Add these from their respective plugins
         String[] endpoints = new String[]{
                 "/cpr/person/1/rest/1234",
-                "/cpr/person/1/rest/search?personnummer=1234"
+                "/cpr/person/1/rest/search?personnummer=1234",
+                "/cvr/company/1/rest/1234",
+                "/cvr/company/1/rest/search?cvrnummer=1234",
+                "/cvr/unit/1/rest/1234",
+                "/cvr/unit/1/rest/search?pnummer=1234",
+                "/cvr/participant/1/rest/1234",
+                "/cvr/participant/1/rest/search?deltagernummer=1234"
         };
-        String port = environment.getProperty("local.server.port");
+        int port = Integer.parseInt(environment.getProperty("local.server.port"));
         StringJoiner failures = new StringJoiner("\n");
+
+        HttpHost localhost = new HttpHost("localhost", port, "https");
+
+        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(
+                new SSLConnectionSocketFactory(
+                        SSLContexts.custom().loadTrustMaterial((TrustStrategy) (chain, authType) -> true).build(),
+                        new NoopHostnameVerifier()
+                )
+        ).build();
+
         for (String endpoint : endpoints) {
+            CloseableHttpResponse resp = httpClient.execute(localhost, new BasicHttpRequest("GET", endpoint));
             try {
-                URL url = new URL("http://localhost:" + port + endpoint);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.connect();
-                int code = connection.getResponseCode();
-                if (code != HttpURLConnection.HTTP_FORBIDDEN) {
-                    failures.add("GET "+endpoint+" : " + code + " " + connection.getResponseMessage());
+                int code = resp.getStatusLine().getStatusCode();
+                if (code != 403) {
+                    failures.add("GET "+endpoint+" : " + code + " " +resp.getStatusLine().getReasonPhrase());
                 }
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
+                resp.close();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                resp.close();
             }
         }
+        httpClient.close();
         if (failures.length() > 0) {
             response.setStatus(500);
             response.getWriter().append(failures.toString());
