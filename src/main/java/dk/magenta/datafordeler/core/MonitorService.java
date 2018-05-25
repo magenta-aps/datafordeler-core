@@ -91,26 +91,26 @@ public class MonitorService {
                 CronExpression cronExpression = new CronExpression(pullSchedule);
                 for (EntityManager entityManager : registerManager.getEntityManagers()) {
                     // Check that entitymanagers that should run on a cron job
-                    // have completed their expected pulls within, say, 2 hours
+                    // have completed their expected pulls within, say, 4 hours
                     // to detect stalled jobs
                     output.println("Inspecting "+entityManager.getClass().getSimpleName());
                     if (entityManager.pullEnabled()) {
 
                         // When does cron say we should have started last?
                         Instant expectedStart = MonitorService.getTimeBefore(cronExpression, Instant.now());
-                        output.println("    Expecting last start at " + expectedStart.toString());
+                        output.println("    Expecting last start at " + expectedStart);
 
                         // When did we start last
                         OffsetDateTime lastStartTime = entityManager.getLastUpdated(session);
-                        output.println("    Last start was at " + expectedStart.toString());
+                        output.println("    Last start was at " + lastStartTime);
 
                         // fail if more than three hours have passed since expectedstart and we are not yet done
                         // not yet done = lastStartTime is somewhere before expectedStart
                         if (
-                                Instant.now().plus(3, ChronoUnit.HOURS).isAfter(expectedStart) &&
+                                Instant.now().plus(4, ChronoUnit.HOURS).isAfter(expectedStart) &&
                                         (lastStartTime == null || lastStartTime.toInstant().isBefore(expectedStart))
                                 ) {
-                            output.println("It is more than 3 hours after expected start, and last start has not been updated to be after expected start");
+                            output.println("It is more than 4 hours after expected start, and last start has not been updated to be after expected start");
                             response.setStatus(500);
                         }
                     } else {
