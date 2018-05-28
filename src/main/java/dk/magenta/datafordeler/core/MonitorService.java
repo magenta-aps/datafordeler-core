@@ -42,6 +42,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.StringJoiner;
 
 @Controller
@@ -155,23 +156,20 @@ public class MonitorService {
     @Autowired
     private Environment environment;
 
+    private HashSet<String> accessCheckPoints = new HashSet<>();
+
+    public void addAccessCheckPoint(String checkpoint) {
+        this.accessCheckPoints.add(checkpoint);
+    }
+
+
     @RequestMapping(path="/access")
     public void checkAccess(HttpServletRequest request, HttpServletResponse response) throws IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
-        // TODO: Add these from their respective plugins
-        String[] endpoints = new String[]{
-                "/cpr/person/1/rest/1234",
-                "/cpr/person/1/rest/search?personnummer=1234",
-                "/cvr/company/1/rest/1234",
-                "/cvr/company/1/rest/search?cvrnummer=1234",
-                "/cvr/unit/1/rest/1234",
-                "/cvr/unit/1/rest/search?pnummer=1234",
-                "/cvr/participant/1/rest/1234",
-                "/cvr/participant/1/rest/search?deltagernummer=1234"
-        };
         int port = Integer.parseInt(environment.getProperty("local.server.port"));
+        StringJoiner successes = new StringJoiner("\n");
         StringJoiner failures = new StringJoiner("\n");
 
-        HttpHost localhost = new HttpHost("localhost", port, "https");
+        HttpHost localhost = new HttpHost("localhost", port, request.getScheme());
 
         CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(
                 new SSLConnectionSocketFactory(
@@ -180,13 +178,12 @@ public class MonitorService {
                 )
         ).build();
 
-        for (String endpoint : endpoints) {
+        for (String endpoint : this.accessCheckPoints) {
             CloseableHttpResponse resp = httpClient.execute(localhost, new BasicHttpRequest("GET", endpoint));
             try {
                 int code = resp.getStatusLine().getStatusCode();
-                if (code != 403) {
-                    failures.add("GET "+endpoint+" : " + code + " " +resp.getStatusLine().getReasonPhrase());
-                }
+                StringJoiner joiner = (code == 403) ? successes : failures;
+                joiner.add("GET "+endpoint+" : " + code + " " +resp.getStatusLine().getReasonPhrase());
                 resp.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -200,6 +197,7 @@ public class MonitorService {
             response.getWriter().append(failures.toString());
         } else {
             response.setStatus(200);
+            response.getWriter().append(successes.toString());
         }
     }
 
