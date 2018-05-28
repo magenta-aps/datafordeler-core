@@ -116,15 +116,13 @@ public class MonitorService {
         }
     }
 
-    // Spring was consistently unable to replace ${sys:PID} with the running program PID,
-    // So a quick fix is to ignore spring placeholders for now, and insert it manually
-    @Value("${dafo.error_file:cache/log/{PID}.err}")
+    @Value("${dafo.error_file:cache/log/${PID}.err}")
     private String errorFileConfig;
 
     @RequestMapping(path="/errors")
     public void checkErrors(HttpServletRequest request, HttpServletResponse response) throws IOException {
         PrintWriter output = response.getWriter();
-        String errorFilePath = this.errorFileConfig.replace("{PID}", new ApplicationPid().toString());
+        String errorFilePath = this.errorFileConfig.replace("${PID}", new ApplicationPid().toString());
         File errorFile = new File(errorFilePath);
         String filePath = errorFile.getAbsolutePath();
         if (!errorFile.exists()) {
