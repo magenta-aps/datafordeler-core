@@ -99,10 +99,10 @@ public class MonitorService {
                         OffsetDateTime lastStartTime = entityManager.getLastUpdated(session);
                         output.println("    Last start was at " + lastStartTime);
 
-                        // fail if more than three hours have passed since expectedstart and we are not yet done
+                        // fail if more than four hours have passed since expectedstart and we are not yet done
                         // not yet done = lastStartTime is somewhere before expectedStart
                         if (
-                                Instant.now().plus(4, ChronoUnit.HOURS).isAfter(expectedStart) &&
+                                Instant.now().isAfter(expectedStart.plus(4, ChronoUnit.HOURS)) &&
                                         (lastStartTime == null || lastStartTime.toInstant().isBefore(expectedStart))
                                 ) {
                             output.println("It is more than 4 hours after expected start, and last start has not been updated to be after expected start");
