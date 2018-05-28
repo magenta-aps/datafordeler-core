@@ -16,6 +16,7 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.env.PropertySourcesPropertyResolver;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -153,14 +154,6 @@ public class Application {
     @Bean
     public TaskScheduler taskScheduler() {
         return new ConcurrentTaskScheduler(); //single threaded by default
-    }
-
-    @Bean
-    public static PropertySourcesPlaceholderConfigurer placeholderConfigurer() {
-        PropertySourcesPlaceholderConfigurer c = new PropertySourcesPlaceholderConfigurer();
-        c.setLocation(new ClassPathResource("application.properties"));
-        c.setIgnoreUnresolvablePlaceholders(true);
-        return c;
     }
 
 }
