@@ -242,7 +242,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
     @WebMethod(exclude = true)
     @RequestMapping(path="/{uuid}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public Envelope getRest(@PathVariable("uuid") String uuid, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
-            throws AccessDeniedException, AccessRequiredException, InvalidTokenException, InvalidClientInputException {
+            throws DataFordelerException {
         Envelope envelope = new Envelope();
         Session session = this.getSessionManager().getSessionFactory().openSession();
         try {
