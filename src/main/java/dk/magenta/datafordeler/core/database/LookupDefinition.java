@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.fapi.Query;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -66,6 +67,7 @@ public class LookupDefinition {
     protected Class<? extends DataItem> dataClass;
     private boolean definitionsAnded = true;
     private int definitionId = 0;
+
 
     public enum Operator {
         EQ("="),
@@ -246,7 +248,9 @@ public class LookupDefinition {
                 ")";
         StringJoiner extraWhere = new StringJoiner(this.definitionsAnded ? " AND " : " OR ");
         for (FieldDefinition fieldDefinition : this.fieldDefinitions) {
-            if (fieldDefinition.onEntity()) {
+            if (fieldDefinition.onIdentification()) {
+                extraWhere.add("(" + (fieldDefinition.inverted ? "NOT ":"") + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, false) + ")");
+            } else if (fieldDefinition.onEntity()) {
                 extraWhere.add("(" + (fieldDefinition.inverted ? "NOT ":"") + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
             } else {
                 List<String> joins = this.getHqlJoinParts(dataItemKey, fieldDefinition);

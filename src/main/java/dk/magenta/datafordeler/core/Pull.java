@@ -164,7 +164,6 @@ public class Pull extends Worker implements Runnable {
                 ItemInputStream<? extends PluginSourceData> stream = this.registerManager.pullEvents(this.importMetadata);
                 if (stream != null) {
                     this.doPull(importMetadata, stream);
-                    // Done. Write last-updated timestamp.
                     Session session = this.engine.sessionManager.getSessionFactory().openSession();
                     importMetadata.setSession(session);
                     this.registerManager.setLastUpdated(null, importMetadata);
