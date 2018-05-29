@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.fapi.Query;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -66,6 +67,7 @@ public class LookupDefinition {
     protected Class<? extends DataItem> dataClass;
     private boolean definitionsAnded = true;
     private int definitionId = 0;
+
 
     public enum Operator {
         EQ("="),
