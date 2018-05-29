@@ -227,7 +227,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
                 e.printStackTrace();
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException e) {
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -319,7 +319,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             } catch (IllegalArgumentException e) {
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException e) {
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
