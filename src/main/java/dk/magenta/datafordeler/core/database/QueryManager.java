@@ -195,7 +195,6 @@ public abstract class QueryManager {
      */
     public static <E extends IdentifiedEntity> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
-
         LookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = lookupDefinition.usingRVDModel() ? "d" : ENTITY;
 
