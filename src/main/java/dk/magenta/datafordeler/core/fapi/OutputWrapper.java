@@ -15,7 +15,9 @@ public abstract class OutputWrapper<E extends IdentifiedEntity> {
     public final List<Object> wrapResults(Collection<E> input, Query query) {
             ArrayList<Object> result = new ArrayList<>();
         for (E item : input) {
-            result.add(wrapResult(item, query));
+            if (item != null) {
+                result.add(wrapResult(item, query));
+            }
         }
         return result;
     }
