@@ -280,7 +280,7 @@ public abstract class Query<E extends Entity> {
             lookupDefinition.put(DataItem.DB_FIELD_LAST_UPDATED, this.recordAfter, OffsetDateTime.class, LookupDefinition.Operator.GT);
         }
         if (uuid != null && !uuid.isEmpty()) {
-            lookupDefinition.put(LookupDefinition.entityref + LookupDefinition.separator + "identification" + LookupDefinition.separator + Identification.DB_FIELD_UUID, this.uuid, UUID.class, LookupDefinition.Operator.EQ);
+            lookupDefinition.put(LookupDefinition.entityref + LookupDefinition.separator + Entity.DB_FIELD_IDENTIFICATION + LookupDefinition.separator + Identification.DB_FIELD_UUID, this.uuid, UUID.class, LookupDefinition.Operator.EQ);
         }
         return lookupDefinition;
     }

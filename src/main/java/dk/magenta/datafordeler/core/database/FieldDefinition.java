@@ -35,6 +35,10 @@ public class FieldDefinition {
         return this.path.startsWith(LookupDefinition.entityref);
     }
 
+    public boolean onIdentification() {
+        return this.path.startsWith(LookupDefinition.entityref + LookupDefinition.separator + Entity.DB_FIELD_IDENTIFICATION);
+    }
+
     public String getOperatorSign() {
         return this.operator.toString();
     }

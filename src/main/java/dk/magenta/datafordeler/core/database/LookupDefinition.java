@@ -246,7 +246,9 @@ public class LookupDefinition {
                 ")";
         StringJoiner extraWhere = new StringJoiner(this.definitionsAnded ? " AND " : " OR ");
         for (FieldDefinition fieldDefinition : this.fieldDefinitions) {
-            if (fieldDefinition.onEntity()) {
+            if (fieldDefinition.onIdentification()) {
+                extraWhere.add("(" + (fieldDefinition.inverted ? "NOT ":"") + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, false) + ")");
+            } else if (fieldDefinition.onEntity()) {
                 extraWhere.add("(" + (fieldDefinition.inverted ? "NOT ":"") + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
             } else {
                 List<String> joins = this.getHqlJoinParts(dataItemKey, fieldDefinition);
