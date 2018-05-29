@@ -82,7 +82,7 @@ public class Envelope {
 
     @JsonProperty
     @XmlElement
-    private List<?> results;
+    private List<?> results = Collections.emptyList();
 
     public void setResults(Collection<?> results) {
         this.results = new LinkedList<>(results);

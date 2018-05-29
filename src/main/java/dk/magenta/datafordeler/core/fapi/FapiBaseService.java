@@ -210,15 +210,15 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             envelope.addRequestData(request);
             try {
                 E entity = this.searchById(id, query, session);
-                if (this.getOutputWrapper() != null) {
-                    envelope.setResult(this.getOutputWrapper().wrapResult(entity, query));
-                } else {
-                    envelope.setResult(entity);
-                }
                 if (entity == null) {
                     this.log.debug("Item not found, returning");
                 } else {
                     this.log.debug("Item found, returning");
+                    if (this.getOutputWrapper() != null) {
+                        envelope.setResult(this.getOutputWrapper().wrapResult(entity, query));
+                    } else {
+                        envelope.setResult(entity);
+                    }
                 }
                 envelope.close();
                 loggerHelper.logResult(envelope);
