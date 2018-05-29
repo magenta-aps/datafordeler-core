@@ -260,13 +260,18 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             envelope.addUserData(user);
             envelope.addRequestData(request);
             try {
-                E entity = this.searchById(uuid, query, session);
+                List<E> results = this.searchByQuery(query, session);
                 if (this.getOutputWrapper() != null) {
-                    envelope.setResult(this.getOutputWrapper().wrapResult(entity, query));
+                    envelope.setResults(this.getOutputWrapper().wrapResults(results, query));
                 } else {
-                    envelope.setResult(entity);
+                    ArrayNode jacksonConverted = objectMapper.valueToTree(results);
+                    ArrayList<Object> wrapper = new ArrayList<>();
+                    for (JsonNode node : jacksonConverted) {
+                        wrapper.add(node);
+                    }
+                    envelope.setResults(wrapper);
                 }
-                if (entity == null) {
+                if (results.isEmpty()) {
                     this.log.debug("Item not found, returning");
                 } else {
                     this.log.debug("Item found, returning");
