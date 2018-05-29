@@ -12,6 +12,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Query object specifying a search, with basic filter parameters
@@ -48,6 +49,15 @@ public abstract class Query<E extends Entity> {
 
     @QueryField(queryName = "recordAfter", type = QueryField.FieldType.STRING)
     protected OffsetDateTime recordAfter = null;
+
+
+    public void setUuid(List<UUID> uuid) {
+        this.uuid = uuid;
+    }
+
+    @QueryField(queryName = "UUID", type = QueryField.FieldType.STRING)
+    private List<UUID> uuid = null;
+
 
     private List<String> kommunekodeRestriction = new ArrayList<>();
 
@@ -95,6 +105,7 @@ public abstract class Query<E extends Entity> {
     public Query(String page, String pageSize, String registrationFrom, String registrationTo) {
         this(intFromString(page, 0), intFromString(pageSize, 10), parseDateTime(registrationFrom), parseDateTime(registrationTo));
     }
+
 
     public int getPageSize() {
         return this.pageSize;
@@ -264,7 +275,7 @@ public abstract class Query<E extends Entity> {
     public LookupDefinition getLookupDefinition() {
         LookupDefinition lookupDefinition = new LookupDefinition(this, this.getDataClass());
         if (this.recordAfter != null) {
-            lookupDefinition.put(DataItem.DB_FIELD_LAST_UPDATED, this.recordAfter, OffsetDateTime.class, LookupDefinition.Operator.GT);
+            lookupDefinition.put(DataItem.DB_FIELD_LAST_UPDATED, this.recordAfter, OffsetDateTime.class, this.uuid, LookupDefinition.Operator.GT);
         }
         return lookupDefinition;
     }
