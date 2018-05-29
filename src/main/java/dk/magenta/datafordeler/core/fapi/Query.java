@@ -47,28 +47,10 @@ public abstract class Query<E extends Entity> {
     @QueryField(queryName = "recordAfter", type = QueryField.FieldType.STRING)
     protected OffsetDateTime recordAfter = null;
 
-
-
-
-
     @QueryField(queryName = "UUID", type = QueryField.FieldType.STRING)
-    private List<UUID> uuid = null;
-
+    private List<UUID> uuid = new ArrayList<>();
 
     private List<String> kommunekodeRestriction = new ArrayList<>();
-
-
-    public void setUuid(Collection<UUID> uuid) {
-        this.uuid = new ArrayList<UUID>(uuid);
-
-    }
-    public void addUUID(String uuid){
-        if(uuid != null){
-            this.uuid.add(UUID.fromString(uuid));
-        }
-
-
-    }
 
     public Query() {
     }
@@ -264,6 +246,17 @@ public abstract class Query<E extends Entity> {
             this.increaseDataParamCount();
         }
     }
+
+    public void setUuid(Collection<UUID> uuid) {
+        this.uuid = new ArrayList<>(uuid);
+    }
+
+    public void addUUID(String uuid){
+        if (uuid != null){
+            this.uuid.add(UUID.fromString(uuid));
+        }
+    }
+
 
     public void addKommunekodeRestriction(String kommunekode) {
         this.kommunekodeRestriction.add(kommunekode);

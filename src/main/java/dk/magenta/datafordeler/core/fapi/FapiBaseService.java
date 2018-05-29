@@ -253,15 +253,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             );
             this.checkAndLogAccess(loggerHelper);
             Q query = this.getQuery(requestParams, true);
-
-
-            List<UUID> uuidList = new ArrayList<UUID>();
-            if (uuidList != null){
-                query.setUuid(uuidList);
-                query.addUUID(uuid);
-            }
-
-
+            query.addUUID(uuid);
 
             this.applyAreaRestrictionsToQuery(query, user);
             envelope.addQueryData(query);
