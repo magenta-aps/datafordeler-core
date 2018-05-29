@@ -227,7 +227,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
                 e.printStackTrace();
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -268,7 +268,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             E entity = this.searchById(id, query, session);
 
             sendAsCSV(Stream.of(entity), request, response);
-        } catch (AccessDeniedException|AccessRequiredException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
             throw e;
         } catch (Exception e) {
             e.printStackTrace();
@@ -319,7 +319,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             } catch (IllegalArgumentException e) {
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -382,7 +382,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             }
             envelope.close();
             loggerHelper.logResult(envelope, requestParams.toString());
-        } catch (AccessDeniedException|AccessRequiredException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -421,7 +421,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
 
             sendAsCSV(this.searchByQueryAsStream(query, session),
                 request, response);
-        } catch (AccessDeniedException|AccessRequiredException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -462,7 +462,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             }
             envelope.close();
             loggerHelper.logResult(envelope, query.toString());
-        } catch (AccessDeniedException|AccessRequiredException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
