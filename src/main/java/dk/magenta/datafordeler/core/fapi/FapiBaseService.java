@@ -190,57 +190,6 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
      * @param requestParams url parameters
      * @return Found Entity, or null if none found.
      */
-  /*  @WebMethod(exclude = true)
-    @RequestMapping(path="/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public Envelope getRest(@PathVariable("id") String id, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
-        throws AccessDeniedException, AccessRequiredException, InvalidTokenException, InvalidClientInputException {
-        Envelope envelope = new Envelope();
-        Session session = this.getSessionManager().getSessionFactory().openSession();
-        try {
-            DafoUserDetails user = this.getDafoUserManager().getUserFromRequest(request);
-            LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
-            loggerHelper.info(
-                    "Incoming REST request for " + this.getServiceName() + " with id " + id
-            );
-            this.checkAndLogAccess(loggerHelper);
-            Q query = this.getQuery(requestParams, true);
-            this.applyAreaRestrictionsToQuery(query, user);
-            envelope.addQueryData(query);
-            envelope.addUserData(user);
-            envelope.addRequestData(request);
-            try {
-                E entity = this.searchById(id, query, session);
-                if (entity == null) {
-                    this.log.debug("Item not found, returning");
-                } else {
-                    this.log.debug("Item found, returning");
-                    if (this.getOutputWrapper() != null) {
-                        envelope.setResult(this.getOutputWrapper().wrapResult(entity, query));
-                    } else {
-                        envelope.setResult(entity);
-                    }
-                }
-                envelope.close();
-                loggerHelper.logResult(envelope);
-
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-                throw new InvalidClientInputException(e.getMessage());
-            }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException e) {
-            throw e;
-        } catch (DataFordelerException e) {
-            e.printStackTrace();
-            this.log.error("Error in REST getById ("+request.getRequestURI()+")", e);
-            throw e;
-        } finally {
-            session.close();
-        }
-
-        return envelope;
-    }*/
-
-
     @WebMethod(exclude = true)
     @RequestMapping(path="/{uuid}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public Envelope getRest(@PathVariable("uuid") String uuid, @RequestParam MultiValueMap<String, String> requestParams, HttpServletRequest request)
@@ -347,7 +296,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
     public Envelope getSoap(@WebParam(name="id") @XmlElement(required=true) String id,
                      @WebParam(name="registeringFra") @XmlElement(required = false) String registeringFra,
                      @WebParam(name="registeringTil") @XmlElement(required = false) String registeringTil)
-        throws InvalidClientInputException, AccessRequiredException, InvalidTokenException, AccessDeniedException {
+            throws DataFordelerException {
         Session session = this.getSessionManager().getSessionFactory().openSession();
         Envelope envelope = new Envelope();
         try {
@@ -360,15 +309,21 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             );
             this.checkAndLogAccess(loggerHelper);
             Q query = this.getQuery(registeringFra, registeringTil);
+            query.addUUID(id);
             envelope.addQueryData(query);
             envelope.addUserData(user);
             envelope.addRequestData(request);
             try {
-                E entity = this.searchById(id, query, session);
-                if (outputWrapper != null) {
-                    envelope.setResult(outputWrapper.wrapResult(entity, query));
+                List<E> results = this.searchByQuery(query, session);
+                if (this.getOutputWrapper() != null) {
+                    envelope.setResults(this.getOutputWrapper().wrapResults(results, query));
                 } else {
-                    envelope.setResult(entity);
+                    ArrayNode jacksonConverted = objectMapper.valueToTree(results);
+                    ArrayList<Object> wrapper = new ArrayList<>();
+                    for (JsonNode node : jacksonConverted) {
+                        wrapper.add(node);
+                    }
+                    envelope.setResults(wrapper);
                 }
                 envelope.close();
                 loggerHelper.logResult(envelope);
