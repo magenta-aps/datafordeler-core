@@ -9,10 +9,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Query object specifying a search, with basic filter parameters
@@ -51,15 +48,27 @@ public abstract class Query<E extends Entity> {
     protected OffsetDateTime recordAfter = null;
 
 
-    public void setUuid(List<UUID> uuid) {
-        this.uuid = uuid;
-    }
+
+
 
     @QueryField(queryName = "UUID", type = QueryField.FieldType.STRING)
     private List<UUID> uuid = null;
 
 
     private List<String> kommunekodeRestriction = new ArrayList<>();
+
+
+    public void setUuid(Collection<UUID> uuid) {
+        this.uuid = new ArrayList<UUID>(uuid);
+
+    }
+    public void addUUID(String uuid){
+        if(uuid != null){
+            this.uuid.add(UUID.fromString(uuid));
+        }
+
+
+    }
 
     public Query() {
     }
@@ -275,7 +284,9 @@ public abstract class Query<E extends Entity> {
     public LookupDefinition getLookupDefinition() {
         LookupDefinition lookupDefinition = new LookupDefinition(this, this.getDataClass());
         if (this.recordAfter != null) {
-            lookupDefinition.put(DataItem.DB_FIELD_LAST_UPDATED, this.recordAfter, OffsetDateTime.class, this.uuid, LookupDefinition.Operator.GT);
+            lookupDefinition.put(DataItem.DB_FIELD_LAST_UPDATED, this.recordAfter, OffsetDateTime.class, LookupDefinition.Operator.GT);
+        }if (uuid != null && !uuid.isEmpty()) {
+            lookupDefinition.put(LookupDefinition.entityref + LookupDefinition.separator + "identification" + LookupDefinition.separator + Identification.DB_FIELD_UUID, this.uuid, UUID.class, LookupDefinition.Operator.EQ);
         }
         return lookupDefinition;
     }

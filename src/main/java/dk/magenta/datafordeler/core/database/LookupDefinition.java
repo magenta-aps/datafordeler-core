@@ -121,10 +121,7 @@ public class LookupDefinition {
     public FieldDefinition put(String path, Object value, Class fieldClass, Operator operator) {
         return this.put(new FieldDefinition(path, value, fieldClass, operator));
     }
-    public FieldDefinition put(String path, Object value, Class fieldClass, List<UUID> uuid, Operator operator) {
-        return this.put(new FieldDefinition(path, value, fieldClass, uuid, operator));
-    }
-
+  
     public FieldDefinition put(FieldDefinition fieldDefinition) {
         this.fieldDefinitions.add(fieldDefinition);
         return fieldDefinition;

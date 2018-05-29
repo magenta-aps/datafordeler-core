@@ -17,17 +17,10 @@ public class FieldDefinition {
     public FieldDefinition(String path, Object value) {
         this(path, value, value != null ? value.getClass() : null, LookupDefinition.Operator.EQ);
     }
-    public FieldDefinition(String path, Object o, Class fieldClass, List<UUID> uuid, Object value) {
-        this(path, value, value != null ? value.getClass() : null, LookupDefinition.Operator.EQ);
-    }
 
     public FieldDefinition(String path, Object value, Class type) {
         this(path, value, type, LookupDefinition.Operator.EQ);
     }
-
-   /* public FieldDefinition(String path, Object value, List<UUID> uuid, Class type) {
-        this(path, value, type, uuid, LookupDefinition.Operator.EQ);
-    }*/
 
     public FieldDefinition(String path, Object value, Class type, LookupDefinition.Operator operator) {
         this.path = path;
