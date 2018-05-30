@@ -77,7 +77,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.identification;
     }
 
-    public static final String IO_FIELD_UUID = "UUID";
+    public static final String IO_FIELD_UUID = "uuid";
 
     @JsonProperty(value = IO_FIELD_UUID)
     public UUID getUUID() {
@@ -97,7 +97,9 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         //this.identification.setUuid(uuid);
     }
 
-    @JsonProperty("domaene")
+
+    public static final String IO_FIELD_DOMAIN = "domain";
+    @JsonProperty(value = IO_FIELD_DOMAIN)
     public String getDomain() {
         if (this.identification != null) {
             return this.identification.getDomain();
