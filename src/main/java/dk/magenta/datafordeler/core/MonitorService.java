@@ -142,9 +142,7 @@ public class MonitorService {
         }
         if (errorFile.length() > 0) {
             response.setStatus(500);
-            FileInputStream fileStream = new FileInputStream(errorFile);
-            IOUtils.copy(fileStream, output, Charset.forName("UTF-8"));
-            fileStream.close();
+            output.println("There are errors present in file "+errorFile.getName());
         } else {
             response.setStatus(200);
         }
