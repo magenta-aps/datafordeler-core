@@ -231,7 +231,6 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
                 loggerHelper.logResult(envelope);
 
             } catch (IllegalArgumentException e) {
-                e.printStackTrace();
                 throw new InvalidClientInputException(e.getMessage());
             }
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException e) {
