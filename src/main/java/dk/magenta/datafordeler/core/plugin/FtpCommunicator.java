@@ -159,6 +159,10 @@ public class FtpCommunicator implements Communicator {
                 currentFiles.add(outputFile);
             }
 
+            // ArrayList<File> files = new ArrayList<>(Arrays.asList(localCopyFolder.toFile().listFiles()));
+            // files.sort(File::compareTo);
+            // currentFiles.addAll(files);
+
             this.onBeforeBuildStream(ftpClient, currentFiles, uri, downloadPaths);
             InputStream inputStream = this.buildChainedInputStream(currentFiles);
 
