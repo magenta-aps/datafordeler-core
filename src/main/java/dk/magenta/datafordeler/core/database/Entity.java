@@ -15,14 +15,10 @@ import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
- * Created by lars on 20-02-17.
- * An Entity represents a top-level item in the database as well as in service 
+ * An Entity represents a top-level item in the database as well as in service
  * output, such as a Person or a Company (to be implemented as subclasses in plugins)
  * Entities usually hold very little data on their own, but links to a series of 
  * bitemporality objects (Registrations, and further down Effects), that in turn 
@@ -31,7 +27,7 @@ import java.util.UUID;
 @MappedSuperclass
 @Embeddable
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public abstract class Entity<E extends Entity, R extends Registration> extends DatabaseEntry {
+public abstract class Entity<E extends Entity, R extends Registration> extends DatabaseEntry implements IdentifiedEntity {
 
     @Transient
     private Logger log;
@@ -40,12 +36,13 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return this.log;
     }
 
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    public static final String DB_FIELD_IDENTIFICATION = "identification";
+    @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
     @JsonIgnore
     @XmlTransient
     protected Identification identification;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "entity")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "entity")
     @OrderBy("registrationFrom asc") // Refers to sequenceNumber in Registration class
     @Filters({
             @Filter(name = Registration.FILTER_REGISTRATION_FROM, condition="(registrationTo >= :"+Registration.FILTERPARAM_REGISTRATION_FROM+" OR registrationTo is null)"),
@@ -74,12 +71,15 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         this.domain = domain;
     }
 
+    @Override
     @JsonIgnore
     public Identification getIdentification() {
         return this.identification;
     }
 
-    @JsonProperty("UUID")
+    public static final String IO_FIELD_UUID = "uuid";
+
+    @JsonProperty(value = IO_FIELD_UUID)
     public UUID getUUID() {
         if (this.identification != null) {
             return this.identification.getUuid();
@@ -97,7 +97,9 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         //this.identification.setUuid(uuid);
     }
 
-    @JsonProperty("domaene")
+
+    public static final String IO_FIELD_DOMAIN = "domain";
+    @JsonProperty(value = IO_FIELD_DOMAIN)
     public String getDomain() {
         if (this.identification != null) {
             return this.identification.getDomain();
@@ -112,10 +114,12 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         //this.identification.setDomain(domain);
     }
 
+    public static final String IO_FIELD_REGISTRATIONS = "registreringer";
+
     @OrderBy("registrationFrom asc")
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY, value = "registreringer")
-    @XmlElement(name="registreringer")
-    @JacksonXmlProperty(localName = "registreringer")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY, value = IO_FIELD_REGISTRATIONS)
+    @XmlElement(name=IO_FIELD_REGISTRATIONS)
+    @JacksonXmlProperty(localName = IO_FIELD_REGISTRATIONS)
     @JacksonXmlElementWrapper(useWrapping = false)
     public List<R> getRegistrations() {
         ArrayList<R> registrations = new ArrayList<>(this.registrations);
@@ -201,7 +205,29 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     }
 
 
-
+    public void dedupRegistrations(Session session, boolean onlyDetect) {
+        ArrayList<R> orderedRegistrations = new ArrayList<>(this.getRegistrations());
+        Collections.sort(orderedRegistrations);
+        R last = null;
+        HashSet<R> toDelete = new HashSet<>();
+        for (R registration : orderedRegistrations) {
+            if (last != null && last.equalTime(registration)) {
+                this.log.info("Registration collision on entity "+this.getId()+": "+registration.registrationFrom+"|"+registration.registrationTo);
+                if (!onlyDetect) {
+                    registration.mergeInto(last);
+                    toDelete.add(registration);
+                    this.registrations.remove(registration);
+                }
+            } else {
+                last = registration;
+            }
+        }
+        if (!onlyDetect) {
+            for (R registration : toDelete) {
+                session.delete(registration);
+            }
+        }
+    }
 
 
     public List<R> findRegistrations(OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
@@ -287,6 +313,23 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
         return registrations;
     }
 
+    @JsonIgnore
+    public Set<DataItem> getCurrent() {
+        OffsetDateTime now = OffsetDateTime.now();
+        R registration = this.getRegistrationAt(now);
+        HashSet<DataItem> dataItems = new HashSet<>();
+        if (registration != null) {
+            for (Object effectObject : registration.getEffectsAt(now)) {
+                Effect effect = (Effect) effectObject;
+                for (Object dataObject : effect.getDataItems()) {
+                    DataItem data = (DataItem) dataObject;
+                    dataItems.add(data);
+                }
+            }
+        }
+        return dataItems;
+    }
+
     private static OffsetDateTime nFrom(OffsetDateTime a) {
         if (a == null) return OffsetDateTime.MIN;
         return a;
@@ -295,6 +338,27 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
     private static OffsetDateTime nTo(OffsetDateTime a) {
         if (a == null) return OffsetDateTime.MAX;
         return a;
+    }
+
+    @Override
+    public IdentifiedEntity getNewest(Collection<IdentifiedEntity> set) {
+        OffsetDateTime last = OffsetDateTime.MIN;
+        IdentifiedEntity newestEntity = null;
+        for (IdentifiedEntity item : set) {
+            if (item instanceof Entity) {
+                Entity entity = (Entity) item;
+                for (Object oRegistration : entity.getRegistrations()) {
+                    Registration registration = (Registration) oRegistration;
+                    OffsetDateTime registrationTime = registration.getLastImportTime();
+                    if (registrationTime != null && registrationTime.isAfter(last)) {
+                        last = registrationTime;
+                        newestEntity = item;
+                        break;
+                    }
+                }
+            }
+        }
+        return newestEntity;
     }
 
 }

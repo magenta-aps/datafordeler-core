@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.plugindemo.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.magenta.datafordeler.core.database.DataItem;
 import dk.magenta.datafordeler.core.database.Identification;
+import org.hibernate.Session;
 
 import javax.persistence.Column;
 import javax.persistence.FetchType;
@@ -12,11 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.Map;
-import org.hibernate.Session;
 
-/**
- * Created by lars on 21-02-17.
- */
 @javax.persistence.Entity
 @Table(name="demo_data")
 @XmlRootElement

@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by lars on 29-05-17. A CommandHandler for executing pulls. The
- * command interface delegates to this when it receives a "pull" command
+ * A CommandHandler for executing pulls. The command interface delegates
+ * to this when it receives a "pull" command
  */
 @Component
 public class ScheduleChangedCommandHandler extends CommandHandler {
@@ -51,7 +51,7 @@ public class ScheduleChangedCommandHandler extends CommandHandler {
         public String table;
 
         @JsonProperty(required = true)
-        public int id;
+        public String id;
 
         @JsonProperty(required = true)
         public List<String> fields;
@@ -85,22 +85,23 @@ public class ScheduleChangedCommandHandler extends CommandHandler {
     }
 
     public boolean accept(Command command) {
-        try {
-            switch(ScheduleType.forData(
-                this.getCommandData(command.getCommandBody()))) {
-                case DUMP:
-                    return engine.isDumpEnabled();
+        if (command != null && command.getCommandBody() != null) {
+            try {
+                ScheduleType scheduleType = ScheduleType.forData(this.getCommandData(command.getCommandBody()));
+                if (scheduleType != null) {
+                    switch (scheduleType) {
+                        case DUMP:
+                            return engine.isDumpEnabled();
 
-                case PULL:
-                    return engine.isPullEnabled();
-
-                default:
-                    return false;
+                        case PULL:
+                            return engine.isPullEnabled();
+                    }
+                }
+            } catch (InvalidClientInputException e) {
+                getLog().warn("failed to determine acceptance", e);
             }
-        } catch (InvalidClientInputException e) {
-            getLog().warn("failed to determine acceptance", e);
-            return false;
         }
+        return false;
     }
 
     @Override

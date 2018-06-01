@@ -24,8 +24,7 @@ import java.util.*;
 import dk.magenta.datafordeler.core.database.Entity;
 
 /**
- * Created by lars on 20-02-17.
- * A Registration defines the time range in which a piece of data is “registered”,
+ * A Registration defines the time range in which a piece of data is "registered",
  * that is, when did it enter into the records of our data source, and when was it 
  * supplanted by more recent data.
  * A Registration points to exactly one Entity, and may have any number of Effects
@@ -221,20 +220,21 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
 
+    public static final String DB_FIELD_REGISTRATION_FROM = "registrationFrom";
+    public static final String IO_FIELD_REGISTRATION_FROM = "registreringFra";
 
-
-    @Column(nullable = true, insertable = true, updatable = false)
+    @Column(name = DB_FIELD_REGISTRATION_FROM, nullable = true, insertable = true, updatable = false)
     protected OffsetDateTime registrationFrom;
 
 
-    @JsonProperty(value = "registreringFra")
+    @JsonProperty(value = IO_FIELD_REGISTRATION_FROM)
     @XmlElement
     @XmlJavaTypeAdapter(type = OffsetDateTime.class, value = OffsetDateTimeAdapter.class)
     public OffsetDateTime getRegistrationFrom() {
         return this.registrationFrom;
     }
 
-    @JsonProperty(value = "registreringFra")
+    @JsonProperty(value = IO_FIELD_REGISTRATION_FROM)
     public void setRegistrationFrom(OffsetDateTime registrationFrom) {
         this.registrationFrom = registrationFrom;
     }
@@ -242,48 +242,54 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
 
-    @Column(nullable = true, insertable = true, updatable = false)
+    public static final String DB_FIELD_REGISTRATION_TO = "registrationTo";
+    public static final String IO_FIELD_REGISTRATION_TO = "registreringTil";
+
+    @Column(name = DB_FIELD_REGISTRATION_TO, nullable = true, insertable = true, updatable = false)
     protected OffsetDateTime registrationTo;
 
-    @JsonProperty(value = "registreringTil")
+    @JsonProperty(value = IO_FIELD_REGISTRATION_TO)
     @XmlElement
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value= OffsetDateTimeAdapter.class)
     public OffsetDateTime getRegistrationTo() {
         return this.registrationTo;
     }
 
-    @JsonProperty(value = "registreringTil")
+    @JsonProperty(value = IO_FIELD_REGISTRATION_TO)
     public void setRegistrationTo(OffsetDateTime registrationTo) {
         this.registrationTo = registrationTo;
     }
 
 
+    public static final String IO_FIELD_SEQUENCE_NUMBER = "sekvensnummer";
 
     @Column(nullable = false, insertable = true, updatable = false)
     protected int sequenceNumber;
 
-    @JsonProperty(value = "sekvensnummer")
+    @JsonProperty(value = IO_FIELD_SEQUENCE_NUMBER)
     @XmlElement
     public int getSequenceNumber() {
         return this.sequenceNumber;
     }
 
-    @JsonProperty(value = "sekvensnummer")
+    @JsonProperty(value = IO_FIELD_SEQUENCE_NUMBER)
     public void setSequenceNumber(int sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
     }
 
 
+    public static final String IO_FIELD_CHECKSUM = "checksum";
+
     // The checksum as reported by the register
     protected String registerChecksum;
 
-    @JsonProperty("checksum")
+    @JsonProperty(value = IO_FIELD_CHECKSUM)
     public String getRegisterChecksum() {
         return this.registerChecksum;
     }
 
 
-    @JsonProperty("checksum")
+    @JsonProperty(value = IO_FIELD_CHECKSUM)
     public void setRegisterChecksum(String registerChecksum) {
         this.registerChecksum = registerChecksum;
     }
@@ -360,15 +366,25 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
     public boolean equals(Registration o) {
         return o != null &&
-            compareTo(o) == 0 &&
-            getSequenceNumber() == o.getSequenceNumber() &&
-            (getRegisterChecksum() == o.getRegisterChecksum() ||
-                getRegisterChecksum()
-                    .equalsIgnoreCase(o.getRegisterChecksum()));
+                compareTo(o) == 0 &&
+                getSequenceNumber() == o.getSequenceNumber() &&
+                (getRegisterChecksum() == o.getRegisterChecksum() ||
+                        getRegisterChecksum()
+                                .equalsIgnoreCase(o.getRegisterChecksum()));
+    }
+
+    public boolean equalTime(Registration o) {
+        if (o == null) return false;
+        if (this.compareTo(o) != 0) return false;
+
+        OffsetDateTime oDateTime = o == null ? null : o.registrationTo;
+        if (this.registrationTo == null) {
+            return (oDateTime == null);
+        }
+        return this.registrationTo.toInstant().compareTo(oDateTime.toInstant()) == 0;
     }
 
     public R split(OffsetDateTime splitTime) {
-        //Registration newReg = this.entity.createRegistration();
         R newReg = (R) this.entity.createRegistration();
         newReg.setRegistrationFrom(splitTime);
         newReg.setRegistrationTo(this.registrationTo);
@@ -378,5 +394,11 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
             newEffect.setRegistration(newReg);
         }
         return newReg;
+    }
+
+    public void mergeInto(R otherRegistration) {
+        for (V effect : new ArrayList<V>(this.getEffects())) {
+            effect.setRegistration(otherRegistration);
+        }
     }
 }

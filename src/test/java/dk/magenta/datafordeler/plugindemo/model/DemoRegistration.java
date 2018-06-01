@@ -8,9 +8,6 @@ import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 
-/**
- * Created by lars on 12-01-17.
- */
 @javax.persistence.Entity
 @Table(name="demo_registration")
 public class DemoRegistration extends Registration<DemoEntity, DemoRegistration, DemoEffect> {

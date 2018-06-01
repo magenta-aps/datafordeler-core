@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.plugindemo.fapi;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import dk.magenta.datafordeler.core.database.LookupDefinition;
 import dk.magenta.datafordeler.core.fapi.ParameterMap;
 import dk.magenta.datafordeler.core.fapi.Query;
@@ -11,9 +10,6 @@ import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by lars on 19-04-17.
- */
 public class DemoQuery extends Query<DemoEntity> {
 
     public static final String POSTNR = "postnr";
@@ -41,6 +37,9 @@ public class DemoQuery extends Query<DemoEntity> {
 
     public void setPostnr(String postnr) {
         this.postnr = postnr;
+        if (postnr != null) {
+            this.increaseDataParamCount();
+        }
     }
 
     public String getBynavn() {
@@ -49,6 +48,9 @@ public class DemoQuery extends Query<DemoEntity> {
 
     public void setBynavn(String bynavn) {
         this.bynavn = bynavn;
+        if (bynavn != null) {
+            this.increaseDataParamCount();
+        }
     }
 
     public String getAktiv() {
@@ -57,6 +59,9 @@ public class DemoQuery extends Query<DemoEntity> {
 
     public void setAktiv(String aktiv) {
         this.aktiv = aktiv;
+        if (aktiv != null) {
+            this.increaseDataParamCount();
+        }
     }
 
     @Override

@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.gapi.GapiTestBase;
-import dk.magenta.datafordeler.core.testutil.TestUserDetails;
-import dk.magenta.datafordeler.core.user.DafoUserManager;
-import dk.magenta.datafordeler.core.user.UserProfile;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
+import dk.magenta.datafordeler.core.testutil.TestUserDetails;
+import dk.magenta.datafordeler.core.user.DafoUserManager;
+import dk.magenta.datafordeler.core.user.UserProfile;
 import dk.magenta.datafordeler.plugindemo.DemoPlugin;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
@@ -27,15 +27,11 @@ import org.springframework.http.*;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
 import static org.mockito.Mockito.when;
 
-/**
- * Created by lars on 06-06-17.
- */
 @RunWith(OrderedRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -103,7 +99,7 @@ public class CommandTest extends GapiTestBase {
         this.callbackController.addCallbackResponse("/test/receipt", "", receiptCallback);
 
 
-        String body = "{\"plugin\":\"Demo\"}";
+        String body = "{\"plugin\":\"Demo\",\"foo\":\"bar\"}";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> httpPostEntity = new HttpEntity<String>(body, headers);
@@ -128,6 +124,7 @@ public class CommandTest extends GapiTestBase {
             status = getResponseNode.get("status").asText();
             Assert.assertEquals("pull", getResponseNode.get("commandName").asText());
             Assert.assertNotNull(getResponseNode.get("received").asText());
+            Assert.assertEquals("bar", getResponseNode.get("commandBody").get("foo").asText());
             Thread.sleep(1000);
         }
         System.out.println("status: "+status);
@@ -195,17 +192,13 @@ public class CommandTest extends GapiTestBase {
         HttpEntity<String> httpGetEntity = new HttpEntity<String>("", headers);
         ResponseEntity<String> getResponse = this.restTemplate.exchange("/command/" + id, HttpMethod.GET, httpGetEntity, String.class);
         Assert.assertNotNull(getResponse);
-        if (!CommandService.getDebugDisableSecurity()) {
-            Assert.assertEquals(403, getResponse.getStatusCodeValue());
-        }
+        Assert.assertEquals(200, getResponse.getStatusCodeValue());
 
         HttpEntity<String> httpDeleteEntity = new HttpEntity<String>("", headers);
         ResponseEntity<String> deleteResponse = this.restTemplate.exchange("/command/"+id, HttpMethod.DELETE, httpDeleteEntity, String.class);
         System.out.println("DELETE Response received: "+deleteResponse.getBody());
         Assert.assertNotNull(deleteResponse);
-        if (!CommandService.getDebugDisableSecurity()) {
-            Assert.assertEquals(403, deleteResponse.getStatusCodeValue());
-        }
+        Assert.assertEquals(200, deleteResponse.getStatusCodeValue());
     }
 
 
@@ -224,9 +217,7 @@ public class CommandTest extends GapiTestBase {
         ResponseEntity<String> postResponse = this.restTemplate.exchange("/command/pull", HttpMethod.POST, httpPostEntity, String.class);
         System.out.println("postResponse: " + postResponse);
         Assert.assertNotNull(postResponse);
-        if (!CommandService.getDebugDisableSecurity()) {
-            Assert.assertEquals(403, postResponse.getStatusCodeValue());
-        }
+        Assert.assertEquals(403, postResponse.getStatusCodeValue());
     }
 
     @Test
@@ -238,9 +229,7 @@ public class CommandTest extends GapiTestBase {
         ResponseEntity<String> postResponse = this.restTemplate.exchange("/command/pull", HttpMethod.POST, httpPostEntity, String.class);
         System.out.println("postResponse: " + postResponse);
         Assert.assertNotNull(postResponse);
-        if (!CommandService.getDebugDisableSecurity()) {
-            Assert.assertEquals(403, postResponse.getStatusCodeValue());
-        }
+        Assert.assertEquals(403, postResponse.getStatusCodeValue());
     }
 
     private String jsonList(List<String> jsonData, String listKey) {

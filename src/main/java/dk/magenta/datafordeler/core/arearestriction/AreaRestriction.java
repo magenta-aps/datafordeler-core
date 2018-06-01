@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 /**
  * Describes a specific area that can be used when limiting queries to data in DAFO.
- *
  */
 public class AreaRestriction {
     private String name;

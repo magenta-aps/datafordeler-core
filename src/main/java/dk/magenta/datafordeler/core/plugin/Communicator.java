@@ -8,9 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
-/**
- * Created by lars on 11-01-17.
- */
 public interface Communicator {
 
   InputStream fetch(URI uri) throws HttpStatusException, DataStreamException;

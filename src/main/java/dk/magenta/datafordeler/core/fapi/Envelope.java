@@ -14,9 +14,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * Created by lars on 01-07-17.
- */
 public class Envelope {
 
     public Envelope() {
@@ -85,7 +82,7 @@ public class Envelope {
 
     @JsonProperty
     @XmlElement
-    private List<?> results;
+    private List<?> results = Collections.emptyList();
 
     public void setResults(Collection<?> results) {
         this.results = new LinkedList<>(results);

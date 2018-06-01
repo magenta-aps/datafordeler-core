@@ -3,10 +3,8 @@ package dk.magenta.datafordeler.core.command;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.database.ConfigurationSessionManager;
-import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.role.CommandRole;
@@ -33,7 +31,6 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by lars on 29-05-17.
  * Webservice that receives commands on POST requests, checks job status on GET
  * requests, and cancels jobs on DELETE requests.
  * The basic idea is that a POST request will parsed, and if successful, a row will be put in the Command table.
@@ -60,13 +57,6 @@ public class CommandService {
 
     @Autowired
     private DafoUserManager dafoUserManager;
-
-    // For debugging purposes - make sure this is set to false when running in production
-    private static boolean DEBUG_DISABLE_SECURITY = true;
-
-    public static boolean getDebugDisableSecurity() {
-        return DEBUG_DISABLE_SECURITY;
-    }
 
     /**
      * Check that the user in the loggerHelper has access to the required role, and if not, log the attempt and throw an exception
@@ -96,9 +86,6 @@ public class CommandService {
      */
     protected void checkAccess(DafoUserDetails dafoUserDetails, SystemRole requiredRole)
             throws AccessDeniedException, AccessRequiredException {
-        if (DEBUG_DISABLE_SECURITY) {
-            return;
-        }
         dafoUserDetails.checkHasSystemRole(requiredRole);
     }
 
@@ -124,7 +111,8 @@ public class CommandService {
                                         // * has a target that matches the command requested (e.g. "pull")
                                         commandRole.getCommandName().equalsIgnoreCase(commandName) &&
                                         // * has a details map that validates the command body
-                                        commandData.containsAll(commandRole.getDetails())
+                                        (commandData == null && (commandRole.getDetails() == null || commandRole.getDetails().isEmpty())) ||
+                                        (commandData != null && commandData.containsAll(commandRole.getDetails()))
                                 ) {
                             return commandRole;
                         }
@@ -141,11 +129,12 @@ public class CommandService {
         CommandData commandData = handler.getCommandData(command.getCommandBody());
         SystemRole requiredRole = this.findMatchingRole(roleType, command.getCommandName(), commandData);
         if (requiredRole == null) {
-            loggerHelper.info("No Command Role exists for [SystemRoleType:"+roleType.name()+", Command: "+command.getCommandName()+", CommandData: "+commandData.toString()+"]");
+            loggerHelper.info("No Command Role exists for [SystemRoleType:"+roleType.name()+", Command: "+command.getCommandName()+", CommandData: "+commandData+"]");
             throw new AccessDeniedException("No Command Role exists for command '"+command.getCommandName()+"' with data '"+commandData+"'");
         }
         // Check that the user has this SystemRole
         this.checkAndLogAccess(loggerHelper, requiredRole);
+        System.out.println("ROLE OK");
     }
 
 

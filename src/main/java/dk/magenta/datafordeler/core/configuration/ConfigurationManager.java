@@ -8,14 +8,11 @@ import org.hibernate.Transaction;
 import javax.persistence.NoResultException;
 
 /**
- * Created by lars on 06-04-17.
  * Plugin configurations are stored in separate database tables, each with only one
  * row. On loading the program, the Configuration object is retrieved from the database, or
  * if one doesn’t exist (such as on the first run), created and saved.
  */
 public abstract class ConfigurationManager<C extends Configuration> {
-
-    private C configuration;
 
     /**
      * Locate Configuration object, or create one if none found.
@@ -26,12 +23,11 @@ public abstract class ConfigurationManager<C extends Configuration> {
         Transaction transaction = session.beginTransaction();
         Class<C> configurationClass = this.getConfigurationClass();
         try {
-            this.configuration = session.createQuery("select c from " + configurationClass.getSimpleName() + " c", configurationClass).getSingleResult();
+            session.createQuery("select c from " + configurationClass.getSimpleName() + " c", configurationClass).getSingleResult();
             this.getLog().info("Loaded configuration object");
         } catch (NoResultException e) {
             this.getLog().info("No configuration object exists, create one.");
-            this.configuration = this.createConfiguration();
-            session.persist(this.configuration);
+            session.persist(this.createConfiguration());
             transaction.commit();
         } finally {
             session.close();

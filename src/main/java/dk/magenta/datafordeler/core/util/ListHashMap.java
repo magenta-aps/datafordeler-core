@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by lars on 23-02-17.
  * A collection mapping keys to lists.
  * Extends HashMap, so the separate lists under each key can be accessed by calling methods on the superclass
  */

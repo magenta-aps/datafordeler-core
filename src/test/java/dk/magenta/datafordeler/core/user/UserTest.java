@@ -18,9 +18,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
-/**
- * Created by jubk on 22-06-2017.
- */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

@@ -1,6 +1,8 @@
 package dk.magenta.datafordeler.core.command;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.Engine;
@@ -20,7 +22,6 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Created by lars on 29-05-17.
  * A CommandHandler for executing pulls. The command interface delegates to this
  * when it receives a "pull" command
  */
@@ -34,6 +35,17 @@ public class PullCommandHandler extends CommandHandler {
 
         @JsonProperty(required = true)
         public String plugin;
+
+        private ObjectNode data = new ObjectMapper().createObjectNode();
+
+        @JsonAnySetter
+        public void setData(String key, JsonNode value) {
+            this.data.set(key, value);
+        }
+
+        public ObjectNode getData() {
+            return this.data;
+        }
 
         @Override
         public boolean containsAll(Map<String, Object> data) {
@@ -84,7 +96,7 @@ public class PullCommandHandler extends CommandHandler {
             Plugin plugin = this.getPlugin(commandData);
             this.getLog().info("Pulling with plugin " + plugin.getClass().getCanonicalName());
 
-            Pull pull = new Pull(engine, plugin);
+            Pull pull = new Pull(engine, plugin, commandData.getData());
             pull.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
                 public void uncaughtException(Thread th, Throwable ex) {
                     PullCommandHandler.this.getLog().error("Pull failed", ex);

@@ -7,9 +7,6 @@ import org.hibernate.query.Query;
 import javax.persistence.Table;
 import java.util.UUID;
 
-/**
- * Created by lars on 21-02-17.
- */
 @javax.persistence.Entity
 @Table(name="test_entity")
 public class TestEntity extends Entity<TestEntity, TestRegistration> {

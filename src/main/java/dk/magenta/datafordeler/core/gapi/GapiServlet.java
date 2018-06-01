@@ -14,9 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 
-/**
- * Created by lars on 15-02-17.
- */
 @WebServlet(name="GapiInterface", urlPatterns={"/odata/gapi", "/odata/gapi/*"})
 public class GapiServlet extends HttpServlet {
 

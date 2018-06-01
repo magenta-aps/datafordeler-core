@@ -6,11 +6,11 @@ import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
-import dk.magenta.datafordeler.core.util.ItemInputStream;
 import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.KeyExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
+import dk.magenta.datafordeler.core.util.ItemInputStream;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityReference;
@@ -30,9 +30,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.UUID;
 
-/**
- * Created by lars on 03-04-17.
- */
 @RunWith(OrderedRunner.class)
 @ContextConfiguration(classes = Application.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

@@ -4,7 +4,7 @@ import dk.magenta.datafordeler.core.database.RegistrationReference;
 import org.apache.http.StatusLine;
 
 /**
- * Created by lars on 14-03-17.
+ * Exception to be thrown when a reference doesn't lead to a registration
  */
 public class FailedReferenceException extends HttpStatusException {
 

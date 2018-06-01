@@ -1,8 +1,5 @@
 package dk.magenta.datafordeler.core.exception;
 
-/**
- * Created by lars on 23-05-17.
- */
 public class PluginImplementationException extends DataFordelerException {
 
     public PluginImplementationException(String message) {

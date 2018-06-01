@@ -1,16 +1,14 @@
 package dk.magenta.datafordeler.core.user;
 
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+import dk.magenta.datafordeler.core.exception.ConfigurationException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
+import java.beans.PropertyVetoException;
 
-/**
- * Created by jubk on 21-06-2017.
- */
 @Component
 public class UserDatabaseConfig {
 
@@ -24,7 +22,7 @@ public class UserDatabaseConfig {
   private String password;
 
   @Bean
-  public UserQueryManager userQueryManager() {
+  public UserQueryManager userQueryManager() throws ConfigurationException {
     if (enabled) {
       return new UserQueryManagerImpl(userJdbcTemplate());
     } else {
@@ -40,21 +38,28 @@ public class UserDatabaseConfig {
    * the datasource.
    * @return A configured DataSource
    */
-  public DataSource userDataSource() {
-    DataSourceProperties dataSourceProperties = new DataSourceProperties();
-    dataSourceProperties.setUrl(url);
-    dataSourceProperties.setUsername(username);
-    dataSourceProperties.setPassword(password);
-    dataSourceProperties.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    return dataSourceProperties.initializeDataSourceBuilder().build();
+  public ComboPooledDataSource userDataSource() throws ConfigurationException {
+    ComboPooledDataSource pooledDataSource = new ComboPooledDataSource();
+    try {
+      pooledDataSource.setJdbcUrl(url);
+      pooledDataSource.setUser(username);
+      pooledDataSource.setPassword(password);
+      pooledDataSource.setDriverClass("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+      pooledDataSource.setMinPoolSize(5);
+      pooledDataSource.setMaxPoolSize(200);
+      pooledDataSource.setMaxStatements(50);
+      pooledDataSource.setIdleConnectionTestPeriod(3000);
+    } catch (PropertyVetoException e) {
+        throw new ConfigurationException(e);
+    }
+    return pooledDataSource;
   }
 
   /**
    * Builds a JdbcTemplate bean used for working with the DAFO users database.
    * @return A configured JdbcTemplate
    */
-  public JdbcTemplate userJdbcTemplate() {
-    DataSource dataSource = userDataSource();
-    return new JdbcTemplate(dataSource);
+  public JdbcTemplate userJdbcTemplate() throws ConfigurationException {
+    return new JdbcTemplate(this.userDataSource());
   }
 }

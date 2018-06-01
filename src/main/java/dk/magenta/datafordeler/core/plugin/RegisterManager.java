@@ -5,6 +5,7 @@ import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
+import dk.magenta.datafordeler.core.io.ImportInputStream;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
@@ -13,16 +14,18 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.web.util.UriUtils;
 
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- * Created by lars on 05-04-17.
+ * Manager for a Plugin's connection to its data source, through e series of EntityManagers
  */
 public abstract class RegisterManager {
 
@@ -152,9 +155,21 @@ public abstract class RegisterManager {
         return eventCommunicator.fetch(eventInterface);
     }
 
-    public boolean pullsEventsCommonly() {
-        return true;
+    public ImportInputStream getCacheStream(List<File> cacheFiles) throws IOException {
+        InputStream inputStream = null;
+        for (File file : cacheFiles) {
+            Path filePath = Paths.get(file.toURI());
+            InputStream newInputStream = Files.newInputStream(filePath);
+            if (inputStream == null) {
+                inputStream = newInputStream;
+            } else {
+                inputStream = new SequenceInputStream(inputStream, newInputStream);
+            }
+        }
+        return new ImportInputStream(inputStream, cacheFiles);
     }
+
+    public abstract boolean pullsEventsCommonly();
 
     public ItemInputStream<? extends PluginSourceData> pullEvents(ImportMetadata importMetadata) throws DataFordelerException {
         /*HashMap<EntityManager, ItemInputStream<? extends PluginSourceData>> streams = new HashMap<>();
@@ -274,10 +289,18 @@ public abstract class RegisterManager {
         return sj.toString();
     }
 
-    public void setLastUpdated(EntityManager entityManager, OffsetDateTime timestamp) {
-        Session session = this.getSessionManager().getSessionFactory().openSession();
-        entityManager.setLastUpdated(session, timestamp);
-        session.close();
+    public void setLastUpdated(EntityManager entityManager, ImportMetadata importMetadata) {
+        boolean inTransaction = importMetadata.isTransactionInProgress();
+        Session session = importMetadata.getSession();
+        if (!inTransaction) {
+            session.beginTransaction();
+            importMetadata.setTransactionInProgress(true);
+        }
+        entityManager.setLastUpdated(session, importMetadata.getImportTime());
+        if (!inTransaction) {
+            session.getTransaction().commit();
+            importMetadata.setTransactionInProgress(false);
+        }
     }
 
 }

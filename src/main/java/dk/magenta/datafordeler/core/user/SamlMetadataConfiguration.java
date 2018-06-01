@@ -17,9 +17,6 @@ import org.springframework.context.annotation.Bean;
 import java.io.*;
 import java.net.URISyntaxException;
 
-/**
- * Created by jubk on 19-06-2017.
- */
 @org.springframework.context.annotation.Configuration
 @EnableConfigurationProperties(TokenConfigProperties.class)
 public class SamlMetadataConfiguration {

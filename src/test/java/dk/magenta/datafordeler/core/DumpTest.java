@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dk.magenta.datafordeler.core.command.ScheduleChangedCommandHandler;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.dump.Dump;
 import dk.magenta.datafordeler.core.dump.DumpConfiguration;
@@ -12,6 +13,7 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.TaskListener;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
+import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import dk.magenta.datafordeler.plugindemo.model.DemoData;
 import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
@@ -19,6 +21,7 @@ import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
 import org.apache.commons.io.Charsets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -47,15 +50,15 @@ import org.springframework.test.context.TestPropertySource;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * Created by lars on 03-04-17.
- */
 @RunWith(OrderedRunner.class)
 @ContextConfiguration(classes = Application.class)
 @PropertySource("classpath:application-test.properties")
@@ -84,6 +87,9 @@ public class DumpTest extends GapiTestBase {
 
     @LocalServerPort
     private int port;
+
+    private static final OffsetDateTime FROM_TIME =
+        OffsetDateTime.parse("2001-01-01T00:00:00+00:00");
 
     /**
      * Perform some sanity checks before each test.
@@ -147,19 +153,15 @@ public class DumpTest extends GapiTestBase {
 
     private void createOneEntity(int postalcode, String cityname)
         throws DataFordelerException {
-        final OffsetDateTime from =
-            OffsetDateTime.parse("2001-01-01T00:00:00+00:00");
-        final OffsetDateTime split =
-            OffsetDateTime.parse("2011-01-01T00:00:00+00:00");
 
         DemoEntity entity = new DemoEntity(
             new UUID(0, Integer.parseInt(Integer.toString(postalcode), 16)),
             "http://example.com"
         );
-        DemoRegistration registration = new DemoRegistration(from, null, 0);
+        DemoRegistration registration = new DemoRegistration(FROM_TIME, null, 0);
         entity.addRegistration(registration);
 
-        DemoEffect effect1 = new DemoEffect(registration, from, null);
+        DemoEffect effect1 = new DemoEffect(registration, FROM_TIME, null);
         effect1.setDataItems(Arrays.asList(
             new DemoData(postalcode, cityname)
         ));
@@ -253,7 +255,7 @@ public class DumpTest extends GapiTestBase {
             .stream(Format.values()).map(f ->
                 new DumpConfiguration(
                     "duuump-" + f.name(),
-                    "/demo/postnummer/1/rest/search",
+                    "/demo/postnummer/1/rest/search?postnr=*",
                     f,
                     Charsets.UTF_8,
                     "* * * * * *",
@@ -274,15 +276,20 @@ public class DumpTest extends GapiTestBase {
         List<DumpData> dumpDatas =
             QueryManager.getAllItems(session, DumpData.class);
 
-        Assert.assertEquals("After one run",
-            configs.size(), dumps.size());
+        TriConsumer<String, List<DumpConfiguration>, List<DumpInfo>> check =
+            (message, configList, dumpList) -> Assert.assertEquals(message,
+                configList.stream()
+                    .map(DumpConfiguration::getFormat)
+                    .collect(Collectors.toList()),
+                dumpList.stream()
+                    .map(DumpInfo::getFormat)
+                    .collect(Collectors.toList()));
 
-        Assert.assertEquals("After one run",
-            configs.size(), dumpDatas.size());
+        check.accept("After one run", configs, dumps);
 
         Assert.assertArrayEquals("Dump contents",
             new String[]{
-                "<Envelope>\n"
+                unifyNewlines("<Envelope>\n"
                     + "  <path></path>\n"
                     + "  <terms>https://doc.test.data.gl/terms</terms>\n"
                     + "  <requestTimestamp/>\n"
@@ -291,8 +298,8 @@ public class DumpTest extends GapiTestBase {
                     + "  <page>1</page>\n"
                     + "  <pageSize>10</pageSize>\n"
                     + "  <results/>\n"
-                    + "</Envelope>\n",
-                "{\n"
+                    + "</Envelope>\n"),
+                unifyNewlines("{\n"
                     + "  \"path\" : \"\",\n"
                     + "  \"terms\" : \"https://doc.test.data.gl/terms\",\n"
                     + "  \"requestTimestamp\" : null,\n"
@@ -301,11 +308,11 @@ public class DumpTest extends GapiTestBase {
                     + "  \"page\" : 1,\n"
                     + "  \"pageSize\" : 10,\n"
                     + "  \"results\" : [ ]\n"
-                    + "}",
+                    + "}"),
                 "",
                 "",
             },
-            dumps.stream().map(DumpInfo::getStringData).toArray());
+            dumps.stream().map(DumpInfo::getStringData).map(DumpTest::unifyNewlines).toArray());
 
         session.close();
 
@@ -318,13 +325,9 @@ public class DumpTest extends GapiTestBase {
 
         dumps = QueryManager.getAllItems(session, DumpInfo.class);
 
-        Assert.assertEquals("After two runs",
-            configs.size(), dumps.size());
-
         dumpDatas = QueryManager.getAllItems(session, DumpData.class);
 
-        Assert.assertEquals("After two runs",
-            configs.size(), dumpDatas.size());
+        check.accept("After two runs", configs, dumps);
 
         session.close();
     }
@@ -349,7 +352,7 @@ public class DumpTest extends GapiTestBase {
             .stream(Format.values()).map(f ->
                 new DumpConfiguration(
                     "duuump-" + f.name(),
-                    "/demo/postnummer/1/rest/search",
+                    "/demo/postnummer/1/rest/search?postnr=*",
                     f,
                     Charsets.UTF_8,
                     "* * * * * *",
@@ -370,6 +373,14 @@ public class DumpTest extends GapiTestBase {
         Assert.assertEquals("After one run",
             configs.size(), dumps.size());
 
+        OffsetDateTimeAdapter adapter = new OffsetDateTimeAdapter();
+        OffsetDateTime localFrom = FROM_TIME.withOffsetSameInstant(
+            ZoneOffset.systemDefault().getRules()
+                .getOffset(Instant.from(FROM_TIME))
+        );
+
+        final String localString = adapter.marshal(localFrom);
+
         Assert.assertArrayEquals("Dump contents",
             Arrays.stream(DumpConfiguration.Format.values()).map(
                 s -> {
@@ -380,8 +391,12 @@ public class DumpTest extends GapiTestBase {
                         return null;
                     }
                 }
-            ).toArray(),
-            dumps.stream().map(DumpInfo::getStringData).toArray());
+            ).map(DumpTest::unifyNewlines).toArray(),
+            dumps.stream().map(DumpInfo::getStringData).map(
+                s -> s
+                    .replace(localString, "XXX")
+                    .replace("\"XXX\"", "XXX")
+            ).map(DumpTest::unifyNewlines).toArray());
 
         session.close();
 
@@ -413,7 +428,7 @@ public class DumpTest extends GapiTestBase {
 
         new Dump(this.engine, sessionManager, new DumpConfiguration(
             "duuump-whatever",
-            "/demo/postnummer/1/rest/search",
+            "/demo/postnummer/1/rest/search?postnr=*",
             DumpConfiguration.Format.csv,
             Charsets.UTF_8,
             "* * * * * *",
@@ -455,6 +470,34 @@ public class DumpTest extends GapiTestBase {
         JsonNode json = objectMapper.readTree(resp.getBody());
 
         Assert.assertNotNull(json);
+    }
+
+    private static Pattern newlinePattern = Pattern.compile("\\R");
+
+    private static String unifyNewlines(String input) {
+        return newlinePattern.matcher(input).replaceAll("\r\n");
+    }
+
+    @Test
+    @Order(order = 5)
+    public void testScheduleParse() throws IOException {
+        ScheduleChangedCommandHandler.ScheduleChangedCommandData data;
+        data = objectMapper.readerFor(ScheduleChangedCommandHandler.ScheduleChangedCommandData.class).readValue(
+                "{\"table\":\"dummy\", \"id\": \"somestring\", \"fields\":[\"field1\"]}"
+        );
+        Assert.assertEquals("dummy", data.table);
+        Assert.assertEquals("somestring", data.id);
+        Assert.assertEquals(1, data.fields.size());
+        Assert.assertEquals("field1", data.fields.get(0));
+
+        data = objectMapper.readerFor(ScheduleChangedCommandHandler.ScheduleChangedCommandData.class).readValue(
+                "{\"table\":\"dummy\", \"id\": 3, \"fields\":[\"field1\", \"field2\"]}"
+        );
+        Assert.assertEquals("dummy", data.table);
+        Assert.assertEquals("3", data.id);
+        Assert.assertEquals(2, data.fields.size());
+        Assert.assertEquals("field1", data.fields.get(0));
+        Assert.assertEquals("field2", data.fields.get(1));
     }
 
 }

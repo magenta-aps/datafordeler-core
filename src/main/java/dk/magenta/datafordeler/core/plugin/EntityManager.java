@@ -1,9 +1,11 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.database.*;
-import dk.magenta.datafordeler.core.exception.*;
+import dk.magenta.datafordeler.core.exception.DataFordelerException;
+import dk.magenta.datafordeler.core.exception.FailedReferenceException;
+import dk.magenta.datafordeler.core.exception.HttpStatusException;
+import dk.magenta.datafordeler.core.exception.WrongSubclassException;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
@@ -19,11 +21,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Created by lars on 13-03-17.
- *
  * Entity (and associates) specific manager. Subclass in plugins
  * A plugin can have any number of Entity classes, each needing their own way of handling.
  * An EntityManager basically specifies how to parse raw input data into the bitemporal data
@@ -142,18 +145,6 @@ public abstract class EntityManager {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     /** Reference parsing **/
 
     /**
@@ -192,7 +183,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
+    public List<? extends Registration> parseData(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
 
     /**
      * Parse incoming data into a Registration (data coming from within a request envelope)
@@ -200,7 +191,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public List<? extends Registration> parseRegistration(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
+    public List<? extends Registration> parseData(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {return null;}
 
 
     public boolean handlesOwnSaves() {
@@ -238,7 +229,7 @@ public abstract class EntityManager {
             throw new FailedReferenceException(reference, e);
         }
 
-        return this.parseRegistration(
+        return this.parseData(
             registrationData,
             importMetadata
         );
@@ -334,5 +325,12 @@ public abstract class EntityManager {
         }
         lastUpdated.setTimestamp(time);
         session.saveOrUpdate(lastUpdated);
+    }
+
+    /**
+     * Should return whether the configuration is set so that pulls are enabled for this entitymanager
+     */
+    public boolean pullEnabled() {
+        return false;
     }
 }

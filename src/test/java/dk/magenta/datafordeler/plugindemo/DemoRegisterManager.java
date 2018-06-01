@@ -18,10 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.stereotype.Component;
 
-import javax.inject.Singleton;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,9 +33,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
 
-/**
- * Created by lars on 05-04-17.
- */
 @Component
 public class DemoRegisterManager extends RegisterManager {
 
@@ -190,16 +185,25 @@ public class DemoRegisterManager extends RegisterManager {
     }
 
     @Override
-    public void setLastUpdated(EntityManager entityManager, OffsetDateTime timestamp) {
-        Session session = this.getSessionManager().getSessionFactory().openSession();
+    public void setLastUpdated(EntityManager entityManager, ImportMetadata importMetadata) {
+        boolean inTransaction = importMetadata.isTransactionInProgress();
+        Session session = importMetadata.getSession();
+        if (!inTransaction) {
+            session.beginTransaction();
+            importMetadata.setTransactionInProgress(true);
+        }
         if (entityManager == null) {
             for (EntityManager e : this.entityManagers) {
-                e.setLastUpdated(session, timestamp);
+                e.setLastUpdated(session, importMetadata.getImportTime());
             }
         } else {
-            entityManager.setLastUpdated(session, timestamp);
+            entityManager.setLastUpdated(session, importMetadata.getImportTime());
         }
-        session.close();
+
+        if (!inTransaction) {
+            session.getTransaction().commit();
+            importMetadata.setTransactionInProgress(false);
+        }
     }
 
 

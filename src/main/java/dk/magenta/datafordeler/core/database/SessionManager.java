@@ -11,11 +11,10 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import javax.annotation.PreDestroy;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 
 /**
- * A bean to obtain Sessions with. Autowire this in, and obtain sessions with
+ * A bean to obtain Sessions with. This should be autowired in, and sessions obtained with
  * sessionManager.getSessionFactory().openSession();
  */
 public class SessionManager {
@@ -27,13 +26,11 @@ public class SessionManager {
     public SessionManager(SessionManagerConfiguration smConfig) {
         try {
             this.log.info("Initialize SessionManager");
-            // Create the SessionFactory from hibernate.cfg.xml
 
             // Create empty configuration object
             Configuration configuration = new Configuration();
 
-            this.log.info("Loading configuration from hibernate.cfg.xml");
-            Properties props = System.getProperties();
+            this.log.info("Loading configuration from " + smConfig.getPrimaryHibernateConfigurationFile());
             configuration.configure(smConfig.getPrimaryHibernateConfigurationFile());
 
             Set<Class> managedClasses = new HashSet<>();
@@ -53,6 +50,10 @@ public class SessionManager {
             ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
             componentProvider.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));
             componentProvider.addExcludeFilter(new AssignableTypeFilter(dk.magenta.datafordeler.core.configuration.Configuration.class));
+
+            for (Class cls : ConfigurationSessionManager.getManagedClasses()) {
+                componentProvider.addExcludeFilter(new AssignableTypeFilter(cls));
+            }
 
             Set<BeanDefinition> components = componentProvider.findCandidateComponents("dk.magenta.datafordeler");
             ClassLoader cl = Thread.currentThread().getContextClassLoader();

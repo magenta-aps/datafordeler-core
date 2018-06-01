@@ -73,11 +73,6 @@
             <version>1.0.0.Final</version>
         </dependency>
         <dependency>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>8.4-701.jdbc4</version>
-        </dependency>
-        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-c3p0</artifactId>
             <version>5.1.10.Final</version>
@@ -201,6 +196,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
             <version>${spring.boot.version}</version>
+        </dependency>
+        <!-- needed for logging on windows -->
+        <dependency>
+            <groupId>org.dblock.log4jna</groupId>
+            <artifactId>log4jna-api</artifactId>
+            <version>2.0</version>
         </dependency>
 
         <!-- Apache CXF (fapi) -->
@@ -352,6 +353,27 @@
                 </executions>
             </plugin>
 
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-site</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

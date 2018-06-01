@@ -26,7 +26,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
 /**
- * Created by lars on 20-02-17.
  * An Effect defines the time range in which a piece of data has effect.
  * An Effect points to exactly one Registration, but may have any number of DataItems
  * associated.
@@ -52,13 +51,15 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Filter(name = DataItem.FILTER_RECORD_AFTER, condition="(lastUpdated > :"+DataItem.FILTERPARAM_RECORD_AFTER+")")
+    @JoinTable(
+        joinColumns = @JoinColumn(name = "effects_id", referencedColumnName = "id"),
+        inverseJoinColumns = @JoinColumn(name = "dataitems_id", referencedColumnName = "id"),
+        indexes = {
+            @Index(columnList = "effects_id"),
+            @Index(columnList = "dataitems_id")
+        }
+    )
     protected Set<D> dataItems;
-
-    @Column(nullable = true, insertable = true, updatable = false)
-    private OffsetDateTime effectFrom;
-
-    @Column(nullable = true, insertable = true, updatable = false)
-    private OffsetDateTime effectTo;
 
     public Effect() {
         this.dataItems = new HashSet<D>();
@@ -126,32 +127,37 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
         }
     }
 
-    @JsonProperty(value = "virkningFra")
-    @XmlElement(name = "virkningFra")
+    public static final String DB_FIELD_EFFECT_FROM = "effectFrom";
+    public static final String IO_FIELD_EFFECT_FROM = "virkningFra";
+
+    @Column(name = DB_FIELD_EFFECT_FROM, nullable = true, insertable = true, updatable = false)
+    @JsonProperty(value = IO_FIELD_EFFECT_FROM)
+    @XmlElement(name = IO_FIELD_EFFECT_FROM)
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
+    private OffsetDateTime effectFrom;
+
     public OffsetDateTime getEffectFrom() {
         return this.effectFrom;
     }
 
-    @JsonProperty(value = "virkningFra")
-    @XmlElement(name = "virkningFra")
-    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
     public void setEffectFrom(OffsetDateTime effectFrom) {
         this.effectFrom = effectFrom;
     }
 
 
+    public static final String DB_FIELD_EFFECT_TO = "effectTo";
+    public static final String IO_FIELD_EFFECT_TO = "virkningTil";
 
-    @JsonProperty(value = "virkningTil")
-    @XmlElement(name = "virkningTil")
+    @JsonProperty(value = IO_FIELD_EFFECT_TO)
+    @XmlElement(name = IO_FIELD_EFFECT_TO)
     @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
+    @Column(name = DB_FIELD_EFFECT_TO, nullable = true, insertable = true, updatable = false)
+    private OffsetDateTime effectTo;
+
     public OffsetDateTime getEffectTo() {
         return this.effectTo;
     }
 
-    @JsonProperty(value = "virkningTil")
-    @XmlElement(name = "virkningTil")
-    @XmlJavaTypeAdapter(type=OffsetDateTime.class, value=OffsetDateTimeAdapter.class)
     public void setEffectTo(OffsetDateTime effectTo) {
         this.effectTo = effectTo;
     }
@@ -268,6 +274,11 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
             data.addEffect(other);
         }
         return other;
+    }
+
+    public String toCompactString() {
+        R registration = this.registration;
+        return registration.registrationFrom + "|" + registration.registrationTo + "|" + this.effectFrom + "|" + this.effectTo;
     }
 
 }

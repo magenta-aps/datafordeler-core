@@ -1,9 +1,7 @@
 package dk.magenta.datafordeler.core.exception;
 
-import java.io.IOException;
-
 /**
- * Created by lars on 14-03-17.
+ * Exception to be thrown in case of an error in handling data transfer
  */
 public class DataStreamException extends DataFordelerException {
 

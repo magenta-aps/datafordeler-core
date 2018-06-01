@@ -12,7 +12,6 @@ public class DumpData extends DatabaseEntry {
     private byte[] data;
 
     public DumpData() {
-
     }
 
     public DumpData(byte[] data) {

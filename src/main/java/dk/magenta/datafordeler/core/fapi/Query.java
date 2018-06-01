@@ -9,15 +9,12 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Query object specifying a search, with basic filter parameters
  * Subclasses should specify further searchable parameters, annotated with @QueryField.
  * SOAP clients should pass a serialized instance of a Query class to the SOAP interface
- * Created by lars on 19-04-17.
  */
 public abstract class Query<E extends Entity> {
 
@@ -49,6 +46,9 @@ public abstract class Query<E extends Entity> {
 
     @QueryField(queryName = "recordAfter", type = QueryField.FieldType.STRING)
     protected OffsetDateTime recordAfter = null;
+
+    @QueryField(queryName = "UUID", type = QueryField.FieldType.STRING)
+    private List<UUID> uuid = new ArrayList<>();
 
     private List<String> kommunekodeRestriction = new ArrayList<>();
 
@@ -97,6 +97,7 @@ public abstract class Query<E extends Entity> {
         this(intFromString(page, 0), intFromString(pageSize, 10), parseDateTime(registrationFrom), parseDateTime(registrationTo));
     }
 
+
     public int getPageSize() {
         return this.pageSize;
     }
@@ -144,11 +145,22 @@ public abstract class Query<E extends Entity> {
     }
 
     public void setRegistrationFrom(OffsetDateTime registrationFrom) {
-        this.registrationFrom = registrationFrom;
+        this.setRegistrationFrom(registrationFrom, null);
     }
 
-    public void setRegistrationFrom(String registrationFrom) throws DateTimeParseException {
-        this.registrationFrom = parseDateTime(registrationFrom);
+    public void setRegistrationFrom(OffsetDateTime registrationFrom, OffsetDateTime fallback) {
+        this.registrationFrom = registrationFrom;
+        if (registrationFrom == null && fallback != null) {
+            this.registrationFrom = fallback;
+        }
+    }
+
+    public void setRegistrationFrom(String registrationFrom) {
+        this.setRegistrationFrom(registrationFrom, null);
+    }
+
+    public void setRegistrationFrom(String registrationFrom, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setRegistrationFrom(parseDateTime(registrationFrom), fallback);
     }
 
     public OffsetDateTime getRegistrationTo() {
@@ -156,11 +168,22 @@ public abstract class Query<E extends Entity> {
     }
 
     public void setRegistrationTo(OffsetDateTime registrationTo) {
-        this.registrationTo = registrationTo;
+        this.setRegistrationTo(registrationTo, null);
     }
 
-    public void setRegistrationTo(String registrationTo) throws DateTimeParseException {
-        this.registrationTo = parseDateTime(registrationTo);
+    public void setRegistrationTo(OffsetDateTime registrationTo, OffsetDateTime fallback) {
+        this.registrationTo = registrationTo;
+        if (registrationTo == null && fallback != null) {
+            this.registrationTo = fallback;
+        }
+    }
+
+    public void setRegistrationTo(String registrationTo) {
+        this.setRegistrationTo(registrationTo, null);
+    }
+
+    public void setRegistrationTo(String registrationTo, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setRegistrationTo(parseDateTime(registrationTo), fallback);
     }
 
     public OffsetDateTime getEffectFrom() {
@@ -168,11 +191,22 @@ public abstract class Query<E extends Entity> {
     }
 
     public void setEffectFrom(OffsetDateTime effectFrom) {
+        this.setEffectFrom(effectFrom, null);
+    }
+
+    public void setEffectFrom(OffsetDateTime effectFrom, OffsetDateTime fallback) {
         this.effectFrom = effectFrom;
+        if (effectFrom == null && fallback != null) {
+            this.effectFrom = fallback;
+        }
     }
 
     public void setEffectFrom(String effectFrom) {
-        this.effectFrom = parseDateTime(effectFrom);
+        this.setEffectFrom(effectFrom, null);
+    }
+
+    public void setEffectFrom(String effectFrom, OffsetDateTime fallback) {
+        this.setEffectFrom(parseDateTime(effectFrom), fallback);
     }
 
     public OffsetDateTime getEffectTo() {
@@ -180,11 +214,22 @@ public abstract class Query<E extends Entity> {
     }
 
     public void setEffectTo(OffsetDateTime effectTo) {
+        this.setEffectTo(effectTo, null);
+    }
+
+    public void setEffectTo(OffsetDateTime effectTo, OffsetDateTime fallback) {
         this.effectTo = effectTo;
+        if (effectTo == null && fallback != null) {
+            this.effectTo = fallback;
+        }
     }
 
     public void setEffectTo(String effectTo) {
-        this.effectTo = parseDateTime(effectTo);
+        this.setEffectTo(effectTo, null);
+    }
+
+    public void setEffectTo(String effectTo, OffsetDateTime fallback) {
+        this.setEffectTo(parseDateTime(effectTo), fallback);
     }
 
     public OffsetDateTime getRecordAfter() {
@@ -197,7 +242,21 @@ public abstract class Query<E extends Entity> {
 
     public void setRecordAfter(String recordAfter) throws DateTimeParseException {
         this.recordAfter = parseDateTime(recordAfter);
+        if (recordAfter != null) {
+            this.increaseDataParamCount();
+        }
     }
+
+    public void setUuid(Collection<UUID> uuid) {
+        this.uuid = new ArrayList<>(uuid);
+    }
+
+    public void addUUID(String uuid){
+        if (uuid != null){
+            this.uuid.add(UUID.fromString(uuid));
+        }
+    }
+
 
     public void addKommunekodeRestriction(String kommunekode) {
         this.kommunekodeRestriction.add(kommunekode);
@@ -220,6 +279,9 @@ public abstract class Query<E extends Entity> {
         if (this.recordAfter != null) {
             lookupDefinition.put(DataItem.DB_FIELD_LAST_UPDATED, this.recordAfter, OffsetDateTime.class, LookupDefinition.Operator.GT);
         }
+        if (uuid != null && !uuid.isEmpty()) {
+            lookupDefinition.put(LookupDefinition.entityref + LookupDefinition.separator + Entity.DB_FIELD_IDENTIFICATION + LookupDefinition.separator + Identification.DB_FIELD_UUID, this.uuid, UUID.class, LookupDefinition.Operator.EQ);
+        }
         return lookupDefinition;
     }
 
@@ -231,17 +293,31 @@ public abstract class Query<E extends Entity> {
         this.setPage(parameterMap.getFirstOf(PARAM_PAGE));
         this.setPageSize(parameterMap.getFirstOf(PARAM_PAGESIZE));
         try {
-            this.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM));
-            this.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO));
-            this.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM));
-            this.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO));
+            OffsetDateTime now = OffsetDateTime.now();
+            this.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM), now);
+            this.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO), now);
+            this.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM), now);
+            this.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO), now);
             this.setRecordAfter(parameterMap.getFirstOf(PARAM_RECORD_AFTER));
         } catch (DateTimeParseException e) {
             throw new InvalidClientInputException(e.getMessage());
         }
         if (!limitsOnly) {
             this.setFromParameters(parameterMap);
+            if (this.getDataParamCount() == 0) {
+                throw new InvalidClientInputException("Missing query parameters");
+            }
         }
+    }
+
+    private int dataParamCount = 0;
+
+    protected void increaseDataParamCount() {
+        this.dataParamCount++;
+    }
+
+    protected int getDataParamCount() {
+        return this.dataParamCount;
     }
 
     public abstract void setFromParameters(ParameterMap parameterMap) throws InvalidClientInputException;

@@ -22,8 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by lars on 27-06-17.
- * A special Communicator that fetches data over a HTTP connection by the 
+ * A special Communicator that fetches data over a HTTP connection by the
  * scan-scroll pattern: We specify the query in a POST, then get a handle back 
  * that we can use in a series of subsequent GET requests to get all the data 
  * (which tends to be a lot).
@@ -101,6 +100,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
             public void run() {
                 try {
                     JsonNode responseNode;
+                    log.info("Scan-scroll fetching from " + startUri + " with body:\n" + body);
 
                     HttpPost initialPost = new HttpPost(startUri);
                     initialPost.setEntity(new StringEntity(body, "utf-8"));
@@ -119,13 +119,6 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         log.error(InputStreamReader.readInputStream(response.getEntity().getContent()));
                         throw new HttpStatusException(response.getStatusLine(), startUri);
                     }
-
-                    /*
-                    String postResponseContent = InputStreamReader.readInputStream(content);
-                    outputStream.write(postResponseContent.getBytes("UTF-8"));
-                    outputStream.flush();
-                    responseNode = objectMapper.readTree(postResponseContent);
-                    */
 
                     responseNode = objectMapper.readTree(content);
 
@@ -164,7 +157,6 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                                 m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
                                 if (m.find()) {
                                     scrollId = m.group(1);
-                                    log.info("found next scrollId");
                                 } else {
                                     scrollId = null;
                                     log.info("next scrollId not found");

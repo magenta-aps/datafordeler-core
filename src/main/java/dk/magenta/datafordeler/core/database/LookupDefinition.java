@@ -2,11 +2,11 @@ package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.fapi.Query;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * Created by lars on 13-06-17.
  * A LookupDefinition is a way of defining how to look up entities based on the data hierarchy within them.
  * Since the data in an entity is spread out over multiple tables, it is difficult to do a database select
  * on a field when you don't know where it is. So, DataItem subclasses and Query subclasses should implement
@@ -59,11 +59,15 @@ public class LookupDefinition {
     private boolean matchNulls = false;
     public static final String separator = ".";
     public static final String entityref = "$";
+    public static final String registrationref = "r";
+    public static final String effectref = "v";
     public static final char escape = '\\';
-    private static final String quotedSeparator = Pattern.quote(separator);
-    private ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
-    private Class<? extends DataItem> dataClass;
-    private int nextId = 0;
+    protected static final String quotedSeparator = Pattern.quote(separator);
+    protected ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
+    protected Class<? extends DataItem> dataClass;
+    private boolean definitionsAnded = true;
+    private int definitionId = 0;
+
 
     public enum Operator {
         EQ("="),
@@ -81,37 +85,6 @@ public class LookupDefinition {
         }
     }
 
-    private class FieldDefinition {
-
-        public String path;
-        public Object value;
-        public Class type;
-        public Operator operator = Operator.EQ;
-        public int id;
-
-        public FieldDefinition(String path, Object value) {
-            this(path, value, value != null ? value.getClass() : null, Operator.EQ);
-        }
-        public FieldDefinition(String path, Object value, Class type) {
-            this(path, value, type, Operator.EQ);
-        }
-        public FieldDefinition(String path, Object value, Class type, Operator operator) {
-            this.path = path;
-            this.value = value;
-            this.type = type;
-            this.operator = operator;
-            this.id = LookupDefinition.this.nextId++;
-        }
-
-        public boolean onEntity() {
-            return this.path.startsWith(entityref);
-        }
-
-        public String getOperatorSign() {
-            return this.operator.toString();
-        }
-    }
-
     public LookupDefinition(Class<? extends DataItem> dataClass) {
         this.dataClass = dataClass;
     }
@@ -126,6 +99,10 @@ public class LookupDefinition {
         this.putAll(map);
     }
 
+    public void orDefinitions() {
+        this.definitionsAnded = false;
+    }
+
     public void put(String path, Object value) {
         if (value != null) {
             if (value instanceof Collection) {
@@ -138,16 +115,18 @@ public class LookupDefinition {
         }
     }
 
-    public void put(String path, Object value, Class fieldClass) {
-        if (value != null) {
-            this.fieldDefinitions.add(new FieldDefinition(path, value, fieldClass));
-        }
+    public FieldDefinition put(String path, Object value, Class fieldClass) {
+        return this.put(new FieldDefinition(path, value, fieldClass));
     }
 
-    public void put(String path, Object value, Class fieldClass, Operator operator) {
-        if (value != null) {
-            this.fieldDefinitions.add(new FieldDefinition(path, value, fieldClass, operator));
-        }
+    public FieldDefinition put(String path, Object value, Class fieldClass, Operator operator) {
+        return this.put(new FieldDefinition(path, value, fieldClass, operator));
+    }
+
+    public final FieldDefinition put(FieldDefinition fieldDefinition) {
+        this.fieldDefinitions.add(fieldDefinition);
+        fieldDefinition.id = this.definitionId++;
+        return fieldDefinition;
     }
 
     public void putAll(Map<String, Object> map) {
@@ -173,6 +152,14 @@ public class LookupDefinition {
         this.matchNulls = matchNulls;
     }
 
+    public Class<? extends DataItem> getDataClass() {
+        return this.dataClass;
+    }
+
+
+
+
+
     /**
      * Obtain the table join string, including all tables that have been added to the LookupDefinition
      * @param rootKey Root key, denoting the baseline for the join. This is most often the hql identifier
@@ -186,8 +173,8 @@ public class LookupDefinition {
         for (FieldDefinition definition : this.fieldDefinitions) {
             joinTables.addAll(this.getHqlJoinParts(rootKey, definition));
         }
-        String joinString = " JOIN ";
         if (!joinTables.isEmpty()) {
+            String joinString = " JOIN ";
             StringJoiner s = new StringJoiner(joinString);
             for (String table : joinTables) {
                 s.add(table);
@@ -197,14 +184,20 @@ public class LookupDefinition {
         return "";
     }
 
-    private ArrayList<String> getHqlJoinParts(String rootKey, FieldDefinition fieldDefinition) {
+    public boolean usingRVDModel() {
+        return true;
+    }
+
+    protected ArrayList<String> getHqlJoinParts(String rootKey, FieldDefinition fieldDefinition) {
         ArrayList<String> joinTables = new ArrayList<>();
         String path = fieldDefinition.path;
         if (path.contains(separator)) {
             String[] parts = path.split(quotedSeparator);
-            if (parts[0].equals(entityref)) {
+            String firstPart = parts[0];
+            if (firstPart.equals(entityref) || firstPart.equals(registrationref) || firstPart.equals(effectref)) {
                 parts = Arrays.copyOfRange(parts, 1, parts.length);
             }
+
             StringBuilder fullParts = new StringBuilder(rootKey);
             for (int i = 0; i<parts.length - 1; i++) {
                 String part = parts[i];
@@ -214,6 +207,16 @@ public class LookupDefinition {
                 if (!joinTables.contains(joinEntry)) {
                     joinTables.add(joinEntry);
                 }
+            }
+        }
+        if (!fieldDefinition.anded.isEmpty()) {
+            for (FieldDefinition other : fieldDefinition.anded) {
+                joinTables.addAll(this.getHqlJoinParts(rootKey, other));
+            }
+        }
+        if (!fieldDefinition.ored.isEmpty()) {
+            for (FieldDefinition other : fieldDefinition.ored) {
+                joinTables.addAll(this.getHqlJoinParts(rootKey, other));
             }
         }
         return joinTables;
@@ -235,18 +238,20 @@ public class LookupDefinition {
      */
     public String getHqlWhereString(String dataItemKey, String entityKey, String prefix) {
 
-        String whereContainer = entityKey + " IN (" +
+        String whereContainer = entityKey + " %s IN (" +
                 "SELECT " + entityKey + " FROM " + this.dataClass.getCanonicalName() + " " + dataItemKey +
-                " JOIN " + dataItemKey + ".effects v" +
-                " JOIN v.registration r" +
-                " JOIN r.entity " + entityKey +
+                " JOIN " + dataItemKey + ".effects " + effectref +
+                " JOIN " + effectref + ".registration " + registrationref +
+                " JOIN " + registrationref + ".entity " + entityKey +
                 " %s " +
                 " WHERE %s" +
                 ")";
-        StringJoiner extraWhere = new StringJoiner(" AND ");
+        StringJoiner extraWhere = new StringJoiner(this.definitionsAnded ? " AND " : " OR ");
         for (FieldDefinition fieldDefinition : this.fieldDefinitions) {
-            if (fieldDefinition.onEntity()) {
-                extraWhere.add("(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
+            if (fieldDefinition.onIdentification()) {
+                extraWhere.add("(" + (fieldDefinition.inverted ? "NOT ":"") + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, false) + ")");
+            } else if (fieldDefinition.onEntity()) {
+                extraWhere.add("(" + (fieldDefinition.inverted ? "NOT ":"") + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
             } else {
                 List<String> joins = this.getHqlJoinParts(dataItemKey, fieldDefinition);
                 String join = "";
@@ -257,9 +262,10 @@ public class LookupDefinition {
                     }
                     join = sj.toString();
                 }
-                String where = this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true);
 
-                extraWhere.add(String.format(whereContainer, join, where));
+                String where = "(" + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")";
+                String inversion = fieldDefinition.inverted ? "NOT" : "";
+                extraWhere.add(String.format(whereContainer, inversion, join, where));
             }
         }
 
@@ -279,15 +285,16 @@ public class LookupDefinition {
         }
         return strings;
     }
-    private String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition) {
+    protected String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition) {
         return this.getHqlWherePart(rootKey, entityKey, fieldDefinition, false);
     }
 
-    private String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition, boolean joinedTable) {
+    protected String getHqlWherePart(String rootKey, String entityKey, FieldDefinition fieldDefinition, boolean joinedTable) {
+        String where = null;
         String path = fieldDefinition.path;
-        String parameterPath = this.getParameterPath(rootKey, entityKey, path) + "_" + fieldDefinition.id;
+        String parameterPath = LookupDefinition.getParameterPath(rootKey, entityKey, path) + "_" + fieldDefinition.id;
         Object value = fieldDefinition.value;
-        String variablePath = this.getVariablePath(rootKey, entityKey, path);
+        String variablePath = LookupDefinition.getVariablePath(rootKey, entityKey, path);
         if (joinedTable) {
             int lastIndex = variablePath.lastIndexOf(".");
             if (lastIndex != -1) {
@@ -297,29 +304,56 @@ public class LookupDefinition {
 
         if (value == null) {
             if (this.matchNulls) {
-                return variablePath + " is null";
+                if (fieldDefinition.operator == Operator.EQ) {
+                    where = variablePath + " is null";
+                } else if (fieldDefinition.operator == Operator.NE) {
+                    where = variablePath + " is not null";
+                }
             }
         } else if (value instanceof List) {
             List list = (List) value;
             StringJoiner or = new StringJoiner(" OR ");
+            boolean hasNonWildcardItems = false;
             for (int i = 0; i < list.size(); i++) {
                 if (parameterValueWildcard(list.get(i))) {
                     or.add("cast(" + variablePath + " as string) like :" + parameterPath + "_" + i + " escape '" + LookupDefinition.escape + "'");
-                } else {
+                } else if (!fieldDefinition.getOperatorSign().equals("=")) {
                     or.add(variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath + "_" + i);
+                } else {
+                    hasNonWildcardItems = true;
                 }
             }
+            if (hasNonWildcardItems) {
+                or.add(variablePath + " IN (:" + parameterPath + "_" + "list)");
+            }
             if (or.length() > 0) {
-                return "(" + or.toString() + ")";
+                where = "(" + or.toString() + ")";
             }
         } else {
             if (parameterValueWildcard(value)) {
-                return "cast(" + variablePath + " as string) like :" + parameterPath + " escape '" + LookupDefinition.escape + "'";
+                where = "cast(" + variablePath + " as string) like :" + parameterPath + " escape '" + LookupDefinition.escape + "'";
             } else {
-                return variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath;
+                where = variablePath + " " + fieldDefinition.getOperatorSign() + " :" + parameterPath;
             }
         }
-        return null;
+        if (!fieldDefinition.anded.isEmpty()) {
+            StringJoiner and = new StringJoiner(" AND ");
+            and.add(where);
+            for (FieldDefinition other : fieldDefinition.anded) {
+                and.add(this.getHqlWherePart(rootKey, entityKey, other, joinedTable));
+            }
+            where = "(" + and.toString() + ")";
+        }
+        if (!fieldDefinition.ored.isEmpty()) {
+            StringJoiner or = new StringJoiner(" OR ");
+            or.add(where);
+            for (FieldDefinition other : fieldDefinition.ored) {
+                or.add(this.getHqlWherePart(rootKey, entityKey, other, joinedTable));
+            }
+            where = "(" + or.toString() + ")";
+        }
+
+        return where;
     }
 
 
@@ -330,12 +364,18 @@ public class LookupDefinition {
      * @param key dot-spearated path, e.g. foo.bar.baz
      * @return converted path. e.g. (rootKey: "d", entityKey: "e", key: "foo.bar.baz") => "d_foo_bar_baz" or (rootKey: "d", entityKey: "e", key: "$.bar.baz") => "e_bar_baz"
      */
-    private String getVariablePath(String rootKey, String entityKey, String key) {
+    protected static String getVariablePath(String rootKey, String entityKey, String key) {
         int separatorIndex = key.indexOf(separator);
         String first = separatorIndex != -1 ? key.substring(0, separatorIndex) : key;
         String object = rootKey;
         if (first.equals(entityref)) {
             object = entityKey;
+            key = key.substring(separatorIndex + 1);
+        } else if (first.equals(registrationref)) {
+            object = registrationref;
+            key = key.substring(separatorIndex + 1);
+        } else if (first.equals(effectref)) {
+            object = effectref;
             key = key.substring(separatorIndex + 1);
         }
         object += "." + key;
@@ -349,10 +389,10 @@ public class LookupDefinition {
      * @param key dot-spearated path, e.g. foo.bar.baz
      * @return converted path. e.g. (rootKey: "d", entityKey: "e", key: "foo.bar.baz") => "d_foo_bar_baz" or (rootKey: "d", entityKey: "e", key: "$.bar.baz") => "e_bar_baz"
      */
-    private String getParameterPath(String rootKey, String entityKey, String key) {
+    public static String getParameterPath(String rootKey, String entityKey, String key) {
         //int separatorIndex = key.indexOf(separator);
         //String first = separatorIndex != -1 ? key.substring(0, separatorIndex) : key;
-        String object = this.getVariablePath(rootKey, entityKey, key);
+        String object = getVariablePath(rootKey, entityKey, key);
         /*if (first.equals(entityref)) {
             object = entityKey;
             key = key.substring(separatorIndex + 1);
@@ -366,7 +406,7 @@ public class LookupDefinition {
      * @param key
      * @return
      */
-    private String getFinal(String key) {
+    protected String getFinal(String key) {
         if (key.contains(separator)) {
             return key.substring(key.lastIndexOf(separator) + 1);
         } else {
@@ -385,36 +425,12 @@ public class LookupDefinition {
     public HashMap<String, Object> getHqlParameters(String rootKey, String entityKey) {
         HashMap<String, Object> map = new HashMap<>();
         for (FieldDefinition definition : this.fieldDefinitions) {
-            String path = definition.path;
-
-            String parameterPath = this.getParameterPath(rootKey, entityKey, path) + "_" + definition.id;
-
-            Object value = definition.value;
-            Class type = definition.type;
-            if (value != null) {
-                if (value instanceof List) {
-                    List list = (List) value;
-                    for (int i=0; i<list.size(); i++) {
-                        Object item = list.get(i);
-                        if (parameterValueWildcard(item)) {
-                            map.put(parameterPath + "_" + i, replaceWildcard(item));
-                        } else {
-                            map.put(parameterPath + "_" + i, castValue(type, item));
-                        }
-                    }
-                } else {
-                    if (parameterValueWildcard(value)) {
-                        map.put(parameterPath, replaceWildcard(value));
-                    } else {
-                        map.put(parameterPath, castValue(type, value));
-                    }
-                }
-            }
+            map.putAll(definition.getParameterMap(rootKey, entityKey));
         }
         return map;
     }
 
-    private static Object castValue(Class cls, Object value) {
+    public static Object castValue(Class cls, Object value) {
         if (cls == null) {return value;}
         if ((cls == Long.TYPE || cls == Long.class) && !(value instanceof Long)) {
             if (value instanceof Number) {
@@ -434,7 +450,7 @@ public class LookupDefinition {
         return cls.cast(value);
     }
 
-    private static boolean parameterValueWildcard(Object value) {
+    public static boolean parameterValueWildcard(Object value) {
         if (value instanceof String) {
             String stringValue = (String) value;
             //return stringValue.startsWith("*") || stringValue.endsWith("*");
@@ -443,7 +459,7 @@ public class LookupDefinition {
         return false;
     }
 
-    private static String replaceWildcard(Object item) {
+    public static String replaceWildcard(Object item) {
         return ((String) item).replace("%", escape + "%").replace("*", "%");
     }
 

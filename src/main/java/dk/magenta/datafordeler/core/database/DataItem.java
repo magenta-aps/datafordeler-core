@@ -8,7 +8,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
- * Created by lars on 20-02-17.
  * Superclass for bitemporal data, pointing to Effects objects.
  * Pieces of data sharing exact bitemporality may be stored in one DataItem, pointing
  * to all the Effects applicable (and by extension, Registrations).
@@ -66,7 +65,6 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
 
     @JsonIgnore
     @OneToOne(cascade = CascadeType.ALL)
-    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL)
     private RecordCollection recordSet = null;
 
     public void addRecordData(RecordData recordData) {
@@ -83,6 +81,7 @@ public abstract class DataItem<V extends Effect, D extends DataItem> extends Dat
     }
 
     public static final String DB_FIELD_LAST_UPDATED = "lastUpdated";
+    public static final String IO_FIELD_LAST_UPDATED = "sidstOpdateret";
 
     @Column(name = DB_FIELD_LAST_UPDATED)
     private OffsetDateTime lastUpdated;

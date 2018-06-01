@@ -8,9 +8,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
-/**
- * Created by jubk on 12-06-2017.
- */
 public abstract class DafoUserDetails {
 
   private final OffsetDateTime creationTime;

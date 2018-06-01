@@ -6,18 +6,20 @@ import dk.magenta.datafordeler.core.util.DoubleHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
-import org.hibernate.exception.ConstraintViolationException;
 
+import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * Created by lars on 22-02-17.
+ * Collection of static methods for accessing the database
  */
 public abstract class QueryManager {
 
@@ -25,16 +27,45 @@ public abstract class QueryManager {
 
     public static final String ENTITY = "e";
 
-    private static Identification getIdentificationFromCache(Session session, UUID uuid, String domain) {
-        if (!identifications.containsKey(domain)) {
+
+    /**
+     * We keep a local cache of Identification references, the idea being to quickly determine if an Identification objects exists in the database.
+     * If initializeCache has been run for the domain, this cache should always be able to say whether an identification *exists* in he DB, even if
+     * we need to do a DB lookup to get it.
+     * Looking in the database to see if an Identification exists is an expensive workload when it happens thousands of times per minute during an import.
+     * This cache holds the object ID of all known identifications in a domain, findable by domain string and UUID.
+     */
+    private static DoubleHashMap<String, UUID, Long> identifications = new DoubleHashMap<>();
+
+
+    /**
+     * Populate the Identification cache from the database, if the given domain is not already fetched
+     * @param session
+     * @param domain
+     */
+    private static void initializeCache(Session session, String domain) {
+        /*if (!identifications.containsKey(domain)) {
             log.info("Loading identifications for domain "+domain);
             org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.domain = :domain", Identification.class);
             databaseQuery.setParameter("domain", domain);
+            databaseQuery.setFlushMode(FlushModeType.COMMIT);
             for (Identification identification : databaseQuery.getResultList()) {
                 identifications.put(domain, identification.getUuid(), identification.getId());
             }
             log.info("Identifications loaded");
-        }
+        }*/
+    }
+
+    /**
+     * Obtain the object id from the cache, and find the corresponding Identification from Hibernate L1 cache
+     * If the id is not found in the cache, or the Identification is not in L1 cache, return null
+     * @param session
+     * @param uuid
+     * @param domain
+     * @return
+     */
+    private static Identification getIdentificationFromCache(Session session, UUID uuid, String domain) {
+        initializeCache(session, domain);
         Long id = identifications.get(domain, uuid);
         if (id != null) {
             return session.get(Identification.class, id);
@@ -50,33 +81,70 @@ public abstract class QueryManager {
      * @return
      */
     public static Identification getIdentification(Session session, UUID uuid) {
-        log.trace("Get Identification from UUID " + uuid);
+        //log.info("Get Identification from UUID " + uuid);
         org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
         databaseQuery.setParameter("uuid", uuid);
         logQuery(databaseQuery);
         databaseQuery.setCacheable(true);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         try {
             return databaseQuery.getSingleResult();
         } catch (NoResultException e) {
+            //log.info("not found");
             return null;
         }
     }
 
-
-    private static DoubleHashMap<String, UUID, Long> identifications = new DoubleHashMap<>();
-
-    public static Identification getOrCreateIdentification(Session session, UUID uuid, String domain) {
+    public static Identification getIdentification(Session session, UUID uuid, String domain) {
         Identification identification = getIdentificationFromCache(session, uuid, domain);
-        if (identification == null) {
-            log.debug("Didn't find identification for domain "+domain+"/"+uuid+" in cache");
+        if (identification == null/* && hasIdentification(session, uuid, domain)*/) {
             identification = getIdentification(session, uuid);
+            /*if (identification != null) {
+                identifications.put(domain, uuid, identification.getId());
+            }*/
+        }
+        return identification;
+    }
+
+    /**
+     * Determine whether an Identification exists.
+     * @param session
+     * @param uuid
+     * @param domain
+     * @return
+     */
+    public static boolean hasIdentification(Session session, UUID uuid, String domain) {
+        initializeCache(session, domain);
+        return identifications.get(domain, uuid) != null;
+    }
+
+    /**
+     * Quickly get an Identification object, or create one if not found.
+     * First look in the Hibernate L1 cache (fast).
+     * If that fails, see if our local cache tells us whether the object even exists in the database (also fast), and if so do a DB lookup (slow).
+     * If no object is found, we know that the DB doesn't hold it for us, so create the objects and save it, then put it in the cache.
+     * @param session
+     * @param uuid
+     * @param domain
+     * @return
+     */
+    public static Identification getOrCreateIdentification(Session session, UUID uuid, String domain) {
+        Identification identification;
+        identification = getIdentificationFromCache(session, uuid, domain);
+        if (identification == null) {
+            log.debug("Didn't find identification for "+domain+"/"+uuid+" in cache");
+            //if (hasIdentification(session, uuid, domain)) {
+            //    log.debug("Cache for "+domain+"/"+uuid+" had a broken DB link");
+                identification = getIdentification(session, uuid);
+            //}
             if (identification == null) {
-                log.debug("Creating new");
+                log.debug("Creating new for "+domain+"/"+uuid);
                 identification = new Identification(uuid, domain);
                 session.save(identification);
                 identifications.put(domain, uuid, identification.getId());
             } else {
-                log.debug("found it in db");
+                log.debug("Identification for "+domain+"/"+uuid+" found in database: "+identification.getId());
+                identifications.put(domain, uuid, identification.getId());
             }
         } else {
             log.debug("Identification for "+domain+"/"+uuid+" found in cache: "+identification.getId());
@@ -84,12 +152,9 @@ public abstract class QueryManager {
         return identification;
     }
 
-    public static boolean hasIdentification(UUID uuid, String domain) {
-        return identifications.get(domain, uuid) != null;
-    }
-
     /**
-    * On transaction rollback, we must clear a number of optimization caches to avoid invalid references
+     * On transaction rollback, we must clear a number of optimization caches to avoid invalid references.
+     * Each cache that needs clearing on rollback should be added here.
      */
     public static void clearCaches() {
         identifications.clear();
@@ -110,11 +175,14 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends Entity> List<E> getAllEntities(Session session, Class<E> eClass) {
+    public static <E extends DatabaseEntry> List<E> getAllEntities(Session session, Class<E> eClass) {
         log.trace("Get all Entities of class " + eClass.getCanonicalName());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
+        long start = Instant.now().toEpochMilli();
         List<E> results = databaseQuery.getResultList();
+        log.debug("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
         return results;
     }
 
@@ -125,18 +193,23 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends Entity, D extends DataItem> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
+    public static <E extends IdentifiedEntity> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
-
         LookupDefinition lookupDefinition = query.getLookupDefinition();
-        String root = "d";
+        String root = lookupDefinition.usingRVDModel() ? "d" : ENTITY;
 
         String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
 
+        String extraJoin = "";
+        if (!lookupDefinition.usingRVDModel()) {
+            extraJoin = lookupDefinition.getHqlJoinString(root, ENTITY);
+        }
+
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
+                " " + extraJoin +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
 
-        log.info(queryString);
+        log.debug(queryString);
 
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
@@ -145,8 +218,13 @@ public abstract class QueryManager {
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
 
         for (String key : extraParameters.keySet()) {
-            log.info(key+" = "+extraParameters.get(key));
-            databaseQuery.setParameter(key, extraParameters.get(key));
+            Object value = extraParameters.get(key);
+            log.debug(key+" = "+value);
+            if (value instanceof Collection) {
+                databaseQuery.setParameterList(key, (Collection) value);
+            } else {
+                databaseQuery.setParameter(key, value);
+            }
         }
 
         // Offset & limit
@@ -156,8 +234,11 @@ public abstract class QueryManager {
         if (query.getCount() < Integer.MAX_VALUE) {
             databaseQuery.setMaxResults(query.getCount());
         }
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
+        long start = Instant.now().toEpochMilli();
         List<E> results = databaseQuery.getResultList();
+        log.debug("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
         return results;
     }
 
@@ -168,7 +249,7 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends Entity, D extends DataItem> Stream<E> getAllEntitiesAsStream(Session session, Query query, Class<E> eClass) {
+    public static <E extends IdentifiedEntity, D extends DataItem> Stream<E> getAllEntitiesAsStream(Session session, Query query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
 
         LookupDefinition lookupDefinition = query.getLookupDefinition();
@@ -179,7 +260,7 @@ public abstract class QueryManager {
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
 
-        log.info(queryString);
+        log.debug(queryString);
 
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
@@ -188,8 +269,13 @@ public abstract class QueryManager {
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
 
         for (String key : extraParameters.keySet()) {
-            log.info(key+" = "+extraParameters.get(key));
-            databaseQuery.setParameter(key, extraParameters.get(key));
+            Object value = extraParameters.get(key);
+            log.debug(key+" = "+value);
+            if (value instanceof Collection) {
+                databaseQuery.setParameterList(key, (Collection) value);
+            } else {
+                databaseQuery.setParameter(key, value);
+            }
         }
 
         // Offset & limit
@@ -199,6 +285,8 @@ public abstract class QueryManager {
         if (query.getCount() < Integer.MAX_VALUE) {
             databaseQuery.setMaxResults(query.getCount());
         }
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
+        databaseQuery.setFetchSize(1000);
         logQuery(databaseQuery);
         Stream<E> results = databaseQuery.stream();
         return results;
@@ -211,7 +299,7 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends Entity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
+    public static <E extends IdentifiedEntity> E getEntity(Session session, UUID uuid, Class<E> eClass) {
         Identification identification = getIdentification(session, uuid);
         if (identification != null) {
             return getEntity(session, identification, eClass);
@@ -219,16 +307,31 @@ public abstract class QueryManager {
         return null;
     }
 
-    public static <E extends Entity> E getEntity(Session session, Identification identification, Class<E> eClass) {
-        log.trace("Get Entity of class " + eClass.getCanonicalName() + " by identification "+identification.getUuid());
+    /**
+     * Get an entity from an identification
+     * @param session
+     * @param identification
+     * @param eClass
+     * @param <E>
+     * @return
+     */
+    public static <E extends IdentifiedEntity> E getEntity(Session session, Identification identification, Class<E> eClass) {
+        log.info("Get Entity of class " + eClass.getCanonicalName() + " by identification "+identification.getUuid());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " where " + ENTITY + ".identification = :identification", eClass);
         databaseQuery.setParameter("identification", identification);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
         databaseQuery.setCacheable(true);
         try {
-            return databaseQuery.getSingleResult();
+            long start = Instant.now().toEpochMilli();
+            E entity = databaseQuery.getSingleResult();
+            log.debug("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
+            return entity;
         } catch (NoResultException e) {
             return null;
+        } catch (NonUniqueResultException e) {
+            List<E> entities = databaseQuery.getResultList();
+            return (E) entities.get(0).getNewest(new ArrayList<>(entities));
         }
     }
 
@@ -239,6 +342,7 @@ public abstract class QueryManager {
             .createQuery(
                 String.format("SELECT t FROM %s t", tClass.getCanonicalName()),
                 tClass);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         return databaseQuery.getResultList();
     }
 
@@ -249,6 +353,7 @@ public abstract class QueryManager {
             .createQuery(
                 String.format("SELECT t FROM %s t", tClass.getCanonicalName()),
                 tClass);
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         return databaseQuery.stream();
     }
 
@@ -261,6 +366,7 @@ public abstract class QueryManager {
         for (String key : filter.keySet()) {
             databaseQuery.setParameter(key, filter.get(key));
         }
+        databaseQuery.setFlushMode(FlushModeType.COMMIT);
         return databaseQuery.getResultList();
     }
 
@@ -302,7 +408,7 @@ public abstract class QueryManager {
      */
     public static <V extends Effect> List<V> getEffects(Session session, Entity entity, OffsetDateTime effectFrom, OffsetDateTime effectTo, Class<V> vClass) {
         // AFAIK, this method is only ever used for testing
-        log.trace("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        log.info("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         org.hibernate.query.Query<V> databaseQuery = session.createQuery("select v from " + entity.getClass().getCanonicalName() + " " + ENTITY +" join "+ENTITY+".registrations r join r.effects v where "+ENTITY+".id = :id and v.effectFrom = :from and v.effectTo = :to", vClass);
         databaseQuery.setParameter("id", entity.getId());
         databaseQuery.setParameter("from", effectFrom);
@@ -320,7 +426,7 @@ public abstract class QueryManager {
      * @return
      */
     public static <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) throws PluginImplementationException {
-        log.debug("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
+        log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         LookupDefinition lookupDefinition = similar.getLookupDefinition();
         String dataItemKey = "d";
         String extraJoin = lookupDefinition.getHqlJoinString(dataItemKey, ENTITY);
@@ -349,7 +455,12 @@ public abstract class QueryManager {
         query.setParameter(entityIdKey, entity.getId());
         HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(dataItemKey, ENTITY);
         for (String key : extraParameters.keySet()) {
-            query.setParameter(key, extraParameters.get(key));
+            Object value = extraParameters.get(key);
+            if (value instanceof Collection) {
+                query.setParameterList(key, (Collection) value);
+            } else {
+                query.setParameter(key, value);
+            }
         }
         logQuery(query);
         List<D> results = query.list();
@@ -409,17 +520,16 @@ public abstract class QueryManager {
      * @param session A database session to work on
      * @param registration Registration to be saved
      */
-    public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems, boolean validateRegsitrationSequence) throws DataFordelerException {
+    public static <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>> void saveRegistration(Session session, E entity, R registration, boolean dedupEffects, boolean dedupItems, boolean validateRegistrationSequence) throws DataFordelerException {
         log.debug("Saving registration of type " + registration.getClass().getCanonicalName() + " with checksum " + registration.getRegisterChecksum() + " and sequence number " + registration.getSequenceNumber());
         if (entity == null && registration.entity != null) {
             E existingEntity = getEntity(session, registration.entity.getUUID(), (Class<E>) registration.entity.getClass());
             if (existingEntity != null) {
-                System.out.println("Entity "+existingEntity.getUUID()+" has Identification "+System.identityHashCode(existingEntity.getIdentification()));
                 entity = existingEntity;
-                log.info("There is an existing entity with uuid " + existingEntity.getUUID().toString() + ", using that");
+                log.debug("There is an existing entity with uuid " + existingEntity.getUUID().toString() + ", using that");
             } else {
                 entity = registration.entity;
-                log.info("No existing entity with uuid "+entity.getUUID().toString()+" "+registration.entity.getClass());
+                log.debug("No existing entity with uuid "+entity.getUUID().toString()+" "+registration.entity.getClass());
             }
         }
         if (entity == null) {
@@ -427,7 +537,7 @@ public abstract class QueryManager {
         }
 
 
-        if (validateRegsitrationSequence) {
+        if (validateRegistrationSequence) {
             // Validate registration:
             // * No existing registration on the entity may have the same sequence number
             // * The registration must have a sequence number one higher than the highest existing one
@@ -439,14 +549,13 @@ public abstract class QueryManager {
                     if (otherRegistration != registration) { // Consider only other registrations
                         if (otherRegistration.getId() != null || session.contains(otherRegistration)) { // Consider only saved registrations
                             if (registration.equals(otherRegistration)) {
-                                // the registration exactly matches a
-                                // pre-existing registration, so saving it is a
-                                // no-op
+                                // the registration exactly matches a pre-existing registration, so saving it is a no-op
                                 return;
                             }
                             if (otherRegistration.getSequenceNumber() == registration.getSequenceNumber()) {
+                                log.error("Duplicate sequence number");
                                 for (R r : entity.getRegistrations()) {
-                                    System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                                    log.error((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
                                 }
                                 throw new DuplicateSequenceNumberException(registration, otherRegistration);
                             }
@@ -459,8 +568,9 @@ public abstract class QueryManager {
                 }
 
                 if (highestSequenceNumber > -1 && registration.getSequenceNumber() != highestSequenceNumber + 1) {
+                    log.warn("Skipped sequence number");
                     for (R r : entity.getRegistrations()) {
-                        System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                        log.warn((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
                     }
                     //throw new SkippedSequenceNumberException(registration, highestSequenceNumber);
                 }
@@ -468,8 +578,9 @@ public abstract class QueryManager {
                     if (lastExistingRegistration.getRegistrationTo() == null) {
                         lastExistingRegistration.setRegistrationTo(registration.getRegistrationFrom());
                     } else if (!lastExistingRegistration.getRegistrationTo().equals(registration.getRegistrationFrom())) {
+                        log.error("Mismatching registration boundary");
                         for (R r : entity.getRegistrations()) {
-                            System.out.println((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
+                            log.error((r == registration ? "* " : "  ") + r.getSequenceNumber() + ": " + r.getRegistrationFrom() + " => " + r.getRegistrationTo());
                         }
                         throw new MismatchingRegistrationBoundaryException(registration, lastExistingRegistration);
                     }
@@ -481,7 +592,6 @@ public abstract class QueryManager {
         }
 
         registration.setEntity(entity);
-        entity.addRegistration(registration);
 
         // Normalize references: setting them to existing Identification entries if possible
         // If no existing Identification exists, keep the one we have and save it to the session
@@ -546,7 +656,6 @@ public abstract class QueryManager {
                 }*/
             }
         }
-
 
     }
 

@@ -1,20 +1,14 @@
 package dk.magenta.datafordeler.core.plugin;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 
-/**
- * Created by lars on 06-04-17.
- */
+import java.util.*;
+import java.util.stream.Collectors;
+
 public class TaskListener implements JobListener {
 
     private Logger log = LogManager.getLogger(this.getClass());

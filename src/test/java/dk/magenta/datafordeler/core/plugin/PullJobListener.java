@@ -7,9 +7,6 @@ import org.quartz.JobListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/**
- * Created by lars on 06-04-17.
- */
 public class PullJobListener implements JobListener {
 
     private String name;
