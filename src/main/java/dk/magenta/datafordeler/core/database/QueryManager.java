@@ -182,7 +182,7 @@ public abstract class QueryManager {
         logQuery(databaseQuery);
         long start = Instant.now().toEpochMilli();
         List<E> results = databaseQuery.getResultList();
-        log.info("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
+        log.debug("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
         return results;
     }
 
@@ -209,7 +209,7 @@ public abstract class QueryManager {
                 " " + extraJoin +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
 
-        log.info(queryString);
+        log.debug(queryString);
 
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
@@ -219,7 +219,7 @@ public abstract class QueryManager {
 
         for (String key : extraParameters.keySet()) {
             Object value = extraParameters.get(key);
-            log.info(key+" = "+value);
+            log.debug(key+" = "+value);
             if (value instanceof Collection) {
                 databaseQuery.setParameterList(key, (Collection) value);
             } else {
@@ -238,7 +238,7 @@ public abstract class QueryManager {
         logQuery(databaseQuery);
         long start = Instant.now().toEpochMilli();
         List<E> results = databaseQuery.getResultList();
-        log.info("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
+        log.debug("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
         return results;
     }
 
@@ -260,8 +260,7 @@ public abstract class QueryManager {
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
 
-        log.info(queryString);
-        System.out.println(queryString);
+        log.debug(queryString);
 
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
@@ -271,8 +270,7 @@ public abstract class QueryManager {
 
         for (String key : extraParameters.keySet()) {
             Object value = extraParameters.get(key);
-            log.info(key+" = "+value);
-            System.out.println(key+" = "+value);
+            log.debug(key+" = "+value);
             if (value instanceof Collection) {
                 databaseQuery.setParameterList(key, (Collection) value);
             } else {
@@ -318,7 +316,7 @@ public abstract class QueryManager {
      * @return
      */
     public static <E extends IdentifiedEntity> E getEntity(Session session, Identification identification, Class<E> eClass) {
-        log.trace("Get Entity of class " + eClass.getCanonicalName() + " by identification "+identification.getUuid());
+        log.info("Get Entity of class " + eClass.getCanonicalName() + " by identification "+identification.getUuid());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " where " + ENTITY + ".identification = :identification", eClass);
         databaseQuery.setParameter("identification", identification);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
@@ -327,7 +325,7 @@ public abstract class QueryManager {
         try {
             long start = Instant.now().toEpochMilli();
             E entity = databaseQuery.getSingleResult();
-            log.info("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
+            log.debug("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
             return entity;
         } catch (NoResultException e) {
             return null;
@@ -410,7 +408,7 @@ public abstract class QueryManager {
      */
     public static <V extends Effect> List<V> getEffects(Session session, Entity entity, OffsetDateTime effectFrom, OffsetDateTime effectTo, Class<V> vClass) {
         // AFAIK, this method is only ever used for testing
-        log.trace("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        log.info("Get Effects of class " + vClass.getCanonicalName() + " under Entity "+entity.getUUID() + " from "+effectFrom.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " to " + effectTo.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         org.hibernate.query.Query<V> databaseQuery = session.createQuery("select v from " + entity.getClass().getCanonicalName() + " " + ENTITY +" join "+ENTITY+".registrations r join r.effects v where "+ENTITY+".id = :id and v.effectFrom = :from and v.effectTo = :to", vClass);
         databaseQuery.setParameter("id", entity.getId());
         databaseQuery.setParameter("from", effectFrom);
@@ -428,7 +426,7 @@ public abstract class QueryManager {
      * @return
      */
     public static <D extends DataItem> List<D> getDataItems(Session session, Entity entity, D similar, Class<D> dClass) throws PluginImplementationException {
-        log.debug("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
+        log.info("Get DataItems of class " + dClass.getCanonicalName() + " under Entity "+entity.getUUID() + " with content matching DataItem "+similar.asMap());
         LookupDefinition lookupDefinition = similar.getLookupDefinition();
         String dataItemKey = "d";
         String extraJoin = lookupDefinition.getHqlJoinString(dataItemKey, ENTITY);
@@ -528,10 +526,10 @@ public abstract class QueryManager {
             E existingEntity = getEntity(session, registration.entity.getUUID(), (Class<E>) registration.entity.getClass());
             if (existingEntity != null) {
                 entity = existingEntity;
-                log.info("There is an existing entity with uuid " + existingEntity.getUUID().toString() + ", using that");
+                log.debug("There is an existing entity with uuid " + existingEntity.getUUID().toString() + ", using that");
             } else {
                 entity = registration.entity;
-                log.info("No existing entity with uuid "+entity.getUUID().toString()+" "+registration.entity.getClass());
+                log.debug("No existing entity with uuid "+entity.getUUID().toString()+" "+registration.entity.getClass());
             }
         }
         if (entity == null) {
