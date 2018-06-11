@@ -54,4 +54,8 @@ public class NoDBUserQueryManager extends UserQueryManager {
   @Override
   public void insertAreaRestriction(AreaRestriction areaRestriction) {
   }
+
+  @Override
+  public void checkConnection() {
+  }
 }

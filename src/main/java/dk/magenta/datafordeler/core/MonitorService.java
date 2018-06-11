@@ -6,6 +6,7 @@ import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.plugin.RegisterManager;
+import dk.magenta.datafordeler.core.user.UserQueryManager;
 import dk.magenta.datafordeler.core.util.CronUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
@@ -58,6 +59,9 @@ public class MonitorService {
     @Autowired
     PluginManager pluginManager;
 
+    @Autowired
+    UserQueryManager userQueryManager;
+
     @RequestMapping(path="/database")
     public void checkDatabaseConnections(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Session session = sessionManager.getSessionFactory().openSession();
@@ -71,6 +75,9 @@ public class MonitorService {
         query.uniqueResult();
         session.close();
         response.getWriter().println("Secondary database connection ok");
+
+        userQueryManager.checkConnection();
+        response.getWriter().println("Tertiary database connection ok");
 
         response.setStatus(200);
     }

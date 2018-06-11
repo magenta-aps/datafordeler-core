@@ -222,4 +222,12 @@ public class UserQueryManagerImpl extends UserQueryManager {
         serviceTypeName
     );
   }
+
+  @Override
+  public void checkConnection() {
+    SqlRowSet rows = jdbcTemplate.queryForRowSet("SELECT 1");
+    if (rows.next()) {
+      rows.getInt(1);
+    }
+  }
 }
