@@ -254,6 +254,7 @@ public class Engine {
     public void setupPullSchedule(RegisterManager registerManager, String cronSchedule, boolean dummyRun) {
         if (this.pullEnabled && this.cronEnabled) {
             ScheduleBuilder scheduleBuilder;
+            this.log.info("Scheduling pull with "+registerManager.getClass().getCanonicalName()+" with schedule "+cronSchedule);
             try {
                 scheduleBuilder = makeSchedule(cronSchedule);
             } catch (Exception e) {
@@ -307,7 +308,7 @@ public class Engine {
                 }
 
             } catch (SchedulerException e) {
-                this.log.error("failed to schedule pull!", e);
+                this.log.error("Failed to schedule pull!", e);
             }
         }
     }
