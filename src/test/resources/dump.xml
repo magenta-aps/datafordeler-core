@@ -25,8 +25,8 @@
           </data>
         </virkninger>
       </registreringer>
-      <UUID>00000000-0000-0000-0000-000000003900</UUID>
-      <domaene>http://example.com</domaene>
+      <uuid>00000000-0000-0000-0000-000000003900</uuid>
+      <domain>http://example.com</domain>
     </results>
     <results>
       <registreringer>
@@ -46,8 +46,8 @@
           </data>
         </virkninger>
       </registreringer>
-      <UUID>00000000-0000-0000-0000-000000003992</UUID>
-      <domaene>http://example.com</domaene>
+      <uuid>00000000-0000-0000-0000-000000003992</uuid>
+      <domain>http://example.com</domain>
     </results>
   </results>
 </Envelope>

@@ -251,9 +251,13 @@ public abstract class Query<E extends Entity> {
         this.uuid = new ArrayList<>(uuid);
     }
 
-    public void addUUID(String uuid){
+    public void addUUID(String uuid) throws InvalidClientInputException {
         if (uuid != null){
-            this.uuid.add(UUID.fromString(uuid));
+            try {
+                this.uuid.add(UUID.fromString(uuid));
+            } catch (IllegalArgumentException e) {
+                throw new InvalidClientInputException("Invalid uuid "+uuid, e);
+            }
         }
     }
 

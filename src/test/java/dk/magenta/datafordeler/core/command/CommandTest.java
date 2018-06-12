@@ -124,7 +124,8 @@ public class CommandTest extends GapiTestBase {
             status = getResponseNode.get("status").asText();
             Assert.assertEquals("pull", getResponseNode.get("commandName").asText());
             Assert.assertNotNull(getResponseNode.get("received").asText());
-            Assert.assertEquals("bar", getResponseNode.get("commandBody").get("foo").asText());
+            String commandBody = getResponseNode.get("commandBody").asText();
+            Assert.assertEquals("bar", objectMapper.readTree(commandBody).get("foo").asText());
             Thread.sleep(1000);
         }
         System.out.println("status: "+status);
