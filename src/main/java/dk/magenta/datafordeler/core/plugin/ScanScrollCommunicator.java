@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.HttpGetWithEntity;
@@ -133,7 +134,11 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
                         URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
                         HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
-                        partialGet.setEntity(new StringEntity(scrollId));
+                        partialGet.setHeader("Content-Type", "application/json");
+                        ObjectNode scrollObject = objectMapper.createObjectNode();
+                        scrollObject.put("scroll", "10m");
+                        scrollObject.put("scroll_id", scrollId);
+                        partialGet.setEntity(new StringEntity(scrollObject.toString()));
                         try {
                             log.info("Sending chunk GET to " + fetchUri);
                             response = httpclient.execute(partialGet);
