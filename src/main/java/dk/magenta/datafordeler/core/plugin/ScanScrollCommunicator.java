@@ -89,7 +89,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
     public InputStream fetch(URI initialUri, URI scrollUri, final String body) throws HttpStatusException, DataStreamException, URISyntaxException, IOException {
         CloseableHttpClient httpclient = this.buildClient();
 
-        final URI startUri = new URI(initialUri.getScheme(), initialUri.getUserInfo(), initialUri.getHost(), initialUri.getPort(), initialUri.getPath(), "search_type=scan&scroll=1m", null);
+        final URI startUri = new URI(initialUri.getScheme(), initialUri.getUserInfo(), initialUri.getHost(), initialUri.getPort(), initialUri.getPath(), "search_type=query_then_fetch&scroll=1m", null);
 
         PipedInputStream inputStream = new PipedInputStream(); // Return this one
         final BufferedOutputStream outputStream = new BufferedOutputStream(new PipedOutputStream(inputStream));
@@ -104,6 +104,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
                     HttpPost initialPost = new HttpPost(startUri);
                     initialPost.setEntity(new StringEntity(body, "utf-8"));
+                    initialPost.setHeader("Content-Type", "application/json");
                     CloseableHttpResponse response;
                     log.info("Sending initial POST to " + startUri);
                     try {
@@ -114,13 +115,17 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                     }
                     log.info("Initial POST sent");
                     log.info("HTTP status: " + response.getStatusLine().getStatusCode());
-                    InputStream content = response.getEntity().getContent();
+                    String content = InputStreamReader.readInputStream(response.getEntity().getContent());
                     if (response.getStatusLine().getStatusCode() != 200) {
-                        log.error(InputStreamReader.readInputStream(response.getEntity().getContent()));
+                        log.error(content);
                         throw new HttpStatusException(response.getStatusLine(), startUri);
                     }
 
                     responseNode = objectMapper.readTree(content);
+                    StringReader r = new StringReader(content);
+                    IOUtils.copy(r, outputStream);
+                    r.close();
+                    content = null;
 
                     String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
                     while (scrollId != null) {
