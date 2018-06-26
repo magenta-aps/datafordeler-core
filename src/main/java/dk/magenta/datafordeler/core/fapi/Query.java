@@ -26,25 +26,25 @@ public abstract class Query<E extends Entity> {
     public static final String[] PARAM_EFFECT_TO = new String[] {"virkningTil", "effectTo"};
     public static final String[] PARAM_RECORD_AFTER = new String[] { "opdateretEfter", "recordAfter" };
 
-    @QueryField(queryName = "page", type = QueryField.FieldType.INT)
+    @QueryField(queryNames = {"side", "page"}, type = QueryField.FieldType.INT)
     protected int page = 1;
 
-    @QueryField(queryName = "pageSize", type = QueryField.FieldType.INT)
+    @QueryField(queryNames = {"sidestoerrelse", "pageSize"}, type = QueryField.FieldType.INT)
     protected int pageSize = 10;
 
-    @QueryField(queryName = "registrationFrom", type = QueryField.FieldType.STRING)
+    @QueryField(queryNames = {"registreringFra", "registrationFrom"}, type = QueryField.FieldType.STRING)
     protected OffsetDateTime registrationFrom = null;
 
-    @QueryField(queryName = "registrationTo", type = QueryField.FieldType.STRING)
+    @QueryField(queryNames = {"registreringTil", "registrationTo"}, type = QueryField.FieldType.STRING)
     protected OffsetDateTime registrationTo = null;
 
-    @QueryField(queryName = "effectFrom", type = QueryField.FieldType.STRING)
+    @QueryField(queryNames = {"virkningFra", "effectFrom"}, type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectFrom = null;
 
-    @QueryField(queryName = "effectTo", type = QueryField.FieldType.STRING)
+    @QueryField(queryNames = {"virkningTil", "effectTo"}, type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectTo = null;
 
-    @QueryField(queryName = "recordAfter", type = QueryField.FieldType.STRING)
+    @QueryField(queryNames = { "opdateretEfter", "recordAfter" }, type = QueryField.FieldType.STRING)
     protected OffsetDateTime recordAfter = null;
 
     @QueryField(queryName = "UUID", type = QueryField.FieldType.STRING)
