@@ -24,7 +24,7 @@
                 <dt>Query fields:</dt>
                 <dd>
                     <ul class="list-unstyled">
-                        <li th:each="queryField : ${serviceDescriptor.fields}" th:text="|${queryField.type} ${queryField.name}|"></li>
+                        <li th:each="queryField : ${serviceDescriptor.fields}" th:text="|${queryField.type} ${queryField.namesAsString()}|"></li>
                     </ul>
                 </dd>
             </dl>
@@ -38,7 +38,7 @@
                 <dt>Query fields:</dt>
                 <dd>
                     <ul class="list-unstyled">
-                        <li th:each="queryField : ${serviceDescriptor.fields}" th:text="|${queryField.type} ${queryField.name}|"></li>
+                        <li th:each="queryField : ${serviceDescriptor.fields}" th:text="|${queryField.type} ${queryField.namesAsString()}|"></li>
                     </ul>
                 </dd>
             </dl>
