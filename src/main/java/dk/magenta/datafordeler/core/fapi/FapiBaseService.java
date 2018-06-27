@@ -233,7 +233,8 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             } catch (IllegalArgumentException e) {
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
+            this.log.warn("Error in REST getById ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -274,7 +275,8 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             E entity = this.searchById(id, query, session);
 
             sendAsCSV(Stream.of(entity), request, response);
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
+            this.log.warn("Error in REST getRestCsv ("+request.getRequestURI()+")", e);
             throw e;
         } catch (Exception e) {
             e.printStackTrace();
@@ -332,6 +334,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
                 throw new InvalidClientInputException(e.getMessage());
             }
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
+            this.log.warn("Error in SOAP getById (id: "+id+", registeringFra: "+registeringFra+", registeringTil: "+registeringTil+")", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -394,7 +397,8 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             }
             envelope.close();
             loggerHelper.logResult(envelope, requestParams.toString());
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
+            this.log.warn("Error in REST search ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -434,6 +438,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             sendAsCSV(this.searchByQueryAsStream(query, session),
                 request, response);
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
+            this.log.warn("Error in REST CSV search ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -475,6 +480,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             envelope.close();
             loggerHelper.logResult(envelope, query.toString());
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
+            this.log.warn("Error in SOAP search", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
