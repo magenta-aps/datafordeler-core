@@ -57,6 +57,11 @@ public class Stopwatch {
         this.results.put(key, 0L);
     }
 
+    public void clear() {
+        this.results.clear();
+        this.running.clear();
+    }
+
     /**
      * Get the key and time in a pretty format: "key: [time]ms"
      * @param key
