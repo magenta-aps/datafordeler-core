@@ -10,13 +10,19 @@ import java.util.List;
 
 public abstract class OutputWrapper<E extends IdentifiedEntity> {
 
-    public abstract Object wrapResult(E input, Query query);
+    public enum Mode {
+        RVD,
+        RDV,
+        DRV
+    }
+
+    public abstract Object wrapResult(E input, Query query, Mode mode);
     
-    public final List<Object> wrapResults(Collection<E> input, Query query) {
+    public final List<Object> wrapResults(Collection<E> input, Query query, Mode mode) {
             ArrayList<Object> result = new ArrayList<>();
         for (E item : input) {
             if (item != null) {
-                result.add(wrapResult(item, query));
+                result.add(wrapResult(item, query, mode));
             }
         }
         return result;
