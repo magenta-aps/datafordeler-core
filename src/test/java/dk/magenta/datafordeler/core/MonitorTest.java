@@ -58,6 +58,10 @@ public class MonitorTest {
         ResponseEntity<String> response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(response.getBody(), HttpStatus.OK, response.getStatusCode());
 
+        log.info("testing");
+        response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+
         log.error(new NullPointerException());
         response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());

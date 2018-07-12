@@ -170,9 +170,13 @@ public class IndexTest {
                 Assert.assertNotNull(queryField);
                 Assert.assertTrue(queryField instanceof ObjectNode);
                 ObjectNode queryFieldObject = (ObjectNode) queryField;
-                Assert.assertNotNull(queryFieldObject.get("name"));
+                Assert.assertNotNull(queryFieldObject.get("names"));
                 Assert.assertNotNull(queryFieldObject.get("type"));
-                queryFieldMap.put(queryFieldObject.get("name").textValue(), queryFieldObject.get("type").textValue());
+                ArrayNode nameNodes = (ArrayNode) queryFieldObject.get("names");
+                for (JsonNode name : nameNodes) {
+                    queryFieldMap.put(name.textValue(), queryFieldObject.get("type").textValue());
+                }
+
             }
             Assert.assertEquals("string", queryFieldMap.get("registrationFrom"));
             Assert.assertEquals("string", queryFieldMap.get("registrationTo"));
