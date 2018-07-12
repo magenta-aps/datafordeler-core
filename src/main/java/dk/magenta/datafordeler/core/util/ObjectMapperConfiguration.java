@@ -130,6 +130,7 @@ public class ObjectMapperConfiguration {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.registerModule(this.getOffsetDateTimeModule());
         objectMapper.registerModule(this.getLocalDateModule());
+        objectMapper.registerModule(this.getLocalDateTimeModule());
         return objectMapper;
     }
 
