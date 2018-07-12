@@ -13,16 +13,24 @@ public abstract class OutputWrapper<E extends IdentifiedEntity> {
     public enum Mode {
         RVD,
         RDV,
-        DRV
+        DRV,
+        LEGACY
     }
 
-    public abstract Object wrapResult(E input, Query query, Mode mode);
-    
+    // Override either of these
+    public Object wrapResult(E input, Query query) {
+        return null;
+    }
+
+    public Object wrapResult(E input, Query query, Mode mode) {
+        return this.wrapResult(input, query);
+    }
+
     public final List<Object> wrapResults(Collection<E> input, Query query, Mode mode) {
             ArrayList<Object> result = new ArrayList<>();
         for (E item : input) {
             if (item != null) {
-                result.add(wrapResult(item, query, mode));
+                result.add(this.wrapResult(item, query, mode));
             }
         }
         return result;
