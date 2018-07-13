@@ -238,7 +238,7 @@ public class Pull extends Worker implements Runnable {
             }
             this.onComplete();
         } catch (Throwable e) {
-            this.log.error(this.prefix+"Pull rrored", e);
+            this.log.error(this.prefix+"Pull errored", e);
             this.onError(e);
             throw new RuntimeException(e);
         } finally {
