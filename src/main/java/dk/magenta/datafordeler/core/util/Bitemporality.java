@@ -23,11 +23,17 @@ public class Bitemporality {
     }
 
     public Bitemporality(OffsetDateTime registrationFrom) {
-        this(registrationFrom, null, null, null);
+        this.registrationFrom = registrationFrom;
+
     }
 
     public Bitemporality(OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
-        this(registrationFrom, registrationTo, null, null);
+        this.registrationFrom = registrationFrom;
+        this.registrationTo = registrationTo;
+    }
+
+    public Bitemporality(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, LocalDate effectFrom, LocalDate effectTo) {
+        this(registrationFrom, registrationTo, convertTime(effectFrom), convertTime(effectTo));
     }
 
     public Bitemporality(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, TemporalAccessor effectFrom, TemporalAccessor effectTo) {
@@ -121,11 +127,11 @@ public class Bitemporality {
         return this.registrationFrom + "|" + this.registrationTo + "|" + this.effectFrom + "|" + this.effectTo;
     }
 
-    public static OffsetDateTime convertTime(TemporalAccessor time) {
-        return time != null ? OffsetDateTime.from(time) : null;
-    }
-
     public static OffsetDateTime convertTime(LocalDate time) {
         return time != null ? OffsetDateTime.of(time, LocalTime.MIDNIGHT, ZoneOffset.UTC) : null;
+    }
+
+    public static OffsetDateTime convertTime(TemporalAccessor time) {
+        return time != null ? OffsetDateTime.from(time) : null;
     }
 }
