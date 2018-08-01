@@ -2,7 +2,6 @@ package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.fapi.Query;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -188,8 +187,8 @@ public class LookupDefinition {
         return true;
     }
 
-    protected ArrayList<String> getHqlJoinParts(String rootKey, FieldDefinition fieldDefinition) {
-        ArrayList<String> joinTables = new ArrayList<>();
+    protected HashSet<String> getHqlJoinParts(String rootKey, FieldDefinition fieldDefinition) {
+        HashSet<String> joinTables = new HashSet<>();
         String path = fieldDefinition.path;
         if (path.contains(separator)) {
             String[] parts = path.split(quotedSeparator);
@@ -204,9 +203,7 @@ public class LookupDefinition {
                 String beforeAppend = fullParts.toString();
                 fullParts.append("_").append(part);
                 String joinEntry = beforeAppend + "." + part + " " + fullParts;
-                if (!joinTables.contains(joinEntry)) {
-                    joinTables.add(joinEntry);
-                }
+                joinTables.add(joinEntry);
             }
         }
         if (!fieldDefinition.anded.isEmpty()) {
@@ -253,7 +250,7 @@ public class LookupDefinition {
             } else if (fieldDefinition.onEntity()) {
                 extraWhere.add("(" + (fieldDefinition.inverted ? "NOT ":"") + this.getHqlWherePart(dataItemKey, entityKey, fieldDefinition, true) + ")");
             } else {
-                List<String> joins = this.getHqlJoinParts(dataItemKey, fieldDefinition);
+                Set<String> joins = this.getHqlJoinParts(dataItemKey, fieldDefinition);
                 String join = "";
                 if (joins != null && !joins.isEmpty()) {
                     StringJoiner sj = new StringJoiner(" JOIN ", " JOIN ", "");
