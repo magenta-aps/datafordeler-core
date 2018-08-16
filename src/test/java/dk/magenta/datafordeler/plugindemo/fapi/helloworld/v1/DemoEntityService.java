@@ -45,10 +45,6 @@ public class DemoEntityService extends FapiService<DemoEntity, DemoQuery> {
         return DemoEntity.class;
     }
 
-    @Override
-    protected Class<? extends DataItem> getDataClass() {
-        return DemoData.class;
-    }
 
     @Override
     public Plugin getPlugin() {

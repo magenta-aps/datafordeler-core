@@ -27,10 +27,10 @@ public abstract class ServiceDescriptor {
     private Plugin plugin;
     private String serviceName;
     private String serviceAddress;
-    private Class<? extends Query> queryClass;
+    private Class<? extends BaseQuery> queryClass;
 
 
-    public ServiceDescriptor(Plugin plugin, String serviceName, String serviceAddress, Class<? extends Query> queryClass) {
+    public ServiceDescriptor(Plugin plugin, String serviceName, String serviceAddress, Class<? extends BaseQuery> queryClass) {
         this.plugin = plugin;
         this.serviceName = serviceName;
         if (serviceAddress.endsWith("/")) {
@@ -66,17 +66,19 @@ public abstract class ServiceDescriptor {
     @JsonProperty(value = "search_queryfields")
     public List<ServiceQueryField> getFields() {
         ArrayList<ServiceQueryField> fields = new ArrayList<>();
-        for (Field field : getAllFields(this.queryClass)) {
-            QueryField qf = field.getAnnotation(QueryField.class);
-            ServiceQueryField queryField = new ServiceQueryField();
-            if (!QueryField.EMPTY.equals(qf.queryName())) {
-                queryField.names.add(qf.queryName());
+        for (Class queryClass = this.queryClass; queryClass != null; queryClass = queryClass.getSuperclass()) {
+            for (Field field : getAllFields(queryClass)) {
+                QueryField qf = field.getAnnotation(QueryField.class);
+                ServiceQueryField queryField = new ServiceQueryField();
+                if (!QueryField.EMPTY.equals(qf.queryName())) {
+                    queryField.names.add(qf.queryName());
+                }
+                if (qf.queryNames().length > 0) {
+                    queryField.names.addAll(Arrays.asList(qf.queryNames()));
+                }
+                queryField.type = qf.type().name().toLowerCase();
+                fields.add(queryField);
             }
-            if (qf.queryNames().length > 0) {
-                queryField.names.addAll(Arrays.asList(qf.queryNames()));
-            }
-            queryField.type = qf.type().name().toLowerCase();
-            fields.add(queryField);
         }
         return fields;
     }

@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.exception.*;
+import dk.magenta.datafordeler.core.fapi.BaseQuery;
 import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.util.DoubleHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
@@ -186,8 +187,8 @@ public abstract class QueryManager {
         return results;
     }
 
-    private static <E extends IdentifiedEntity> org.hibernate.query.Query<E> getQuery(Session session, Query query, Class<E> eClass) {
-        LookupDefinition lookupDefinition = query.getLookupDefinition();
+    private static <E extends IdentifiedEntity> org.hibernate.query.Query<E> getQuery(Session session, BaseQuery query, Class<E> eClass) {
+        BaseLookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = lookupDefinition.usingRVDModel() ? "d" : ENTITY;
 
         String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
@@ -235,7 +236,7 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends IdentifiedEntity> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
+    public static <E extends IdentifiedEntity> List<E> getAllEntities(Session session, BaseQuery query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
         org.hibernate.query.Query<E> databaseQuery = QueryManager.getQuery(session, query, eClass);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
@@ -253,7 +254,7 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends IdentifiedEntity, D extends DataItem> Stream<E> getAllEntitiesAsStream(Session session, Query query, Class<E> eClass) {
+    public static <E extends IdentifiedEntity, D extends DataItem> Stream<E> getAllEntitiesAsStream(Session session, BaseQuery query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
         org.hibernate.query.Query<E> databaseQuery = QueryManager.getQuery(session, query, eClass);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);

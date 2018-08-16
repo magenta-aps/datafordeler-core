@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  * Service container to be subclassed for each Entity class, serving REST and SOAP
  */
 @RequestMapping("/fapi_service_with_no_requestmapping")
-public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Query> {
+public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends BaseQuery> {
 
     @Autowired
     protected ObjectMapper objectMapper;
@@ -105,18 +105,10 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
 
 
     /**
-     * Obtains the Entity class that the service handles.
      * @return Entity subclass
      */
     @WebMethod(exclude = true)
     protected abstract Class<E> getEntityClass();
-
-    /**
-     * Obtains the DataItem class that the service handles.
-     * @return DataItem subclass
-     */
-    @WebMethod(exclude = true)
-    protected abstract Class<? extends DataItem> getDataClass();
 
 
 
@@ -529,8 +521,10 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
     @WebMethod(exclude = true) // Non-soap methods must have this
     protected List<E> searchByQuery(Q query, Session session) throws DataFordelerException {
         query.applyFilters(session);
-        return QueryManager.getAllEntities(session, query,
-            this.getEntityClass());
+        return QueryManager.getAllEntities(
+                session, query,
+                this.getEntityClass()
+        );
     }
 
     /**
@@ -544,8 +538,10 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
     protected Stream<E> searchByQueryAsStream(Q query, Session session) throws
         DataFordelerException {
         query.applyFilters(session);
-        return QueryManager.getAllEntitiesAsStream(session, query,
-            this.getEntityClass());
+        return QueryManager.getAllEntitiesAsStream(
+                session, query,
+                this.getEntityClass()
+        );
     }
 
     /**

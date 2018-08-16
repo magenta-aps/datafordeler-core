@@ -18,15 +18,15 @@ public abstract class OutputWrapper<E extends IdentifiedEntity> {
     }
 
     // Override either of these
-    public Object wrapResult(E input, Query query) {
+    public Object wrapResult(E input, BaseQuery query) {
         return null;
     }
 
-    public Object wrapResult(E input, Query query, Mode mode) {
+    public Object wrapResult(E input, BaseQuery query, Mode mode) {
         return this.wrapResult(input, query);
     }
 
-    public final List<Object> wrapResults(Collection<E> input, Query query, Mode mode) {
+    public final List<Object> wrapResults(Collection<E> input, BaseQuery query, Mode mode) {
             ArrayList<Object> result = new ArrayList<>();
         for (E item : input) {
             if (item != null) {

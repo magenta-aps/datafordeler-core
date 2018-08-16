@@ -92,7 +92,7 @@ public class Envelope {
         this.results = Collections.singletonList(result);
     }
 
-    public void addQueryData(Query query) {
+    public void addQueryData(BaseQuery query) {
         this.setPage(query.getPage());
         this.setPageSize(query.getPageSize());
     }
