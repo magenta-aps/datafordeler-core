@@ -5,7 +5,7 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 
 public class RestServiceDescriptor extends ServiceDescriptor {
 
-    public RestServiceDescriptor(Plugin plugin, String serviceName, String metaAddress, Class<? extends Query> queryClass) {
+    public RestServiceDescriptor(Plugin plugin, String serviceName, String metaAddress, Class<? extends BaseQuery> queryClass) {
         super(plugin, serviceName, metaAddress, queryClass);
     }
 

@@ -5,7 +5,7 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 
 public class SoapServiceDescriptor extends ServiceDescriptor {
 
-    public SoapServiceDescriptor(Plugin plugin, String serviceName, String metaAddress, Class<? extends Query> queryClass) {
+    public SoapServiceDescriptor(Plugin plugin, String serviceName, String metaAddress, Class<? extends BaseQuery> queryClass) {
         super(plugin, serviceName, metaAddress, queryClass);
     }
 

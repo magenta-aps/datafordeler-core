@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
 import dk.magenta.datafordeler.core.exception.*;
+import dk.magenta.datafordeler.core.fapi.BaseQuery;
 import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.util.DoubleHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
@@ -186,20 +187,11 @@ public abstract class QueryManager {
         return results;
     }
 
-    /**
-     * Get all Entities of a specific class, that match the given parameters
-     * @param session Database session to work from
-     * @param query Query object defining search parameters
-     * @param eClass Entity subclass
-     * @return
-     */
-    public static <E extends IdentifiedEntity> List<E> getAllEntities(Session session, Query query, Class<E> eClass) {
-        log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
-        LookupDefinition lookupDefinition = query.getLookupDefinition();
+    private static <E extends IdentifiedEntity> org.hibernate.query.Query<E> getQuery(Session session, BaseQuery query, Class<E> eClass) {
+        BaseLookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = lookupDefinition.usingRVDModel() ? "d" : ENTITY;
 
         String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
-
         String extraJoin = "";
         if (!lookupDefinition.usingRVDModel()) {
             extraJoin = lookupDefinition.getHqlJoinString(root, ENTITY);
@@ -234,6 +226,19 @@ public abstract class QueryManager {
         if (query.getCount() < Integer.MAX_VALUE) {
             databaseQuery.setMaxResults(query.getCount());
         }
+        return databaseQuery;
+    }
+
+    /**
+     * Get all Entities of a specific class, that match the given parameters
+     * @param session Database session to work from
+     * @param query Query object defining search parameters
+     * @param eClass Entity subclass
+     * @return
+     */
+    public static <E extends IdentifiedEntity> List<E> getAllEntities(Session session, BaseQuery query, Class<E> eClass) {
+        log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
+        org.hibernate.query.Query<E> databaseQuery = QueryManager.getQuery(session, query, eClass);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
         logQuery(databaseQuery);
         long start = Instant.now().toEpochMilli();
@@ -249,42 +254,9 @@ public abstract class QueryManager {
      * @param eClass Entity subclass
      * @return
      */
-    public static <E extends IdentifiedEntity, D extends DataItem> Stream<E> getAllEntitiesAsStream(Session session, Query query, Class<E> eClass) {
+    public static <E extends IdentifiedEntity, D extends DataItem> Stream<E> getAllEntitiesAsStream(Session session, BaseQuery query, Class<E> eClass) {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
-
-        LookupDefinition lookupDefinition = query.getLookupDefinition();
-        String root = "d";
-
-        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
-
-        String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
-                " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
-
-        log.debug(queryString);
-
-        // Build query
-        org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
-
-        // Insert parameters, casting as necessary
-        HashMap<String, Object> extraParameters = lookupDefinition.getHqlParameters(root, ENTITY);
-
-        for (String key : extraParameters.keySet()) {
-            Object value = extraParameters.get(key);
-            log.debug(key+" = "+value);
-            if (value instanceof Collection) {
-                databaseQuery.setParameterList(key, (Collection) value);
-            } else {
-                databaseQuery.setParameter(key, value);
-            }
-        }
-
-        // Offset & limit
-        if (query.getOffset() > 0) {
-            databaseQuery.setFirstResult(query.getOffset());
-        }
-        if (query.getCount() < Integer.MAX_VALUE) {
-            databaseQuery.setMaxResults(query.getCount());
-        }
+        org.hibernate.query.Query<E> databaseQuery = QueryManager.getQuery(session, query, eClass);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
         databaseQuery.setFetchSize(1000);
         logQuery(databaseQuery);

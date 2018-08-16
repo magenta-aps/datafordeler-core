@@ -136,6 +136,21 @@ public class FtpCommunicator implements Communicator {
         }
     }
 
+    public ImportInputStream fetchLocal() throws DataStreamException {
+        ArrayList<File> files = new ArrayList<>(Arrays.asList(localCopyFolder.toFile().listFiles()));
+        files.sort(File::compareTo);
+        try {
+            InputStream inputStream = this.buildChainedInputStream(files);
+            if (inputStream != null) {
+                return new ImportInputStream(new CloseDetectInputStream(inputStream), files);
+            } else {
+                return new ImportInputStream(new ByteArrayInputStream("".getBytes()));
+            }
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
+    }
+
     /**
      * Fetches all yet-unfetched files from the folder denoted by the uri.
      */
@@ -159,9 +174,7 @@ public class FtpCommunicator implements Communicator {
                 currentFiles.add(outputFile);
             }
 
-            // ArrayList<File> files = new ArrayList<>(Arrays.asList(localCopyFolder.toFile().listFiles()));
-            // files.sort(File::compareTo);
-            // currentFiles.addAll(files);
+
 
             this.onBeforeBuildStream(ftpClient, currentFiles, uri, downloadPaths);
             InputStream inputStream = this.buildChainedInputStream(currentFiles);
