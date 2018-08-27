@@ -75,8 +75,8 @@ public class DemoQuery extends Query<DemoEntity> {
     }
 
     @Override
-    public BaseLookupDefinition getLookupDefinition() {
-        BaseLookupDefinition lookupDefinition = super.getLookupDefinition();
+    public LookupDefinition getLookupDefinition() {
+        LookupDefinition lookupDefinition = super.getLookupDefinition();
         if (this.postnr != null) {
             lookupDefinition.put("postnr", this.postnr, Integer.class);
         }
