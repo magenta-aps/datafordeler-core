@@ -6,6 +6,7 @@ import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.FailedReferenceException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.exception.WrongSubclassException;
+import dk.magenta.datafordeler.core.fapi.FapiBaseService;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
@@ -76,7 +77,7 @@ public abstract class EntityManager {
      * Plugins must return an instance of a FapiService subclass from this method
      * @return
      */
-    public abstract FapiService getEntityService();
+    public abstract FapiBaseService getEntityService();
 
 
 

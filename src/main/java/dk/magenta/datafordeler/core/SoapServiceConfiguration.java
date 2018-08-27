@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.exception.InvalidServiceOwnerDefinitionException;
+import dk.magenta.datafordeler.core.fapi.FapiBaseService;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.fapi.SoapHandler;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
@@ -65,7 +66,7 @@ public class SoapServiceConfiguration {
                 throw new InvalidServiceOwnerDefinitionException(plugin, serviceOwner, this.ownerValidation);
             }
             for (EntityManager entityManager : registerManager.getEntityManagers()) {
-                FapiService service = entityManager.getEntityService();
+                FapiBaseService service = entityManager.getEntityService();
                 String base = "/" + serviceOwner + "/" + service.getServiceName() + "/" + service.getVersion();
 
                 // SOAP

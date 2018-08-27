@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.core;
 
+import dk.magenta.datafordeler.core.fapi.FapiBaseService;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -105,7 +106,7 @@ public class PluginManager {
     public Plugin getPluginForServicePath(String path) {
         for (Plugin plugin : this.plugins) {
             for (EntityManager entityManager : plugin.getRegisterManager().getEntityManagers()) {
-                FapiService restService = entityManager.getEntityService();
+                FapiBaseService restService = entityManager.getEntityService();
                 for (String servicePath : restService.getServicePaths()) {
                     if (path.startsWith(servicePath)) {
                         return plugin;
