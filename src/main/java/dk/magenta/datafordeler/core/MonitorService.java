@@ -104,7 +104,7 @@ public class MonitorService {
 
                         // When did we start last
                         OffsetDateTime lastStartTime = entityManager.getLastUpdated(session);
-                        output.println("    Last start was at " + lastStartTime);
+                        output.println("    Last start was at " + lastStartTime.toInstant());
 
                         // fail if more than four hours have passed since expectedstart and we are not yet done
                         // not yet done = lastStartTime is somewhere before expectedStart
