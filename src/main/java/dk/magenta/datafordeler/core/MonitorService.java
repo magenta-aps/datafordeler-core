@@ -103,7 +103,7 @@ public class MonitorService {
                         // not yet done = lastStartTime is somewhere before expectedStart
                         if (
                                 Instant.now().isAfter(expectedStart.plus(4, ChronoUnit.HOURS)) &&
-                                        (lastStartTime == null || lastStartTime.toInstant().isBefore(expectedStart))
+                                        (lastStartTime == null || lastStartTime.toInstant().plusSeconds(60).isBefore(expectedStart))
                                 ) {
                             output.println("It is more than 4 hours after expected start, and last start has not been updated to be after expected start");
                             response.setStatus(500);
