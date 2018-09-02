@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.core.fapi;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import org.hibernate.Filter;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
 import java.time.*;
@@ -25,6 +26,14 @@ public abstract class BaseQuery {
     public static final String[] PARAM_EFFECT_FROM = new String[] {"virkningFra", "effectFrom"};
     public static final String[] PARAM_EFFECT_TO = new String[] {"virkningTil", "effectTo"};
     public static final String[] PARAM_RECORD_AFTER = new String[] { "opdateretEfter", "recordAfter" };
+
+    public static final String[] PARAM_OUTPUT_WRAPPING = new String[] {"format", "fmt"};
+    public static final Map<String, OutputWrapper.Mode> PARAM_OUTPUT_WRAPPING_VALUEMAP = new HashMap<>();
+    static {
+        PARAM_OUTPUT_WRAPPING_VALUEMAP.put("rvd", OutputWrapper.Mode.RVD);
+        PARAM_OUTPUT_WRAPPING_VALUEMAP.put("rdv", OutputWrapper.Mode.RDV);
+        PARAM_OUTPUT_WRAPPING_VALUEMAP.put("drv", OutputWrapper.Mode.DRV);
+    }
 
     @QueryField(queryNames = {"side", "page"}, type = QueryField.FieldType.INT)
     protected int page = 1;
@@ -51,6 +60,8 @@ public abstract class BaseQuery {
     protected List<UUID> uuid = new ArrayList<>();
 
     private List<String> kommunekodeRestriction = new ArrayList<>();
+
+    private OutputWrapper.Mode mode = null;
 
     public BaseQuery() {
     }
@@ -284,6 +295,14 @@ public abstract class BaseQuery {
      */
     public abstract BaseLookupDefinition getLookupDefinition();
 
+    public OutputWrapper.Mode getMode() {
+        return this.mode;
+    }
+
+    public OutputWrapper.Mode getMode(OutputWrapper.Mode fallback) {
+        return this.mode != null ? this.mode : fallback;
+    }
+
     /**
      * Parse a ParameterMap from a http request and insert values in this Query object
      * @param parameterMap
@@ -306,6 +325,10 @@ public abstract class BaseQuery {
             if (this.getDataParamCount() == 0) {
                 throw new InvalidClientInputException("Missing query parameters");
             }
+        }
+        String modeString = parameterMap.getFirstOf(PARAM_OUTPUT_WRAPPING);
+        if (modeString != null) {
+            this.mode = PARAM_OUTPUT_WRAPPING_VALUEMAP.get(modeString);
         }
     }
 
@@ -459,24 +482,30 @@ public abstract class BaseQuery {
      */
     public void applyFilters(Session session) {
         if (this.getRegistrationFrom() != null) {
-            Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_FROM);
-            filter.setParameter(Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFrom());
+            this.applyFilter(session, Registration.FILTER_REGISTRATION_FROM, Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFrom());
+            this.applyFilter(session, Monotemporal.FILTER_REGISTRATION_AFTER, Monotemporal.FILTERPARAM_REGISTRATION_AFTER, this.getRegistrationFrom());
         }
         if (this.getRegistrationTo() != null) {
-            Filter filter = session.enableFilter(Registration.FILTER_REGISTRATION_TO);
-            filter.setParameter(Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationTo());
+            this.applyFilter(session, Registration.FILTER_REGISTRATION_TO, Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationTo());
+            this.applyFilter(session, Monotemporal.FILTER_REGISTRATION_BEFORE, Monotemporal.FILTERPARAM_REGISTRATION_BEFORE, this.getRegistrationFrom());
         }
         if (this.getEffectFrom() != null) {
-            Filter filter = session.enableFilter(Effect.FILTER_EFFECT_FROM);
-            filter.setParameter(Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
+            this.applyFilter(session, Effect.FILTER_EFFECT_FROM, Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
+            this.applyFilter(session, Bitemporal.FILTER_EFFECT_AFTER, Bitemporal.FILTERPARAM_EFFECT_AFTER, this.getEffectFrom());
         }
         if (this.getEffectTo() != null) {
-            Filter filter = session.enableFilter(Effect.FILTER_EFFECT_TO);
-            filter.setParameter(Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
+            this.applyFilter(session, Effect.FILTER_EFFECT_TO, Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
+            this.applyFilter(session, Bitemporal.FILTER_EFFECT_BEFORE, Bitemporal.FILTERPARAM_EFFECT_BEFORE, this.getEffectTo());
         }
         if (this.getRecordAfter() != null) {
-            Filter filter = session.enableFilter(DataItem.FILTER_RECORD_AFTER);
-            filter.setParameter(DataItem.FILTERPARAM_RECORD_AFTER, this.getRecordAfter());
+            this.applyFilter(session, DataItem.FILTER_RECORD_AFTER, DataItem.FILTERPARAM_RECORD_AFTER, this.getRecordAfter());
+            this.applyFilter(session, Nontemporal.FILTER_LASTUPDATED_AFTER, Nontemporal.FILTERPARAM_LASTUPDATED_AFTER, this.getRecordAfter());
+        }
+    }
+
+    private void applyFilter(Session session, String filterName, String parameterName, Object parameterValue) {
+        if (session.getSessionFactory().getDefinedFilterNames().contains(filterName)) {
+            session.enableFilter(filterName).setParameter(parameterName, parameterValue);
         }
     }
 
