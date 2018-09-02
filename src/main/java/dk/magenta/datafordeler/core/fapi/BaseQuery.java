@@ -487,7 +487,7 @@ public abstract class BaseQuery {
         }
         if (this.getRegistrationTo() != null) {
             this.applyFilter(session, Registration.FILTER_REGISTRATION_TO, Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationTo());
-            this.applyFilter(session, Monotemporal.FILTER_REGISTRATION_BEFORE, Monotemporal.FILTERPARAM_REGISTRATION_BEFORE, this.getRegistrationFrom());
+            this.applyFilter(session, Monotemporal.FILTER_REGISTRATION_BEFORE, Monotemporal.FILTERPARAM_REGISTRATION_BEFORE, this.getRegistrationTo());
         }
         if (this.getEffectFrom() != null) {
             this.applyFilter(session, Effect.FILTER_EFFECT_FROM, Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
