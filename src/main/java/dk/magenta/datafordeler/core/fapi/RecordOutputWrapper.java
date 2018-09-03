@@ -39,7 +39,30 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
         return this.objectMapper;
     }
 
-    public abstract Set<String> getRemoveFieldNames();
+
+
+    // RVD
+    private final Set<String> rvdNodeRemoveFields = new HashSet<>(Arrays.asList(new String[]{
+            "registreringFra",
+            "registreringTil",
+            "registrationFrom",
+            "registrationTo",
+            "virkningFra",
+            "virkningTil",
+            "sidstOpdateret",
+            "lastUpdated"
+    }));
+    private final Set<String> rdvNodeRemoveFields = rvdNodeRemoveFields;
+
+    public Set<String> getRemoveFieldNames(Mode mode) {
+        switch (mode) {
+            case RVD:
+                return this.rvdNodeRemoveFields;
+            case RDV:
+                return this.rdvNodeRemoveFields;
+        }
+        return Collections.emptySet();
+    }
 
     protected abstract void fillContainer(OutputContainer container, E item);
 
@@ -47,11 +70,11 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
 
     protected class OutputContainer {
 
-        private DoubleListHashMap<Bitemporality, String, JsonNode> bitemporalData = new DoubleListHashMap<>();
+        protected DoubleListHashMap<Bitemporality, String, JsonNode> bitemporalData = new DoubleListHashMap<>();
 
-        private ListHashMap<String, JsonNode> nontemporalData = new ListHashMap<>();
+        protected ListHashMap<String, JsonNode> nontemporalData = new ListHashMap<>();
 
-        private HashSet<String> forcedArrayKeys = new HashSet<>();
+        protected HashSet<String> forcedArrayKeys = new HashSet<>();
 
         public boolean isArrayForced(String key) {
             return this.forcedArrayKeys.contains(key);
@@ -98,10 +121,6 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                     Bitemporality bitemporality = bitemporalityExtractor.apply(record);
                     if (value instanceof ObjectNode) {
                         ObjectNode oValue = (ObjectNode) value;
-                        Set<String> removeFieldNames = RecordOutputWrapper.this.getRemoveFieldNames();
-                        if (removeFieldNames != null) {
-                            oValue.remove(removeFieldNames);
-                        }
                         if (unwrapSingle && value.size() == 1) {
                             this.bitemporalData.add(bitemporality, key, oValue.get(oValue.fieldNames().next()));
                             continue;
@@ -169,15 +188,6 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
             this.nontemporalData.add(key, data != null ? new TextNode(data.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) : null);
         }
 
-        // RVD
-        private final Set<String> rvdNodeRemoveFields = new HashSet<>(Arrays.asList(new String[]{
-                "registreringFra",
-                "registreringTil",
-                "registrationFrom",
-                "registrationTo",
-                "sidstOpdateret",
-                "lastUpdated"
-        }));
 
         public ObjectNode getRVD(Bitemporality mustOverlap) {
 
@@ -236,16 +246,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                                 HashMap<String, ArrayList<JsonNode>> records = this.bitemporalData.get(bitemporality);
                                 for (String key : records.keySet()) {
                                     List<JsonNode> nodes = records.get(key);
-                                    nodes = this.filterNodes(nodes, node -> {
-                                        if (node instanceof ObjectNode) {
-                                            ObjectNode objectNode = (ObjectNode) node;
-                                            objectNode.remove(rvdNodeRemoveFields);
-                                            if (objectNode.size() == 1) {
-                                                node = objectNode.get(objectNode.fieldNames().next());
-                                            }
-                                        }
-                                        return node;
-                                    });
+                                    nodes = this.removeFields(nodes, Mode.RVD);
                                     this.setValue(objectMapper, effectNode, key, nodes);
                                 }
                                 lastEffect = bitemporality;
@@ -255,8 +256,25 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                 }
             }
             ObjectNode output = objectMapper.createObjectNode();
-            output.set("registreringer", registrationsNode);
+            output.set(REGISTRATIONS, registrationsNode);
             return output;
+        }
+
+        private List<JsonNode> removeFields(List<JsonNode> nodes, Mode mode) {
+            Set<String> removeFieldNames = RecordOutputWrapper.this.getRemoveFieldNames(mode);
+            if (removeFieldNames != null) {
+                nodes = this.filterNodes(nodes, node -> {
+                    if (node instanceof ObjectNode) {
+                        ObjectNode objectNode = (ObjectNode) node;
+                        objectNode.remove(removeFieldNames);
+                        if (objectNode.size() == 1) {
+                            node = objectNode.get(objectNode.fieldNames().next());
+                        }
+                    }
+                    return node;
+                });
+            }
+            return nodes;
         }
 
 
@@ -315,13 +333,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                                         registrationNode.set(outKey, dataNode);
                                     }
                                     List<JsonNode> nodes = records.get(key);
-                                    nodes = this.filterNodes(nodes, node -> {
-                                        if (node instanceof ObjectNode) {
-                                            ObjectNode objectNode = (ObjectNode) node;
-                                            objectNode.remove(rvdNodeRemoveFields);
-                                        }
-                                        return node;
-                                    });
+                                    nodes = this.removeFields(nodes, Mode.RDV);
                                     for (JsonNode node : nodes) {
                                         ObjectNode oNode;
                                         if (node instanceof ObjectNode) {
@@ -343,7 +355,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                 }
             }
             ObjectNode output = objectMapper.createObjectNode();
-            output.set("registreringer", registrationsNode);
+            output.set(REGISTRATIONS, registrationsNode);
             return output;
         }
 
@@ -361,7 +373,9 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                             arrayNode = objectMapper.createArrayNode();
                             objectNode.set(key, arrayNode);
                         }
-                        arrayNode.addAll(data.get(key));
+                        List<JsonNode> nodes = data.get(key);
+                        nodes = this.removeFields(nodes, Mode.DRV);
+                        arrayNode.addAll(nodes);
                     }
                 }
             }
@@ -404,11 +418,15 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
         return this.getNode(record, mustContain, mode);
     }
 
-    public Object getNode(E record, Bitemporality overlap, Mode mode) {
+    protected OutputContainer createOutputContainer() {
+        return new OutputContainer();
+    }
+
+    public ObjectNode getNode(E record, Bitemporality overlap, Mode mode) {
         ObjectNode root = this.objectMapper.createObjectNode();
         root.put(Identification.IO_FIELD_UUID, record.getIdentification().getUuid().toString());
         root.put(Identification.IO_FIELD_DOMAIN, record.getIdentification().getDomain());
-        OutputContainer recordOutput = new OutputContainer();
+        OutputContainer recordOutput = this.createOutputContainer();
         this.fillContainer(recordOutput, record);
         root.setAll(recordOutput.getBase());
         switch (mode) {

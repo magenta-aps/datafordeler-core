@@ -33,6 +33,7 @@ public abstract class BaseQuery {
         PARAM_OUTPUT_WRAPPING_VALUEMAP.put("rvd", OutputWrapper.Mode.RVD);
         PARAM_OUTPUT_WRAPPING_VALUEMAP.put("rdv", OutputWrapper.Mode.RDV);
         PARAM_OUTPUT_WRAPPING_VALUEMAP.put("drv", OutputWrapper.Mode.DRV);
+        PARAM_OUTPUT_WRAPPING_VALUEMAP.put("legacy", OutputWrapper.Mode.LEGACY);
     }
 
     @QueryField(queryNames = {"side", "page"}, type = QueryField.FieldType.INT)
