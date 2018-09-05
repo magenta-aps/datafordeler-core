@@ -380,7 +380,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             envelope.addRequestData(request);
             List<E> results = this.searchByQuery(query, session);
             if (this.getOutputWrapper() != null) {
-                envelope.setResults(this.getOutputWrapper().wrapResults(results, query, this.getDefaultMode()));
+                envelope.setResults(this.getOutputWrapper().wrapResults(results, query, query.getMode(this.getDefaultMode())));
             } else {
                 ArrayNode jacksonConverted = objectMapper.valueToTree(results);
                 ArrayList<Object> wrapper = new ArrayList<>();
@@ -467,7 +467,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             envelope.addRequestData(request);
             List<E> results = this.searchByQuery(query, session);
             if (this.getOutputWrapper() != null) {
-                envelope.setResult(this.getOutputWrapper().wrapResults(results, query, this.getDefaultMode()));
+                envelope.setResult(this.getOutputWrapper().wrapResults(results, query, query.getMode(this.getDefaultMode())));
             } else {
                 envelope.setResults(results);
             }
@@ -492,7 +492,6 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
      * @return Query subclass instance
      */
     protected abstract Q getEmptyQuery();
-
 
     /**
      * Parse a map of URL parameters into a Query object of the correct subclass
