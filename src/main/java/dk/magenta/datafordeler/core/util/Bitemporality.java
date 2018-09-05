@@ -15,7 +15,7 @@ public class Bitemporality implements Comparable<Bitemporality> {
     public OffsetDateTime effectFrom;
     public OffsetDateTime effectTo;
 
-    public Bitemporality(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, OffsetDateTime effectFrom,OffsetDateTime effectTo) {
+    public Bitemporality(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         this.registrationFrom = registrationFrom;
         this.registrationTo = registrationTo;
         this.effectFrom = effectFrom;
