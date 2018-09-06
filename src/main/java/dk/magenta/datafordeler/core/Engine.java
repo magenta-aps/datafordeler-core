@@ -206,7 +206,7 @@ public class Engine {
         } else {
             try {
                entityManager.sendReceipt(receipt);
-            } catch (IOException e) {
+            } catch (DataFordelerException | IOException e) {
                 log.error("Failed sending receipt", e);
                 e.printStackTrace();
             }
