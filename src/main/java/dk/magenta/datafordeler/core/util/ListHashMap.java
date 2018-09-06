@@ -1,9 +1,6 @@
 package dk.magenta.datafordeler.core.util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A collection mapping keys to lists.
@@ -33,6 +30,15 @@ public class ListHashMap<K, V> extends HashMap<K, ArrayList<V>> {
             this.put(key, list);
         }
         list.add(value);
+    }
+
+    public void add(K key, Collection<V> values) {
+        ArrayList<V> list = this.get(key);
+        if (list == null) {
+            list = new ArrayList<>();
+            this.put(key, list);
+        }
+        list.addAll(values);
     }
 
     /**
