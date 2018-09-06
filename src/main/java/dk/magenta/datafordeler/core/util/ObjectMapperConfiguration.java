@@ -127,6 +127,7 @@ public class ObjectMapperConfiguration {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, indent);
+        objectMapper.enable(JsonParser.Feature.ALLOW_TRAILING_COMMA);
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.registerModule(this.getOffsetDateTimeModule());
         objectMapper.registerModule(this.getLocalDateModule());

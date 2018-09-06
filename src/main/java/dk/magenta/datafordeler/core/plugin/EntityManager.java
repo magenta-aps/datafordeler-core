@@ -108,7 +108,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public int sendReceipt(Receipt receipt) throws IOException {
+    public int sendReceipt(Receipt receipt) throws IOException, DataFordelerException {
         ObjectMapper objectMapper = this.getObjectMapper();
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
         if (receiptEndpoint != null) {
@@ -132,7 +132,7 @@ public abstract class EntityManager {
             int statuscode = 0;
             try {
                 statuscode = this.sendReceipt(receipt);
-            } catch (IOException e) {
+            } catch (DataFordelerException | IOException e) {
                 // What to do here?
             }
             responses.put(receipt, statuscode);
