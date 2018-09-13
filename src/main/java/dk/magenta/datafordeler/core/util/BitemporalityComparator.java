@@ -6,7 +6,6 @@ import java.util.Objects;
 
 public class BitemporalityComparator<B extends Bitemporality> implements Comparator<B> {
 
-
     public enum Type {
         REGISTRATION_FROM,
         REGISTRATION_TO,
@@ -26,6 +25,7 @@ public class BitemporalityComparator<B extends Bitemporality> implements Compara
 
     private static final Type[] comparisonOrder = new Type[] {Type.REGISTRATION_FROM, Type.REGISTRATION_TO, Type.EFFECT_FROM, Type.EFFECT_TO};
 
+    @Override
     public int compare(Bitemporality o1, Bitemporality o2) {
         if (this.type == Type.ALL) {
             int c;
