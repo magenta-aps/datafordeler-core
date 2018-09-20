@@ -27,6 +27,10 @@
             <id>central</id>
             <url>http://central.maven.org/maven2/</url>
         </repository>
+        <repository>
+            <id>local-repo</id>
+            <url>file://${project.basedir}/src/main/resources/repo</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -301,8 +305,6 @@
             <groupId>it.sauronsoftware</groupId>
             <artifactId>ftp4j</artifactId>
             <version>1.6</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/extralib/ftp4j-1.6.jar</systemPath>
         </dependency>
 
     </dependencies>
