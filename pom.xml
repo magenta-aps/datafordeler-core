@@ -28,8 +28,8 @@
             <url>http://central.maven.org/maven2/</url>
         </repository>
         <repository>
-            <id>novus</id>
-            <url>http://repo.novus.com/releases/</url>
+            <id>local-repo</id>
+            <url>file://${project.basedir}/src/main/resources/repo</url>
         </repository>
     </repositories>
 
