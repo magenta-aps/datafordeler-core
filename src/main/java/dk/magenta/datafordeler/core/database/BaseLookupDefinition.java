@@ -157,7 +157,7 @@ public class BaseLookupDefinition {
      *                for the DataItem table: if the HQL so far is "SELECT e from FooEntity JOIN e.registrations r JOIN r.effects v JOIN v.dataItems d",
      *                then "d" would be the rootKey to look up paths within the dataItem table
      * @param entityKey Entity key, denoting the hql identifier for the Entity table. In the above example, "e" would be the entityKey
-     * @return join string, e.g. "JOIN d.abc d_abc JOIN e.foo e_foo"
+     * @return join string, e.g. " LEFT JOIN d.abc d_abc LEFT JOIN e.foo e_foo"
      */
     public String getHqlJoinString(String rootKey, String entityKey) {
         ArrayList<String> joinTables = new ArrayList<>();
@@ -165,7 +165,7 @@ public class BaseLookupDefinition {
             joinTables.addAll(this.getHqlJoinParts(rootKey, definition));
         }
         if (!joinTables.isEmpty()) {
-            String joinString = " JOIN ";
+            String joinString = " LEFT JOIN ";
             StringJoiner s = new StringJoiner(joinString);
             for (String table : joinTables) {
                 s.add(table);

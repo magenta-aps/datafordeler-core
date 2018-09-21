@@ -85,7 +85,6 @@ public abstract class QueryManager {
         //log.info("Get Identification from UUID " + uuid);
         org.hibernate.query.Query<Identification> databaseQuery = session.createQuery("select i from Identification i where i.uuid = :uuid", Identification.class);
         databaseQuery.setParameter("uuid", uuid);
-        logQuery(databaseQuery);
         databaseQuery.setCacheable(true);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
         try {
@@ -180,7 +179,6 @@ public abstract class QueryManager {
         log.trace("Get all Entities of class " + eClass.getCanonicalName());
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " join "+ENTITY+".identification i where i.uuid != null", eClass);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
-        logQuery(databaseQuery);
         long start = Instant.now().toEpochMilli();
         List<E> results = databaseQuery.getResultList();
         log.debug("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
@@ -200,9 +198,7 @@ public abstract class QueryManager {
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
                 " " + extraJoin +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
-
-        log.debug(queryString);
-
+        
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
 
@@ -211,7 +207,7 @@ public abstract class QueryManager {
 
         for (String key : extraParameters.keySet()) {
             Object value = extraParameters.get(key);
-            log.debug(key+" = "+value);
+            System.out.println(key+" = "+value);
             if (value instanceof Collection) {
                 databaseQuery.setParameterList(key, (Collection) value);
             } else {
@@ -240,7 +236,6 @@ public abstract class QueryManager {
         log.info("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
         org.hibernate.query.Query<E> databaseQuery = QueryManager.getQuery(session, query, eClass);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
-        logQuery(databaseQuery);
         long start = Instant.now().toEpochMilli();
         List<E> results = databaseQuery.getResultList();
         log.debug("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
@@ -259,7 +254,6 @@ public abstract class QueryManager {
         org.hibernate.query.Query<E> databaseQuery = QueryManager.getQuery(session, query, eClass);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
         databaseQuery.setFetchSize(1000);
-        logQuery(databaseQuery);
         Stream<E> results = databaseQuery.stream();
         return results;
     }
@@ -292,7 +286,6 @@ public abstract class QueryManager {
         org.hibernate.query.Query<E> databaseQuery = session.createQuery("select "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY + " where " + ENTITY + ".identification = :identification", eClass);
         databaseQuery.setParameter("identification", identification);
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
-        logQuery(databaseQuery);
         databaseQuery.setCacheable(true);
         try {
             long start = Instant.now().toEpochMilli();
@@ -385,7 +378,6 @@ public abstract class QueryManager {
         databaseQuery.setParameter("id", entity.getId());
         databaseQuery.setParameter("from", effectFrom);
         databaseQuery.setParameter("to", effectTo);
-        logQuery(databaseQuery);
         return databaseQuery.list();
     }
 
@@ -420,7 +412,6 @@ public abstract class QueryManager {
                 " JOIN r.entity "+ENTITY + " "+extraJoin +
                 " WHERE " + ENTITY + ".id = :"+entityIdKey + " "+ extraWhere.toString();
 
-
         log.debug(queryString);
         org.hibernate.query.Query<D> query = session.createQuery(queryString, dClass);
 
@@ -434,7 +425,6 @@ public abstract class QueryManager {
                 query.setParameter(key, value);
             }
         }
-        logQuery(query);
         List<D> results = query.list();
         return results;
     }
@@ -656,16 +646,6 @@ public abstract class QueryManager {
                 }
                 session.delete(dataItem);
             }
-        }
-    }
-
-    private static void logQuery(org.hibernate.query.Query query) {
-        if (log.isDebugEnabled()) {
-            StringJoiner sj = new StringJoiner(", ");
-            for (Parameter parameter : query.getParameters()) {
-                sj.add(parameter.getName() + ": " + query.getParameterValue(parameter));
-            }
-            log.debug(query.getQueryString() + " [" + sj.toString() + "]");
         }
     }
 
