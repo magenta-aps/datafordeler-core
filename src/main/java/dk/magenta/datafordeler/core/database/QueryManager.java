@@ -207,7 +207,6 @@ public abstract class QueryManager {
 
         for (String key : extraParameters.keySet()) {
             Object value = extraParameters.get(key);
-            System.out.println(key+" = "+value);
             if (value instanceof Collection) {
                 databaseQuery.setParameterList(key, (Collection) value);
             } else {
