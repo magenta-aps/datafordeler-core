@@ -94,6 +94,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
         PipedInputStream inputStream = new PipedInputStream(); // Return this one
         final BufferedOutputStream outputStream = new BufferedOutputStream(new PipedOutputStream(inputStream));
+        OutputStreamWriter writer = new OutputStreamWriter(outputStream, "utf-8");
 
         log.info("Streams created");
         Thread fetcher = new Thread(new Runnable() {
@@ -123,14 +124,11 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                     }
 
                     responseNode = objectMapper.readTree(content);
-                    StringReader r = new StringReader(content);
-                    IOUtils.copy(r, outputStream);
-                    r.close();
-                    content = null;
+                    writer.append(content);
+                    writer.flush();
 
                     String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
                     while (scrollId != null) {
-                        InputStream getResponseData;
 
                         URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
                         HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
@@ -142,8 +140,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         try {
                             log.info("Sending chunk GET to " + fetchUri);
                             response = httpclient.execute(partialGet);
-                            getResponseData = new BufferedInputStream(response.getEntity().getContent(), 8192);
-
+                            content = InputStreamReader.readInputStream(response.getEntity().getContent());
 
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -151,33 +148,24 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         }
 
                         try {
-                            int peekSize = 1000;
-                            getResponseData.mark(peekSize);
-                            byte[] peekBytes = new byte[peekSize];
-                            getResponseData.read(peekBytes, 0, peekSize);
-                            getResponseData.reset();
 
-                            String peekString = new String(peekBytes, 0, peekSize, "utf-8");
-
-                            Matcher m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(peekString);
+                            Matcher m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(content);
                             if (m.find()) {
                                 log.info("Empty results encountered");
                                 scrollId = null;
                             } else {
-                                m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
+                                m = ScanScrollCommunicator.this.scrollIdPattern.matcher(content);
                                 if (m.find()) {
                                     scrollId = m.group(1);
                                 } else {
                                     scrollId = null;
                                     log.info("next scrollId not found");
                                 }
-                                IOUtils.copy(getResponseData, outputStream);
+                                writer.append(content);
                             }
 
                         } catch (IOException e) {
                             throw new DataStreamException(e);
-                        } finally {
-                            getResponseData.close();
                         }
 
                         if (scrollId != null) {
@@ -195,15 +183,15 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             // Reached the end
                             break;
                         }
-
                     }
+                    writer.flush();
                 } catch (DataStreamException | IOException | URISyntaxException | HttpStatusException e) {
                     ScanScrollCommunicator.this.log.error(e);
                     throw new RuntimeException(e);
                 } finally {
                     try {
                         log.info("Closing outputstream");
-                        outputStream.close();
+                        writer.close();
                     } catch (IOException e1) {
                     }
                     ScanScrollCommunicator.this.fetches.remove(inputStream);
