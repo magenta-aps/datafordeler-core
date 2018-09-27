@@ -93,8 +93,8 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         final URI startUri = new URI(initialUri.getScheme(), initialUri.getUserInfo(), initialUri.getHost(), initialUri.getPort(), initialUri.getPath(), "search_type=query_then_fetch&scroll=1m", null);
 
         PipedInputStream inputStream = new PipedInputStream(); // Return this one
-        final BufferedOutputStream outputStream = new BufferedOutputStream(new PipedOutputStream(inputStream));
-        OutputStreamWriter writer = new OutputStreamWriter(outputStream, "utf-8");
+        BufferedOutputStream outputStream = new BufferedOutputStream(new PipedOutputStream(inputStream));
+        final OutputStreamWriter writer = new OutputStreamWriter(outputStream, "utf-8");
 
         log.info("Streams created");
         Thread fetcher = new Thread(new Runnable() {
@@ -170,7 +170,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
                         if (scrollId != null) {
                             // There is more data
-                            outputStream.write(delimiter);
+                            writer.append(delimiter);
                             if (throttle > 0) {
                                 try {
                                     log.info("Waiting "+throttle+" milliseconds before next request");
