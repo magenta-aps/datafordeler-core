@@ -48,7 +48,7 @@ public class Application {
     @Autowired
     SessionManager sessionManager;
 
-    private static Logger log = LogManager.getLogger(Application.class);
+    private static Logger log = LogManager.getLogger(Application.class.getCanonicalName());
 
     public static final int servicePort = 8445;
 

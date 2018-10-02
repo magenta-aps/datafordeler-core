@@ -62,7 +62,7 @@ public class Engine {
     @Value("${dafo.cron.enabled:true}")
     private boolean cronEnabled;
 
-    Logger log = LogManager.getLogger(Engine.class);
+    private static Logger log = LogManager.getLogger(Engine.class.getCanonicalName());
 
     @Autowired(required = false)
     private RequestMappingHandlerMapping handlerMapping;

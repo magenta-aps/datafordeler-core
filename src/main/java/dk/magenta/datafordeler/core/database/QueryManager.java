@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  */
 public abstract class QueryManager {
 
-    private static Logger log = LogManager.getLogger(QueryManager.class);
+    private static Logger log = LogManager.getLogger(QueryManager.class.getCanonicalName());
 
     public static final String ENTITY = "e";
 

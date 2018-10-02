@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class GapiServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-    private Logger log = LogManager.getLogger(GapiServlet.class);
+    private static Logger log = LogManager.getLogger(GapiServlet.class.getCanonicalName());
 
     @Autowired
     private Engine engine;

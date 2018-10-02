@@ -45,7 +45,7 @@ public class Dump extends Worker {
         }
     }
 
-    private Logger log = LogManager.getLogger(this.getClass().getName());
+    private static Logger log = LogManager.getLogger(Dump.class.getCanonicalName());
 
     private final Engine engine;
     private final DumpConfiguration config;

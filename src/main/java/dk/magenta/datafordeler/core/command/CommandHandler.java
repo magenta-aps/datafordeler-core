@@ -17,7 +17,7 @@ import java.util.List;
 @Component
 public abstract class CommandHandler {
 
-    private Logger log = LogManager.getLogger(this.getClass());
+    private static Logger log = LogManager.getLogger(CommandHandler.class.getCanonicalName());
 
     /**
      * Return the command name that this handler answers to. Must be unique among CommandHandlers; no two CommandHandler classes may return the same string

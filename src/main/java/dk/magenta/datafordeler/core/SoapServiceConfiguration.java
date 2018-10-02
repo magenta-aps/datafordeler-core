@@ -27,7 +27,7 @@ public class SoapServiceConfiguration {
     @Autowired
     PluginManager pluginManager;
 
-    private Logger log = LogManager.getLogger(Application.class);
+    private static Logger log = LogManager.getLogger(Application.class.getCanonicalName());
 
     private final Pattern ownerValidation = Pattern.compile("^[a-zA-Z0-9_]+$");
 
@@ -67,19 +67,21 @@ public class SoapServiceConfiguration {
             }
             for (EntityManager entityManager : registerManager.getEntityManagers()) {
                 FapiBaseService service = entityManager.getEntityService();
-                String base = "/" + serviceOwner + "/" + service.getServiceName() + "/" + service.getVersion();
+                if (service != null) {
+                    String base = "/" + serviceOwner + "/" + service.getServiceName() + "/" + service.getVersion();
 
-                // SOAP
-                this.log.info("Setting up SOAP handler on " + base + "/soap");
-                JaxWsServerFactoryBean serverFactoryBean = new JaxWsServerFactoryBean();
-                serverFactoryBean.setBus(bus);
-                serverFactoryBean.setAddress(base + "/soap");
-                serviceOwnerMatchers.add(base + "/soap");
-                serverFactoryBean.setServiceBean(service);
+                    // SOAP
+                    this.log.info("Setting up SOAP handler on " + base + "/soap");
+                    JaxWsServerFactoryBean serverFactoryBean = new JaxWsServerFactoryBean();
+                    serverFactoryBean.setBus(bus);
+                    serverFactoryBean.setAddress(base + "/soap");
+                    serviceOwnerMatchers.add(base + "/soap");
+                    serverFactoryBean.setServiceBean(service);
 
-                serverFactoryBean.addHandlers(Collections.singletonList(new SoapHandler()));
-                serverFactoryBean.create();
-                this.serverBeans.add(serverFactoryBean);
+                    serverFactoryBean.addHandlers(Collections.singletonList(new SoapHandler()));
+                    serverFactoryBean.create();
+                    this.serverBeans.add(serverFactoryBean);
+                }
             }
         }
 

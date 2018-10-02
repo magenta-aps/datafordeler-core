@@ -34,7 +34,7 @@ public class MonitorTest {
     @Autowired
     private Engine engine;
 
-    private Logger log = LogManager.getLogger(MonitorTest.class);
+    private static Logger log = LogManager.getLogger(MonitorTest.class.getCanonicalName());
 
     @Test
     public void testDatabaseMonitoring() {

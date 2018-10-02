@@ -13,7 +13,7 @@ public abstract class AbstractTask<W extends Worker> implements
 
     public static final String DATA_DUMMYRUN = "dummyRun";
 
-    private Logger log = LogManager.getLogger(AbstractTask.class);
+    private static Logger log = LogManager.getLogger(AbstractTask.class.getCanonicalName());
 
     private W worker;
 

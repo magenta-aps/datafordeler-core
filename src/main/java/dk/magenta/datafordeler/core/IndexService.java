@@ -48,8 +48,13 @@ public class IndexService {
                 for (Plugin plugin : pluginManager.getPlugins()) {
                     for (EntityManager entityManager : plugin.getRegisterManager().getEntityManagers()) {
                         FapiBaseService restService = entityManager.getEntityService();
-                        for (String servicePath : restService.getServicePaths()) {
-                            serviceMap.put(servicePath, new ImmutablePair<>(restService, false));
+                        if (restService != null) {
+                            String[] servicePaths = restService.getServicePaths();
+                            if (servicePaths != null) {
+                                for (String servicePath : servicePaths) {
+                                    serviceMap.put(servicePath, new ImmutablePair<FapiBaseService, Boolean>(restService, false));
+                                }
+                            }
                         }
                     }
                 }

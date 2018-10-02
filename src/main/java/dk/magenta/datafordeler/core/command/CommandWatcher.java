@@ -25,7 +25,7 @@ import java.util.List;
 @Component
 public class CommandWatcher {
 
-    private Logger log = LogManager.getLogger(CommandWatcher.class);
+    private static Logger log = LogManager.getLogger(CommandWatcher.class.getCanonicalName());
 
     @Autowired
     private ConfigurationSessionManager sessionManager;
