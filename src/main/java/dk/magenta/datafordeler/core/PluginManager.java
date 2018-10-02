@@ -24,7 +24,7 @@ public class PluginManager {
 
     private HashMap<String, Plugin> pluginsByName= new HashMap<>();
 
-    private Logger log = LogManager.getLogger(PluginManager.class);
+    private static Logger log = LogManager.getLogger(PluginManager.class.getCanonicalName());
 
     private List<PluginManagerCallbackHandler> postConstructCallbackHandlers = new ArrayList<>();
 

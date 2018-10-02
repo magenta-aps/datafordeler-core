@@ -21,7 +21,7 @@ public class SessionManager {
 
     private SessionFactory sessionFactory;
 
-    private Logger log = LogManager.getLogger(SessionManager.class);
+    private static Logger log = LogManager.getLogger(SessionManager.class.getCanonicalName());
 
     public SessionManager(SessionManagerConfiguration smConfig) {
         try {

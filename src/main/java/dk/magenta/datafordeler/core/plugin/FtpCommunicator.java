@@ -29,7 +29,7 @@ public class FtpCommunicator implements Communicator {
 
     public static final String DONE_FILE_ENDING = ".done";
 
-    private static Logger log = LogManager.getLogger(FtpCommunicator.class);
+    private static Logger log = LogManager.getLogger(FtpCommunicator.class.getCanonicalName());
 
     protected String username;
     protected String password;

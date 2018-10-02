@@ -23,7 +23,7 @@ public class CallbackController {
     @Autowired
     ObjectMapper objectMapper;
 
-    Logger log = LogManager.getLogger(CallbackController.class);
+    private static Logger log = LogManager.getLogger(CallbackController.class.getCanonicalName());
 
     private class Expector {
         public String response;

@@ -50,7 +50,7 @@ public class DemoRegisterManager extends RegisterManager {
 
     private HttpCommunicator commonFetcher;
 
-    protected Logger log = LogManager.getLogger(DemoRegisterManager.class);
+    private static Logger log = LogManager.getLogger(DemoRegisterManager.class.getCanonicalName());
 
     private int port;
 

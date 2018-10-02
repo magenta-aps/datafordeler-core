@@ -41,7 +41,7 @@ import java.util.List;
 @Component
 public class DemoEntityManager extends EntityManager {
 
-    protected Logger log = LogManager.getLogger(DemoEntityManager.class);
+    private static Logger log = LogManager.getLogger(DemoEntityManager.class.getCanonicalName());
 
     @Autowired
     private ObjectMapper objectMapper;

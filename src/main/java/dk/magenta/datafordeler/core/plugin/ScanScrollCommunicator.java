@@ -69,7 +69,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.uncaughtExceptionHandler = uncaughtExceptionHandler;
     }
 
-    private Logger log = LogManager.getLogger(ScanScrollCommunicator.class);
+    private static Logger log = LogManager.getLogger(ScanScrollCommunicator.class.getCanonicalName());
 
 
     private Pattern emptyResultsPattern = Pattern.compile("\"hits\":\\s*\\[\\s*\\]");

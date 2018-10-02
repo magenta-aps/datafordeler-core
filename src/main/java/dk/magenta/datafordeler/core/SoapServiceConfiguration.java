@@ -27,7 +27,7 @@ public class SoapServiceConfiguration {
     @Autowired
     PluginManager pluginManager;
 
-    private Logger log = LogManager.getLogger(Application.class);
+    private static Logger log = LogManager.getLogger(Application.class.getCanonicalName());
 
     private final Pattern ownerValidation = Pattern.compile("^[a-zA-Z0-9_]+$");
 
