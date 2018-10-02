@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.exception.InvalidServiceOwnerDefinitionException;
+import dk.magenta.datafordeler.core.fapi.FapiBaseService;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.fapi.SoapHandler;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
@@ -65,20 +66,22 @@ public class SoapServiceConfiguration {
                 throw new InvalidServiceOwnerDefinitionException(plugin, serviceOwner, this.ownerValidation);
             }
             for (EntityManager entityManager : registerManager.getEntityManagers()) {
-                FapiService service = entityManager.getEntityService();
-                String base = "/" + serviceOwner + "/" + service.getServiceName() + "/" + service.getVersion();
+                FapiBaseService service = entityManager.getEntityService();
+                if (service != null) {
+                    String base = "/" + serviceOwner + "/" + service.getServiceName() + "/" + service.getVersion();
 
-                // SOAP
-                this.log.info("Setting up SOAP handler on " + base + "/soap");
-                JaxWsServerFactoryBean serverFactoryBean = new JaxWsServerFactoryBean();
-                serverFactoryBean.setBus(bus);
-                serverFactoryBean.setAddress(base + "/soap");
-                serviceOwnerMatchers.add(base + "/soap");
-                serverFactoryBean.setServiceBean(service);
+                    // SOAP
+                    this.log.info("Setting up SOAP handler on " + base + "/soap");
+                    JaxWsServerFactoryBean serverFactoryBean = new JaxWsServerFactoryBean();
+                    serverFactoryBean.setBus(bus);
+                    serverFactoryBean.setAddress(base + "/soap");
+                    serviceOwnerMatchers.add(base + "/soap");
+                    serverFactoryBean.setServiceBean(service);
 
-                serverFactoryBean.addHandlers(Collections.singletonList(new SoapHandler()));
-                serverFactoryBean.create();
-                this.serverBeans.add(serverFactoryBean);
+                    serverFactoryBean.addHandlers(Collections.singletonList(new SoapHandler()));
+                    serverFactoryBean.create();
+                    this.serverBeans.add(serverFactoryBean);
+                }
             }
         }
 
