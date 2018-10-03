@@ -135,7 +135,10 @@ public class Pull extends Worker implements Runnable {
                         this.importMetadata = new ImportMetadata();
                         this.importMetadata.setImportTime(interruptedPull.getStartTime());
                         this.importMetadata.setStartChunk(interruptedPull.getChunk());
-                        this.importMetadata.setImportConfiguration((ObjectNode) this.engine.objectMapper.readTree(interruptedPull.getImportConfiguration()));
+                        String importConfiguration = interruptedPull.getImportConfiguration();
+                        if (importConfiguration != null) {
+                            this.importMetadata.setImportConfiguration((ObjectNode) this.engine.objectMapper.readTree(importConfiguration));
+                        }
                         this.deleteInterrupt(interruptedPull);
 
                         Session session = this.engine.sessionManager.getSessionFactory().openSession();
