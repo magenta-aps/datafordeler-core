@@ -5,6 +5,7 @@ import dk.magenta.datafordeler.core.configuration.ConfigurationManager;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Base class for a plugin. Defines which methods must be implemented.
@@ -43,7 +44,8 @@ public abstract class Plugin {
      * @return
      */
     public boolean handlesSchema(String schema) {
-        return this.getRegisterManager().handlesSchema(schema);
+        RegisterManager registerManager = this.getRegisterManager();
+        return registerManager != null && registerManager.handlesSchema(schema);
     }
 
     /**
@@ -51,7 +53,8 @@ public abstract class Plugin {
      * @return
      */
     public final EntityManager getEntityManager(String schema) {
-        return this.getRegisterManager().getEntityManager(schema);
+        RegisterManager registerManager = this.getRegisterManager();
+        return registerManager != null ? registerManager.getEntityManager(schema) : null;
     }
 
     /**
@@ -59,7 +62,8 @@ public abstract class Plugin {
      * @return
      */
     public final EntityManager getEntityManager(URI uri) {
-        return this.getRegisterManager().getEntityManager(uri);
+        RegisterManager registerManager = this.getRegisterManager();
+        return registerManager != null ? registerManager.getEntityManager(uri) : null;
     }
 
     /**
@@ -69,7 +73,8 @@ public abstract class Plugin {
     public abstract ConfigurationManager getConfigurationManager();
 
     public final Collection<String> getHandledURISubstrings() {
-        return this.getRegisterManager().getHandledURISubstrings();
+        RegisterManager registerManager = this.getRegisterManager();
+        return registerManager != null ? registerManager.getHandledURISubstrings() : Collections.emptyList();
     }
 
     public abstract RolesDefinition getRolesDefinition();

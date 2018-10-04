@@ -7,6 +7,7 @@ import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.fapi.ServiceDescriptor;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
+import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.cxf.jaxws.JaxWsServerFactoryBean;
@@ -45,15 +46,17 @@ public class IndexService {
             @Override
             public void executePluginManagerCallback(PluginManager pluginManager) {
                 HashMap<String, Pair<FapiBaseService, Boolean>> serviceMap = new HashMap<>();
-
                 for (Plugin plugin : pluginManager.getPlugins()) {
-                    for (EntityManager entityManager : plugin.getRegisterManager().getEntityManagers()) {
-                        FapiBaseService restService = entityManager.getEntityService();
-                        if (restService != null) {
-                            String[] servicePaths = restService.getServicePaths();
-                            if (servicePaths != null) {
-                                for (String servicePath : servicePaths) {
-                                    serviceMap.put(servicePath, new ImmutablePair<FapiBaseService, Boolean>(restService, false));
+                    RegisterManager registerManager = plugin.getRegisterManager();
+                    if (registerManager != null) {
+                        for (EntityManager entityManager : registerManager.getEntityManagers()) {
+                            FapiBaseService restService = entityManager.getEntityService();
+                            if (restService != null) {
+                                String[] servicePaths = restService.getServicePaths();
+                                if (servicePaths != null) {
+                                    for (String servicePath : servicePaths) {
+                                        serviceMap.put(servicePath, new ImmutablePair<FapiBaseService, Boolean>(restService, false));
+                                    }
                                 }
                             }
                         }

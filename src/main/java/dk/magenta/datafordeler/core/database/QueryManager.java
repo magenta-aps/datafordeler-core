@@ -198,7 +198,8 @@ public abstract class QueryManager {
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
                 " " + extraJoin +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
-        
+
+        System.out.println(queryString);
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
 
@@ -207,6 +208,7 @@ public abstract class QueryManager {
 
         for (String key : extraParameters.keySet()) {
             Object value = extraParameters.get(key);
+            System.out.println(key+" = "+value);
             if (value instanceof Collection) {
                 databaseQuery.setParameterList(key, (Collection) value);
             } else {
