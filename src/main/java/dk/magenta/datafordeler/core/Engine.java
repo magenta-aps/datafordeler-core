@@ -227,16 +227,18 @@ public class Engine {
         if (this.pullEnabled && this.cronEnabled) {
             List<Plugin> plugins = this.pluginManager.getPlugins();
             if (plugins.isEmpty()) {
-                this.log.warn("No plugins registered!");
+                log.warn("No plugins registered!");
             }
             for (Plugin plugin : plugins) {
                 RegisterManager registerManager = plugin.getRegisterManager();
-                String schedule = registerManager.getPullCronSchedule();
-                this.log.info("Registered plugin {} has schedule '{}'",
-                        plugin.getClass().getCanonicalName(), schedule);
+                if (registerManager != null) {
+                    String schedule = registerManager.getPullCronSchedule();
+                    log.info("Registered plugin {} has schedule '{}'",
+                            plugin.getClass().getCanonicalName(), schedule);
 
-                if (schedule != null && !schedule.isEmpty()) {
-                    this.setupPullSchedule(registerManager, schedule, false);
+                    if (schedule != null && !schedule.isEmpty()) {
+                        this.setupPullSchedule(registerManager, schedule, false);
+                    }
                 }
             }
         }
@@ -254,11 +256,11 @@ public class Engine {
     public void setupPullSchedule(RegisterManager registerManager, String cronSchedule, boolean dummyRun) {
         if (this.pullEnabled && this.cronEnabled) {
             ScheduleBuilder scheduleBuilder;
-            this.log.info("Scheduling pull with "+registerManager.getClass().getCanonicalName()+" with schedule "+cronSchedule);
+            log.info("Scheduling pull with "+registerManager.getClass().getCanonicalName()+" with schedule "+cronSchedule);
             try {
                 scheduleBuilder = makeSchedule(cronSchedule);
             } catch (Exception e) {
-                this.log.error(e);
+                log.error(e);
                 return;
             }
             setupPullSchedule(registerManager, scheduleBuilder, dummyRun);
@@ -431,48 +433,50 @@ public class Engine {
     public <E extends Entity<E, R>, R extends Registration<E, R, V>, V extends Effect<R, V, D>, D extends DataItem<V, D>, P extends RegistrationReference> List<R> synchronize(Session session, Plugin plugin, OffsetDateTime from) throws DataFordelerException {
         this.log.info("Synchronizing with plugin " + plugin.getClass().getCanonicalName());
         RegisterManager registerManager = plugin.getRegisterManager();
-        ItemInputStream<? extends EntityReference> entityReferences = registerManager.listRegisterChecksums(null, from);
-        EntityReference<E, P> entityReference;
         ArrayList<R> newRegistrations = new ArrayList<R>();
-        ImportMetadata importMetadata = new ImportMetadata();
-        try {
-            while ((entityReference = entityReferences.next()) != null) {
-                Class<E> entityClass = entityReference.getEntityClass();
-                EntityManager entityManager = registerManager.getEntityManager(entityClass);
-                E entity = QueryManager.getEntity(session, entityReference.getObjectId(), entityClass);
-                HashSet<String> knownChecksums = new HashSet<>();
-                if (entity != null) {
-                    for (Object oRegistration : entity.getRegistrations()) {
-                        R registration = (R) oRegistration;
-                        String checksum = registration.getRegisterChecksum();
-                        this.log.debug("Checksum " + checksum + " is already known");
-                        knownChecksums.add(checksum);
+        if (registerManager != null) {
+            ItemInputStream<? extends EntityReference> entityReferences = registerManager.listRegisterChecksums(null, from);
+            EntityReference<E, P> entityReference;
+            ImportMetadata importMetadata = new ImportMetadata();
+            try {
+                while ((entityReference = entityReferences.next()) != null) {
+                    Class<E> entityClass = entityReference.getEntityClass();
+                    EntityManager entityManager = registerManager.getEntityManager(entityClass);
+                    E entity = QueryManager.getEntity(session, entityReference.getObjectId(), entityClass);
+                    HashSet<String> knownChecksums = new HashSet<>();
+                    if (entity != null) {
+                        for (Object oRegistration : entity.getRegistrations()) {
+                            R registration = (R) oRegistration;
+                            String checksum = registration.getRegisterChecksum();
+                            this.log.debug("Checksum " + checksum + " is already known");
+                            knownChecksums.add(checksum);
+                        }
                     }
-                }
 
-                // We need to find all registrations that we don't already have in the database
-                ArrayList<P> missingRegistrationReferences = new ArrayList<P>();
-                for (P registrationReference : entityReference.getRegistrationReferences()) {
-                    String checksum = registrationReference.getChecksum();
-                    if (!knownChecksums.contains(checksum)) {
-                        this.log.debug("Checksum " + checksum + " is not already known, adding to list of registrations to fetch");
-                        missingRegistrationReferences.add(registrationReference);
+                    // We need to find all registrations that we don't already have in the database
+                    ArrayList<P> missingRegistrationReferences = new ArrayList<P>();
+                    for (P registrationReference : entityReference.getRegistrationReferences()) {
+                        String checksum = registrationReference.getChecksum();
+                        if (!knownChecksums.contains(checksum)) {
+                            this.log.debug("Checksum " + checksum + " is not already known, adding to list of registrations to fetch");
+                            missingRegistrationReferences.add(registrationReference);
+                        }
                     }
-                }
 
-                for (P registrationReference : missingRegistrationReferences) {
-                    List<? extends Registration> registrations = entityManager.fetchRegistration(registrationReference, importMetadata);
-                    for (Registration registration : registrations) {
-                        registration.setLastImportTime(importMetadata.getImportTime());
-                        QueryManager.saveRegistration(session, entity, (R) registration);
-                        newRegistrations.add((R) registration);
+                    for (P registrationReference : missingRegistrationReferences) {
+                        List<? extends Registration> registrations = entityManager.fetchRegistration(registrationReference, importMetadata);
+                        for (Registration registration : registrations) {
+                            registration.setLastImportTime(importMetadata.getImportTime());
+                            QueryManager.saveRegistration(session, entity, (R) registration);
+                            newRegistrations.add((R) registration);
+                        }
                     }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (DataFordelerException e) {
+                this.log.error("Synchronization with plugin " + plugin.getClass().getCanonicalName() + " failed", e);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (DataFordelerException e) {
-            this.log.error("Synchronization with plugin "+plugin.getClass().getCanonicalName()+" failed", e);
         }
         return newRegistrations;
     }

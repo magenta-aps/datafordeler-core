@@ -4,7 +4,9 @@ import dk.magenta.datafordeler.core.PluginManager;
 import dk.magenta.datafordeler.core.PluginManagerCallbackHandler;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestriction;
 import dk.magenta.datafordeler.core.arearestriction.AreaRestrictionType;
+import dk.magenta.datafordeler.core.plugin.AreaRestrictionDefinition;
 import dk.magenta.datafordeler.core.plugin.Plugin;
+import dk.magenta.datafordeler.core.plugin.RolesDefinition;
 import dk.magenta.datafordeler.core.role.SystemRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -60,8 +62,9 @@ public class DafoEngineUserManager extends DafoUserManager implements PluginMana
     ArrayList<SystemRole> newSystemRoles = new ArrayList<>();
 
     for (Plugin plugin : pluginManager.getPlugins()) {
-      if (plugin.getRolesDefinition() != null) {
-        for (SystemRole systemRole : plugin.getRolesDefinition().getRoles()) {
+      RolesDefinition rolesDefinition = plugin.getRolesDefinition();
+      if (rolesDefinition != null) {
+        for (SystemRole systemRole : rolesDefinition.getRoles()) {
           if (!storedSystemRoleNames.contains(systemRole.getRoleName())) {
             newSystemRoles.add(systemRole);
           }
@@ -83,25 +86,26 @@ public class DafoEngineUserManager extends DafoUserManager implements PluginMana
     List<AreaRestrictionType> newAreaRestrictionTypes = new ArrayList<>();
     List<AreaRestriction> newAreaRestrictions = new ArrayList<>();
 
-    Set<String> storedAreaRestrictionTypes =
-        userQueryManager.getAllAreaRestrictionTypeLookupNames();
-    Set<String> storedAreaRestrictions =
-        userQueryManager.getAllAreaRestrictionLookupNames();
+    Set<String> storedAreaRestrictionTypes = userQueryManager.getAllAreaRestrictionTypeLookupNames();
+    Set<String> storedAreaRestrictions = userQueryManager.getAllAreaRestrictionLookupNames();
 
     // Find unstored types and areas
     for (Plugin plugin : pluginManager.getPlugins()) {
-      Collection<AreaRestrictionType> typesList = plugin.getAreaRestrictionDefinition().getAreaRestrictionTypes();
-      if (typesList != null) {
-        // Make sure we have unique values
-        typesList = new HashSet<>(typesList);
-        for (AreaRestrictionType areaRestrictionType : typesList) {
-          if (!storedAreaRestrictionTypes.contains(areaRestrictionType.lookupName())) {
-            newAreaRestrictionTypes.add(areaRestrictionType);
-          }
-          HashSet<AreaRestriction> choices = new HashSet<>(areaRestrictionType.getChoices());
-          for (AreaRestriction areaRestriction : choices) {
-            if (!storedAreaRestrictions.contains(areaRestriction.lookupName())) {
-              newAreaRestrictions.add(areaRestriction);
+      AreaRestrictionDefinition areaRestrictionDefinition = plugin.getAreaRestrictionDefinition();
+      if (areaRestrictionDefinition != null) {
+        Collection<AreaRestrictionType> typesList = areaRestrictionDefinition.getAreaRestrictionTypes();
+        if (typesList != null) {
+          // Make sure we have unique values
+          typesList = new HashSet<>(typesList);
+          for (AreaRestrictionType areaRestrictionType : typesList) {
+            if (!storedAreaRestrictionTypes.contains(areaRestrictionType.lookupName())) {
+              newAreaRestrictionTypes.add(areaRestrictionType);
+            }
+            HashSet<AreaRestriction> choices = new HashSet<>(areaRestrictionType.getChoices());
+            for (AreaRestriction areaRestriction : choices) {
+              if (!storedAreaRestrictions.contains(areaRestriction.lookupName())) {
+                newAreaRestrictions.add(areaRestriction);
+              }
             }
           }
         }

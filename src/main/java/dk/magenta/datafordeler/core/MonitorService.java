@@ -88,35 +88,37 @@ public class MonitorService {
         PrintWriter output = response.getWriter();
         for (Plugin plugin : pluginManager.getPlugins()) {
             RegisterManager registerManager = plugin.getRegisterManager();
-            String pullSchedule = CronUtil.reformatSchedule(registerManager.getPullCronSchedule());
-            if (pullSchedule != null && !pullSchedule.isEmpty()) {
-                CronExpression cronExpression = new CronExpression(pullSchedule);
-                for (EntityManager entityManager : registerManager.getEntityManagers()) {
-                    // Check that entitymanagers that should run on a cron job
-                    // have completed their expected pulls within, say, 4 hours
-                    // to detect stalled jobs
-                    output.println("Inspecting "+entityManager.getClass().getSimpleName());
-                    if (entityManager.pullEnabled()) {
+            if (registerManager != null) {
+                String pullSchedule = CronUtil.reformatSchedule(registerManager.getPullCronSchedule());
+                if (pullSchedule != null && !pullSchedule.isEmpty()) {
+                    CronExpression cronExpression = new CronExpression(pullSchedule);
+                    for (EntityManager entityManager : registerManager.getEntityManagers()) {
+                        // Check that entitymanagers that should run on a cron job
+                        // have completed their expected pulls within, say, 4 hours
+                        // to detect stalled jobs
+                        output.println("Inspecting " + entityManager.getClass().getSimpleName());
+                        if (entityManager.pullEnabled()) {
 
-                        // When does cron say we should have started last?
-                        Instant expectedStart = MonitorService.getTimeBefore(cronExpression, Instant.now());
-                        output.println("    Expecting last start at " + expectedStart);
+                            // When does cron say we should have started last?
+                            Instant expectedStart = MonitorService.getTimeBefore(cronExpression, Instant.now());
+                            output.println("    Expecting last start at " + expectedStart);
 
-                        // When did we start last
-                        OffsetDateTime lastStartTime = entityManager.getLastUpdated(session);
-                        output.println("    Last start was at " + lastStartTime.toInstant());
+                            // When did we start last
+                            OffsetDateTime lastStartTime = entityManager.getLastUpdated(session);
+                            output.println("    Last start was at " + lastStartTime.toInstant());
 
-                        // fail if more than four hours have passed since expectedstart and we are not yet done
-                        // not yet done = lastStartTime is somewhere before expectedStart
-                        if (
-                                Instant.now().isAfter(expectedStart.plus(4, ChronoUnit.HOURS)) &&
-                                        (lastStartTime == null || lastStartTime.toInstant().plusSeconds(60).isBefore(expectedStart))
-                                ) {
-                            output.println("It is more than 4 hours after expected start, and last start has not been updated to be after expected start");
-                            response.setStatus(500);
+                            // fail if more than four hours have passed since expectedstart and we are not yet done
+                            // not yet done = lastStartTime is somewhere before expectedStart
+                            if (
+                                    Instant.now().isAfter(expectedStart.plus(4, ChronoUnit.HOURS)) &&
+                                            (lastStartTime == null || lastStartTime.toInstant().plusSeconds(60).isBefore(expectedStart))
+                                    ) {
+                                output.println("It is more than 4 hours after expected start, and last start has not been updated to be after expected start");
+                                response.setStatus(500);
+                            }
+                        } else {
+                            output.println("    Disabled");
                         }
-                    } else {
-                        output.println("    Disabled");
                     }
                 }
             }
