@@ -134,7 +134,6 @@ public class CommandService {
         }
         // Check that the user has this SystemRole
         this.checkAndLogAccess(loggerHelper, requiredRole);
-        System.out.println("ROLE OK");
     }
 
 
