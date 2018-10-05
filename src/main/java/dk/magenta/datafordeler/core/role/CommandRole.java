@@ -23,6 +23,7 @@ public abstract class CommandRole extends SystemRole {
 
     @Override
     public String getTargetName() {
-        return this.getCommandName() + this.getDetails();
+        Map<String, Object> details = this.getDetails();
+        return this.getCommandName() + (details != null ? details : "");
     }
 }
