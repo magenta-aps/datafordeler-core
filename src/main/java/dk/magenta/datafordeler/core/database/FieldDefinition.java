@@ -8,10 +8,11 @@ public class FieldDefinition {
     public Object value;
     public Class type;
     public BaseLookupDefinition.Operator operator = BaseLookupDefinition.Operator.EQ;
-    public int id;
+    public long id;
     public HashSet<FieldDefinition> anded = new HashSet<>();
     public HashSet<FieldDefinition> ored = new HashSet<>();
     public boolean inverted = false;
+    private static long globalId = 0;
 
     public FieldDefinition(String path, Object value) {
         this(path, value, value != null ? value.getClass() : null, BaseLookupDefinition.Operator.EQ);
@@ -26,6 +27,8 @@ public class FieldDefinition {
         this.value = value;
         this.type = type;
         this.operator = operator;
+        this.id = globalId;
+        globalId = (globalId < Long.MAX_VALUE) ? (globalId+1) : 0;
     }
 
 
@@ -114,5 +117,21 @@ public class FieldDefinition {
             map.putAll(other.getParameterMap(rootKey, entityKey));
         }
         return map;
+    }
+
+    public String toString() {
+        StringJoiner and = new StringJoiner(",\n");
+        for (FieldDefinition a : this.anded) {
+            and.add(a.toString());
+        }
+        StringJoiner or = new StringJoiner(",\n");
+        for (FieldDefinition o : this.ored) {
+            and.add(o.toString());
+        }
+        return "FieldDefintion (\n" +
+                (this.inverted ? "!":"") + this.path + " " + this.operator + " " + this.value +
+                ((and.length() > 0) ? (" AND [\n"+and.toString()+"\n]"):"") +
+                ((or.length() > 0) ? (" OR [\n"+or.toString()+"\n]"):"") +
+                "\n)";
     }
 }

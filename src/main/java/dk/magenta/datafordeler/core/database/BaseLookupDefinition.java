@@ -65,7 +65,6 @@ public class BaseLookupDefinition {
     protected static final String quotedSeparator = Pattern.quote(separator);
     protected ArrayList<FieldDefinition> fieldDefinitions = new ArrayList<>();
     protected boolean definitionsAnded = true;
-    protected int definitionId = 0;
 
 
     public enum Operator {
@@ -121,7 +120,6 @@ public class BaseLookupDefinition {
 
     public final FieldDefinition put(FieldDefinition fieldDefinition) {
         this.fieldDefinitions.add(fieldDefinition);
-        fieldDefinition.id = this.definitionId++;
         return fieldDefinition;
     }
 
