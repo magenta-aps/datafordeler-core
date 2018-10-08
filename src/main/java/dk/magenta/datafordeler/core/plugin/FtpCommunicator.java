@@ -4,8 +4,10 @@ import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.io.ImportInputStream;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
+import dk.magenta.datafordeler.core.util.LabeledSequenceInputStream;
 import it.sauronsoftware.ftp4j.*;
 import it.sauronsoftware.ftp4j.connectors.HTTPTunnelConnector;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.StatusLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -261,19 +263,15 @@ public class FtpCommunicator implements Communicator {
         List<File> filesToProcess = new ArrayList<>(files);
         filesToProcess.sort(Comparator.naturalOrder());
 
-        InputStream inputStream = null;
+        List<Pair<String, InputStream>> streams = new Vector<>();
         for (File file : filesToProcess) {
             if (!file.getName().endsWith(DONE_FILE_ENDING)) {
                 Path filePath = Paths.get(file.toURI());
                 InputStream newInputStream = Files.newInputStream(filePath);
-                if (inputStream == null) {
-                    inputStream = newInputStream;
-                } else {
-                    inputStream = new SequenceInputStream(inputStream, newInputStream);
-                }
+                streams.add(Pair.of(file.getName(), newInputStream));
             }
         }
-        return inputStream;
+        return new LabeledSequenceInputStream(streams);
     }
 
     protected List<String> filterFilesToDownload(List<String> paths) throws IOException {
