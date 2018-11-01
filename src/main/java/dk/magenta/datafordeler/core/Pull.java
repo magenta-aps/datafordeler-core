@@ -191,9 +191,6 @@ public class Pull extends Worker implements Runnable {
                     Session session = this.engine.sessionManager.getSessionFactory().openSession();
                     OffsetDateTime lastUpdate = entityManager.getLastUpdated(session);
                     session.close();
-                    System.out.println("importMetadata: "+importMetadata);
-                    System.out.println("importConfiguration: "+importConfiguration);
-                    System.out.println("importMetadata.getImportTime(): "+importMetadata.getImportTime());
                     if (lastUpdate != null && importMetadata.getImportTime().toLocalDate().isEqual(lastUpdate.toLocalDate()) && importConfiguration.size() == 0) {
                         this.log.info(this.prefix + "Already pulled data for " + entityManager.getClass().getSimpleName()+" at "+lastUpdate+", no need to re-pull today");
                         continue;
