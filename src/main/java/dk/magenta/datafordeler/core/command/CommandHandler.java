@@ -62,9 +62,12 @@ public abstract class CommandHandler {
         try {
             ObjectNode commandBody = this.getCommandBodyAsJson(command);
             if (commandBody != null) {
-                String requestedServerName = commandBody.get("targetServer").textValue();
-                if (requestedServerName != null) {
-                    return requestedServerName.equals(this.engine.getServerName());
+                JsonNode targetServerNode = commandBody.get("targetServer");
+                if (targetServerNode != null) {
+                    String requestedServerName = targetServerNode.textValue();
+                    if (requestedServerName != null) {
+                        return requestedServerName.equals(this.engine.getServerName());
+                    }
                 }
             }
         } catch (IOException|NullPointerException e) {
