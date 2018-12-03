@@ -85,6 +85,7 @@ public class Application {
         try {
             SpringApplication.run(Application.class, args);
         } catch (Throwable e) {
+            e.printStackTrace();
             while (e != null) {
                 if (e instanceof com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) {
                     log.error(((com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) e).getErrors());

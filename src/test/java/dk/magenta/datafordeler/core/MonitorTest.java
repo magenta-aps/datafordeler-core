@@ -43,7 +43,6 @@ public class MonitorTest {
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
-
     @Test
     @Ignore
     public void testPullMonitoring() {
@@ -62,7 +61,7 @@ public class MonitorTest {
         response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        log.error(new NullPointerException());
+        log.error(new NullPointerException().toString());
         response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }

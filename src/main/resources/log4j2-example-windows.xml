@@ -36,10 +36,11 @@
         <logger name="org.springframework.boot.actuate.endpoint.jmx" level="warn"/>
         <logger name="org.hibernate.event.internal.DefaultDeleteEventListener" level="warn"/>
         <logger name="org.opensaml" level="warn"/>
-        <Logger name="dk.magenta.datafordeler" level="error">
-            <AppenderRef ref="MonitorFile" />
+        <Logger name="dk.magenta.datafordeler">
+            <AppenderRef ref="Console" level="info" />
+            <AppenderRef ref="Win32EventLog" level="info" />
+            <AppenderRef ref="MonitorFile" level="error" />
         </Logger>
-        <Logger name="dk.magenta.datafordeler" level="info"/>
         <Root level="info">
             <AppenderRef ref="Console" />
             <AppenderRef ref="Win32EventLog" />
