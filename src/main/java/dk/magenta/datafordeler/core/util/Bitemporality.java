@@ -68,7 +68,7 @@ public class Bitemporality implements Comparable<Bitemporality> {
 
         Bitemporality that = (Bitemporality) o;
 
-        if (((compare & COMPARE_REGISTRATION_FROM) != 0) && (registrationFrom != null ? !Equality.equal(registrationFrom, registrationFrom) : that.registrationFrom != null))
+        if (((compare & COMPARE_REGISTRATION_FROM) != 0) && (registrationFrom != null ? !Equality.equal(registrationFrom, that.registrationFrom) : that.registrationFrom != null))
             return false;
         if (((compare & COMPARE_REGISTRATION_TO) != 0) && (registrationTo != null ? !Equality.equal(registrationTo, that.registrationTo) : that.registrationTo != null))
             return false;
