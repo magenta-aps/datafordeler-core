@@ -3,7 +3,7 @@ package dk.magenta.datafordeler.core.util;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.fapi.Envelope;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 

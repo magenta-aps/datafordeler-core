@@ -3,9 +3,9 @@ package dk.magenta.datafordeler.core.user;
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
 import dk.magenta.datafordeler.core.util.MockInternalServletRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.opensaml.saml2.core.Assertion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class DafoUserManager {
 
-  Logger logger = LoggerFactory.getLogger(DafoUserManager.class);
+  Logger logger = LogManager.getLogger(DafoUserManager.class.getCanonicalName());
 
   @Autowired
   private TokenParser tokenParser;
