@@ -5,11 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import dk.magenta.datafordeler.core.util.Equality;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Filters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlElement;
@@ -57,7 +57,7 @@ public abstract class Entity<E extends Entity, R extends Registration> extends D
 
     public Entity() {
         this.registrations = new ArrayList<R>();
-        this.log = LoggerFactory.getLogger(this.getClass());
+        this.log = LogManager.getLogger(this.getClass().getCanonicalName());
     }
 
     public Entity(Identification identification) {

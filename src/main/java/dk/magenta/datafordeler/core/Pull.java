@@ -55,7 +55,7 @@ public class Pull extends Worker implements Runnable {
         }
     }
 
-    private Logger log = LogManager.getLogger(Pull.class);
+    private Logger log = LogManager.getLogger(Pull.class.getCanonicalName());
 
     private RegisterManager registerManager;
     private Engine engine;

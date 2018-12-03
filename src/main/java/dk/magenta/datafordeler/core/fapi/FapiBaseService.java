@@ -14,9 +14,9 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
@@ -125,7 +125,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
     }
 
 
-    private Logger log = LoggerFactory.getLogger(FapiBaseService.class);
+    private Logger log = LogManager.getLogger(FapiBaseService.class.getCanonicalName());
 
     protected OutputWrapper.Mode getDefaultMode() {
         return OutputWrapper.Mode.RVD;
