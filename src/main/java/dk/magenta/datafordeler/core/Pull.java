@@ -162,7 +162,6 @@ public class Pull extends Worker implements Runnable {
 
             this.importMetadata = new ImportMetadata();
             this.importMetadata.setImportConfiguration(importConfiguration);
-            this.importMetadata.setStartChunk(3705);
 
             boolean error = false;
             boolean skip = false;
@@ -198,6 +197,7 @@ public class Pull extends Worker implements Runnable {
 
                     this.log.info(this.prefix + "Pulling data for " + entityManager.getClass().getSimpleName());
 
+                    this.registerManager.beforePull(entityManager, this.importMetadata);
                     InputStream stream = this.registerManager.pullRawData(this.registerManager.getEventInterface(entityManager), entityManager, this.importMetadata);
                     if (stream != null) {
                         session = this.engine.sessionManager.getSessionFactory().openSession();
@@ -217,6 +217,7 @@ public class Pull extends Worker implements Runnable {
                         } finally {
                             QueryManager.clearCaches();
                             session.close();
+                            this.importMetadata.setSession(null);
                             stream.close();
                         }
                     }
