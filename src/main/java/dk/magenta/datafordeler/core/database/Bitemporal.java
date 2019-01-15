@@ -5,23 +5,27 @@ import dk.magenta.datafordeler.core.util.Bitemporality;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
 
-public interface Bitemporal<E extends IdentifiedEntity> extends Monotemporal<E> {
+public interface Bitemporal extends Monotemporal {
 
-//    String FILTERPARAM_EFFECT_AFTER = "effectFromDate";
-//    String FILTERPARAM_EFFECT_BEFORE = "effectToDate";
-//    String FILTER_EFFECT_AFTER = "(" + Bitemporal.DB_FIELD_EFFECT_FROM + " >= :" + Bitemporal.FILTERPARAM_EFFECT_AFTER + " OR " + Bitemporal.DB_FIELD_EFFECT_FROM + " is null)";
-//    String FILTER_EFFECT_BEFORE = "(" + Bitemporal.DB_FIELD_EFFECT_FROM + " < :" + Bitemporal.FILTERPARAM_EFFECT_BEFORE + " OR " + Bitemporal.DB_FIELD_EFFECT_FROM + " is null)";
+    String FILTER_EFFECTFROM_AFTER = "effectFromAfterFilter";
+    String FILTER_EFFECTFROM_BEFORE = "effectFromBeforeFilter";
+    String FILTER_EFFECTTO_AFTER = "effectToAfterFilter";
+    String FILTER_EFFECTTO_BEFORE = "effectToBeforeFilter";
 
-    String FILTER_EFFECT_AFTER = "effectAfterFilter";
-    String FILTER_EFFECT_BEFORE = "effectBeforeFilter";
-    String FILTERPARAM_EFFECT_AFTER = "effectAfterDate";
-    String FILTERPARAM_EFFECT_BEFORE = "effectBeforeDate";
+    String FILTERPARAM_EFFECTFROM_AFTER = "effectFromAfterDate";
+    String FILTERPARAM_EFFECTFROM_BEFORE = "effectFromBeforeDate";
+    String FILTERPARAM_EFFECTTO_AFTER = "effectToAfterDate";
+    String FILTERPARAM_EFFECTTO_BEFORE = "effectToBeforeDate";
+
+    // True if the sought registration begins after our query
+    String FILTERLOGIC_EFFECTFROM_AFTER = "(" + Bitemporal.DB_FIELD_EFFECT_FROM + " >= :" + Bitemporal.FILTERPARAM_EFFECTFROM_AFTER + ")";
+    // True if the sought effect begins before our query
+    String FILTERLOGIC_EFFECTFROM_BEFORE = "(" + Bitemporal.DB_FIELD_EFFECT_FROM + " < :" + Bitemporal.FILTERPARAM_EFFECTFROM_BEFORE + " OR " + Bitemporal.DB_FIELD_EFFECT_FROM + " is null)";
 
     // True if the sought effect ends after our query
-    String FILTERLOGIC_EFFECT_AFTER = "(" + Bitemporal.DB_FIELD_EFFECT_TO + " >= :" + Bitemporal.FILTERPARAM_EFFECT_AFTER + " OR " + Bitemporal.DB_FIELD_EFFECT_TO + " is null)";
-
-    // True if the sought effect begins before our query
-    String FILTERLOGIC_EFFECT_BEFORE = "(" + Bitemporal.DB_FIELD_EFFECT_FROM + " < :" + Bitemporal.FILTERPARAM_EFFECT_BEFORE + " OR " + Bitemporal.DB_FIELD_EFFECT_FROM + " is null)";
+    String FILTERLOGIC_EFFECTTO_AFTER = "(" + Bitemporal.DB_FIELD_EFFECT_TO + " >= :" + Bitemporal.FILTERPARAM_EFFECTTO_AFTER + " OR " + Bitemporal.DB_FIELD_EFFECT_TO + " is null)";
+    // True if the sought effect ends before our query
+    String FILTERLOGIC_EFFECTTO_BEFORE = "(" + Bitemporal.DB_FIELD_EFFECT_TO + " < :" + Bitemporal.FILTERPARAM_EFFECTTO_BEFORE + ")";
 
 
     String DB_FIELD_EFFECT_FROM = "effectFrom";

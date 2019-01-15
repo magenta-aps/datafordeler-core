@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.user;
 
+import dk.magenta.datafordeler.core.exception.AccessDeniedException;
+import dk.magenta.datafordeler.core.exception.InvalidCertificateException;
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
 import dk.magenta.datafordeler.core.util.MockInternalServletRequest;
@@ -7,8 +9,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opensaml.saml2.core.Assertion;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * Manages DAFO users that are created from incoming SAML tokens.
@@ -23,6 +29,29 @@ public class DafoUserManager {
   private TokenParser tokenParser;
   @Autowired
   private TokenVerifier tokenVerifier;
+
+  @Value("${pitu.sdn.whitelist:}")
+  private String[] pituSDNWhitelistCsep;
+
+  private HashSet<String> pituSDNWhitelist = new HashSet<>();
+
+  @Value("${pitu.idn.whitelist:}")
+  private String[] pituIDNWhitelistCsep;
+
+  private HashSet<String> pituIDNWhitelist = new HashSet<>();
+
+  @Value("${ip.whitelist:}")
+  private String[] ipWhitelistCsep;
+
+  private HashSet<String> ipWhitelist = new HashSet<>();
+
+
+  @PostConstruct
+  public void init() {
+    this.pituSDNWhitelist.addAll(Arrays.asList(this.pituSDNWhitelistCsep));
+    this.pituIDNWhitelist.addAll(Arrays.asList(this.pituIDNWhitelistCsep));
+    this.ipWhitelist.addAll(Arrays.asList(this.ipWhitelistCsep));
+  }
 
   /**
    * Parses and verifies a string containing a deflated and base64 encoded SAML token.
@@ -46,12 +75,14 @@ public class DafoUserManager {
    * @throws InvalidTokenException
    */
   public DafoUserDetails getUserFromRequest(HttpServletRequest request)
-      throws InvalidTokenException {
+          throws InvalidTokenException, AccessDeniedException, InvalidCertificateException {
 
     if (request instanceof MockInternalServletRequest) {
       return ((MockInternalServletRequest) request).getUserDetails();
     }
-
+    if (!this.ipWhitelist.contains(request.getRemoteAddr())) {
+      throw new AccessDeniedException("Client IP rejected");
+    }
     // If an authorization header starting with "SAML " is provided, use it to create a
     // SAML token based user.
     String authHeader = request.getHeader("Authorization");
@@ -77,6 +108,21 @@ public class DafoUserManager {
 
       return userDetails;
     }
+
+
+    // If an SSL_CLIENT_S_DN header is provided, create a clientcertificate-based user
+    String sslClientSubjectDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN);
+    String sslClientIssuerDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN);
+    if (sslClientSubjectDN != null && sslClientIssuerDN != null) {
+      if (!this.pituSDNWhitelist.contains(sslClientSubjectDN)) {
+        throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN+" \""+sslClientSubjectDN+"\" is not whitelisted");
+      }
+      if (!this.pituIDNWhitelist.contains(sslClientIssuerDN)) {
+        throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN+" \""+sslClientIssuerDN+"\" is not whitelisted");
+      }
+      return new PituDafoUserDetails(request);
+    }
+
     // Fall back to an anonymous user
     return this.getFallbackUser();
   }

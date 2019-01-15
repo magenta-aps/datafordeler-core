@@ -3,10 +3,7 @@ package dk.magenta.datafordeler.core.fapi;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.*;
-import dk.magenta.datafordeler.core.database.Identification;
-import dk.magenta.datafordeler.core.database.IdentifiedEntity;
-import dk.magenta.datafordeler.core.database.Monotemporal;
-import dk.magenta.datafordeler.core.database.Nontemporal;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.util.Bitemporality;
 import dk.magenta.datafordeler.core.util.BitemporalityComparator;
 import dk.magenta.datafordeler.core.util.DoubleListHashMap;
@@ -96,19 +93,19 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
             this.addTemporal(key, records, converter, unwrapSingle, forceArray, t -> t.getMonotemporality().asBitemporality());
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records) {
             this.addBitemporal(key, records, null, false, false);
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records, boolean unwrapSingle) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records, boolean unwrapSingle) {
             this.addBitemporal(key, records, null, unwrapSingle, false);
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter) {
             this.addBitemporal(key, records, converter, false, false);
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter, boolean unwrapSingle, boolean forceArray) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter, boolean unwrapSingle, boolean forceArray) {
             this.addTemporal(key, records, converter, unwrapSingle, forceArray, t -> t.getMonotemporality().asBitemporality());
         }
 

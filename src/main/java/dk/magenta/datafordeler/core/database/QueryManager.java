@@ -185,6 +185,8 @@ public abstract class QueryManager {
         return results;
     }
 
+    private static final boolean logQuery = true;
+
     private static <E extends IdentifiedEntity> org.hibernate.query.Query<E> getQuery(Session session, BaseQuery query, Class<E> eClass) {
         BaseLookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = lookupDefinition.usingRVDModel() ? "d" : ENTITY;
@@ -199,6 +201,12 @@ public abstract class QueryManager {
                 " " + extraJoin +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
 
+        StringJoiner stringJoiner = null;
+        if (logQuery) {
+            stringJoiner = new StringJoiner("\n");
+            stringJoiner.add(queryString);
+        }
+
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
 
@@ -207,11 +215,18 @@ public abstract class QueryManager {
 
         for (String key : extraParameters.keySet()) {
             Object value = extraParameters.get(key);
+            if (logQuery) {
+                stringJoiner.add(key+" = "+value);
+            }
             if (value instanceof Collection) {
                 databaseQuery.setParameterList(key, (Collection) value);
             } else {
                 databaseQuery.setParameter(key, value);
             }
+        }
+
+        if (logQuery) {
+            log.info(stringJoiner.toString());
         }
 
         // Offset & limit
