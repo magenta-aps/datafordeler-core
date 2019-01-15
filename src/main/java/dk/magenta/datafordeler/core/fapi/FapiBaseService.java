@@ -228,7 +228,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
                 e.printStackTrace();
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|InvalidCertificateException e) {
             this.log.warn("Error in REST getById ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
@@ -270,7 +270,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             E entity = this.searchById(id, query, session);
 
             sendAsCSV(Stream.of(entity), request, response);
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|InvalidCertificateException|HttpNotFoundException e) {
             this.log.warn("Error in REST getRestCsv ("+request.getRequestURI()+")", e);
             throw e;
         } catch (Exception e) {
@@ -328,7 +328,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             } catch (IllegalArgumentException e) {
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|InvalidCertificateException e) {
             this.log.warn("Error in SOAP getById (id: "+id+", registeringFra: "+registeringFra+", registeringTil: "+registeringTil+")", e);
             throw e;
         } catch (DataFordelerException e) {
@@ -392,7 +392,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             }
             envelope.close();
             loggerHelper.logResult(envelope, requestParams.toString());
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|InvalidCertificateException|HttpNotFoundException e) {
             this.log.warn("Error in REST search ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
@@ -432,7 +432,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
 
             sendAsCSV(this.searchByQueryAsStream(query, session),
                 request, response);
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException|InvalidCertificateException e) {
             this.log.warn("Error in REST CSV search ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
@@ -449,7 +449,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
      * @param query Query object specifying search parameters
      * @return Found Entities
      */
-    // TODO: How to use DafoUserDetails with SOAP requests?
+    // TODO: How to use DafoUserDetails with SOAP requests?, |InvalidCertificateException
     @WebMethod(operationName = "search")
     public Envelope searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
         Session session = this.getSessionManager().getSessionFactory().openSession();
@@ -474,7 +474,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             }
             envelope.close();
             loggerHelper.logResult(envelope, query.toString());
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException|InvalidCertificateException e) {
             this.log.warn("Error in SOAP search", e);
             throw e;
         } catch (DataFordelerException e) {

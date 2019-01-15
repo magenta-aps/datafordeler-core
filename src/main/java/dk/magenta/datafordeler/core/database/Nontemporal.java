@@ -3,7 +3,7 @@ package dk.magenta.datafordeler.core.database;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
-public interface Nontemporal<E extends IdentifiedEntity> {
+public interface Nontemporal {
 
     String FILTER_LASTUPDATED_AFTER = "lastupdatedAfterFilter";
     String FILTER_LASTUPDATED_BEFORE = "lastupdatedBeforeFilter";
@@ -12,20 +12,16 @@ public interface Nontemporal<E extends IdentifiedEntity> {
     String FILTERLOGIC_LASTUPDATED_AFTER = "(" + Nontemporal.DB_FIELD_UPDATED + " >= :" + Monotemporal.FILTERPARAM_LASTUPDATED_AFTER + ")";
     String FILTERLOGIC_LASTUPDATED_BEFORE = "(" + Nontemporal.DB_FIELD_UPDATED + " < :" + Monotemporal.FILTERPARAM_LASTUPDATED_BEFORE + ")";
 
-    String DB_FIELD_ENTITY = "entity";
-    E getEntity();
-    void setEntity(E entity);
-
     String DB_FIELD_UPDATED = "dafoUpdated";
     String IO_FIELD_UPDATED = "sidstOpdateret";
     OffsetDateTime getDafoUpdated();
-    Nontemporal setDafoUpdated(OffsetDateTime dafoUpdated);
-    boolean equalData(Object o);
+    void setDafoUpdated(OffsetDateTime dafoUpdated);
+    //boolean equalData(Object o);
 
     static void copy(Nontemporal from, Nontemporal to) {
         to.setDafoUpdated(from.getDafoUpdated());
     }
-
+/*
     static boolean equalData(Nontemporal a, Nontemporal b) {
         if (a != null) {
             if (b == null) return false;
@@ -50,5 +46,5 @@ public interface Nontemporal<E extends IdentifiedEntity> {
         }
         return true;
     }
-
+*/
 }
