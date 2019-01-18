@@ -23,58 +23,64 @@ import java.util.HashSet;
  */
 public class DafoUserManager {
 
-  Logger logger = LogManager.getLogger(DafoUserManager.class.getCanonicalName());
+    Logger logger = LogManager.getLogger(DafoUserManager.class.getCanonicalName());
 
-  @Autowired
-  private TokenParser tokenParser;
-  @Autowired
-  private TokenVerifier tokenVerifier;
+    @Autowired
+    private TokenParser tokenParser;
+    @Autowired
+    private TokenVerifier tokenVerifier;
 
-  @Value("${pitu.sdn.whitelist:}")
-  private String[] pituSDNWhitelistCsep;
+    @Value("${pitu.sdn.whitelist:}")
+    private String[] pituSDNWhitelistCsep;
 
-  private HashSet<String> pituSDNWhitelist = new HashSet<>();
+    private HashSet<String> pituSDNWhitelist = new HashSet<>();
 
-  @Value("${pitu.idn.whitelist:}")
-  private String[] pituIDNWhitelistCsep;
+    @Value("${pitu.idn.whitelist:}")
+    private String[] pituIDNWhitelistCsep;
 
-  private HashSet<String> pituIDNWhitelist = new HashSet<>();
+    private HashSet<String> pituIDNWhitelist = new HashSet<>();
 
-  @Value("${ip.whitelist:}")
-  private String[] ipWhitelistCsep;
+    @Value("${ip.whitelist:}")
+    private String[] ipWhitelistCsep;
 
-  private HashSet<String> ipWhitelist = new HashSet<>();
-
-
-  @PostConstruct
-  public void init() {
-    this.pituSDNWhitelist.addAll(Arrays.asList(this.pituSDNWhitelistCsep));
-    this.pituIDNWhitelist.addAll(Arrays.asList(this.pituIDNWhitelistCsep));
-    this.ipWhitelist.addAll(Arrays.asList(this.ipWhitelistCsep));
-  }
-
-  /**
-   * Parses and verifies a string containing a deflated and base64 encoded SAML token.
-   * @param tokendata - A deflated and base64 encoded SAML token
-   * @return A verified Assertion object
-   * @throws InvalidTokenException
-   */
-  public Assertion parseAndVerifyToken(String tokendata) throws InvalidTokenException {
-    Assertion samlAssertion = tokenParser.parseAssertion(tokendata);
-    tokenVerifier.verifyAssertion(samlAssertion);
-    return samlAssertion;
-  }
+    private HashSet<String> ipWhitelist = new HashSet<>();
 
 
-  /**
-   * Creates a DafoUserDetails object from an incoming request. If there is a SAML token on the
-   * request that token will parsed and verified. If not an AnonymousDafoUserDetails object will
-   * be returned.
-   * @param request - a HttpServletRequest
-   * @return A DafoUserDetails object
-   * @throws InvalidTokenException
-   */
-  public DafoUserDetails getUserFromRequest(HttpServletRequest request)
+    @PostConstruct
+    public void init() {
+        this.pituSDNWhitelist.addAll(Arrays.asList(this.pituSDNWhitelistCsep));
+        this.pituIDNWhitelist.addAll(Arrays.asList(this.pituIDNWhitelistCsep));
+        this.ipWhitelist.addAll(Arrays.asList(this.ipWhitelistCsep));
+    }
+
+    /**
+     * Parses and verifies a string containing a deflated and base64 encoded SAML token.
+     *
+     * @param tokendata - A deflated and base64 encoded SAML token
+     * @return A verified Assertion object
+     * @throws InvalidTokenException
+     */
+    public Assertion parseAndVerifyToken(String tokendata) throws InvalidTokenException {
+        Assertion samlAssertion = tokenParser.parseAssertion(tokendata);
+        tokenVerifier.verifyAssertion(samlAssertion);
+        return samlAssertion;
+    }
+
+
+    /**
+     * Creates a DafoUserDetails object from an incoming request. If there is a SAML token on the
+     * request that token will parsed and verified. If not an AnonymousDafoUserDetails object will
+     * be returned.
+     *
+     * @param request - a HttpServletRequest
+     * @return A DafoUserDetails object
+     * @throws InvalidTokenException
+     */
+    public DafoUserDetails getUserFromRequest(HttpServletRequest request) throws AccessDeniedException, InvalidTokenException, InvalidCertificateException {
+        return this.getUserFromRequest(request, false);
+    }
+
+    public DafoUserDetails getUserFromRequest(HttpServletRequest request, boolean samlOnly)
           throws InvalidTokenException, AccessDeniedException, InvalidCertificateException {
 
     if (request instanceof MockInternalServletRequest) {
@@ -109,18 +115,19 @@ public class DafoUserManager {
       return userDetails;
     }
 
-
-    // If an SSL_CLIENT_S_DN header is provided, create a clientcertificate-based user
-    String sslClientSubjectDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN);
-    String sslClientIssuerDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN);
-    if (sslClientSubjectDN != null && sslClientIssuerDN != null) {
-      if (!this.pituSDNWhitelist.contains(sslClientSubjectDN)) {
-        throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN+" \""+sslClientSubjectDN+"\" is not whitelisted");
-      }
-      if (!this.pituIDNWhitelist.contains(sslClientIssuerDN)) {
-        throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN+" \""+sslClientIssuerDN+"\" is not whitelisted");
-      }
-      return new PituDafoUserDetails(request);
+    if (!samlOnly) {
+        // If an SSL_CLIENT_S_DN header is provided, create a clientcertificate-based user
+        String sslClientSubjectDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN);
+        String sslClientIssuerDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN);
+        if (sslClientSubjectDN != null && sslClientIssuerDN != null) {
+            if (!this.pituSDNWhitelist.contains(sslClientSubjectDN)) {
+                throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN + " \"" + sslClientSubjectDN + "\" is not whitelisted");
+            }
+            if (!this.pituIDNWhitelist.contains(sslClientIssuerDN)) {
+                throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN + " \"" + sslClientIssuerDN + "\" is not whitelisted");
+            }
+            return new PituDafoUserDetails(request);
+        }
     }
 
     // Fall back to an anonymous user

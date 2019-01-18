@@ -153,8 +153,8 @@ public class CommandService {
      */
     @RequestMapping(method = RequestMethod.GET, path="{id}")
     public void doGet(HttpServletRequest request, HttpServletResponse response, @PathVariable("id") Long commandId)
-            throws IOException, HttpNotFoundException, InvalidClientInputException, InvalidTokenException, AccessRequiredException, AccessDeniedException, DataStreamException {
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            throws IOException, HttpNotFoundException, InvalidClientInputException, InvalidTokenException, AccessRequiredException, AccessDeniedException, DataStreamException, InvalidCertificateException {
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request, true);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info("GET request received on address " + request.getServletPath());
 
@@ -182,8 +182,8 @@ public class CommandService {
 
     @RequestMapping(method = RequestMethod.GET, path="pull/summary/{plugin}/{state}")
     public void doGetSummary(HttpServletRequest request, HttpServletResponse response, @PathVariable("plugin") String pluginName, @PathVariable("state") String state)
-            throws IOException, HttpNotFoundException, InvalidClientInputException, InvalidTokenException, AccessRequiredException, AccessDeniedException, DataStreamException {
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            throws IOException, HttpNotFoundException, InvalidClientInputException, InvalidTokenException, AccessRequiredException, AccessDeniedException, DataStreamException, InvalidCertificateException {
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request, true);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info("GET request received on address " + request.getServletPath());
 
@@ -236,8 +236,8 @@ public class CommandService {
      */
     @RequestMapping(method = RequestMethod.POST, path = "/{command}")
     public void doPost(HttpServletRequest request, HttpServletResponse response, @PathVariable("command") String commandName)
-            throws IOException, InvalidClientInputException, InvalidTokenException, AccessDeniedException, AccessRequiredException, DataStreamException {
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            throws IOException, InvalidClientInputException, InvalidTokenException, AccessDeniedException, AccessRequiredException, DataStreamException, InvalidCertificateException {
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request, true);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info("POST request received on address " + request.getServletPath());
         loggerHelper.info("Request for command '"+commandName+"'");
@@ -282,8 +282,8 @@ public class CommandService {
      */
     @RequestMapping(method = RequestMethod.DELETE, path="{id}")
     public void doDelete(HttpServletRequest request, HttpServletResponse response, @PathVariable("id") Long commandId)
-            throws IOException, InvalidClientInputException, HttpNotFoundException, InvalidTokenException, DataStreamException, AccessDeniedException, AccessRequiredException {
-        DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
+            throws IOException, InvalidClientInputException, HttpNotFoundException, InvalidTokenException, DataStreamException, AccessDeniedException, AccessRequiredException, InvalidCertificateException {
+        DafoUserDetails user = dafoUserManager.getUserFromRequest(request, true);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
         loggerHelper.info("DELETE request received on address " + request.getServletPath());
         if (commandId >= 0) {
