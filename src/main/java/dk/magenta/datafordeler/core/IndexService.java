@@ -3,7 +3,6 @@ package dk.magenta.datafordeler.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.fapi.FapiBaseService;
-import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.fapi.ServiceDescriptor;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
@@ -55,7 +54,7 @@ public class IndexService {
                                 String[] servicePaths = restService.getServicePaths();
                                 if (servicePaths != null) {
                                     for (String servicePath : servicePaths) {
-                                        serviceMap.put(servicePath, new ImmutablePair<FapiBaseService, Boolean>(restService, false));
+                                        serviceMap.put(servicePath, new ImmutablePair<>(restService, false));
                                     }
                                 }
                             }
@@ -64,7 +63,7 @@ public class IndexService {
                 }
 
                 for (JaxWsServerFactoryBean soapServiceBean : soapServiceConfiguration.getServerBeans()) {
-                    FapiService soapService = (FapiService) soapServiceBean.getServiceBean();
+                    FapiBaseService soapService = (FapiBaseService) soapServiceBean.getServiceBean();
                     serviceMap.put(soapServiceBean.getAddress(), new ImmutablePair<>(soapService, true));
                 }
 

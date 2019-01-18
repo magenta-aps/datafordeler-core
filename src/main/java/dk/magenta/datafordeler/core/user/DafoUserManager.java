@@ -15,6 +15,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Manages DAFO users that are created from incoming SAML tokens.
@@ -45,6 +46,9 @@ public class DafoUserManager {
 
     private HashSet<String> ipWhitelist = new HashSet<>();
 
+    public Set<String> getIpWhitelist() {
+        return this.ipWhitelist;
+    }
 
     @PostConstruct
     public void init() {
@@ -81,80 +85,81 @@ public class DafoUserManager {
     }
 
     public DafoUserDetails getUserFromRequest(HttpServletRequest request, boolean samlOnly)
-          throws InvalidTokenException, AccessDeniedException, InvalidCertificateException {
+            throws InvalidTokenException, AccessDeniedException, InvalidCertificateException {
 
-    if (request instanceof MockInternalServletRequest) {
-      return ((MockInternalServletRequest) request).getUserDetails();
-    }
-    if (!this.ipWhitelist.contains(request.getRemoteAddr())) {
-      throw new AccessDeniedException("Client IP rejected");
-    }
-    // If an authorization header starting with "SAML " is provided, use it to create a
-    // SAML token based user.
-    String authHeader = request.getHeader("Authorization");
-    if (authHeader != null && authHeader.indexOf("SAML ") == 0) {
-      LoggerHelper loggerHelper = new LoggerHelper(logger, request);
-      loggerHelper.info("Authorizing with SAML token");
+        if (request instanceof MockInternalServletRequest) {
+            return ((MockInternalServletRequest) request).getUserDetails();
+        }
+        if (!this.getIpWhitelist().contains(request.getRemoteAddr())) {
+            throw new AccessDeniedException("Client IP rejected");
+        }
+        // If an authorization header starting with "SAML " is provided, use it to create a
+        // SAML token based user.
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.indexOf("SAML ") == 0) {
+            LoggerHelper loggerHelper = new LoggerHelper(logger, request);
+            loggerHelper.info("Authorizing with SAML token");
 
-      SamlDafoUserDetails userDetails;
-      try {
-         userDetails = getSamlUserDetailsFromToken(authHeader.substring(5));
-      }
-      catch (InvalidTokenException e) {
-        loggerHelper.info("Token verification failed: " + e.getMessage());
-        throw(e);
-      }
-
-      loggerHelper.setUser(userDetails);
-      loggerHelper.info(String.format(
-          "User authorized with SAML token %s issued at %s",
-          userDetails.getIdentity(),
-          userDetails.getIssueInstant()
-      ));
-
-      return userDetails;
-    }
-
-    if (!samlOnly) {
-        // If an SSL_CLIENT_S_DN header is provided, create a clientcertificate-based user
-        String sslClientSubjectDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN);
-        String sslClientIssuerDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN);
-        if (sslClientSubjectDN != null && sslClientIssuerDN != null) {
-            if (!this.pituSDNWhitelist.contains(sslClientSubjectDN)) {
-                throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN + " \"" + sslClientSubjectDN + "\" is not whitelisted");
+            SamlDafoUserDetails userDetails;
+            try {
+                userDetails = getSamlUserDetailsFromToken(authHeader.substring(5));
+            } catch (InvalidTokenException e) {
+                loggerHelper.info("Token verification failed: " + e.getMessage());
+                throw (e);
             }
-            if (!this.pituIDNWhitelist.contains(sslClientIssuerDN)) {
-                throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN + " \"" + sslClientIssuerDN + "\" is not whitelisted");
+
+            loggerHelper.setUser(userDetails);
+            loggerHelper.info(String.format(
+                    "User authorized with SAML token %s issued at %s",
+                    userDetails.getIdentity(),
+                    userDetails.getIssueInstant()
+            ));
+
+            return userDetails;
+        }
+
+        if (!samlOnly) {
+            // If an SSL_CLIENT_S_DN header is provided, create a clientcertificate-based user
+            String sslClientSubjectDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN);
+            String sslClientIssuerDN = request.getHeader(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN);
+            if (sslClientSubjectDN != null && sslClientIssuerDN != null) {
+                if (!this.pituSDNWhitelist.contains(sslClientSubjectDN)) {
+                    throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_SUBJECT_DN + " \"" + sslClientSubjectDN + "\" is not whitelisted");
+                }
+                if (!this.pituIDNWhitelist.contains(sslClientIssuerDN)) {
+                    throw new InvalidCertificateException(PituDafoUserDetails.HEADER_SSL_CLIENT_ISSUER_DN + " \"" + sslClientIssuerDN + "\" is not whitelisted");
+                }
+                return new PituDafoUserDetails(request);
             }
-            return new PituDafoUserDetails(request);
+        }
+
+        System.out.println("FALLBACK USER");
+        // Fall back to an anonymous user
+        return this.getFallbackUser();
+    }
+
+    public DafoUserDetails getFallbackUser() {
+        return new AnonymousDafoUserDetails();
+    }
+
+    public SamlDafoUserDetails getSamlUserDetailsFromToken(String tokenData)
+            throws InvalidTokenException {
+        Assertion samlAssertion = parseAndVerifyToken(tokenData);
+        SamlDafoUserDetails samlDafoUserDetails = new SamlDafoUserDetails(samlAssertion);
+        this.addUserProfilesToSamlUser(samlDafoUserDetails);
+
+        return samlDafoUserDetails;
+    }
+
+    /**
+     * Populates a SamlDafoUserDetails object with UserProfiles by translating the UserProfile
+     * names gotten from the original SAML token to UserProfile objects.
+     *
+     * @param samlDafoUserDetails
+     */
+    public void addUserProfilesToSamlUser(SamlDafoUserDetails samlDafoUserDetails) {
+        for (String profileName : samlDafoUserDetails.getAssertionUserProfileNames()) {
+            samlDafoUserDetails.addUserProfile(new UserProfile(profileName));
         }
     }
-
-    // Fall back to an anonymous user
-    return this.getFallbackUser();
-  }
-
-  public DafoUserDetails getFallbackUser() {
-    return new AnonymousDafoUserDetails();
-  }
-
-  public SamlDafoUserDetails getSamlUserDetailsFromToken(String tokenData)
-      throws InvalidTokenException{
-    Assertion samlAssertion = parseAndVerifyToken(tokenData);
-    SamlDafoUserDetails samlDafoUserDetails = new SamlDafoUserDetails(samlAssertion);
-    this.addUserProfilesToSamlUser(samlDafoUserDetails);
-
-    return samlDafoUserDetails;
-  }
-
-  /**
-   * Populates a SamlDafoUserDetails object with UserProfiles by translating the UserProfile
-   * names gotten from the original SAML token to UserProfile objects.
-   * @param samlDafoUserDetails
-   */
-  public void addUserProfilesToSamlUser(SamlDafoUserDetails samlDafoUserDetails) {
-    for (String profileName : samlDafoUserDetails.getAssertionUserProfileNames()) {
-      samlDafoUserDetails.addUserProfile(new UserProfile(profileName));
-    }
-  }
 }
