@@ -53,6 +53,9 @@ public class Engine {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Value("${dafo.server.name:dafo01}")
+    private String serverName;
+
     @Value("${dafo.dump.enabled:true}")
     private boolean dumpEnabled;
 
@@ -77,6 +80,10 @@ public class Engine {
     public void init() {
         this.setupPullSchedules();
         this.setupDumpSchedules();
+    }
+
+    public String getServerName() {
+        return this.serverName;
     }
 
     public boolean isPullEnabled() {

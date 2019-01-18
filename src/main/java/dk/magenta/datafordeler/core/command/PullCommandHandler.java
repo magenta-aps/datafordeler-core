@@ -73,9 +73,6 @@ public class PullCommandHandler extends CommandHandler {
     private PluginManager pluginManager;
 
     @Autowired
-    private SessionManager sessionManager;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
     @Override
@@ -84,7 +81,7 @@ public class PullCommandHandler extends CommandHandler {
     }
 
     public boolean accept(Command command) {
-        return this.engine.isPullEnabled();
+        return super.accept(command) && this.engine.isPullEnabled();
     }
 
     @Override
