@@ -1,8 +1,10 @@
 package dk.magenta.datafordeler.core.plugin;
 
 
+import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -15,15 +17,20 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.*;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.SSLContexts;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import javax.net.ssl.SSLContext;
+import java.io.*;
 import java.net.URI;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,19 +41,32 @@ import java.util.Map;
  */
 public class HttpCommunicator implements Communicator {
 
-    private CookieStore cookieStore;
+    private CookieStore cookieStore = new BasicCookieStore();
 
     private String username;
     private String password;
 
+    private File keystoreFile;
+    private String keystorePassword;
+
     public HttpCommunicator() {
-        this.cookieStore = new BasicCookieStore();
     }
 
     public HttpCommunicator(String username, String password) {
-        this();
         this.username = username;
         this.password = password;
+    }
+
+    public HttpCommunicator(File keystoreFile, String keystorePassword) {
+        this.keystoreFile = keystoreFile;
+        this.keystorePassword = keystorePassword;
+    }
+
+    public HttpCommunicator(String username, String password, File keystoreFile, String keystorePassword) {
+        this.username = username;
+        this.password = password;
+        this.keystoreFile = keystoreFile;
+        this.keystorePassword = keystorePassword;
     }
 
     @Override
@@ -113,27 +133,52 @@ public class HttpCommunicator implements Communicator {
     }
 
     @Override
-    public StatusLine send(URI endpoint, String payload) throws IOException {
+    public StatusLine send(URI endpoint, String payload) throws DataFordelerException {
         CloseableHttpClient httpclient = this.buildClient();
         HttpPost request = new HttpPost(endpoint);
         try {
             request.setEntity(new StringEntity(payload));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            // TODO: Do this in a thread?
+            return httpclient.execute(request).getStatusLine();
+        } catch (IOException e) {
+            throw new DataStreamException(e);
         }
-        // TODO: Do this in a thread?
-
-        CloseableHttpResponse response = httpclient.execute(request);
-        return response.getStatusLine();
     }
 
-    protected CloseableHttpClient buildClient() {
+    protected CloseableHttpClient buildClient() throws DataStreamException {
         HttpClientBuilder builder = HttpClients.custom();
+
         if (this.username != null && this.password != null) {
             CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(this.username, this.password));
             builder.setDefaultCredentialsProvider(credentialsProvider);
         }
+
+        if (this.keystoreFile != null && this.keystorePassword != null) {
+            try {
+                KeyStore keyStore = KeyStore.getInstance(
+                        keystoreMap.get(FilenameUtils.getExtension(this.keystoreFile.getName()))
+                );
+                try (FileInputStream fileInputStream = new FileInputStream(this.keystoreFile)) {
+                    keyStore.load(fileInputStream, this.keystorePassword.toCharArray());
+                }
+                SSLContextBuilder sslBuilder = SSLContexts.custom().loadKeyMaterial(
+                        keyStore,
+                        this.keystorePassword.toCharArray()
+                );
+                SSLContext sslContext = sslBuilder.build();
+                SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
+                        sslContext,
+                        new String[] { "TLSv1.2" },
+                        null,
+                        SSLConnectionSocketFactory.getDefaultHostnameVerifier()
+                );
+                builder.setSSLSocketFactory(socketFactory);
+            } catch (NoSuchAlgorithmException | CertificateException | KeyManagementException | IOException | KeyStoreException | UnrecoverableKeyException e) {
+                throw new DataStreamException(e);
+            }
+        }
+
         builder.setDefaultCookieStore(this.cookieStore);
         return builder.build();
     }
@@ -145,4 +190,19 @@ public class HttpCommunicator implements Communicator {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public void setKeystoreFile(File keystoreFile) {
+        this.keystoreFile = keystoreFile;
+    }
+
+    public void setKeystorePassword(String keystorePassword) {
+        this.keystorePassword = keystorePassword;
+    }
+
+    private static HashMap<String, String> keystoreMap = new HashMap<>();
+    static {
+        keystoreMap.put("jks", "jks");
+        keystoreMap.put("p12", "pkcs12");
+    }
+
 }
