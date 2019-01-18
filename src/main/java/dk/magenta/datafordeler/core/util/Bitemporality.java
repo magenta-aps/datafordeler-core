@@ -68,23 +68,23 @@ public class Bitemporality {
 
         Bitemporality that = (Bitemporality) o;
 
-        if (((compare & COMPARE_REGISTRATION_FROM) != 0) && (registrationFrom != null ? !registrationFrom.equals(that.registrationFrom) : that.registrationFrom != null))
+        if (((compare & COMPARE_REGISTRATION_FROM) != 0) && (registrationFrom != null ? !Equality.equal(registrationFrom, that.registrationFrom) : that.registrationFrom != null))
             return false;
-        if (((compare & COMPARE_REGISTRATION_TO) != 0) && (registrationTo != null ? !registrationTo.equals(that.registrationTo) : that.registrationTo != null))
+        if (((compare & COMPARE_REGISTRATION_TO) != 0) && (registrationTo != null ? !Equality.equal(registrationTo, that.registrationTo) : that.registrationTo != null))
             return false;
-        if (((compare & COMPARE_EFFECT_FROM) != 0) && (effectFrom != null ? !effectFrom.equals(that.effectFrom) : that.effectFrom != null))
+        if (((compare & COMPARE_EFFECT_FROM) != 0) && (effectFrom != null ? !Equality.equal(effectFrom, that.effectFrom) : that.effectFrom != null))
             return false;
-        if (((compare & COMPARE_EFFECT_TO) != 0) && (effectTo != null ? !effectTo.equals(that.effectTo) : that.effectTo != null))
+        if (((compare & COMPARE_EFFECT_TO) != 0) && (effectTo != null ? !Equality.equal(effectTo ,that.effectTo) : that.effectTo != null))
             return false;
         return true;
     }
 
     public boolean equalRegistration(Bitemporality o) {
-        return o != null && Objects.equals(this.registrationFrom, o.registrationFrom) && Objects.equals(this.registrationTo, o.registrationTo);
+        return o != null && Equality.equal(this.registrationFrom, o.registrationFrom) && Equality.equal(this.registrationTo, o.registrationTo);
     }
 
     public boolean equalEffect(Bitemporality o) {
-        return o != null && Objects.equals(this.effectFrom, o.effectFrom) && Objects.equals(this.effectTo, o.effectTo);
+        return o != null && Equality.equal(this.effectFrom, o.effectFrom) && Equality.equal(this.effectTo, o.effectTo);
     }
 
     @Override
