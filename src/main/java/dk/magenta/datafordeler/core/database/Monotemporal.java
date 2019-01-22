@@ -12,30 +12,39 @@ import java.util.Collection;
 import java.util.Comparator;
 
 
-public interface Monotemporal<E extends IdentifiedEntity> extends Nontemporal<E> {
+public interface Monotemporal extends Nontemporal {
 
-    String FILTER_REGISTRATION_AFTER = "registrationAfterFilter";
-    String FILTER_REGISTRATION_BEFORE = "registrationBeforeFilter";
-    String FILTERPARAM_REGISTRATION_AFTER = "registrationAfterDate";
-    String FILTERPARAM_REGISTRATION_BEFORE = "registrationBeforeDate";
+    String FILTER_REGISTRATIONFROM_AFTER = "registrationFromAfterFilter";
+    String FILTER_REGISTRATIONFROM_BEFORE = "registrationFromBeforeFilter";
+    String FILTER_REGISTRATIONTO_AFTER = "registrationToAfterFilter";
+    String FILTER_REGISTRATIONTO_BEFORE = "registrationToBeforeFilter";
+
+    String FILTERPARAM_REGISTRATIONFROM_AFTER = "registrationFromAfterDate";
+    String FILTERPARAM_REGISTRATIONFROM_BEFORE = "registrationFromBeforeDate";
+    String FILTERPARAM_REGISTRATIONTO_AFTER = "registrationToAfterDate";
+    String FILTERPARAM_REGISTRATIONTO_BEFORE = "registrationToBeforeDate";
+
+    // True if the sought registration begins after our query
+    String FILTERLOGIC_REGISTRATIONFROM_AFTER = "(" + Monotemporal.DB_FIELD_REGISTRATION_FROM + " >= :" + Monotemporal.FILTERPARAM_REGISTRATIONFROM_AFTER + ")";
+    // True if the sought registration begins before our query
+    String FILTERLOGIC_REGISTRATIONFROM_BEFORE = "(" + Monotemporal.DB_FIELD_REGISTRATION_FROM + " < :" + Monotemporal.FILTERPARAM_REGISTRATIONFROM_BEFORE + " OR " + Monotemporal.DB_FIELD_REGISTRATION_FROM + " is null)";
 
     // True if the sought registration ends after our query
-    String FILTERLOGIC_REGISTRATION_AFTER = "(" + Monotemporal.DB_FIELD_REGISTRATION_TO + " >= :" + Monotemporal.FILTERPARAM_REGISTRATION_AFTER + " OR " + Monotemporal.DB_FIELD_REGISTRATION_TO + " is null)";
-
-    // True if the sought registration begins before our query
-    String FILTERLOGIC_REGISTRATION_BEFORE = "(" + Monotemporal.DB_FIELD_REGISTRATION_FROM + " < :" + Monotemporal.FILTERPARAM_REGISTRATION_BEFORE + " OR " + Monotemporal.DB_FIELD_REGISTRATION_FROM + " is null)";
+    String FILTERLOGIC_REGISTRATIONTO_AFTER = "(" + Monotemporal.DB_FIELD_REGISTRATION_TO + " >= :" + Monotemporal.FILTERPARAM_REGISTRATIONTO_AFTER + " OR " + Monotemporal.DB_FIELD_REGISTRATION_TO + " is null)";
+    // True if the sought registration ends before our query
+    String FILTERLOGIC_REGISTRATIONTO_BEFORE = "(" + Monotemporal.DB_FIELD_REGISTRATION_TO + " < :" + Monotemporal.FILTERPARAM_REGISTRATIONTO_BEFORE + ")";
 
 
     String DB_FIELD_REGISTRATION_FROM = "registrationFrom";
     String IO_FIELD_REGISTRATION_FROM = "registreringFra";
     OffsetDateTime getRegistrationFrom();
-    Monotemporal setRegistrationFrom(OffsetDateTime registrationFrom);
+    void setRegistrationFrom(OffsetDateTime registrationFrom);
 
     
     String DB_FIELD_REGISTRATION_TO = "registrationTo";
     String IO_FIELD_REGISTRATION_TO = "registreringTil";
     OffsetDateTime getRegistrationTo();
-    Monotemporal setRegistrationTo(OffsetDateTime registrationTo);
+    void setRegistrationTo(OffsetDateTime registrationTo);
 
 
     static <T extends Monotemporal> T newestRecord(Collection<T> set) {

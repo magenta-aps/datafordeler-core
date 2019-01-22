@@ -19,7 +19,7 @@ public interface Nontemporal<E extends IdentifiedEntity> {
     String DB_FIELD_UPDATED = "dafoUpdated";
     String IO_FIELD_UPDATED = "sidstOpdateret";
     OffsetDateTime getDafoUpdated();
-    Nontemporal setDafoUpdated(OffsetDateTime dafoUpdated);
+    void setDafoUpdated(OffsetDateTime dafoUpdated);
     boolean equalData(Object o);
 
     static void copy(Nontemporal from, Nontemporal to) {

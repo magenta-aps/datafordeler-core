@@ -483,31 +483,43 @@ public abstract class BaseQuery {
      */
     public void applyFilters(Session session) {
         if (this.getRegistrationFrom() != null) {
-            this.applyFilter(session, Registration.FILTER_REGISTRATION_FROM, Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFrom());
-            this.applyFilter(session, Monotemporal.FILTER_REGISTRATION_AFTER, Monotemporal.FILTERPARAM_REGISTRATION_AFTER, this.getRegistrationFrom());
+            //this.applyFilter(session, Registration.FILTER_REGISTRATION_FROM, Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFrom());
+            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONFROM_BEFORE+"  "+this.getRegistrationFrom());
+            this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONFROM_BEFORE, Monotemporal.FILTERPARAM_REGISTRATIONFROM_BEFORE, this.getRegistrationFrom());
         }
         if (this.getRegistrationTo() != null) {
-            this.applyFilter(session, Registration.FILTER_REGISTRATION_TO, Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationTo());
-            this.applyFilter(session, Monotemporal.FILTER_REGISTRATION_BEFORE, Monotemporal.FILTERPARAM_REGISTRATION_BEFORE, this.getRegistrationTo());
+            //this.applyFilter(session, Registration.FILTER_REGISTRATION_TO, Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationTo());
+            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONTO_AFTER+"  "+this.getRegistrationTo());
+            this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONTO_AFTER, Monotemporal.FILTERPARAM_REGISTRATIONTO_AFTER, this.getRegistrationTo());
         }
         if (this.getEffectFrom() != null) {
-            this.applyFilter(session, Effect.FILTER_EFFECT_FROM, Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
-            this.applyFilter(session, Bitemporal.FILTER_EFFECT_AFTER, Bitemporal.FILTERPARAM_EFFECT_AFTER, this.getEffectFrom());
+            //this.applyFilter(session, Effect.FILTER_EFFECT_FROM, Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
+            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTFROM_BEFORE+"  "+this.getEffectFrom());
+            this.applyFilter(session, Bitemporal.FILTER_EFFECTFROM_BEFORE, Bitemporal.FILTERPARAM_EFFECTFROM_BEFORE, this.getEffectFrom());
         }
         if (this.getEffectTo() != null) {
-            this.applyFilter(session, Effect.FILTER_EFFECT_TO, Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
-            this.applyFilter(session, Bitemporal.FILTER_EFFECT_BEFORE, Bitemporal.FILTERPARAM_EFFECT_BEFORE, this.getEffectTo());
+            //this.applyFilter(session, Effect.FILTER_EFFECT_TO, Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
+            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTTO_AFTER+"  "+this.getEffectTo());
+            this.applyFilter(session, Bitemporal.FILTER_EFFECTTO_AFTER, Bitemporal.FILTERPARAM_EFFECTTO_AFTER, this.getEffectTo());
         }
         if (this.getRecordAfter() != null) {
-            this.applyFilter(session, DataItem.FILTER_RECORD_AFTER, DataItem.FILTERPARAM_RECORD_AFTER, this.getRecordAfter());
+            //this.applyFilter(session, DataItem.FILTER_RECORD_AFTER, DataItem.FILTERPARAM_RECORD_AFTER, this.getRecordAfter());
+            System.out.println("Activating filter "+Nontemporal.FILTER_LASTUPDATED_AFTER+"  "+this.getRecordAfter());
             this.applyFilter(session, Nontemporal.FILTER_LASTUPDATED_AFTER, Nontemporal.FILTERPARAM_LASTUPDATED_AFTER, this.getRecordAfter());
         }
     }
 
     private void applyFilter(Session session, String filterName, String parameterName, Object parameterValue) {
         if (session.getSessionFactory().getDefinedFilterNames().contains(filterName)) {
-            session.enableFilter(filterName).setParameter(parameterName, parameterValue);
+            session.enableFilter(filterName).setParameter(
+                    parameterName,
+                    this.castFilterParam(parameterValue, filterName)
+            );
         }
+    }
+
+    protected Object castFilterParam(Object input, String filter) {
+        return input;
     }
 
 }
