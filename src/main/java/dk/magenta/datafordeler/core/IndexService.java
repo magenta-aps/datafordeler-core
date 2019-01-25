@@ -54,7 +54,7 @@ public class IndexService {
                                 String[] servicePaths = restService.getServicePaths();
                                 if (servicePaths != null) {
                                     for (String servicePath : servicePaths) {
-                                        serviceMap.put(servicePath, new ImmutablePair<FapiBaseService, Boolean>(restService, false));
+                                        serviceMap.put(servicePath, new ImmutablePair<>(restService, false));
                                     }
                                 }
                             }

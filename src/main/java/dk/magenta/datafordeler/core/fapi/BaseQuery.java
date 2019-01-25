@@ -504,9 +504,15 @@ public abstract class BaseQuery {
 
     private void applyFilter(Session session, String filterName, String parameterName, Object parameterValue) {
         if (session.getSessionFactory().getDefinedFilterNames().contains(filterName)) {
-            System.out.println("enable filter "+filterName+", set "+parameterName+" = "+parameterValue);
-            session.enableFilter(filterName).setParameter(parameterName, parameterValue);
+            session.enableFilter(filterName).setParameter(
+                    parameterName,
+                    this.castFilterParam(parameterValue, filterName)
+            );
         }
+    }
+
+    protected Object castFilterParam(Object input, String filter) {
+        return input;
     }
 
 }

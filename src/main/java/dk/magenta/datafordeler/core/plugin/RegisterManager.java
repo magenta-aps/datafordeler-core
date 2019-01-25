@@ -304,6 +304,6 @@ public abstract class RegisterManager {
     }
 
     public void beforePull(EntityManager entityManager, ImportMetadata importMetadata) {
+        // Override in subclasses
     }
-
 }
