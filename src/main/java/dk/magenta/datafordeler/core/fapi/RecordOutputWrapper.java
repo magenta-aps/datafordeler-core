@@ -22,7 +22,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 
-@Component
 public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends OutputWrapper<E> {
 
     public static final String EFFECTS = "virkninger";
@@ -32,14 +31,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
     public static final String REGISTRATION_FROM = "registreringFra";
     public static final String REGISTRATION_TO = "registreringTil";
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    public ObjectMapper getObjectMapper() {
-        return this.objectMapper;
-    }
-
-
+    public abstract ObjectMapper getObjectMapper();
 
     // RVD
     private final Set<String> rvdNodeRemoveFields = new HashSet<>(Arrays.asList(new String[]{
@@ -147,7 +139,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
         }
 
         public <T extends Nontemporal> void addNontemporal(String key, Set<T> records, Function<T, JsonNode> converter, boolean unwrapSingle, boolean forceArray) {
-            ObjectMapper objectMapper = RecordOutputWrapper.this.objectMapper;
+            ObjectMapper objectMapper = RecordOutputWrapper.this.getObjectMapper();
             for (T record : records) {
                 JsonNode value = (converter != null) ? converter.apply(record) : objectMapper.valueToTree(record);
                 if (value instanceof ObjectNode) {
@@ -191,7 +183,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
 
         public ObjectNode getRVD(Bitemporality mustOverlap) {
 
-            ObjectMapper objectMapper = RecordOutputWrapper.this.objectMapper;
+            ObjectMapper objectMapper = RecordOutputWrapper.this.getObjectMapper();
             ArrayNode registrationsNode = objectMapper.createArrayNode();
             ArrayList<Bitemporality> bitemporalities = new ArrayList<>(this.bitemporalData.keySet());
             ListHashMap<OffsetDateTime, Bitemporality> startTerminators = new ListHashMap<>();
@@ -283,7 +275,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
         }
         public ObjectNode getRDV(Bitemporality mustOverlap, Map<String, String> keyConversion, Function<Pair<String, ObjectNode>, ObjectNode> dataConversion) {
 
-            ObjectMapper objectMapper = RecordOutputWrapper.this.objectMapper;
+            ObjectMapper objectMapper = RecordOutputWrapper.this.getObjectMapper();
             ArrayNode registrationsNode = objectMapper.createArrayNode();
             ArrayList<Bitemporality> bitemporalities = new ArrayList<>(this.bitemporalData.keySet());
             ListHashMap<OffsetDateTime, Bitemporality> startTerminators = new ListHashMap<>();
@@ -362,7 +354,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
 
         // DRV
         public ObjectNode getDRV(Bitemporality mustOverlap) {
-            ObjectMapper objectMapper = RecordOutputWrapper.this.objectMapper;
+            ObjectMapper objectMapper = RecordOutputWrapper.this.getObjectMapper();
             ObjectNode objectNode = objectMapper.createObjectNode();
             for (Bitemporality bitemporality : this.bitemporalData.keySet()) {
                 if (bitemporality.overlaps(mustOverlap)) {
@@ -383,7 +375,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
         }
 
         public ObjectNode getBase() {
-            ObjectMapper objectMapper = RecordOutputWrapper.this.objectMapper;
+            ObjectMapper objectMapper = RecordOutputWrapper.this.getObjectMapper();
             ObjectNode objectNode = objectMapper.createObjectNode();
             for (String key : this.nontemporalData.keySet()) {
                 this.setValue(objectMapper, objectNode, key, this.nontemporalData.get(key));
@@ -423,7 +415,8 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
     }
 
     public ObjectNode getNode(E record, Bitemporality overlap, Mode mode) {
-        ObjectNode root = this.objectMapper.createObjectNode();
+        System.out.println(this.getObjectMapper());
+        ObjectNode root = this.getObjectMapper().createObjectNode();
         root.put(Identification.IO_FIELD_UUID, record.getIdentification().getUuid().toString());
         root.put(Identification.IO_FIELD_DOMAIN, record.getIdentification().getDomain());
         OutputContainer recordOutput = this.createOutputContainer();
