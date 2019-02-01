@@ -21,7 +21,7 @@ public class ConfigurationSessionManager {
 
     private SessionFactory sessionFactory;
 
-    private Logger log = LogManager.getLogger(ConfigurationSessionManager.class);
+    private static Logger log = LogManager.getLogger(ConfigurationSessionManager.class.getCanonicalName());
 
     private static HashSet<Class> managedClasses = new HashSet<>();
     static {

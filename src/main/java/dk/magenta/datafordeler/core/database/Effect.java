@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import dk.magenta.datafordeler.core.util.Bitemporality;
 import dk.magenta.datafordeler.core.util.Equality;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
 import org.hibernate.Session;
@@ -279,6 +280,21 @@ public abstract class Effect<R extends Registration, V extends Effect, D extends
     public String toCompactString() {
         R registration = this.registration;
         return registration.registrationFrom + "|" + registration.registrationTo + "|" + this.effectFrom + "|" + this.effectTo;
+    }
+
+    public boolean compareRange(V other) {
+        return (other != null && this.compareRange(other.getEffectFrom(), other.getEffectTo()));
+    }
+
+    public boolean compareRange(OffsetDateTime effectFrom, OffsetDateTime effectTo) {
+        return (
+                Equality.equal(this.getEffectFrom(), effectFrom) &&
+                Equality.equal(this.getEffectTo(), effectTo)
+        );
+    }
+
+    public boolean compareRange(Bitemporality bitemporality) {
+        return this.compareRange(bitemporality.effectFrom, bitemporality.effectTo);
     }
 
 }

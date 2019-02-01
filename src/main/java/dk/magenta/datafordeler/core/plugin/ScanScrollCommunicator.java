@@ -2,6 +2,7 @@ package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.util.HttpGetWithEntity;
@@ -68,7 +69,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.uncaughtExceptionHandler = uncaughtExceptionHandler;
     }
 
-    private Logger log = LogManager.getLogger(ScanScrollCommunicator.class);
+    private static Logger log = LogManager.getLogger(ScanScrollCommunicator.class.getCanonicalName());
 
 
     private Pattern emptyResultsPattern = Pattern.compile("\"hits\":\\s*\\[\\s*\\]");
@@ -89,10 +90,11 @@ public class ScanScrollCommunicator extends HttpCommunicator {
     public InputStream fetch(URI initialUri, URI scrollUri, final String body) throws HttpStatusException, DataStreamException, URISyntaxException, IOException {
         CloseableHttpClient httpclient = this.buildClient();
 
-        final URI startUri = new URI(initialUri.getScheme(), initialUri.getUserInfo(), initialUri.getHost(), initialUri.getPort(), initialUri.getPath(), "search_type=scan&scroll=1m", null);
+        final URI startUri = new URI(initialUri.getScheme(), initialUri.getUserInfo(), initialUri.getHost(), initialUri.getPort(), initialUri.getPath(), "search_type=query_then_fetch&scroll=1m", null);
 
         PipedInputStream inputStream = new PipedInputStream(); // Return this one
-        final BufferedOutputStream outputStream = new BufferedOutputStream(new PipedOutputStream(inputStream));
+        BufferedOutputStream outputStream = new BufferedOutputStream(new PipedOutputStream(inputStream));
+        final OutputStreamWriter writer = new OutputStreamWriter(outputStream, "utf-8");
 
         log.info("Streams created");
         Thread fetcher = new Thread(new Runnable() {
@@ -104,6 +106,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
 
                     HttpPost initialPost = new HttpPost(startUri);
                     initialPost.setEntity(new StringEntity(body, "utf-8"));
+                    initialPost.setHeader("Content-Type", "application/json");
                     CloseableHttpResponse response;
                     log.info("Sending initial POST to " + startUri);
                     try {
@@ -114,26 +117,30 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                     }
                     log.info("Initial POST sent");
                     log.info("HTTP status: " + response.getStatusLine().getStatusCode());
-                    InputStream content = response.getEntity().getContent();
+                    String content = InputStreamReader.readInputStream(response.getEntity().getContent());
                     if (response.getStatusLine().getStatusCode() != 200) {
-                        log.error(InputStreamReader.readInputStream(response.getEntity().getContent()));
+                        log.error(content);
                         throw new HttpStatusException(response.getStatusLine(), startUri);
                     }
 
                     responseNode = objectMapper.readTree(content);
+                    writer.append(content);
+                    writer.flush();
 
                     String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
                     while (scrollId != null) {
-                        InputStream getResponseData;
 
                         URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
                         HttpGetWithEntity partialGet = new HttpGetWithEntity(fetchUri);
-                        partialGet.setEntity(new StringEntity(scrollId));
+                        partialGet.setHeader("Content-Type", "application/json");
+                        ObjectNode scrollObject = objectMapper.createObjectNode();
+                        scrollObject.put("scroll", "10m");
+                        scrollObject.put("scroll_id", scrollId);
+                        partialGet.setEntity(new StringEntity(scrollObject.toString()));
                         try {
                             log.info("Sending chunk GET to " + fetchUri);
                             response = httpclient.execute(partialGet);
-                            getResponseData = new BufferedInputStream(response.getEntity().getContent(), 8192);
-
+                            content = InputStreamReader.readInputStream(response.getEntity().getContent());
 
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -141,38 +148,29 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         }
 
                         try {
-                            int peekSize = 1000;
-                            getResponseData.mark(peekSize);
-                            byte[] peekBytes = new byte[peekSize];
-                            getResponseData.read(peekBytes, 0, peekSize);
-                            getResponseData.reset();
 
-                            String peekString = new String(peekBytes, 0, peekSize, "utf-8");
-
-                            Matcher m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(peekString);
+                            Matcher m = ScanScrollCommunicator.this.emptyResultsPattern.matcher(content);
                             if (m.find()) {
                                 log.info("Empty results encountered");
                                 scrollId = null;
                             } else {
-                                m = ScanScrollCommunicator.this.scrollIdPattern.matcher(peekString);
+                                m = ScanScrollCommunicator.this.scrollIdPattern.matcher(content);
                                 if (m.find()) {
                                     scrollId = m.group(1);
                                 } else {
                                     scrollId = null;
                                     log.info("next scrollId not found");
                                 }
-                                IOUtils.copy(getResponseData, outputStream);
+                                writer.append(content);
                             }
 
                         } catch (IOException e) {
                             throw new DataStreamException(e);
-                        } finally {
-                            getResponseData.close();
                         }
 
                         if (scrollId != null) {
                             // There is more data
-                            outputStream.write(delimiter);
+                            writer.append(delimiter);
                             if (throttle > 0) {
                                 try {
                                     log.info("Waiting "+throttle+" milliseconds before next request");
@@ -185,15 +183,15 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             // Reached the end
                             break;
                         }
-
                     }
+                    writer.flush();
                 } catch (DataStreamException | IOException | URISyntaxException | HttpStatusException e) {
                     ScanScrollCommunicator.this.log.error(e);
                     throw new RuntimeException(e);
                 } finally {
                     try {
                         log.info("Closing outputstream");
-                        outputStream.close();
+                        writer.close();
                     } catch (IOException e1) {
                     }
                     ScanScrollCommunicator.this.fetches.remove(inputStream);

@@ -71,7 +71,7 @@ import java.util.stream.Collectors;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DumpTest extends GapiTestBase {
 
-    private Logger log = LogManager.getLogger(this.getClass().getName());
+    private static Logger log = LogManager.getLogger(DumpTest.class.getCanonicalName());
 
     @Autowired
     private PluginManager pluginManager;

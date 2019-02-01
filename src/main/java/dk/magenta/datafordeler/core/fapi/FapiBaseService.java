@@ -14,9 +14,9 @@ import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  * Service container to be subclassed for each Entity class, serving REST and SOAP
  */
 @RequestMapping("/fapi_service_with_no_requestmapping")
-public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Query> {
+public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends BaseQuery> {
 
     @Autowired
     protected ObjectMapper objectMapper;
@@ -105,18 +105,10 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
 
 
     /**
-     * Obtains the Entity class that the service handles.
      * @return Entity subclass
      */
     @WebMethod(exclude = true)
     protected abstract Class<E> getEntityClass();
-
-    /**
-     * Obtains the DataItem class that the service handles.
-     * @return DataItem subclass
-     */
-    @WebMethod(exclude = true)
-    protected abstract Class<? extends DataItem> getDataClass();
 
 
 
@@ -133,9 +125,11 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
     }
 
 
-    private Logger log = LoggerFactory.getLogger(FapiBaseService.class);
+    private Logger log = LogManager.getLogger(FapiBaseService.class.getCanonicalName());
 
-
+    protected OutputWrapper.Mode getDefaultMode() {
+        return OutputWrapper.Mode.RVD;
+    }
 
 
     public String[] getServicePaths() {
@@ -213,7 +207,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             try {
                 List<E> results = this.searchByQuery(query, session);
                 if (this.getOutputWrapper() != null) {
-                    envelope.setResults(this.getOutputWrapper().wrapResults(results, query));
+                    envelope.setResults(this.getOutputWrapper().wrapResults(results, query, this.getDefaultMode()));
                 } else {
                     ArrayNode jacksonConverted = objectMapper.valueToTree(results);
                     ArrayList<Object> wrapper = new ArrayList<>();
@@ -231,9 +225,11 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
                 loggerHelper.logResult(envelope);
 
             } catch (IllegalArgumentException e) {
+                e.printStackTrace();
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
+            this.log.warn("Error in REST getById ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -274,7 +270,8 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             E entity = this.searchById(id, query, session);
 
             sendAsCSV(Stream.of(entity), request, response);
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
+            this.log.warn("Error in REST getRestCsv ("+request.getRequestURI()+")", e);
             throw e;
         } catch (Exception e) {
             e.printStackTrace();
@@ -317,7 +314,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             try {
                 List<E> results = this.searchByQuery(query, session);
                 if (this.getOutputWrapper() != null) {
-                    envelope.setResults(this.getOutputWrapper().wrapResults(results, query));
+                    envelope.setResults(this.getOutputWrapper().wrapResults(results, query, this.getDefaultMode()));
                 } else {
                     ArrayNode jacksonConverted = objectMapper.valueToTree(results);
                     ArrayList<Object> wrapper = new ArrayList<>();
@@ -331,7 +328,8 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             } catch (IllegalArgumentException e) {
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
+            this.log.warn("Error in SOAP getById (id: "+id+", registeringFra: "+registeringFra+", registeringTil: "+registeringTil+")", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -383,7 +381,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             envelope.addRequestData(request);
             List<E> results = this.searchByQuery(query, session);
             if (this.getOutputWrapper() != null) {
-                envelope.setResults(this.getOutputWrapper().wrapResults(results, query));
+                envelope.setResults(this.getOutputWrapper().wrapResults(results, query, query.getMode(this.getDefaultMode())));
             } else {
                 ArrayNode jacksonConverted = objectMapper.valueToTree(results);
                 ArrayList<Object> wrapper = new ArrayList<>();
@@ -394,7 +392,8 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             }
             envelope.close();
             loggerHelper.logResult(envelope, requestParams.toString());
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
+            this.log.warn("Error in REST search ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -433,7 +432,8 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
 
             sendAsCSV(this.searchByQueryAsStream(query, session),
                 request, response);
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
+            this.log.warn("Error in REST CSV search ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -468,13 +468,14 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
             envelope.addRequestData(request);
             List<E> results = this.searchByQuery(query, session);
             if (this.getOutputWrapper() != null) {
-                envelope.setResult(this.getOutputWrapper().wrapResults(results, query));
+                envelope.setResult(this.getOutputWrapper().wrapResults(results, query, query.getMode(this.getDefaultMode())));
             } else {
                 envelope.setResults(results);
             }
             envelope.close();
             loggerHelper.logResult(envelope, query.toString());
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
+            this.log.warn("Error in SOAP search", e);
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
@@ -492,7 +493,6 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
      * @return Query subclass instance
      */
     protected abstract Q getEmptyQuery();
-
 
     /**
      * Parse a map of URL parameters into a Query object of the correct subclass
@@ -521,8 +521,10 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
     @WebMethod(exclude = true) // Non-soap methods must have this
     protected List<E> searchByQuery(Q query, Session session) throws DataFordelerException {
         query.applyFilters(session);
-        return QueryManager.getAllEntities(session, query,
-            this.getEntityClass());
+        return QueryManager.getAllEntities(
+                session, query,
+                this.getEntityClass()
+        );
     }
 
     /**
@@ -536,8 +538,10 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Quer
     protected Stream<E> searchByQueryAsStream(Q query, Session session) throws
         DataFordelerException {
         query.applyFilters(session);
-        return QueryManager.getAllEntitiesAsStream(session, query,
-            this.getEntityClass());
+        return QueryManager.getAllEntitiesAsStream(
+                session, query,
+                this.getEntityClass()
+        );
     }
 
     /**

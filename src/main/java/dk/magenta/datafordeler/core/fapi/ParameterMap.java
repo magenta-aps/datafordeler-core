@@ -18,6 +18,11 @@ public class ParameterMap extends ListHashMap<String, String> {
         super(initial);
     }
 
+    public ParameterMap set(String key, String value) {
+        super.add(key, value);
+        return this;
+    }
+
     public String asUrlParams() {
         StringJoiner sj = new StringJoiner("&");
         for (String key : this.keySet()) {

@@ -4,13 +4,14 @@ import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.io.ImportInputStream;
 import dk.magenta.datafordeler.core.util.CloseDetectInputStream;
+import dk.magenta.datafordeler.core.util.LabeledSequenceInputStream;
 import it.sauronsoftware.ftp4j.*;
 import it.sauronsoftware.ftp4j.connectors.HTTPTunnelConnector;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.StatusLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
@@ -30,7 +31,7 @@ public class FtpCommunicator implements Communicator {
 
     public static final String DONE_FILE_ENDING = ".done";
 
-    private static Logger log = LogManager.getLogger(FtpCommunicator.class);
+    private static Logger log = LogManager.getLogger(FtpCommunicator.class.getCanonicalName());
 
     protected String username;
     protected String password;
@@ -136,6 +137,21 @@ public class FtpCommunicator implements Communicator {
         }
     }
 
+    public ImportInputStream fetchLocal() throws DataStreamException {
+        ArrayList<File> files = new ArrayList<>(Arrays.asList(localCopyFolder.toFile().listFiles()));
+        files.sort(File::compareTo);
+        try {
+            InputStream inputStream = this.buildChainedInputStream(files);
+            if (inputStream != null) {
+                return new ImportInputStream(new CloseDetectInputStream(inputStream), files);
+            } else {
+                return new ImportInputStream(new ByteArrayInputStream("".getBytes()));
+            }
+        } catch (IOException e) {
+            throw new DataStreamException(e);
+        }
+    }
+
     /**
      * Fetches all yet-unfetched files from the folder denoted by the uri.
      */
@@ -159,9 +175,7 @@ public class FtpCommunicator implements Communicator {
                 currentFiles.add(outputFile);
             }
 
-            // ArrayList<File> files = new ArrayList<>(Arrays.asList(localCopyFolder.toFile().listFiles()));
-            // files.sort(File::compareTo);
-            // currentFiles.addAll(files);
+
 
             this.onBeforeBuildStream(ftpClient, currentFiles, uri, downloadPaths);
             InputStream inputStream = this.buildChainedInputStream(currentFiles);
@@ -205,7 +219,7 @@ public class FtpCommunicator implements Communicator {
 
     @Override
     public StatusLine send(URI endpoint, String payload) throws IOException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     public void send(URI endpoint, File payload) throws IOException, DataStreamException {
@@ -248,19 +262,15 @@ public class FtpCommunicator implements Communicator {
         List<File> filesToProcess = new ArrayList<>(files);
         filesToProcess.sort(Comparator.naturalOrder());
 
-        InputStream inputStream = null;
+        List<Pair<String, InputStream>> streams = new Vector<>();
         for (File file : filesToProcess) {
             if (!file.getName().endsWith(DONE_FILE_ENDING)) {
                 Path filePath = Paths.get(file.toURI());
                 InputStream newInputStream = Files.newInputStream(filePath);
-                if (inputStream == null) {
-                    inputStream = newInputStream;
-                } else {
-                    inputStream = new SequenceInputStream(inputStream, newInputStream);
-                }
+                streams.add(Pair.of(file.getName(), newInputStream));
             }
         }
-        return inputStream;
+        return new LabeledSequenceInputStream(streams);
     }
 
     protected List<String> filterFilesToDownload(List<String> paths) throws IOException {

@@ -45,14 +45,18 @@ public class ListChecksumTest extends GapiTestBase {
     public void before() {
         Plugin plugin = this.pluginManager.getPluginForSchema("Postnummer");
         DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
-        registerManager.setPort(this.port);
+        if (registerManager != null) {
+            registerManager.setPort(this.port);
+        }
     }
 
     @After
     public void after() {
         Plugin plugin = this.pluginManager.getPluginForSchema("Postnummer");
         DemoRegisterManager registerManager = (DemoRegisterManager) plugin.getRegisterManager();
-        registerManager.setPort(Application.servicePort);
+        if (registerManager != null) {
+            registerManager.setPort(Application.servicePort);
+        }
     }
 
     @Test

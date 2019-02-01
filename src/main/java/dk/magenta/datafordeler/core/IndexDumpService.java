@@ -5,15 +5,16 @@ import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.AccessDeniedException;
 import dk.magenta.datafordeler.core.exception.AccessRequiredException;
+import dk.magenta.datafordeler.core.exception.InvalidCertificateException;
 import dk.magenta.datafordeler.core.exception.InvalidTokenException;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.role.ReadServiceRole;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +48,7 @@ public class IndexDumpService {
     @Autowired
     private DafoUserManager dafoUserManager;
 
-    private Logger log = LoggerFactory.getLogger("IndexDumpService");
+    private Logger log = LogManager.getLogger(IndexDumpService.class.getCanonicalName());
 
     @PostConstruct
     public void init() {
@@ -83,7 +84,7 @@ public class IndexDumpService {
 
     @RequestMapping(path="list", produces="text/html")
     public ModelAndView html(HttpServletRequest request)
-        throws InvalidTokenException, AccessRequiredException {
+            throws InvalidTokenException, AccessRequiredException, AccessDeniedException, InvalidCertificateException {
 
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);
@@ -121,7 +122,7 @@ public class IndexDumpService {
     public void get(@PathVariable Long id,
         HttpServletRequest request,
         HttpServletResponse response)
-        throws InvalidTokenException, AccessDeniedException, AccessRequiredException, IOException {
+            throws InvalidTokenException, AccessDeniedException, AccessRequiredException, IOException, InvalidCertificateException {
         Map<String, Object> filter = new HashMap<>();
         filter.put("id", id);
 
@@ -132,7 +133,7 @@ public class IndexDumpService {
     public void get(@PathVariable String name,
         HttpServletRequest request,
         HttpServletResponse response)
-        throws InvalidTokenException, AccessDeniedException, AccessRequiredException, IOException {
+            throws InvalidTokenException, AccessDeniedException, AccessRequiredException, IOException, InvalidCertificateException {
         Map<String, Object> filter = new HashMap<>();
         filter.put("name", name);
 
@@ -141,7 +142,7 @@ public class IndexDumpService {
 
     private void getDump(HttpServletRequest request,
         HttpServletResponse response, Map<String, Object> filter)
-        throws InvalidTokenException, AccessDeniedException, AccessRequiredException, IOException {
+            throws InvalidTokenException, AccessDeniedException, AccessRequiredException, IOException, InvalidCertificateException {
         DafoUserDetails user = dafoUserManager.getUserFromRequest(request);
         Session session = sessionManager.getSessionFactory().openSession();
         LoggerHelper loggerHelper = new LoggerHelper(log, request, user);

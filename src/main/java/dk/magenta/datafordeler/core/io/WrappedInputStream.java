@@ -11,6 +11,10 @@ public class WrappedInputStream extends InputStream {
         this.inner = inner;
     }
 
+    public InputStream getInner() {
+        return this.inner;
+    }
+
     @Override
     public int read() throws IOException {
         return this.inner.read();

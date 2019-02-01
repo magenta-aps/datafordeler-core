@@ -1,8 +1,9 @@
 package dk.magenta.datafordeler.core;
 
-import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.fapi.FapiBaseService;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
+import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class PluginManager {
 
     private HashMap<String, Plugin> pluginsByName= new HashMap<>();
 
-    private Logger log = LogManager.getLogger(PluginManager.class);
+    private static Logger log = LogManager.getLogger(PluginManager.class.getCanonicalName());
 
     private List<PluginManagerCallbackHandler> postConstructCallbackHandlers = new ArrayList<>();
 
@@ -104,11 +105,14 @@ public class PluginManager {
 
     public Plugin getPluginForServicePath(String path) {
         for (Plugin plugin : this.plugins) {
-            for (EntityManager entityManager : plugin.getRegisterManager().getEntityManagers()) {
-                FapiService restService = entityManager.getEntityService();
-                for (String servicePath : restService.getServicePaths()) {
-                    if (path.startsWith(servicePath)) {
-                        return plugin;
+            RegisterManager registerManager = plugin.getRegisterManager();
+            if (registerManager != null) {
+                for (EntityManager entityManager : registerManager.getEntityManagers()) {
+                    FapiBaseService restService = entityManager.getEntityService();
+                    for (String servicePath : restService.getServicePaths()) {
+                        if (path.startsWith(servicePath)) {
+                            return plugin;
+                        }
                     }
                 }
             }

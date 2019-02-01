@@ -56,7 +56,9 @@ public class IndexTest {
         Assert.assertEquals("postnummer", serviceDescriptor.getServiceName());
         HashMap<String, String> mappedFields = new HashMap<>();
         for (ServiceDescriptor.ServiceQueryField queryField : serviceDescriptor.getFields()) {
-            mappedFields.put(queryField.name, queryField.type);
+            for (String name : queryField.names) {
+                mappedFields.put(name, queryField.type);
+            }
         }
         Assert.assertEquals("int", mappedFields.get("postnr"));
         Assert.assertEquals("boolean", mappedFields.get("aktiv"));
@@ -78,7 +80,9 @@ public class IndexTest {
         Assert.assertEquals("postnummer", serviceDescriptor.getServiceName());
         mappedFields = new HashMap<>();
         for (ServiceDescriptor.ServiceQueryField queryField : serviceDescriptor.getFields()) {
-            mappedFields.put(queryField.name, queryField.type);
+            for (String name : queryField.names) {
+                mappedFields.put(name, queryField.type);
+            }
         }
         Assert.assertEquals("int", mappedFields.get("postnr"));
         Assert.assertEquals("boolean", mappedFields.get("aktiv"));
@@ -112,7 +116,10 @@ public class IndexTest {
             JsonNode queryFieldNode = queryFieldNodes.next();
             Assert.assertTrue(queryFieldNode instanceof ObjectNode);
             ObjectNode queryFieldObjectNode = (ObjectNode) queryFieldNode;
-            mappedFields.put(queryFieldObjectNode.get("name").textValue(), queryFieldObjectNode.get("type").textValue());
+            ArrayNode namesNode = (ArrayNode) queryFieldObjectNode.get("names");
+            for (JsonNode nameNode : namesNode) {
+                mappedFields.put(nameNode.textValue(), queryFieldObjectNode.get("type").textValue());
+            }
         }
         Assert.assertEquals("int", mappedFields.get("postnr"));
         Assert.assertEquals("boolean", mappedFields.get("aktiv"));
@@ -163,9 +170,13 @@ public class IndexTest {
                 Assert.assertNotNull(queryField);
                 Assert.assertTrue(queryField instanceof ObjectNode);
                 ObjectNode queryFieldObject = (ObjectNode) queryField;
-                Assert.assertNotNull(queryFieldObject.get("name"));
+                Assert.assertNotNull(queryFieldObject.get("names"));
                 Assert.assertNotNull(queryFieldObject.get("type"));
-                queryFieldMap.put(queryFieldObject.get("name").textValue(), queryFieldObject.get("type").textValue());
+                ArrayNode nameNodes = (ArrayNode) queryFieldObject.get("names");
+                for (JsonNode name : nameNodes) {
+                    queryFieldMap.put(name.textValue(), queryFieldObject.get("type").textValue());
+                }
+
             }
             Assert.assertEquals("string", queryFieldMap.get("registrationFrom"));
             Assert.assertEquals("string", queryFieldMap.get("registrationTo"));

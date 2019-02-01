@@ -8,6 +8,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface QueryField {
+
+    public static final String EMPTY = "";
+
     enum FieldType {
         STRING, INT, LONG, BOOLEAN
     }
@@ -17,5 +20,7 @@ public @interface QueryField {
      * The querystring name used when querying this field.
      * @return
      */
-    String queryName();
+    String queryName() default EMPTY;
+
+    String[] queryNames() default {};
 }

@@ -3,27 +3,34 @@ package dk.magenta.datafordeler.core.fapi;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.magenta.datafordeler.core.plugin.Plugin;
+import dk.magenta.datafordeler.core.util.StringJoiner;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public abstract class ServiceDescriptor {
 
     public class ServiceQueryField {
-        public String name;
+
+        @JsonProperty
+        public ArrayList<String> names = new ArrayList<>();
+
+        @JsonProperty
         public String type;
+
+        public String namesAsString() {
+            return new StringJoiner("|", "[", "]").addAll(this.names).toString();
+        }
+
     }
 
     private Plugin plugin;
     private String serviceName;
     private String serviceAddress;
-    private Class<? extends Query> queryClass;
+    private Class<? extends BaseQuery> queryClass;
 
 
-    public ServiceDescriptor(Plugin plugin, String serviceName, String serviceAddress, Class<? extends Query> queryClass) {
+    public ServiceDescriptor(Plugin plugin, String serviceName, String serviceAddress, Class<? extends BaseQuery> queryClass) {
         this.plugin = plugin;
         this.serviceName = serviceName;
         if (serviceAddress.endsWith("/")) {
@@ -59,12 +66,19 @@ public abstract class ServiceDescriptor {
     @JsonProperty(value = "search_queryfields")
     public List<ServiceQueryField> getFields() {
         ArrayList<ServiceQueryField> fields = new ArrayList<>();
-        for (Field field : getAllFields(this.queryClass)) {
-            QueryField qf = field.getAnnotation(QueryField.class);
-            ServiceQueryField queryField = new ServiceQueryField();
-            queryField.name = qf.queryName();
-            queryField.type = qf.type().name().toLowerCase();
-            fields.add(queryField);
+        for (Class queryClass = this.queryClass; queryClass != null; queryClass = queryClass.getSuperclass()) {
+            for (Field field : getAllFields(queryClass)) {
+                QueryField qf = field.getAnnotation(QueryField.class);
+                ServiceQueryField queryField = new ServiceQueryField();
+                if (!QueryField.EMPTY.equals(qf.queryName())) {
+                    queryField.names.add(qf.queryName());
+                }
+                if (qf.queryNames().length > 0) {
+                    queryField.names.addAll(Arrays.asList(qf.queryNames()));
+                }
+                queryField.type = qf.type().name().toLowerCase();
+                fields.add(queryField);
+            }
         }
         return fields;
     }

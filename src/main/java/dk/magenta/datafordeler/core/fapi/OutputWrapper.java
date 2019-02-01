@@ -10,13 +10,27 @@ import java.util.List;
 
 public abstract class OutputWrapper<E extends IdentifiedEntity> {
 
-    public abstract Object wrapResult(E input, Query query);
-    
-    public final List<Object> wrapResults(Collection<E> input, Query query) {
+    public enum Mode {
+        RVD,
+        RDV,
+        DRV,
+        LEGACY
+    }
+
+    // Override either of these
+    public Object wrapResult(E input, BaseQuery query) {
+        return null;
+    }
+
+    public Object wrapResult(E input, BaseQuery query, Mode mode) {
+        return this.wrapResult(input, query);
+    }
+
+    public final List<Object> wrapResults(Collection<E> input, BaseQuery query, Mode mode) {
             ArrayList<Object> result = new ArrayList<>();
         for (E item : input) {
             if (item != null) {
-                result.add(wrapResult(item, query));
+                result.add(this.wrapResult(item, query, mode));
             }
         }
         return result;

@@ -49,4 +49,6 @@ public abstract class UserQueryManager {
   public abstract void insertAreaRestrictionType(AreaRestrictionType areaRestrictionType);
 
   public abstract void insertAreaRestriction(AreaRestriction areaRestriction);
+
+  public abstract void checkConnection();
 }

@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Primary;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -59,15 +60,15 @@ public class ObjectMapperConfiguration {
 
 
     /**
-     * Creates a module to serialize and deserialize objects of type "java.time.OffsetDateTime"
+     * Creates a module to serialize and deserialize objects of type "java.time.LocalDate"
      * @return The created module
      */
     private SimpleModule getLocalDateModule() {
         SimpleModule dateModule = new SimpleModule();
         dateModule.addSerializer(LocalDate.class, new JsonSerializer<LocalDate>() {
             @Override
-            public void serialize(LocalDate offsetDateTime, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-                jsonGenerator.writeString(DateTimeFormatter.ISO_LOCAL_DATE.format(offsetDateTime));
+            public void serialize(LocalDate localDate, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+                jsonGenerator.writeString(DateTimeFormatter.ISO_LOCAL_DATE.format(localDate));
             }
         });
         dateModule.addDeserializer(LocalDate.class, new JsonDeserializer<LocalDate>() {
@@ -87,6 +88,36 @@ public class ObjectMapperConfiguration {
         return dateModule;
     }
 
+
+    /**
+     * Creates a module to serialize and deserialize objects of type "java.time.LocalDateTime"
+     * @return The created module
+     */
+    private SimpleModule getLocalDateTimeModule() {
+        SimpleModule dateModule = new SimpleModule();
+        dateModule.addSerializer(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+            @Override
+            public void serialize(LocalDateTime localDateTime, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+                jsonGenerator.writeString(DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(localDateTime));
+            }
+        });
+        dateModule.addDeserializer(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
+            @Override
+            public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+                if (jsonParser.getCurrentToken() == JsonToken.START_OBJECT) {
+                    jsonParser.nextToken();
+                }
+                String tokenValue = jsonParser.getValueAsString();
+                if (tokenValue != null) {
+                    return LocalDateTime.from(DateTimeFormatter.ISO_LOCAL_DATE_TIME.parse(tokenValue));
+                } else {
+                    return null;
+                }
+            }
+        });
+        return dateModule;
+    }
+
     /**
      * ObjectMapper configuration; add serializers here
      */
@@ -96,9 +127,11 @@ public class ObjectMapperConfiguration {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, indent);
+        objectMapper.enable(JsonParser.Feature.ALLOW_TRAILING_COMMA);
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.registerModule(this.getOffsetDateTimeModule());
         objectMapper.registerModule(this.getLocalDateModule());
+        objectMapper.registerModule(this.getLocalDateTimeModule());
         return objectMapper;
     }
 

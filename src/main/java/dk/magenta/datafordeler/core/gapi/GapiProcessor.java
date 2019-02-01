@@ -30,7 +30,7 @@ public class GapiProcessor implements EntityProcessor {
     private OData oData;
     private Edm edm;
     private Engine engine;
-    private Logger log = LogManager.getLogger(GapiProcessor.class);
+    private static Logger log = LogManager.getLogger(GapiProcessor.class.getCanonicalName());
 
     public GapiProcessor(Edm edm, Engine engine) {
         this.edm = edm;

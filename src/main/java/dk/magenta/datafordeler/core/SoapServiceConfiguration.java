@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core;
 
 import dk.magenta.datafordeler.core.exception.InvalidServiceOwnerDefinitionException;
+import dk.magenta.datafordeler.core.fapi.FapiBaseService;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.fapi.SoapHandler;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
@@ -26,7 +27,7 @@ public class SoapServiceConfiguration {
     @Autowired
     PluginManager pluginManager;
 
-    private Logger log = LogManager.getLogger(Application.class);
+    private static Logger log = LogManager.getLogger(Application.class.getCanonicalName());
 
     private final Pattern ownerValidation = Pattern.compile("^[a-zA-Z0-9_]+$");
 
@@ -55,30 +56,33 @@ public class SoapServiceConfiguration {
         List<String> serviceOwnerMatchers = new ArrayList<>();
 
         for (Plugin plugin : pluginManager.getPlugins()) {
-
             RegisterManager registerManager = plugin.getRegisterManager();
-            this.log.info("Handling plugin "+plugin.getName()+" with "+registerManager.getEntityManagers().size()+" EntityManagers");
-            String serviceOwner = plugin.getServiceOwner();
-            this.log.info("Service owner for " + plugin.getClass().getCanonicalName() + " is " + serviceOwner);
-            if (!ownerValidation.matcher(serviceOwner).matches()) {
-                this.log.error("Invalid service owner: " + serviceOwner);
-                throw new InvalidServiceOwnerDefinitionException(plugin, serviceOwner, this.ownerValidation);
-            }
-            for (EntityManager entityManager : registerManager.getEntityManagers()) {
-                FapiService service = entityManager.getEntityService();
-                String base = "/" + serviceOwner + "/" + service.getServiceName() + "/" + service.getVersion();
+            if (registerManager != null) {
+                this.log.info("Handling plugin " + plugin.getName() + " with " + registerManager.getEntityManagers().size() + " EntityManagers");
+                String serviceOwner = plugin.getServiceOwner();
+                this.log.info("Service owner for " + plugin.getClass().getCanonicalName() + " is " + serviceOwner);
+                if (!ownerValidation.matcher(serviceOwner).matches()) {
+                    this.log.error("Invalid service owner: " + serviceOwner);
+                    throw new InvalidServiceOwnerDefinitionException(plugin, serviceOwner, this.ownerValidation);
+                }
+                for (EntityManager entityManager : registerManager.getEntityManagers()) {
+                    FapiBaseService service = entityManager.getEntityService();
+                    if (service != null) {
+                        String base = "/" + serviceOwner + "/" + service.getServiceName() + "/" + service.getVersion();
 
-                // SOAP
-                this.log.info("Setting up SOAP handler on " + base + "/soap");
-                JaxWsServerFactoryBean serverFactoryBean = new JaxWsServerFactoryBean();
-                serverFactoryBean.setBus(bus);
-                serverFactoryBean.setAddress(base + "/soap");
-                serviceOwnerMatchers.add(base + "/soap");
-                serverFactoryBean.setServiceBean(service);
+                        // SOAP
+                        this.log.info("Setting up SOAP handler on " + base + "/soap");
+                        JaxWsServerFactoryBean serverFactoryBean = new JaxWsServerFactoryBean();
+                        serverFactoryBean.setBus(bus);
+                        serverFactoryBean.setAddress(base + "/soap");
+                        serviceOwnerMatchers.add(base + "/soap");
+                        serverFactoryBean.setServiceBean(service);
 
-                serverFactoryBean.addHandlers(Collections.singletonList(new SoapHandler()));
-                serverFactoryBean.create();
-                this.serverBeans.add(serverFactoryBean);
+                        serverFactoryBean.addHandlers(Collections.singletonList(new SoapHandler()));
+                        serverFactoryBean.create();
+                        this.serverBeans.add(serverFactoryBean);
+                    }
+                }
             }
         }
 

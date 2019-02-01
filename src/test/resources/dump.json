@@ -24,8 +24,8 @@
         }
       } ]
     } ],
-    "UUID" : "00000000-0000-0000-0000-000000003900",
-    "domaene" : "http://example.com"
+    "uuid" : "00000000-0000-0000-0000-000000003900",
+    "domain" : "http://example.com"
   }, {
     "registreringer" : [ {
       "sekvensnummer" : 0,
@@ -44,7 +44,7 @@
         }
       } ]
     } ],
-    "UUID" : "00000000-0000-0000-0000-000000003992",
-    "domaene" : "http://example.com"
+    "uuid" : "00000000-0000-0000-0000-000000003992",
+    "domain" : "http://example.com"
   } ]
 }

@@ -2,10 +2,11 @@ package dk.magenta.datafordeler.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import dk.magenta.datafordeler.core.fapi.FapiService;
+import dk.magenta.datafordeler.core.fapi.FapiBaseService;
 import dk.magenta.datafordeler.core.fapi.ServiceDescriptor;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.Plugin;
+import dk.magenta.datafordeler.core.plugin.RegisterManager;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.cxf.jaxws.JaxWsServerFactoryBean;
@@ -43,19 +44,26 @@ public class IndexService {
 
             @Override
             public void executePluginManagerCallback(PluginManager pluginManager) {
-                HashMap<String, Pair<FapiService, Boolean>> serviceMap = new HashMap<>();
-
+                HashMap<String, Pair<FapiBaseService, Boolean>> serviceMap = new HashMap<>();
                 for (Plugin plugin : pluginManager.getPlugins()) {
-                    for (EntityManager entityManager : plugin.getRegisterManager().getEntityManagers()) {
-                        FapiService restService = entityManager.getEntityService();
-                        for (String servicePath : restService.getServicePaths()) {
-                            serviceMap.put(servicePath, new ImmutablePair<>(restService, false));
+                    RegisterManager registerManager = plugin.getRegisterManager();
+                    if (registerManager != null) {
+                        for (EntityManager entityManager : registerManager.getEntityManagers()) {
+                            FapiBaseService restService = entityManager.getEntityService();
+                            if (restService != null) {
+                                String[] servicePaths = restService.getServicePaths();
+                                if (servicePaths != null) {
+                                    for (String servicePath : servicePaths) {
+                                        serviceMap.put(servicePath, new ImmutablePair<>(restService, false));
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
                 for (JaxWsServerFactoryBean soapServiceBean : soapServiceConfiguration.getServerBeans()) {
-                    FapiService soapService = (FapiService) soapServiceBean.getServiceBean();
+                    FapiBaseService soapService = (FapiBaseService) soapServiceBean.getServiceBean();
                     serviceMap.put(soapServiceBean.getAddress(), new ImmutablePair<>(soapService, true));
                 }
 
@@ -68,8 +76,8 @@ public class IndexService {
                 Collections.sort(servicePaths);
 
                 for (String servicePath : servicePaths) {
-                    Pair<FapiService, Boolean> mapEntry = serviceMap.get(servicePath);
-                    FapiService service = mapEntry.getLeft();
+                    Pair<FapiBaseService, Boolean> mapEntry = serviceMap.get(servicePath);
+                    FapiBaseService service = mapEntry.getLeft();
                     boolean isSoap = mapEntry.getRight();
                     ServiceDescriptor serviceDescriptor = service.getServiceDescriptor(servicePath, isSoap);
                     if (serviceDescriptor != null) {

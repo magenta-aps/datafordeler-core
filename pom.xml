@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
-        <jackson.version>2.8.6</jackson.version>
+        <jackson.version>2.9.5</jackson.version>
         <junit.version>LATEST</junit.version>
         <spring.version>4.3.6.RELEASE</spring.version>
         <spring.boot.version>1.5.2.RELEASE</spring.boot.version>
@@ -28,8 +28,8 @@
             <url>http://central.maven.org/maven2/</url>
         </repository>
         <repository>
-            <id>novus</id>
-            <url>http://repo.novus.com/releases/</url>
+            <id>local-repo</id>
+            <url>file://${project.basedir}/src/main/resources/repo</url>
         </repository>
     </repositories>
 
@@ -75,8 +75,20 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-c3p0</artifactId>
-            <version>5.1.10.Final</version>
+            <version>5.2.10.Final</version>
         </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-spatial</artifactId>
+            <version>5.2.10.Final</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
 
         <!-- Spring -->
         <dependency>
@@ -123,32 +135,32 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>RELEASE</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>RELEASE</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>RELEASE</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>RELEASE</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-csv</artifactId>
-            <version>RELEASE</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>RELEASE</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
@@ -164,6 +176,11 @@
             <groupId>com.fasterxml.woodstox</groupId>
             <artifactId>woodstox-core</artifactId>
             <version>5.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>de.grundid.opendatalab</groupId>
+            <artifactId>geojson-jackson</artifactId>
+            <version>1.8</version>
         </dependency>
 
         <!-- Apache HttpComponents -->
@@ -197,12 +214,21 @@
             <artifactId>spring-boot-starter-log4j2</artifactId>
             <version>${spring.boot.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-web</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+
         <!-- needed for logging on windows -->
+        <!--
         <dependency>
             <groupId>org.dblock.log4jna</groupId>
             <artifactId>log4jna-api</artifactId>
             <version>2.0</version>
         </dependency>
+        -->
 
         <!-- Apache CXF (fapi) -->
         <dependency>
@@ -276,20 +302,6 @@
             <version>6.1.0.jre8</version>
         </dependency>
 
-        <dependency>
-            <groupId>net.sourceforge.cobertura</groupId>
-            <artifactId>cobertura</artifactId>
-            <version>RELEASE</version>
-            <scope>test</scope>
-            <exclusions>
-                <!-- Avoid logging framework collision -->
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- Thymeleaf -->
         <dependency>
             <groupId>org.thymeleaf</groupId>
@@ -307,6 +319,38 @@
             <groupId>it.sauronsoftware</groupId>
             <artifactId>ftp4j</artifactId>
             <version>1.6</version>
+        </dependency>
+
+
+
+        <!-- For converting excel spreadsheets -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>3.14</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.14</version>
+        </dependency>
+
+        <!-- For converting odf spreadsheets -->
+        <dependency>
+            <groupId>org.apache.odftoolkit</groupId>
+            <artifactId>odfdom-java</artifactId>
+            <version>0.8.10-incubating</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.odftoolkit</groupId>
+            <artifactId>simple-odf</artifactId>
+            <version>0.8.1-incubating</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jopendocument</groupId>
+            <artifactId>jOpenDocument</artifactId>
+            <version>1.3</version>
         </dependency>
 
     </dependencies>

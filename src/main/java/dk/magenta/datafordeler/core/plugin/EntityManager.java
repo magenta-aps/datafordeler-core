@@ -6,6 +6,7 @@ import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.FailedReferenceException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.core.exception.WrongSubclassException;
+import dk.magenta.datafordeler.core.fapi.FapiBaseService;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
@@ -76,7 +77,7 @@ public abstract class EntityManager {
      * Plugins must return an instance of a FapiService subclass from this method
      * @return
      */
-    public abstract FapiService getEntityService();
+    public abstract FapiBaseService getEntityService();
 
 
 
@@ -107,7 +108,7 @@ public abstract class EntityManager {
      * @return
      * @throws IOException
      */
-    public int sendReceipt(Receipt receipt) throws IOException {
+    public int sendReceipt(Receipt receipt) throws IOException, DataFordelerException {
         ObjectMapper objectMapper = this.getObjectMapper();
         URI receiptEndpoint = this.getReceiptEndpoint(receipt);
         if (receiptEndpoint != null) {
@@ -131,7 +132,7 @@ public abstract class EntityManager {
             int statuscode = 0;
             try {
                 statuscode = this.sendReceipt(receipt);
-            } catch (IOException e) {
+            } catch (DataFordelerException | IOException e) {
                 // What to do here?
             }
             responses.put(receipt, statuscode);

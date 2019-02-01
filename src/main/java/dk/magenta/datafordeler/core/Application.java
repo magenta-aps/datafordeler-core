@@ -48,7 +48,7 @@ public class Application {
     @Autowired
     SessionManager sessionManager;
 
-    private static Logger log = LogManager.getLogger(Application.class);
+    private static Logger log = LogManager.getLogger(Application.class.getCanonicalName());
 
     public static final int servicePort = 8445;
 
@@ -85,6 +85,7 @@ public class Application {
         try {
             SpringApplication.run(Application.class, args);
         } catch (Throwable e) {
+            e.printStackTrace();
             while (e != null) {
                 if (e instanceof com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) {
                     log.error(((com.sun.xml.bind.v2.runtime.IllegalAnnotationsException) e).getErrors());

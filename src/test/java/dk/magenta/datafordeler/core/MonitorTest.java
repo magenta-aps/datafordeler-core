@@ -34,7 +34,7 @@ public class MonitorTest {
     @Autowired
     private Engine engine;
 
-    private Logger log = LogManager.getLogger(MonitorTest.class);
+    private static Logger log = LogManager.getLogger(MonitorTest.class.getCanonicalName());
 
     @Test
     public void testDatabaseMonitoring() {
@@ -42,7 +42,6 @@ public class MonitorTest {
         ResponseEntity<String> response = this.restTemplate.exchange("/monitor/database", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
-
 
     @Test
     @Ignore
@@ -58,7 +57,11 @@ public class MonitorTest {
         ResponseEntity<String> response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(response.getBody(), HttpStatus.OK, response.getStatusCode());
 
-        log.error(new NullPointerException());
+        log.info("testing");
+        response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        log.error(new NullPointerException().toString());
         response = this.restTemplate.exchange("/monitor/errors", HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }

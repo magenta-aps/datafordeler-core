@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class TaskListener implements JobListener {
 
-    private Logger log = LogManager.getLogger(this.getClass());
+    private static Logger log = LogManager.getLogger(TaskListener.class.getCanonicalName());
     private String name;
 
     public enum Event {
