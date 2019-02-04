@@ -16,10 +16,9 @@ import dk.magenta.datafordeler.core.user.DafoUserManager;
 import dk.magenta.datafordeler.core.user.UserProfile;
 import dk.magenta.datafordeler.plugindemo.DemoPlugin;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
-import dk.magenta.datafordeler.plugindemo.model.DemoData;
-import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
+import dk.magenta.datafordeler.plugindemo.model.DemoDataRecord;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
-import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.Session;
@@ -255,9 +254,10 @@ public class FapiTest {
             JsonNode jsonBody = objectMapper.readTree(resp.getBody());
 
 
+            System.out.println("jsonBody: "+objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonBody));
+
             Assert.assertNotNull(jsonBody);
 
-            Assert.assertEquals("fapitest", jsonBody.findValue("domain").asText());
             JsonNode firstResult = jsonBody.get("results").get(0);
             System.out.println(firstResult);
             Assert.assertEquals(uuid.toString(), firstResult.findValue("uuid").asText());
@@ -271,12 +271,10 @@ public class FapiTest {
             JsonNode registration1 = registrations.get(0);
             Assert.assertNotNull(registration1);
 
-            Assert.assertEquals(1, registration1.get("sekvensnummer").asInt());
             Assert.assertTrue(OffsetDateTime.parse("2017-02-21T16:02:50+01:00").isEqual(OffsetDateTime.parse(registration1.get("registreringFra").asText())));
 
             JsonNode registration2 = registrations.get(1);
             Assert.assertNotNull(registration2);
-            Assert.assertEquals(2, registration2.get("sekvensnummer").asInt());
             Assert.assertTrue(OffsetDateTime.parse("2017-05-01T16:06:22+02:00").isEqual(OffsetDateTime.parse(registration2.get("registreringFra").asText())));
             Assert.assertTrue(registration2.get("registreringTil").isNull());
 
@@ -743,47 +741,39 @@ public class FapiTest {
 
     private UUID addTestObject() throws DataFordelerException {
         UUID uuid = UUID.randomUUID();
-        DemoEntity demoEntity = new DemoEntity();
-        demoEntity.setUUID(uuid);
-        demoEntity.setDomain("fapitest");
-
-
-        DemoRegistration demoRegistration = new DemoRegistration();
-        demoRegistration.setRegistrationFrom(OffsetDateTime.parse("2017-02-21T16:02:50+01:00"));
-        demoRegistration.setRegistrationTo(OffsetDateTime.parse("2017-05-01T15:06:22+01:00"));
-        demoRegistration.setRegisterChecksum(UUID.randomUUID().toString());
-        demoRegistration.setSequenceNumber(1);
-        DemoEffect demoEffect = new DemoEffect(demoRegistration, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        DemoData demoData = new DemoData(8000, "Århus C");
-        demoData.addEffect(demoEffect);
-        DemoEffect demoEffect2 = new DemoEffect(demoRegistration, "2018-01-01T00:00:00+01:00", null);
-        DemoData demoData2 = new DemoData(8000, "AArhus C");
-        demoData2.addEffect(demoEffect2);
-
-        DemoRegistration demoRegistration2 = new DemoRegistration();
-        demoRegistration2.setRegistrationFrom(OffsetDateTime.parse("2017-05-01T15:06:22+01:00"));
-        demoRegistration2.setRegistrationTo(null);
-        demoRegistration2.setRegisterChecksum(UUID.randomUUID().toString());
-        demoRegistration2.setSequenceNumber(2);
-        DemoEffect demoEffect3 = new DemoEffect(demoRegistration2, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
-        DemoData demoData3 = new DemoData(8000, "Århus C");
-        demoData3.addEffect(demoEffect3);
-        DemoEffect demoEffect4 = new DemoEffect(demoRegistration2, "2018-01-01T00:00:00+01:00", null);
-        DemoData demoData4 = new DemoData(8000, "Aarhus C");
-        demoData4.addEffect(demoEffect4);
-
         Session session = sessionManager.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         try {
-            QueryManager.saveRegistration(session, demoEntity, demoRegistration);
-            QueryManager.saveRegistration(session, demoEntity, demoRegistration2);
-            try {
-                transaction.commit();
-            } catch (Exception e) {
-            }
+
+            DemoEntityRecord demoEntityRecord = new DemoEntityRecord(uuid, "fapitest");
+            demoEntityRecord.setPostnr(8000);
+            session.saveOrUpdate(demoEntityRecord);
+
+            DemoDataRecord demoDataRecord1 = new DemoDataRecord("Århus C");
+            demoDataRecord1.setBitemporality("2017-02-21T16:02:50+01:00", "2017-05-01T15:06:22+01:00", "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+            demoEntityRecord.addBitemporalRecord(demoDataRecord1, session);
+
+            DemoDataRecord demoDataRecord2 = new DemoDataRecord("AArhus C");
+            demoDataRecord2.setBitemporality("2017-02-21T16:02:50+01:00", "2017-05-01T15:06:22+01:00", "2018-01-01T00:00:00+01:00", null);
+            demoEntityRecord.addBitemporalRecord(demoDataRecord2, session);
+
+            DemoDataRecord demoDataRecord3 = new DemoDataRecord("Århus C");
+            demoDataRecord3.setBitemporality("2017-05-01T15:06:22+01:00", null, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
+            demoEntityRecord.addBitemporalRecord(demoDataRecord3, session);
+
+            DemoDataRecord demoDataRecord4 = new DemoDataRecord("Aarhus C");
+            demoDataRecord4.setBitemporality("2017-05-01T15:06:22+01:00", null, "2018-01-01T00:00:00+01:00", null);
+            demoEntityRecord.addBitemporalRecord(demoDataRecord4, session);
+
+            transaction.commit();
+
+        } catch (Exception e) {
+            transaction.rollback();
+            throw e;
         } finally {
             session.close();
         }
+
         return uuid;
     }
 
@@ -791,8 +781,10 @@ public class FapiTest {
         Session session = sessionManager.getSessionFactory().openSession();
         try {
             Transaction transaction = session.beginTransaction();
-            DemoEntity entity = QueryManager.getEntity(session, uuid, DemoEntity.class);
-            session.delete(entity);
+            DemoEntityRecord entity = QueryManager.getEntity(session, uuid, DemoEntityRecord.class);
+            if (entity != null) {
+                session.delete(entity);
+            }
             transaction.commit();
             System.out.println("Test object " + uuid.toString() + " removed");
         } finally {

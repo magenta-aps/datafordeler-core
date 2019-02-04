@@ -8,7 +8,7 @@ import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.HttpStatusException;
 import dk.magenta.datafordeler.plugindemo.DemoPlugin;
-import dk.magenta.datafordeler.plugindemo.fapi.helloworld.v1.DemoEntityService;
+import dk.magenta.datafordeler.plugindemo.fapi.DemoEntityService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

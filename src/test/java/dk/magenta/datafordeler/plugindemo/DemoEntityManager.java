@@ -1,6 +1,5 @@
 package dk.magenta.datafordeler.plugindemo;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Application;
@@ -10,6 +9,7 @@ import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.ParseException;
 import dk.magenta.datafordeler.core.exception.WrongSubclassException;
+import dk.magenta.datafordeler.core.fapi.FapiBaseService;
 import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
@@ -18,7 +18,7 @@ import dk.magenta.datafordeler.core.plugin.Communicator;
 import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.HttpCommunicator;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
-import dk.magenta.datafordeler.plugindemo.fapi.helloworld.v1.DemoEntityService;
+import dk.magenta.datafordeler.plugindemo.fapi.DemoEntityService;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityReference;
 import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
@@ -104,7 +104,7 @@ public class DemoEntityManager extends EntityManager {
     }
 
     @Override
-    public FapiService getEntityService() {
+    public FapiBaseService getEntityService() {
         return this.demoEntityService;
     }
 
@@ -156,31 +156,27 @@ public class DemoEntityManager extends EntityManager {
 
     /** Registration parsing **/
 
-    public List<Registration> parseData(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {
+    public List<? extends Registration> parseData(InputStream registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         try {
-            return this.parseData(objectMapper.readTree(registrationData), importMetadata);
+            this.parseData(objectMapper.readTree(registrationData), importMetadata);
         } catch (IOException e) {
             throw new DataStreamException(e);
         }
+        return null;
     }
 
     @Override
     public List<? extends Registration> parseData(PluginSourceData registrationData, ImportMetadata importMetadata) throws DataFordelerException {
         try {
-            return this.parseData(objectMapper.readTree(registrationData.getData()), importMetadata);
+            this.parseData(objectMapper.readTree(registrationData.getData()), importMetadata);
         } catch (IOException e) {
             throw new DataStreamException(e);
         }
+        return null;
     }
 
-    public List<Registration> parseData(JsonNode jsonNode, ImportMetadata importMetadata) throws ParseException {
-        try {
-            Registration r = this.objectMapper.treeToValue(jsonNode, this.managedRegistrationClass);
-            r.setLastImportTime();
-            return Collections.singletonList(r);
-        } catch (JsonProcessingException e) {
-            throw new ParseException(e.getMessage());
-        }
+    public void parseData(JsonNode jsonNode, ImportMetadata importMetadata) throws ParseException {
+        System.out.println("parse this: "+jsonNode.toString());
     }
 
     public List<Registration> parseData(String registrationData, String charsetName) throws DataFordelerException {
@@ -223,5 +219,8 @@ public class DemoEntityManager extends EntityManager {
         }*/
         return ItemInputStream.parseJsonStream(responseContent, DemoEntityReference.class, "items", this.objectMapper);
     }
+
+
+
 
 }

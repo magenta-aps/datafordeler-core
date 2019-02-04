@@ -3,10 +3,7 @@ package dk.magenta.datafordeler.core.fapi;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.*;
-import dk.magenta.datafordeler.core.database.Identification;
-import dk.magenta.datafordeler.core.database.IdentifiedEntity;
-import dk.magenta.datafordeler.core.database.Monotemporal;
-import dk.magenta.datafordeler.core.database.Nontemporal;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.util.Bitemporality;
 import dk.magenta.datafordeler.core.util.BitemporalityComparator;
 import dk.magenta.datafordeler.core.util.DoubleListHashMap;
@@ -64,6 +61,10 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
 
         protected DoubleListHashMap<Bitemporality, String, JsonNode> bitemporalData = new DoubleListHashMap<>();
 
+        public DoubleListHashMap<Bitemporality, String, JsonNode> getBitemporalData() {
+            return this.bitemporalData;
+        }
+
         protected ListHashMap<String, JsonNode> nontemporalData = new ListHashMap<>();
 
         protected HashSet<String> forcedArrayKeys = new HashSet<>();
@@ -88,20 +89,20 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
             this.addTemporal(key, records, converter, unwrapSingle, forceArray, t -> t.getMonotemporality().asBitemporality());
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records) {
             this.addBitemporal(key, records, null, false, false);
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records, boolean unwrapSingle) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records, boolean unwrapSingle) {
             this.addBitemporal(key, records, null, unwrapSingle, false);
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter) {
             this.addBitemporal(key, records, converter, false, false);
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter, boolean unwrapSingle, boolean forceArray) {
-            this.addTemporal(key, records, converter, unwrapSingle, forceArray, t -> t.getMonotemporality().asBitemporality());
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter, boolean unwrapSingle, boolean forceArray) {
+            this.addTemporal(key, records, converter, unwrapSingle, forceArray, Bitemporal::getBitemporality);
         }
 
 
@@ -202,6 +203,8 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
             terminators.add(null);
 
             HashSet<Bitemporality> presentBitemporalities = new HashSet<>();
+            System.out.println("startTerminators: "+startTerminators);
+            System.out.println("endTerminators: "+endTerminators);
 
             for (int i=0; i<terminators.size(); i++) {
                 OffsetDateTime t = terminators.get(i);
@@ -224,11 +227,13 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                             registrationNode.put(REGISTRATION_TO, formatTime(next));
                             ArrayNode effectsNode = objectMapper.createArrayNode();
                             registrationNode.set(EFFECTS, effectsNode);
+                            System.out.println("presentBitemporalities: "+presentBitemporalities);
                             ArrayList<Bitemporality> sortedEffects = new ArrayList<>(presentBitemporalities);
                             sortedEffects.sort(BitemporalityComparator.EFFECT);
                             Bitemporality lastEffect = null;
                             ObjectNode effectNode = null;
                             for (Bitemporality bitemporality : sortedEffects) {
+                                System.out.println("bitemporality: "+bitemporality);
                                 if (lastEffect == null || effectNode == null || !lastEffect.equalEffect(bitemporality)) {
                                     effectNode = objectMapper.createObjectNode();
                                     effectsNode.add(effectNode);
@@ -336,6 +341,9 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                                         }
                                         oNode.put(EFFECT_FROM, formatTime(bitemporality.effectFrom));
                                         oNode.put(EFFECT_TO, formatTime(bitemporality.effectTo));
+                                        if (dataConversion != null) {
+                                            oNode = dataConversion.apply(Pair.of(key, oNode));
+                                        }
                                         dataNode.add(oNode);
                                     }
 

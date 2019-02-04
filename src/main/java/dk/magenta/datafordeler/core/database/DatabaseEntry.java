@@ -20,6 +20,7 @@ public abstract class DatabaseEntry {
     @JsonIgnore
     private Long id;
 
+    @JsonIgnore
     public Long getId() {
         return this.id;
     }
