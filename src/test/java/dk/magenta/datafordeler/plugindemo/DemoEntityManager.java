@@ -89,6 +89,11 @@ public class DemoEntityManager extends EntityManager {
     }
 
     @Override
+    public boolean handlesOwnSaves() {
+        return true;
+    }
+
+    @Override
     protected ObjectMapper getObjectMapper() {
         return this.objectMapper;
     }
@@ -177,15 +182,6 @@ public class DemoEntityManager extends EntityManager {
 
     public void parseData(JsonNode jsonNode, ImportMetadata importMetadata) throws ParseException {
         System.out.println("parse this: "+jsonNode.toString());
-    }
-
-    public List<Registration> parseData(String registrationData, String charsetName) throws DataFordelerException {
-        this.getLog().info("Parsing registration data");
-        try {
-            return Collections.singletonList(this.objectMapper.readValue(registrationData.getBytes(charsetName), this.managedRegistrationClass));
-        } catch (IOException e) {
-            throw new DataStreamException(e);
-        }
     }
 
     /** Registration fetching **/

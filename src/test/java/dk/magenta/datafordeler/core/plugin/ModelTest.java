@@ -112,10 +112,10 @@ public class ModelTest {
         // Test getRegisterChecksum
         Assert.assertEquals(registerChecksum, demoRegistration1.getRegisterChecksum());
 
-        // Test getRegistrationFrom
+        // Test getRegistrationFromBefore
         Assert.assertEquals(OffsetDateTime.parse("2017-06-02T17:00:00+02:00"), demoRegistration1.getRegistrationFrom());
 
-        // Test getRegistrationTo
+        // Test getRegistrationToBefore
         Assert.assertEquals(OffsetDateTime.parse("2017-06-05T08:00:16+02:00"), demoRegistration1.getRegistrationTo());
 
         // Test toString

@@ -91,6 +91,9 @@ public abstract class DemoBitemporalRecord extends DatabaseEntry implements Mono
 
 
 
+    public static final String FILTERPARAMTYPE_EFFECTFROM = "java.time.OffsetDateTime";
+    public static final String FILTERPARAMTYPE_EFFECTTO = "java.time.OffsetDateTime";
+
 
     public static final String DB_FIELD_EFFECT_FROM = Bitemporal.DB_FIELD_EFFECT_FROM;
     public static final String IO_FIELD_EFFECT_FROM = Bitemporal.IO_FIELD_EFFECT_FROM;
@@ -130,6 +133,7 @@ public abstract class DemoBitemporalRecord extends DatabaseEntry implements Mono
         return new Bitemporality(this.registrationFrom, this.registrationTo, this.effectFrom, this.effectTo);
     }
 
+    public static final String FILTERPARAMTYPE_LASTUPDATED = "java.time.OffsetDateTime";
 
     public static final String DB_FIELD_UPDATED = Nontemporal.DB_FIELD_UPDATED;
     public static final String IO_FIELD_UPDATED = Nontemporal.IO_FIELD_UPDATED;

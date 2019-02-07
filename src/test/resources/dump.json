@@ -7,44 +7,30 @@
   "page" : 1,
   "pageSize" : 10,
   "results" : [ {
-    "registreringer" : [ {
-      "sekvensnummer" : 0,
-      "registreringFra" : XXX,
-      "registreringTil" : null,
-      "checksum" : null,
-      "sidstImporteret" : null,
-      "virkninger" : [ {
-        "virkningFra" : XXX,
-        "virkningTil" : null,
-        "data" : {
-          "aktiv" : true,
-          "bynavn" : "Nuuk",
-          "postnr" : 3900,
-          "reference" : null
-        }
-      } ]
-    } ],
     "uuid" : "00000000-0000-0000-0000-000000003900",
-    "domain" : "http://example.com"
-  }, {
+    "domain" : "http://example.com",
+    "nummer" : 3900,
     "registreringer" : [ {
-      "sekvensnummer" : 0,
       "registreringFra" : XXX,
       "registreringTil" : null,
-      "checksum" : null,
-      "sidstImporteret" : null,
       "virkninger" : [ {
-        "virkningFra" : XXX,
+        "virkningFra" : "2001-01-01",
         "virkningTil" : null,
-        "data" : {
-          "aktiv" : true,
-          "bynavn" : "Siriuspatruljen",
-          "postnr" : 3992,
-          "reference" : null
-        }
+        "navn" : "Nuuk"
       } ]
-    } ],
+    } ]
+  }, {
     "uuid" : "00000000-0000-0000-0000-000000003992",
-    "domain" : "http://example.com"
+    "domain" : "http://example.com",
+    "nummer" : 3992,
+    "registreringer" : [ {
+      "registreringFra" : XXX,
+      "registreringTil" : null,
+      "virkninger" : [ {
+        "virkningFra" : "2001-01-01",
+        "virkningTil" : null,
+        "navn" : "Siriuspatruljen"
+      } ]
+    } ]
   } ]
 }

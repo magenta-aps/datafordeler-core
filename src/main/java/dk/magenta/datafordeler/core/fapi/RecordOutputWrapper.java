@@ -8,9 +8,7 @@ import dk.magenta.datafordeler.core.util.Bitemporality;
 import dk.magenta.datafordeler.core.util.BitemporalityComparator;
 import dk.magenta.datafordeler.core.util.DoubleListHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -34,8 +32,8 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
     private final Set<String> rvdNodeRemoveFields = new HashSet<>(Arrays.asList(new String[]{
             "registreringFra",
             "registreringTil",
-            "registrationFrom",
-            "registrationTo",
+            "registrationFromBefore",
+            "registrationToBefore",
             "virkningFra",
             "virkningTil",
             "sidstOpdateret",
@@ -183,6 +181,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
 
 
         public ObjectNode getRVD(Bitemporality mustOverlap) {
+            System.out.println("overlap: "+mustOverlap);
 
             ObjectMapper objectMapper = RecordOutputWrapper.this.getObjectMapper();
             ArrayNode registrationsNode = objectMapper.createArrayNode();
@@ -203,8 +202,8 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
             terminators.add(null);
 
             HashSet<Bitemporality> presentBitemporalities = new HashSet<>();
-            System.out.println("startTerminators: "+startTerminators);
-            System.out.println("endTerminators: "+endTerminators);
+//            System.out.println("startTerminators: "+startTerminators);
+//            System.out.println("endTerminators: "+endTerminators);
 
             for (int i=0; i<terminators.size(); i++) {
                 OffsetDateTime t = terminators.get(i);
@@ -227,13 +226,13 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                             registrationNode.put(REGISTRATION_TO, formatTime(next));
                             ArrayNode effectsNode = objectMapper.createArrayNode();
                             registrationNode.set(EFFECTS, effectsNode);
-                            System.out.println("presentBitemporalities: "+presentBitemporalities);
+//                            System.out.println("presentBitemporalities: "+presentBitemporalities);
                             ArrayList<Bitemporality> sortedEffects = new ArrayList<>(presentBitemporalities);
                             sortedEffects.sort(BitemporalityComparator.EFFECT);
                             Bitemporality lastEffect = null;
                             ObjectNode effectNode = null;
                             for (Bitemporality bitemporality : sortedEffects) {
-                                System.out.println("bitemporality: "+bitemporality);
+//                                System.out.println("bitemporality: "+bitemporality);
                                 if (lastEffect == null || effectNode == null || !lastEffect.equalEffect(bitemporality)) {
                                     effectNode = objectMapper.createObjectNode();
                                     effectsNode.add(effectNode);
@@ -414,7 +413,12 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
 
     @Override
     public Object wrapResult(E record, BaseQuery query, Mode mode) {
-        Bitemporality mustContain = new Bitemporality(query.getRegistrationFrom(), query.getRegistrationTo(), query.getEffectFrom(), query.getEffectTo());
+        Bitemporality mustContain = new Bitemporality(
+                query.getRegistrationToAfter(),
+                query.getRegistrationFromBefore(),
+                query.getEffectToAfter(),
+                query.getEffectFromBefore()
+        );
         return this.getNode(record, mustContain, mode);
     }
 

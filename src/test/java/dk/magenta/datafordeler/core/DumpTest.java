@@ -14,10 +14,7 @@ import dk.magenta.datafordeler.core.plugin.TaskListener;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
 import dk.magenta.datafordeler.core.util.OffsetDateTimeAdapter;
-import dk.magenta.datafordeler.plugindemo.model.DemoData;
-import dk.magenta.datafordeler.plugindemo.model.DemoEffect;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
-import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
+import dk.magenta.datafordeler.plugindemo.model.*;
 import org.apache.commons.io.Charsets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -154,22 +151,21 @@ public class DumpTest extends GapiTestBase {
     private void createOneEntity(int postalcode, String cityname)
         throws DataFordelerException {
 
-        DemoEntity entity = new DemoEntity(
+        Session session = sessionManager.getSessionFactory().openSession();
+        Transaction transaction = session.beginTransaction();
+
+
+        DemoEntityRecord entity = new DemoEntityRecord(
             new UUID(0, Integer.parseInt(Integer.toString(postalcode), 16)),
             "http://example.com"
         );
-        DemoRegistration registration = new DemoRegistration(FROM_TIME, null, 0);
-        entity.addRegistration(registration);
+        entity.setPostnr(postalcode);
 
-        DemoEffect effect1 = new DemoEffect(registration, FROM_TIME, null);
-        effect1.setDataItems(Arrays.asList(
-            new DemoData(postalcode, cityname)
-        ));
-        registration.addEffect(effect1);
+        DemoDataRecord data = new DemoDataRecord(cityname);
+        data.setBitemporality(FROM_TIME, null, FROM_TIME, null);
+        entity.addBitemporalRecord(data, session);
 
-        Session session = sessionManager.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
-        QueryManager.saveRegistration(session, entity, registration);
+        session.saveOrUpdate(entity);
         transaction.commit();
         session.close();
     }

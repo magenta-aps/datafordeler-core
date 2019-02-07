@@ -61,7 +61,6 @@ public class IndexTest {
             }
         }
         Assert.assertEquals("int", mappedFields.get("postnr"));
-        Assert.assertEquals("boolean", mappedFields.get("aktiv"));
         Assert.assertEquals("string", mappedFields.get("bynavn"));
         Assert.assertEquals("string", mappedFields.get("registrationFrom"));
         Assert.assertEquals("string", mappedFields.get("registrationTo"));
@@ -122,7 +121,6 @@ public class IndexTest {
             }
         }
         Assert.assertEquals("int", mappedFields.get("postnr"));
-        Assert.assertEquals("boolean", mappedFields.get("aktiv"));
         Assert.assertEquals("string", mappedFields.get("bynavn"));
         Assert.assertEquals("string", mappedFields.get("registrationFrom"));
         Assert.assertEquals("string", mappedFields.get("registrationTo"));

@@ -2,26 +2,19 @@ package dk.magenta.datafordeler.plugindemo.fapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.fapi.RecordOutputWrapper;
 import dk.magenta.datafordeler.core.util.Bitemporality;
-import dk.magenta.datafordeler.core.util.BitemporalityComparator;
 import dk.magenta.datafordeler.core.util.DoubleListHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
-import dk.magenta.datafordeler.plugindemo.model.DemoBitemporalRecord;
+import dk.magenta.datafordeler.plugindemo.model.DemoDataRecord;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.function.Function;
+import java.util.HashMap;
+import java.util.HashSet;
 
 @Component
 public class DemoRecordOutputWrapper extends RecordOutputWrapper<DemoEntityRecord> {
@@ -44,7 +37,10 @@ public class DemoRecordOutputWrapper extends RecordOutputWrapper<DemoEntityRecor
     protected void fillContainer(RecordOutputWrapper<DemoEntityRecord>.OutputContainer container, DemoEntityRecord item) {
         container.addNontemporal(DemoEntityRecord.IO_FIELD_ADDRESS_NUMBER, item.getPostnr());
         container.addBitemporal(DemoEntityRecord.IO_FIELD_ADDRESS_NAME, item.getName(), true);
-        System.out.println(container.getBitemporalData());
+        System.out.println("item.getName() has "+item.getName().size()+" items");
+        for (DemoDataRecord foo : item.getName()) {
+            System.out.println(foo.getBitemporality());
+        }
     }
 
     @Override

@@ -8,46 +8,32 @@
   <pageSize>10</pageSize>
   <results>
     <results>
-      <registreringer>
-        <sekvensnummer>0</sekvensnummer>
-        <registreringFra>XXX</registreringFra>
-        <registreringTil/>
-        <checksum/>
-        <sidstImporteret/>
-        <virkninger>
-          <virkningFra>XXX</virkningFra>
-          <virkningTil/>
-          <data>
-            <aktiv>true</aktiv>
-            <bynavn>Nuuk</bynavn>
-            <postnr>3900</postnr>
-            <reference/>
-          </data>
-        </virkninger>
-      </registreringer>
       <uuid>00000000-0000-0000-0000-000000003900</uuid>
       <domain>http://example.com</domain>
-    </results>
-    <results>
+      <nummer>3900</nummer>
       <registreringer>
-        <sekvensnummer>0</sekvensnummer>
         <registreringFra>XXX</registreringFra>
         <registreringTil/>
-        <checksum/>
-        <sidstImporteret/>
         <virkninger>
-          <virkningFra>XXX</virkningFra>
+          <virkningFra>2001-01-01</virkningFra>
           <virkningTil/>
-          <data>
-            <aktiv>true</aktiv>
-            <bynavn>Siriuspatruljen</bynavn>
-            <postnr>3992</postnr>
-            <reference/>
-          </data>
+          <navn>Nuuk</navn>
         </virkninger>
       </registreringer>
+    </results>
+    <results>
       <uuid>00000000-0000-0000-0000-000000003992</uuid>
       <domain>http://example.com</domain>
+      <nummer>3992</nummer>
+      <registreringer>
+        <registreringFra>XXX</registreringFra>
+        <registreringTil/>
+        <virkninger>
+          <virkningFra>2001-01-01</virkningFra>
+          <virkningTil/>
+          <navn>Siriuspatruljen</navn>
+        </virkninger>
+      </registreringer>
     </results>
   </results>
 </Envelope>

@@ -37,7 +37,7 @@ import dk.magenta.datafordeler.core.database.Entity;
         @FilterDef(name = Registration.FILTER_REGISTRATION_TO, parameters = @ParamDef(name = Registration.FILTERPARAM_REGISTRATION_TO, type = "java.time.OffsetDateTime"))
 })
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
-@JsonPropertyOrder({"sequenceNumber", "registrationFrom", "registrationTo", "checksum", "effects"})
+@JsonPropertyOrder({"sequenceNumber", "registrationFromBefore", "registrationToBefore", "checksum", "effects"})
 public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry implements Comparable<Registration> {
 
     public static final String FILTER_REGISTRATION_FROM = "registrationFromFilter";
@@ -220,7 +220,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
 
-    public static final String DB_FIELD_REGISTRATION_FROM = "registrationFrom";
+    public static final String DB_FIELD_REGISTRATION_FROM = "registrationFromBefore";
     public static final String IO_FIELD_REGISTRATION_FROM = "registreringFra";
 
     @Column(name = DB_FIELD_REGISTRATION_FROM, nullable = true, insertable = true, updatable = false)
@@ -242,7 +242,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
 
 
 
-    public static final String DB_FIELD_REGISTRATION_TO = "registrationTo";
+    public static final String DB_FIELD_REGISTRATION_TO = "registrationToBefore";
     public static final String IO_FIELD_REGISTRATION_TO = "registreringTil";
 
     @Column(name = DB_FIELD_REGISTRATION_TO, nullable = true, insertable = true, updatable = false)
@@ -353,7 +353,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
     /**
-     * Comparison method for the Comparable interface; results in Registrations being sorted by registrationFrom date, nulls first?
+     * Comparison method for the Comparable interface; results in Registrations being sorted by registrationFromBefore date, nulls first?
      */
     @Override
     public int compareTo(Registration o) {

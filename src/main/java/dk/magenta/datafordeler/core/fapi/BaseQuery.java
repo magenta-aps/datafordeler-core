@@ -2,8 +2,6 @@ package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
-import org.hibernate.Filter;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
 import java.time.*;
@@ -21,10 +19,14 @@ public abstract class BaseQuery {
 
     public static final String[] PARAM_PAGE = new String[] {"side", "page"};
     public static final String[] PARAM_PAGESIZE = new String[] {"sidestoerrelse", "pageSize"};
-    public static final String[] PARAM_REGISTRATION_FROM = new String[] {"registreringFra", "registrationFrom"};
-    public static final String[] PARAM_REGISTRATION_TO = new String[] {"registreringTil", "registrationTo"};
-    public static final String[] PARAM_EFFECT_FROM = new String[] {"virkningFra", "effectFrom"};
-    public static final String[] PARAM_EFFECT_TO = new String[] {"virkningTil", "effectTo"};
+    public static final String[] PARAM_REGISTRATION_FROM_BEFORE = new String[] {"registreringFraFør", "registrationFromBefore"};
+    public static final String[] PARAM_REGISTRATION_FROM_AFTER = new String[] {"registreringFraEfter", "registrationFromAfter", "registreringFra", "registrationFrom"};
+    public static final String[] PARAM_REGISTRATION_TO_BEFORE = new String[] {"registreringTilFør", "registrationToBefore", "registreringTil", "registrationTo"};
+    public static final String[] PARAM_REGISTRATION_TO_AFTER = new String[] {"registreringTilEfter", "registrationToAfter"};
+    public static final String[] PARAM_EFFECT_FROM_BEFORE = new String[] {"virkningFraFør", "effectFromBefore"};
+    public static final String[] PARAM_EFFECT_FROM_AFTER = new String[] {"virkningFraEfter", "effectFromAfter"};
+    public static final String[] PARAM_EFFECT_TO_BEFORE = new String[] {"virkningTilFør", "effectToBefore"};
+    public static final String[] PARAM_EFFECT_TO_AFTER = new String[] {"virkningTilEfter", "effectToAfter"};
     public static final String[] PARAM_RECORD_AFTER = new String[] { "opdateretEfter", "recordAfter" };
 
     public static final String[] PARAM_OUTPUT_WRAPPING = new String[] {"format", "fmt"};
@@ -42,17 +44,29 @@ public abstract class BaseQuery {
     @QueryField(queryNames = {"sidestoerrelse", "pageSize"}, type = QueryField.FieldType.INT)
     protected int pageSize = 10;
 
-    @QueryField(queryNames = {"registreringFra", "registrationFrom"}, type = QueryField.FieldType.STRING)
-    protected OffsetDateTime registrationFrom = null;
+    @QueryField(queryNames = {"registreringFraFør", "registrationFromBefore"}, type = QueryField.FieldType.STRING)
+    protected OffsetDateTime registrationFromBefore = null;
 
-    @QueryField(queryNames = {"registreringTil", "registrationTo"}, type = QueryField.FieldType.STRING)
-    protected OffsetDateTime registrationTo = null;
+    @QueryField(queryNames = {"registreringFraEfter", "registrationFromAfter"}, type = QueryField.FieldType.STRING)
+    protected OffsetDateTime registrationFromAfter = null;
 
-    @QueryField(queryNames = {"virkningFra", "effectFrom"}, type = QueryField.FieldType.STRING)
-    protected OffsetDateTime effectFrom = null;
+    @QueryField(queryNames = {"registreringTilFør", "registrationToBefore"}, type = QueryField.FieldType.STRING)
+    protected OffsetDateTime registrationToBefore = null;
 
-    @QueryField(queryNames = {"virkningTil", "effectTo"}, type = QueryField.FieldType.STRING)
-    protected OffsetDateTime effectTo = null;
+    @QueryField(queryNames = {"registreringTilEfter", "registrationToAfter"}, type = QueryField.FieldType.STRING)
+    protected OffsetDateTime registrationToAfter = null;
+
+    @QueryField(queryNames = {"virkningFraFør", "effectFromBefore "}, type = QueryField.FieldType.STRING)
+    protected OffsetDateTime effectFromBefore = null;
+
+    @QueryField(queryNames = {"virkningFraEfter", "effectFromAfter"}, type = QueryField.FieldType.STRING)
+    protected OffsetDateTime effectFromAfter = null;
+
+    @QueryField(queryNames = {"virkningTilFør", "effectToBefore "}, type = QueryField.FieldType.STRING)
+    protected OffsetDateTime effectToBefore  = null;
+
+    @QueryField(queryNames = {"virkningTilEfter", "effectToAfter"}, type = QueryField.FieldType.STRING)
+    protected OffsetDateTime effectToAfter = null;
 
     @QueryField(queryNames = { "opdateretEfter", "recordAfter" }, type = QueryField.FieldType.STRING)
     protected OffsetDateTime recordAfter = null;
@@ -83,10 +97,15 @@ public abstract class BaseQuery {
      * @param page
      * @param pageSize
      */
-    public BaseQuery(int page, int pageSize, OffsetDateTime registrationFrom, OffsetDateTime registrationTo) {
+    public BaseQuery(int page, int pageSize, OffsetDateTime registrationFromAfter, OffsetDateTime registrationFromBefore, OffsetDateTime registrationToAfter, OffsetDateTime registrationToBefore) {
         this(page, pageSize);
-        this.registrationFrom = registrationFrom;
-        this.registrationTo = registrationTo;
+        this.registrationFromAfter = registrationFromAfter;
+        this.registrationFromBefore = registrationFromBefore;
+        this.registrationToAfter = registrationToAfter;
+        this.registrationToBefore = registrationToBefore;
+    }
+    public BaseQuery(int page, int pageSize, OffsetDateTime registrationFromAfter, OffsetDateTime registrationToBefore) {
+        this(page, pageSize, registrationFromAfter, null, null, registrationToBefore);
     }
 
     /**
@@ -105,8 +124,18 @@ public abstract class BaseQuery {
      * @param page
      * @param pageSize
      */
-    public BaseQuery(String page, String pageSize, String registrationFrom, String registrationTo) {
-        this(intFromString(page, 0), intFromString(pageSize, 10), parseDateTime(registrationFrom), parseDateTime(registrationTo));
+    public BaseQuery(String page, String pageSize, String registrationFromAfter, String registrationToBefore) {
+        this(page, pageSize, registrationFromAfter, null, null, registrationToBefore);
+    }
+    public BaseQuery(String page, String pageSize, String registrationFromAfter, String registrationFromBefore, String registrationToAfter, String registrationToBefore) {
+        this(
+                intFromString(page, 0),
+                intFromString(pageSize, 10),
+                parseDateTime(registrationFromAfter),
+                parseDateTime(registrationFromBefore),
+                parseDateTime(registrationToAfter),
+                parseDateTime(registrationToBefore)
+        );
     }
 
 
@@ -152,97 +181,256 @@ public abstract class BaseQuery {
         return this.pageSize;
     }
 
-    public OffsetDateTime getRegistrationFrom() {
-        return this.registrationFrom;
+    public OffsetDateTime getRegistrationFromBefore() {
+        return this.registrationFromBefore;
+    }
+
+    public void setRegistrationFromBefore(OffsetDateTime registrationFromBefore) {
+        this.setRegistrationFromBefore(registrationFromBefore, null);
+    }
+
+    public void setRegistrationFromBefore(OffsetDateTime registrationFromBefore, OffsetDateTime fallback) {
+        this.registrationFromBefore = registrationFromBefore;
+        if (registrationFromBefore == null && fallback != null) {
+            this.registrationFromBefore = fallback;
+        }
+    }
+
+    public void setRegistrationFromBefore(String registrationFromBefore) {
+        this.setRegistrationFromBefore(registrationFromBefore, null);
+    }
+
+    public void setRegistrationFromBefore(String registrationFromBefore, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setRegistrationFromBefore(parseDateTime(registrationFromBefore), fallback);
+    }
+
+
+
+
+
+
+
+    public OffsetDateTime getRegistrationFromAfter() {
+        return this.registrationFromAfter;
+    }
+
+    public void setRegistrationFromAfter(OffsetDateTime registrationFromAfter) {
+        this.setRegistrationFromAfter(registrationFromAfter, null);
+    }
+
+    public void setRegistrationFromAfter(OffsetDateTime registrationFromAfter, OffsetDateTime fallback) {
+        this.registrationFromAfter = registrationFromAfter;
+        if (registrationFromAfter == null && fallback != null) {
+            this.registrationFromAfter = fallback;
+        }
+    }
+
+    public void setRegistrationFromAfter(String registrationFromAfter) {
+        this.setRegistrationFromAfter(registrationFromAfter, null);
+    }
+
+    public void setRegistrationFromAfter(String registrationFromAfter, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setRegistrationFromAfter(parseDateTime(registrationFromAfter), fallback);
     }
 
     public void setRegistrationFrom(OffsetDateTime registrationFrom) {
-        this.setRegistrationFrom(registrationFrom, null);
+        this.setRegistrationFromAfter(registrationFromAfter);
     }
 
     public void setRegistrationFrom(OffsetDateTime registrationFrom, OffsetDateTime fallback) {
-        this.registrationFrom = registrationFrom;
-        if (registrationFrom == null && fallback != null) {
-            this.registrationFrom = fallback;
+        this.setRegistrationFromAfter(registrationFromAfter, fallback);
+    }
+
+    public void setRegistrationFrom(String registrationFromAfter) {
+        this.setRegistrationFromAfter(registrationFromAfter);
+    }
+
+    public void setRegistrationFrom(String registrationFromAfter, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setRegistrationFromAfter(registrationFromAfter, fallback);
+    }
+
+
+
+
+    public OffsetDateTime getRegistrationToAfter() {
+        return this.registrationToAfter;
+    }
+
+    public void setRegistrationToAfter(OffsetDateTime registrationToAfter) {
+        this.setRegistrationToAfter(registrationToAfter, null);
+    }
+
+    public void setRegistrationToAfter(OffsetDateTime registrationToAfter, OffsetDateTime fallback) {
+        this.registrationToAfter = registrationToAfter;
+        if (registrationToAfter == null && fallback != null) {
+            this.registrationToAfter = fallback;
         }
     }
 
-    public void setRegistrationFrom(String registrationFrom) {
-        this.setRegistrationFrom(registrationFrom, null);
+    public void setRegistrationToAfter(String registrationToAfter) {
+        this.setRegistrationToAfter(registrationToAfter, null);
     }
 
-    public void setRegistrationFrom(String registrationFrom, OffsetDateTime fallback) throws DateTimeParseException {
-        this.setRegistrationFrom(parseDateTime(registrationFrom), fallback);
+    public void setRegistrationToAfter(String registrationToAfter, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setRegistrationToAfter(parseDateTime(registrationToAfter), fallback);
     }
+
+
+
+
+
+
+
+
+
+    public OffsetDateTime getRegistrationToBefore() {
+        return this.registrationToBefore;
+    }
+
+    public void setRegistrationToBefore(OffsetDateTime registrationToBefore) {
+        this.setRegistrationToBefore(registrationToBefore, null);
+    }
+
+    public void setRegistrationToBefore(OffsetDateTime registrationToBefore, OffsetDateTime fallback) {
+        this.registrationToBefore = registrationToBefore;
+        if (registrationToBefore == null && fallback != null) {
+            this.registrationToBefore = fallback;
+        }
+    }
+
+    public void setRegistrationToBefore(String registrationToBefore) {
+        this.setRegistrationToBefore(registrationToBefore, null);
+    }
+
+    public void setRegistrationToBefore(String registrationToBefore, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setRegistrationToBefore(parseDateTime(registrationToBefore), fallback);
+    }
+
+
 
     public OffsetDateTime getRegistrationTo() {
-        return this.registrationTo;
+        return this.getRegistrationToBefore();
     }
 
     public void setRegistrationTo(OffsetDateTime registrationTo) {
-        this.setRegistrationTo(registrationTo, null);
+        this.setRegistrationToBefore(registrationTo);
     }
 
     public void setRegistrationTo(OffsetDateTime registrationTo, OffsetDateTime fallback) {
-        this.registrationTo = registrationTo;
-        if (registrationTo == null && fallback != null) {
-            this.registrationTo = fallback;
-        }
+        this.setRegistrationToBefore(registrationTo, fallback);
     }
 
     public void setRegistrationTo(String registrationTo) {
-        this.setRegistrationTo(registrationTo, null);
+        this.setRegistrationToBefore(registrationTo);
     }
 
     public void setRegistrationTo(String registrationTo, OffsetDateTime fallback) throws DateTimeParseException {
-        this.setRegistrationTo(parseDateTime(registrationTo), fallback);
+        this.setRegistrationToBefore(registrationTo, fallback);
     }
 
-    public OffsetDateTime getEffectFrom() {
-        return this.effectFrom;
+
+
+
+
+    public OffsetDateTime getEffectFromBefore () {
+        return this.effectFromBefore ;
     }
 
-    public void setEffectFrom(OffsetDateTime effectFrom) {
-        this.setEffectFrom(effectFrom, null);
+    public void setEffectFromBefore(OffsetDateTime effectFromBefore) {
+        this.setEffectFromBefore(effectFromBefore, null);
     }
 
-    public void setEffectFrom(OffsetDateTime effectFrom, OffsetDateTime fallback) {
-        this.effectFrom = effectFrom;
-        if (effectFrom == null && fallback != null) {
-            this.effectFrom = fallback;
+    public void setEffectFromBefore(OffsetDateTime effectFromBefore, OffsetDateTime fallback) {
+        this.effectFromBefore = effectFromBefore;
+        if (effectFromBefore == null && fallback != null) {
+            this.effectFromBefore = fallback;
         }
     }
 
-    public void setEffectFrom(String effectFrom) {
-        this.setEffectFrom(effectFrom, null);
+    public void setEffectFromBefore(String effectFromBefore) {
+        this.setEffectFromBefore(effectFromBefore, null);
     }
 
-    public void setEffectFrom(String effectFrom, OffsetDateTime fallback) {
-        this.setEffectFrom(parseDateTime(effectFrom), fallback);
+    public void setEffectFromBefore(String effectFromBefore, OffsetDateTime fallback) {
+        this.setEffectFromBefore(parseDateTime(effectFromBefore), fallback);
     }
 
-    public OffsetDateTime getEffectTo() {
-        return this.effectTo;
+
+    public OffsetDateTime getEffectFromAfter() {
+        return this.effectFromAfter;
     }
 
-    public void setEffectTo(OffsetDateTime effectTo) {
-        this.setEffectTo(effectTo, null);
+    public void setEffectFromAfter(OffsetDateTime effectFromAfter) {
+        this.setEffectFromAfter(effectFromAfter, null);
     }
 
-    public void setEffectTo(OffsetDateTime effectTo, OffsetDateTime fallback) {
-        this.effectTo = effectTo;
-        if (effectTo == null && fallback != null) {
-            this.effectTo = fallback;
+    public void setEffectFromAfter(OffsetDateTime effectFromAfter, OffsetDateTime fallback) {
+        this.effectFromAfter = effectFromAfter;
+        if (effectFromAfter == null && fallback != null) {
+            this.effectFromAfter = fallback;
         }
     }
 
-    public void setEffectTo(String effectTo) {
-        this.setEffectTo(effectTo, null);
+    public void setEffectFromAfter(String effectFromAfter) {
+        this.setEffectFromAfter(effectFromAfter, null);
     }
 
-    public void setEffectTo(String effectTo, OffsetDateTime fallback) {
-        this.setEffectTo(parseDateTime(effectTo), fallback);
+    public void setEffectFromAfter(String effectFromAfter, OffsetDateTime fallback) {
+        this.setEffectFromAfter(parseDateTime(effectFromAfter), fallback);
     }
+
+
+
+
+    public OffsetDateTime getEffectToBefore() {
+        return this.effectToBefore;
+    }
+
+    public void setEffectToBefore(OffsetDateTime effectToBefore) {
+        this.setEffectToBefore(effectToBefore, null);
+    }
+
+    public void setEffectToBefore(OffsetDateTime effectToBefore, OffsetDateTime fallback) {
+        this.effectToBefore = effectToBefore;
+        if (effectToBefore == null && fallback != null) {
+            this.effectToBefore = fallback;
+        }
+    }
+
+    public void setEffectToBefore(String effectToBefore) {
+        this.setEffectToBefore(effectToBefore, null);
+    }
+
+    public void setEffectToBefore(String effectToBefore, OffsetDateTime fallback) {
+        this.setEffectToBefore(parseDateTime(effectToBefore), fallback);
+    }
+
+
+
+    public OffsetDateTime getEffectToAfter() {
+        return this.effectToAfter;
+    }
+
+    public void setEffectToAfter(OffsetDateTime effectToAfter) {
+        this.setEffectToAfter(effectToAfter, null);
+    }
+
+    public void setEffectToAfter(OffsetDateTime effectToAfter, OffsetDateTime fallback) {
+        this.effectToAfter = effectToAfter;
+        if (effectToAfter == null && fallback != null) {
+            this.effectToAfter = fallback;
+        }
+    }
+
+    public void setEffectToAfter(String effectToAfter) {
+        this.setEffectToAfter(effectToAfter, null);
+    }
+
+    public void setEffectToAfter(String effectToAfter, OffsetDateTime fallback) {
+        this.setEffectToAfter(parseDateTime(effectToAfter), fallback);
+    }
+
+
 
     public OffsetDateTime getRecordAfter() {
         return this.recordAfter;
@@ -313,10 +501,14 @@ public abstract class BaseQuery {
         this.setPageSize(parameterMap.getFirstOf(PARAM_PAGESIZE));
         try {
             OffsetDateTime now = OffsetDateTime.now();
-            this.setRegistrationFrom(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM), now);
-            this.setRegistrationTo(parameterMap.getFirstOf(PARAM_REGISTRATION_TO), now);
-            this.setEffectFrom(parameterMap.getFirstOf(PARAM_EFFECT_FROM), now);
-            this.setEffectTo(parameterMap.getFirstOf(PARAM_EFFECT_TO), now);
+            this.setRegistrationFromBefore(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM_BEFORE)); // If not set, use current time
+            this.setRegistrationFromAfter(parameterMap.getFirstOf(PARAM_REGISTRATION_FROM_AFTER));
+            this.setRegistrationToBefore(parameterMap.getFirstOf(PARAM_REGISTRATION_TO_BEFORE));
+            this.setRegistrationToAfter(parameterMap.getFirstOf(PARAM_REGISTRATION_TO_AFTER));
+            this.setEffectFromBefore(parameterMap.getFirstOf(PARAM_EFFECT_FROM_BEFORE));
+            this.setEffectFromAfter(parameterMap.getFirstOf(PARAM_EFFECT_FROM_AFTER));
+            this.setEffectToBefore(parameterMap.getFirstOf(PARAM_EFFECT_TO_BEFORE));
+            this.setEffectToAfter(parameterMap.getFirstOf(PARAM_EFFECT_TO_AFTER));
             this.setRecordAfter(parameterMap.getFirstOf(PARAM_RECORD_AFTER));
         } catch (DateTimeParseException e) {
             throw new InvalidClientInputException(e.getMessage());
@@ -482,26 +674,48 @@ public abstract class BaseQuery {
      * @param session Hibernate session in use
      */
     public void applyFilters(Session session) {
-        if (this.getRegistrationFrom() != null) {
-            //this.applyFilter(session, Registration.FILTER_REGISTRATION_FROM, Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFrom());
-            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONFROM_BEFORE+"  "+this.getRegistrationFrom());
-            this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONFROM_BEFORE, Monotemporal.FILTERPARAM_REGISTRATIONFROM_BEFORE, this.getRegistrationFrom());
+        /*if (this.getRegistrationFromBefore() != null) {
+            //this.applyFilter(session, Registration.FILTER_REGISTRATION_FROM, Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFromBefore());
+            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONFROM_BEFORE+"  "+this.getRegistrationFromBefore());
+            this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONFROM_BEFORE, Monotemporal.FILTERPARAM_REGISTRATIONFROM_BEFORE, this.getRegistrationFromBefore());
+        }*/
+        if (this.getRegistrationFromAfter() != null) {
+            //this.applyFilter(session, Registration.FILTER_REGISTRATION_FROM, Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFromBefore());
+            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONFROM_AFTER+"  "+this.getRegistrationFromAfter());
+            this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONFROM_AFTER, Monotemporal.FILTERPARAM_REGISTRATIONFROM_AFTER, this.getRegistrationFromAfter());
         }
-        if (this.getRegistrationTo() != null) {
-            //this.applyFilter(session, Registration.FILTER_REGISTRATION_TO, Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationTo());
-            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONTO_AFTER+"  "+this.getRegistrationTo());
-            this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONTO_AFTER, Monotemporal.FILTERPARAM_REGISTRATIONTO_AFTER, this.getRegistrationTo());
+        if (this.getRegistrationToBefore() != null) {
+            //this.applyFilter(session, Registration.FILTER_REGISTRATION_TO, Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationToBefore());
+            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONTO_BEFORE+"  "+this.getRegistrationToBefore());
+            this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONTO_BEFORE, Monotemporal.FILTERPARAM_REGISTRATIONTO_BEFORE, this.getRegistrationToBefore());
         }
-        if (this.getEffectFrom() != null) {
+        if (this.getRegistrationToAfter() != null) {
+            //this.applyFilter(session, Registration.FILTER_REGISTRATION_TO, Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationToBefore());
+            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONTO_AFTER+"  "+this.getRegistrationToAfter());
+            this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONTO_AFTER, Monotemporal.FILTERPARAM_REGISTRATIONTO_AFTER, this.getRegistrationToAfter());
+        }
+
+        if (this.getEffectFromBefore() != null) {
             //this.applyFilter(session, Effect.FILTER_EFFECT_FROM, Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
-            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTFROM_BEFORE+"  "+this.getEffectFrom());
-            this.applyFilter(session, Bitemporal.FILTER_EFFECTFROM_BEFORE, Bitemporal.FILTERPARAM_EFFECTFROM_BEFORE, this.getEffectFrom());
+            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTFROM_BEFORE+"  "+this.getEffectFromBefore());
+            this.applyFilter(session, Bitemporal.FILTER_EFFECTFROM_BEFORE, Bitemporal.FILTERPARAM_EFFECTFROM_BEFORE, this.getEffectFromBefore());
         }
-        if (this.getEffectTo() != null) {
+        if (this.getEffectFromAfter() != null) {
+            //this.applyFilter(session, Effect.FILTER_EFFECT_FROM, Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
+            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTFROM_AFTER+"  "+this.getEffectFromAfter());
+            this.applyFilter(session, Bitemporal.FILTER_EFFECTFROM_AFTER, Bitemporal.FILTERPARAM_EFFECTFROM_AFTER, this.getEffectFromAfter());
+        }
+        if (this.getEffectToBefore() != null) {
             //this.applyFilter(session, Effect.FILTER_EFFECT_TO, Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
-            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTTO_AFTER+"  "+this.getEffectTo());
-            this.applyFilter(session, Bitemporal.FILTER_EFFECTTO_AFTER, Bitemporal.FILTERPARAM_EFFECTTO_AFTER, this.getEffectTo());
+            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTTO_BEFORE+"  "+this.getEffectToBefore());
+            this.applyFilter(session, Bitemporal.FILTER_EFFECTTO_BEFORE, Bitemporal.FILTERPARAM_EFFECTTO_BEFORE, this.getEffectToBefore());
         }
+        if (this.getEffectToAfter() != null) {
+            //this.applyFilter(session, Effect.FILTER_EFFECT_TO, Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
+            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTTO_AFTER+"  "+this.getEffectToAfter());
+            this.applyFilter(session, Bitemporal.FILTER_EFFECTTO_AFTER, Bitemporal.FILTERPARAM_EFFECTTO_AFTER, this.getEffectToAfter());
+        }
+
         if (this.getRecordAfter() != null) {
             //this.applyFilter(session, DataItem.FILTER_RECORD_AFTER, DataItem.FILTERPARAM_RECORD_AFTER, this.getRecordAfter());
             System.out.println("Activating filter "+Nontemporal.FILTER_LASTUPDATED_AFTER+"  "+this.getRecordAfter());
@@ -511,10 +725,14 @@ public abstract class BaseQuery {
 
     private void applyFilter(Session session, String filterName, String parameterName, Object parameterValue) {
         if (session.getSessionFactory().getDefinedFilterNames().contains(filterName)) {
+            System.out.println("enable filter");
             session.enableFilter(filterName).setParameter(
                     parameterName,
                     this.castFilterParam(parameterValue, filterName)
             );
+        } else {
+
+            System.out.println("do not enable filter");
         }
     }
 

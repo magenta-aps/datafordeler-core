@@ -3,10 +3,12 @@ package dk.magenta.datafordeler.plugindemo.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.magenta.datafordeler.core.database.*;
 import org.hibernate.Session;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.*;
 
 import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -14,6 +16,18 @@ import java.util.UUID;
 
 @javax.persistence.Entity
 @Table(name="demo_entity_record")
+@FilterDefs({
+        @FilterDef(name = Bitemporal.FILTER_EFFECTFROM_AFTER, parameters = @ParamDef(name = Bitemporal.FILTERPARAM_EFFECTFROM_AFTER, type = DemoBitemporalRecord.FILTERPARAMTYPE_EFFECTFROM)),
+        @FilterDef(name = Bitemporal.FILTER_EFFECTFROM_BEFORE, parameters = @ParamDef(name = Bitemporal.FILTERPARAM_EFFECTFROM_BEFORE, type = DemoBitemporalRecord.FILTERPARAMTYPE_EFFECTFROM)),
+        @FilterDef(name = Bitemporal.FILTER_EFFECTTO_AFTER, parameters = @ParamDef(name = Bitemporal.FILTERPARAM_EFFECTTO_AFTER, type = DemoBitemporalRecord.FILTERPARAMTYPE_EFFECTTO)),
+        @FilterDef(name = Bitemporal.FILTER_EFFECTTO_BEFORE, parameters = @ParamDef(name = Bitemporal.FILTERPARAM_EFFECTTO_BEFORE, type = DemoBitemporalRecord.FILTERPARAMTYPE_EFFECTTO)),
+        @FilterDef(name = Monotemporal.FILTER_REGISTRATIONFROM_AFTER, parameters = @ParamDef(name = Monotemporal.FILTERPARAM_REGISTRATIONFROM_AFTER, type = DemoBitemporalRecord.FILTERPARAMTYPE_REGISTRATIONFROM)),
+        @FilterDef(name = Monotemporal.FILTER_REGISTRATIONFROM_BEFORE, parameters = @ParamDef(name = Monotemporal.FILTERPARAM_REGISTRATIONFROM_BEFORE, type = DemoBitemporalRecord.FILTERPARAMTYPE_REGISTRATIONFROM)),
+        @FilterDef(name = Monotemporal.FILTER_REGISTRATIONTO_AFTER, parameters = @ParamDef(name = Monotemporal.FILTERPARAM_REGISTRATIONTO_AFTER, type = DemoBitemporalRecord.FILTERPARAMTYPE_REGISTRATIONTO)),
+        @FilterDef(name = Monotemporal.FILTER_REGISTRATIONTO_BEFORE, parameters = @ParamDef(name = Monotemporal.FILTERPARAM_REGISTRATIONTO_BEFORE, type = DemoBitemporalRecord.FILTERPARAMTYPE_REGISTRATIONTO)),
+        @FilterDef(name = Nontemporal.FILTER_LASTUPDATED_AFTER, parameters = @ParamDef(name = Nontemporal.FILTERPARAM_LASTUPDATED_AFTER, type = DemoBitemporalRecord.FILTERPARAMTYPE_LASTUPDATED)),
+        @FilterDef(name = Nontemporal.FILTER_LASTUPDATED_BEFORE, parameters = @ParamDef(name = Nontemporal.FILTERPARAM_LASTUPDATED_BEFORE, type = DemoBitemporalRecord.FILTERPARAMTYPE_LASTUPDATED))
+})
 public class DemoEntityRecord extends DatabaseEntry implements IdentifiedEntity {
 
     public static final String DB_FIELD_IDENTIFICATION = "identification";
@@ -102,14 +116,11 @@ public class DemoEntityRecord extends DatabaseEntry implements IdentifiedEntity 
             for (DemoDataRecord oldItem : this.name) {
                 if (oldItem.equalData(record) && oldItem.getBitemporality().equals(record.getBitemporality())) {
                     // Same item, don't add
-                    System.out.println("not adding");
                     return;
                 }
             }
-            System.out.println("adding");
             this.name.add(record);
             record.setEntity(this);
-            session.saveOrUpdate(record);
         }
     }
 
