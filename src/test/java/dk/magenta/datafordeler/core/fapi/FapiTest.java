@@ -17,7 +17,6 @@ import dk.magenta.datafordeler.core.user.UserProfile;
 import dk.magenta.datafordeler.plugindemo.DemoPlugin;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
 import dk.magenta.datafordeler.plugindemo.model.DemoDataRecord;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
@@ -97,7 +96,7 @@ public class FapiTest {
     @Test
     @Order(order = 1)
     public void findDemoPluginTest() {
-        String testSchema = DemoEntity.schema;
+        String testSchema = DemoEntityRecord.schema;
         Plugin foundPlugin = this.pluginManager.getPluginForSchema(testSchema);
         Assert.assertEquals(DemoPlugin.class, foundPlugin.getClass());
     }

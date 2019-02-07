@@ -10,28 +10,28 @@
     <results>
       <uuid>00000000-0000-0000-0000-000000003900</uuid>
       <domain>http://example.com</domain>
-      <nummer>3900</nummer>
+      <postnr>3900</postnr>
       <registreringer>
         <registreringFra>XXX</registreringFra>
         <registreringTil/>
         <virkninger>
           <virkningFra>2001-01-01</virkningFra>
           <virkningTil/>
-          <navn>Nuuk</navn>
+          <bynavn>Nuuk</bynavn>
         </virkninger>
       </registreringer>
     </results>
     <results>
       <uuid>00000000-0000-0000-0000-000000003992</uuid>
       <domain>http://example.com</domain>
-      <nummer>3992</nummer>
+      <postnr>3992</postnr>
       <registreringer>
         <registreringFra>XXX</registreringFra>
         <registreringTil/>
         <virkninger>
           <virkningFra>2001-01-01</virkningFra>
           <virkningTil/>
-          <navn>Siriuspatruljen</navn>
+          <bynavn>Siriuspatruljen</bynavn>
         </virkninger>
       </registreringer>
     </results>

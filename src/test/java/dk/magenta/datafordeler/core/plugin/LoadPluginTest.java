@@ -8,9 +8,7 @@ import dk.magenta.datafordeler.core.testutil.OrderedRunner;
 import dk.magenta.datafordeler.plugindemo.DemoEntityManager;
 import dk.magenta.datafordeler.plugindemo.DemoPlugin;
 import dk.magenta.datafordeler.plugindemo.configuration.DemoConfiguration;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
-import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
-import dk.magenta.datafordeler.plugindemo.model.DemoRegistrationReference;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.hibernate.Session;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,16 +55,12 @@ public class LoadPluginTest {
     @Test
     @Order(order=3)
     public void findDemoPluginTest1() {
-        String testSchema = DemoEntity.schema;
+        String testSchema = DemoEntityRecord.schema;
         Plugin foundPlugin = this.pluginManager.getPluginForSchema(testSchema);
         Assert.assertEquals(DemoPlugin.class, foundPlugin.getClass());
 
         EntityManager foundEntityManager = foundPlugin.getEntityManager(testSchema);
         Assert.assertEquals(DemoEntityManager.class, foundEntityManager.getClass());
-
-        Assert.assertEquals(DemoEntity.class, foundEntityManager.getManagedEntityClass());
-        Assert.assertEquals(DemoRegistration.class, foundEntityManager.getManagedRegistrationClass());
-        Assert.assertEquals(DemoRegistrationReference.class, foundEntityManager.getManagedRegistrationReferenceClass());
     }
 
 
@@ -86,7 +80,7 @@ public class LoadPluginTest {
     @Test
     @Order(order=5)
     public void configurationTest() {
-        Plugin plugin = this.pluginManager.getPluginForSchema(DemoEntity.schema);
+        Plugin plugin = this.pluginManager.getPluginForSchema(DemoEntityRecord.schema);
         Session session = sessionManager.getSessionFactory().openSession();
         try {
             DemoConfiguration configuration = (DemoConfiguration) plugin.getConfigurationManager().getConfiguration();

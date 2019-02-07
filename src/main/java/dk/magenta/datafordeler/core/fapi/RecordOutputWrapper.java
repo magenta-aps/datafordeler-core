@@ -29,16 +29,16 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
     public abstract ObjectMapper getObjectMapper();
 
     // RVD
-    private final Set<String> rvdNodeRemoveFields = new HashSet<>(Arrays.asList(new String[]{
+    private final Set<String> rvdNodeRemoveFields = new HashSet<>(Arrays.asList(
             "registreringFra",
             "registreringTil",
-            "registrationFromBefore",
-            "registrationToBefore",
+            "registrationFrom",
+            "registrationTo",
             "virkningFra",
             "virkningTil",
             "sidstOpdateret",
             "lastUpdated"
-    }));
+    ));
     private final Set<String> rdvNodeRemoveFields = rvdNodeRemoveFields;
 
     public Set<String> getRemoveFieldNames(Mode mode) {
@@ -181,8 +181,6 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
 
 
         public ObjectNode getRVD(Bitemporality mustOverlap) {
-            System.out.println("overlap: "+mustOverlap);
-
             ObjectMapper objectMapper = RecordOutputWrapper.this.getObjectMapper();
             ArrayNode registrationsNode = objectMapper.createArrayNode();
             ArrayList<Bitemporality> bitemporalities = new ArrayList<>(this.bitemporalData.keySet());
@@ -202,8 +200,6 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
             terminators.add(null);
 
             HashSet<Bitemporality> presentBitemporalities = new HashSet<>();
-//            System.out.println("startTerminators: "+startTerminators);
-//            System.out.println("endTerminators: "+endTerminators);
 
             for (int i=0; i<terminators.size(); i++) {
                 OffsetDateTime t = terminators.get(i);
@@ -226,13 +222,11 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                             registrationNode.put(REGISTRATION_TO, formatTime(next));
                             ArrayNode effectsNode = objectMapper.createArrayNode();
                             registrationNode.set(EFFECTS, effectsNode);
-//                            System.out.println("presentBitemporalities: "+presentBitemporalities);
                             ArrayList<Bitemporality> sortedEffects = new ArrayList<>(presentBitemporalities);
                             sortedEffects.sort(BitemporalityComparator.EFFECT);
                             Bitemporality lastEffect = null;
                             ObjectNode effectNode = null;
                             for (Bitemporality bitemporality : sortedEffects) {
-//                                System.out.println("bitemporality: "+bitemporality);
                                 if (lastEffect == null || effectNode == null || !lastEffect.equalEffect(bitemporality)) {
                                     effectNode = objectMapper.createObjectNode();
                                     effectsNode.add(effectNode);

@@ -145,13 +145,11 @@ public class Dump extends Worker {
         request.addHeader("Accept", mediaType);
         request.addHeader("Accept-Charset", charset);
 
-        System.out.println("requestPath: "+requestPath);
         try {
             engine.handleRequest(request, response);
         } catch (HttpNotFoundException e) {
             return null;
         }
-        System.out.println("response: "+response.getContentAsString());
 
         return response.getContentAsByteArray();
     }

@@ -130,10 +130,8 @@ public class DumpTest extends GapiTestBase {
 
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         for (Class<? extends DatabaseEntry> cls : Arrays.asList(
-            DemoRegistration.class,
-            DemoEffect.class,
-            DemoData.class,
-            DemoEntity.class,
+            DemoDataRecord.class,
+            DemoEntityRecord.class,
             Identification.class,
             DumpInfo.class,
             DumpData.class

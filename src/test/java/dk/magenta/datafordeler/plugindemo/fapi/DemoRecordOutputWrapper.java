@@ -8,7 +8,6 @@ import dk.magenta.datafordeler.core.fapi.RecordOutputWrapper;
 import dk.magenta.datafordeler.core.util.Bitemporality;
 import dk.magenta.datafordeler.core.util.DoubleListHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
-import dk.magenta.datafordeler.plugindemo.model.DemoDataRecord;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,13 +17,6 @@ import java.util.HashSet;
 
 @Component
 public class DemoRecordOutputWrapper extends RecordOutputWrapper<DemoEntityRecord> {
-
-    public static final String EFFECTS = "virkninger";
-    public static final String EFFECT_FROM = "virkningFra";
-    public static final String EFFECT_TO = "virkningTil";
-    public static final String REGISTRATIONS = "registreringer";
-    public static final String REGISTRATION_FROM = "registreringFra";
-    public static final String REGISTRATION_TO = "registreringTil";
     
     @Autowired
     private ObjectMapper objectMapper;
@@ -37,10 +29,6 @@ public class DemoRecordOutputWrapper extends RecordOutputWrapper<DemoEntityRecor
     protected void fillContainer(RecordOutputWrapper<DemoEntityRecord>.OutputContainer container, DemoEntityRecord item) {
         container.addNontemporal(DemoEntityRecord.IO_FIELD_ADDRESS_NUMBER, item.getPostnr());
         container.addBitemporal(DemoEntityRecord.IO_FIELD_ADDRESS_NAME, item.getName(), true);
-        System.out.println("item.getName() has "+item.getName().size()+" items");
-        for (DemoDataRecord foo : item.getName()) {
-            System.out.println(foo.getBitemporality());
-        }
     }
 
     @Override

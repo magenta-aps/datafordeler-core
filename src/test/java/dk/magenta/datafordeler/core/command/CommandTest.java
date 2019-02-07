@@ -188,6 +188,7 @@ public class CommandTest extends GapiTestBase {
         Assert.assertEquals("queued", postResponseNode.get("status").asText());
         Assert.assertEquals("pull", postResponseNode.get("commandName").asText());
         Assert.assertNotNull(postResponseNode.get("received").asText());
+        System.out.println(postResponseNode);
         long id = postResponseNode.get("id").asLong();
 
         HttpEntity<String> httpGetEntity = new HttpEntity<String>("", headers);

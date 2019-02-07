@@ -3,6 +3,7 @@ package dk.magenta.datafordeler.plugindemo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Application;
+import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.Registration;
 import dk.magenta.datafordeler.core.database.RegistrationReference;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
@@ -10,7 +11,6 @@ import dk.magenta.datafordeler.core.exception.DataStreamException;
 import dk.magenta.datafordeler.core.exception.ParseException;
 import dk.magenta.datafordeler.core.exception.WrongSubclassException;
 import dk.magenta.datafordeler.core.fapi.FapiBaseService;
-import dk.magenta.datafordeler.core.fapi.FapiService;
 import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.io.Receipt;
@@ -19,10 +19,7 @@ import dk.magenta.datafordeler.core.plugin.EntityManager;
 import dk.magenta.datafordeler.core.plugin.HttpCommunicator;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import dk.magenta.datafordeler.plugindemo.fapi.DemoEntityService;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntityReference;
-import dk.magenta.datafordeler.plugindemo.model.DemoRegistration;
-import dk.magenta.datafordeler.plugindemo.model.DemoRegistrationReference;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,10 +55,7 @@ public class DemoEntityManager extends EntityManager {
     private URI baseEndpoint = null;
 
     public DemoEntityManager() {
-        this.managedEntityClass = DemoEntity.class;
-        this.managedEntityReferenceClass = DemoEntityReference.class;
-        this.managedRegistrationReferenceClass = DemoRegistrationReference.class;
-        this.managedRegistrationClass = DemoRegistration.class;
+        this.managedEntityClass = DemoEntityRecord.class;
         this.commonFetcher = new HttpCommunicator();
         try {
             this.baseEndpoint = new URI("http", null, "localhost", Application.servicePort, "/test", null, null);
@@ -130,7 +124,7 @@ public class DemoEntityManager extends EntityManager {
 
     @Override
     public String getSchema() {
-        return DemoEntity.schema;
+        return DemoEntityRecord.schema;
     }
 
     public void setBaseEndpoint(URI baseEndpoint) {
@@ -156,7 +150,7 @@ public class DemoEntityManager extends EntityManager {
     }
 
     public RegistrationReference parseReference(URI referenceURI) {
-        return new DemoRegistrationReference(referenceURI);
+        return null;
     }
 
     /** Registration parsing **/
@@ -204,19 +198,8 @@ public class DemoEntityManager extends EntityManager {
     }
 
     @Override
-    protected ItemInputStream<DemoEntityReference> parseChecksumResponse(InputStream responseContent) throws DataFordelerException {
-        /*ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try {
-            IOUtils.copy(responseContent, baos);
-            byte[] bytes = baos.toByteArray();
-            responseContent = new ByteArrayInputStream(bytes);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-        return ItemInputStream.parseJsonStream(responseContent, DemoEntityReference.class, "items", this.objectMapper);
+    protected ItemInputStream<? extends EntityReference> parseChecksumResponse(InputStream responseContent) throws DataFordelerException {
+        return null;
     }
-
-
-
 
 }

@@ -1,5 +1,6 @@
 package dk.magenta.datafordeler.plugindemo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dk.magenta.datafordeler.core.database.*;
 import org.hibernate.Session;
@@ -30,11 +31,15 @@ import java.util.UUID;
 })
 public class DemoEntityRecord extends DatabaseEntry implements IdentifiedEntity {
 
+
+    public static final String schema = "demo";
+
     public static final String DB_FIELD_IDENTIFICATION = "identification";
 
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     //@OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name = DB_FIELD_IDENTIFICATION)
+    @JsonIgnore
     public Identification identification;
 
     @Override
@@ -63,8 +68,21 @@ public class DemoEntityRecord extends DatabaseEntry implements IdentifiedEntity 
     }
 
 
+    public void setUUID(UUID uuid) {
+        this.identification.setUuid(uuid);
+    }
+
+    public void setDomain(String domain) {
+        this.identification.setDomain(domain);
+    }
+
+    public String getDomain() {
+        return this.identification.getDomain();
+    }
+
+
     public static final String DB_FIELD_ADDRESS_NUMBER = "number";
-    public static final String IO_FIELD_ADDRESS_NUMBER = "nummer";
+    public static final String IO_FIELD_ADDRESS_NUMBER = "postnr";
 
     @Column(name = DB_FIELD_ADDRESS_NUMBER)
     @JsonProperty(IO_FIELD_ADDRESS_NUMBER)
@@ -80,7 +98,7 @@ public class DemoEntityRecord extends DatabaseEntry implements IdentifiedEntity 
 
 
     public static final String DB_FIELD_ADDRESS_NAME = "name";
-    public static final String IO_FIELD_ADDRESS_NAME = "navn";
+    public static final String IO_FIELD_ADDRESS_NAME = "bynavn";
     @OneToMany(mappedBy = DemoDataRecord.DB_FIELD_ENTITY, cascade = CascadeType.ALL)
     @Filters({
             @Filter(name = Bitemporal.FILTER_EFFECTFROM_AFTER, condition = Bitemporal.FILTERLOGIC_EFFECTFROM_AFTER),
