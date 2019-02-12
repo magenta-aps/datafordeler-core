@@ -64,21 +64,8 @@ public class LoadPluginTest {
     }
 
 
-
     @Test
     @Order(order=4)
-    public void findDemoPluginTest2() throws URISyntaxException {
-
-        Plugin foundPlugin = this.pluginManager.getPluginForURI(new URI("http://localhost:" + Application.servicePort));
-        Assert.assertNotNull(foundPlugin);
-        Assert.assertEquals(DemoPlugin.class, foundPlugin.getClass());
-
-        foundPlugin = this.pluginManager.getPluginForURI(new URI("http://example.com"));
-        Assert.assertNull(foundPlugin);
-    }
-
-    @Test
-    @Order(order=5)
     public void configurationTest() {
         Plugin plugin = this.pluginManager.getPluginForSchema(DemoEntityRecord.schema);
         Session session = sessionManager.getSessionFactory().openSession();

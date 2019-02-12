@@ -62,10 +62,14 @@ public class IndexTest {
         }
         Assert.assertEquals("int", mappedFields.get("postnr"));
         Assert.assertEquals("string", mappedFields.get("bynavn"));
-        Assert.assertEquals("string", mappedFields.get("registrationFrom"));
-        Assert.assertEquals("string", mappedFields.get("registrationTo"));
-        Assert.assertEquals("string", mappedFields.get("effectFrom"));
-        Assert.assertEquals("string", mappedFields.get("effectTo"));
+        Assert.assertEquals("string", mappedFields.get("registrationFromAfter"));
+        Assert.assertEquals("string", mappedFields.get("registrationFromBefore"));
+        Assert.assertEquals("string", mappedFields.get("registrationToAfter"));
+        Assert.assertEquals("string", mappedFields.get("registrationToBefore"));
+        Assert.assertEquals("string", mappedFields.get("effectFromAfter"));
+        Assert.assertEquals("string", mappedFields.get("effectFromBefore"));
+        Assert.assertEquals("string", mappedFields.get("effectToAfter"));
+        Assert.assertEquals("string", mappedFields.get("effectToBefore"));
         Assert.assertEquals("int", mappedFields.get("pageSize"));
         Assert.assertEquals("int", mappedFields.get("page"));
 
@@ -84,12 +88,15 @@ public class IndexTest {
             }
         }
         Assert.assertEquals("int", mappedFields.get("postnr"));
-        Assert.assertEquals("boolean", mappedFields.get("aktiv"));
         Assert.assertEquals("string", mappedFields.get("bynavn"));
-        Assert.assertEquals("string", mappedFields.get("registrationFrom"));
-        Assert.assertEquals("string", mappedFields.get("registrationTo"));
-        Assert.assertEquals("string", mappedFields.get("effectFrom"));
-        Assert.assertEquals("string", mappedFields.get("effectTo"));
+        Assert.assertEquals("string", mappedFields.get("registrationFromAfter"));
+        Assert.assertEquals("string", mappedFields.get("registrationFromBefore"));
+        Assert.assertEquals("string", mappedFields.get("registrationToAfter"));
+        Assert.assertEquals("string", mappedFields.get("registrationToBefore"));
+        Assert.assertEquals("string", mappedFields.get("effectFromAfter"));
+        Assert.assertEquals("string", mappedFields.get("effectFromBefore"));
+        Assert.assertEquals("string", mappedFields.get("effectToAfter"));
+        Assert.assertEquals("string", mappedFields.get("effectToBefore"));
         Assert.assertEquals("int", mappedFields.get("pageSize"));
         Assert.assertEquals("int", mappedFields.get("page"));
     }
@@ -120,12 +127,17 @@ public class IndexTest {
                 mappedFields.put(nameNode.textValue(), queryFieldObjectNode.get("type").textValue());
             }
         }
+        System.out.println("mappedFields: "+mappedFields);
         Assert.assertEquals("int", mappedFields.get("postnr"));
         Assert.assertEquals("string", mappedFields.get("bynavn"));
-        Assert.assertEquals("string", mappedFields.get("registrationFrom"));
-        Assert.assertEquals("string", mappedFields.get("registrationTo"));
-        Assert.assertEquals("string", mappedFields.get("effectFrom"));
-        Assert.assertEquals("string", mappedFields.get("effectTo"));
+        Assert.assertEquals("string", mappedFields.get("registrationFromAfter"));
+        Assert.assertEquals("string", mappedFields.get("registrationFromBefore"));
+        Assert.assertEquals("string", mappedFields.get("registrationToAfter"));
+        Assert.assertEquals("string", mappedFields.get("registrationToBefore"));
+        Assert.assertEquals("string", mappedFields.get("effectFromAfter"));
+        Assert.assertEquals("string", mappedFields.get("effectFromBefore"));
+        Assert.assertEquals("string", mappedFields.get("effectToAfter"));
+        Assert.assertEquals("string", mappedFields.get("effectToBefore"));
         Assert.assertEquals("int", mappedFields.get("pageSize"));
         Assert.assertEquals("int", mappedFields.get("page"));
     }
@@ -176,10 +188,14 @@ public class IndexTest {
                 }
 
             }
-            Assert.assertEquals("string", queryFieldMap.get("registrationFrom"));
-            Assert.assertEquals("string", queryFieldMap.get("registrationTo"));
-            Assert.assertEquals("string", queryFieldMap.get("effectFrom"));
-            Assert.assertEquals("string", queryFieldMap.get("effectTo"));
+            Assert.assertEquals("string", queryFieldMap.get("registrationFromAfter"));
+            Assert.assertEquals("string", queryFieldMap.get("registrationFromBefore"));
+            Assert.assertEquals("string", queryFieldMap.get("registrationToAfter"));
+            Assert.assertEquals("string", queryFieldMap.get("registrationToBefore"));
+            Assert.assertEquals("string", queryFieldMap.get("effectFromAfter"));
+            Assert.assertEquals("string", queryFieldMap.get("effectFromBefore"));
+            Assert.assertEquals("string", queryFieldMap.get("effectToAfter"));
+            Assert.assertEquals("string", queryFieldMap.get("effectToBefore"));
             Assert.assertEquals("int", queryFieldMap.get("pageSize"));
             Assert.assertEquals("int", queryFieldMap.get("page"));
         }

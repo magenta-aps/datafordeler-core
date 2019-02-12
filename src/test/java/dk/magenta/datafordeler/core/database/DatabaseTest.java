@@ -1,5 +1,7 @@
 package dk.magenta.datafordeler.core.database;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.plugindemo.fapi.DemoRecordQuery;
@@ -24,6 +26,9 @@ public class DatabaseTest {
     @Autowired
     SessionManager sessionManager;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private static final String domain = "test";
 
     @Test
@@ -39,19 +44,19 @@ public class DatabaseTest {
             DemoDataRecord record1 = new DemoDataRecord("København K");
             record1.setBitemporality("2017-02-21T16:02:50+01:00", null, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
             demoEntity1.addBitemporalRecord(record1, session);
-            session.saveOrUpdate(demoEntity1);
+            session.save(demoEntity1);
 
 
             UUID uuid2 = UUID.randomUUID();
             DemoEntityRecord demoEntity2 = new DemoEntityRecord();
-            demoEntity1.setPostnr(9999);
-            demoEntity1.setIdentification(new Identification(uuid2, domain));
+            demoEntity2.setPostnr(9999);
+            demoEntity2.setIdentification(new Identification(uuid2, domain));
             DemoDataRecord record2 = new DemoDataRecord("NameWith%");
             record2.setBitemporality("2017-02-21T16:02:50+01:00", null, "2017-02-22T13:59:30+01:00", "2017-12-31T23:59:59+01:00");
             demoEntity2.addBitemporalRecord(record2, session);
-            session.saveOrUpdate(demoEntity2);
-            transaction.commit();
+            session.save(demoEntity2);
 
+            transaction.commit();
 
             DemoRecordQuery demoQuery1 = new DemoRecordQuery();
             demoQuery1.setPostnr(1455);
@@ -107,7 +112,7 @@ public class DatabaseTest {
             Assert.assertEquals(uuid1, results9.get(0).getUUID());
 
             DemoRecordQuery demoQuery10 = new DemoRecordQuery();
-            demoQuery10.setBynavn("København K");
+            demoQuery10.setBynavn("København X");
             List<DemoEntityRecord> results10 = QueryManager.getAllEntities(session, demoQuery10, DemoEntityRecord.class);
             Assert.assertEquals(0, results10.size());
 

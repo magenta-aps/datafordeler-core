@@ -28,7 +28,7 @@ public class DemoRecordOutputWrapper extends RecordOutputWrapper<DemoEntityRecor
     @Override
     protected void fillContainer(RecordOutputWrapper<DemoEntityRecord>.OutputContainer container, DemoEntityRecord item) {
         container.addNontemporal(DemoEntityRecord.IO_FIELD_ADDRESS_NUMBER, item.getPostnr());
-        container.addBitemporal(DemoEntityRecord.IO_FIELD_ADDRESS_NAME, item.getName(), true);
+        container.addBitemporal(DemoEntityRecord.IO_FIELD_NAME, item.getName(), true);
     }
 
     @Override

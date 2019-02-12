@@ -12,7 +12,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class DemoDataRecord extends DemoBitemporalRecord {
 
-    @Column
+
+    public static final String DB_FIELD_NAME = "bynavn";
+    @Column(name = DB_FIELD_NAME)
     @JsonProperty("bynavn")
     @XmlElement(name="bynavn")
     private String bynavn;

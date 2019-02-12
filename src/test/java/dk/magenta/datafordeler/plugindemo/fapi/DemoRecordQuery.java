@@ -1,13 +1,10 @@
 package dk.magenta.datafordeler.plugindemo.fapi;
 
 import dk.magenta.datafordeler.core.database.BaseLookupDefinition;
-import dk.magenta.datafordeler.core.database.LookupDefinition;
 import dk.magenta.datafordeler.core.fapi.BaseQuery;
 import dk.magenta.datafordeler.core.fapi.ParameterMap;
-import dk.magenta.datafordeler.core.fapi.Query;
 import dk.magenta.datafordeler.core.fapi.QueryField;
-import dk.magenta.datafordeler.plugindemo.model.DemoData;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
+import dk.magenta.datafordeler.plugindemo.model.DemoDataRecord;
 import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 
 import java.util.HashMap;
@@ -67,7 +64,7 @@ public class DemoRecordQuery extends BaseQuery {
             lookupDefinition.put(BaseLookupDefinition.entityref + BaseLookupDefinition.separator + "postnr", this.postnr, Integer.class);
         }
         if (this.bynavn != null) {
-            lookupDefinition.put("bynavn", this.bynavn, String.class);
+            lookupDefinition.put(DemoEntityRecord.DB_FIELD_NAME + BaseLookupDefinition.separator + DemoDataRecord.DB_FIELD_NAME, this.bynavn, String.class);
         }
         return lookupDefinition;
     }

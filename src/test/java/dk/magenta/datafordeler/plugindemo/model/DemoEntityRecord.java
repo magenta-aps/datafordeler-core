@@ -8,7 +8,6 @@ import org.hibernate.annotations.*;
 
 import javax.persistence.*;
 import javax.persistence.CascadeType;
-import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.util.Collection;
 import java.util.HashSet;
@@ -97,9 +96,9 @@ public class DemoEntityRecord extends DatabaseEntry implements IdentifiedEntity 
     }
 
 
-    public static final String DB_FIELD_ADDRESS_NAME = "name";
-    public static final String IO_FIELD_ADDRESS_NAME = "bynavn";
-    @OneToMany(mappedBy = DemoDataRecord.DB_FIELD_ENTITY, cascade = CascadeType.ALL)
+    public static final String DB_FIELD_NAME = "name";
+    public static final String IO_FIELD_NAME = "bynavn";
+    @OneToMany(targetEntity = DemoDataRecord.class, mappedBy = DemoDataRecord.DB_FIELD_ENTITY, cascade = CascadeType.ALL)
     @Filters({
             @Filter(name = Bitemporal.FILTER_EFFECTFROM_AFTER, condition = Bitemporal.FILTERLOGIC_EFFECTFROM_AFTER),
             @Filter(name = Bitemporal.FILTER_EFFECTFROM_BEFORE, condition = Bitemporal.FILTERLOGIC_EFFECTFROM_BEFORE),
@@ -112,7 +111,7 @@ public class DemoEntityRecord extends DatabaseEntry implements IdentifiedEntity 
             @Filter(name = Nontemporal.FILTER_LASTUPDATED_AFTER, condition = Nontemporal.FILTERLOGIC_LASTUPDATED_AFTER),
             @Filter(name = Nontemporal.FILTER_LASTUPDATED_BEFORE, condition = Nontemporal.FILTERLOGIC_LASTUPDATED_BEFORE)
     })
-    @JsonProperty(IO_FIELD_ADDRESS_NAME)
+    @JsonProperty(IO_FIELD_NAME)
     Set<DemoDataRecord> name = new HashSet<>();
 
     public Set<DemoDataRecord> getName() {

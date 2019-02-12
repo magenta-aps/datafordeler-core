@@ -56,13 +56,13 @@ public abstract class BaseQuery {
     @QueryField(queryNames = {"registreringTilEfter", "registrationToAfter"}, type = QueryField.FieldType.STRING)
     protected OffsetDateTime registrationToAfter = null;
 
-    @QueryField(queryNames = {"virkningFraFør", "effectFromBefore "}, type = QueryField.FieldType.STRING)
+    @QueryField(queryNames = {"virkningFraFør", "effectFromBefore"}, type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectFromBefore = null;
 
     @QueryField(queryNames = {"virkningFraEfter", "effectFromAfter"}, type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectFromAfter = null;
 
-    @QueryField(queryNames = {"virkningTilFør", "effectToBefore "}, type = QueryField.FieldType.STRING)
+    @QueryField(queryNames = {"virkningTilFør", "effectToBefore"}, type = QueryField.FieldType.STRING)
     protected OffsetDateTime effectToBefore  = null;
 
     @QueryField(queryNames = {"virkningTilEfter", "effectToAfter"}, type = QueryField.FieldType.STRING)
