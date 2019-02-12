@@ -86,7 +86,6 @@ public class DafoUserManager {
 
     public DafoUserDetails getUserFromRequest(HttpServletRequest request, boolean samlOnly)
             throws InvalidTokenException, AccessDeniedException, InvalidCertificateException {
-
         if (request instanceof MockInternalServletRequest) {
             return ((MockInternalServletRequest) request).getUserDetails();
         }
