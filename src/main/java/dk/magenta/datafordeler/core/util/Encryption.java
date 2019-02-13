@@ -31,13 +31,13 @@ public abstract class Encryption {
         return handle;
     }
 
-    public static byte[] encrypt(File keyFile, String plaintext) throws Exception {
+    public static byte[] encrypt(File keyFile, String plaintext) throws GeneralSecurityException, IOException {
         KeysetHandle handle = getKeysetHandle(keyFile);
         Aead aead = AeadFactory.getPrimitive(handle);
         return aead.encrypt(plaintext.getBytes(), new byte[0]);
     }
 
-    public static String decrypt(File keyFile, byte[] ciphertext) throws Exception {
+    public static String decrypt(File keyFile, byte[] ciphertext) throws GeneralSecurityException, IOException {
         KeysetHandle handle = getKeysetHandle(keyFile);
         Aead aead = AeadFactory.getPrimitive(handle);
         byte[] plaintext = aead.decrypt(ciphertext, new byte[0]);
