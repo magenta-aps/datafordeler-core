@@ -231,8 +231,8 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                                     effectNode = objectMapper.createObjectNode();
                                     effectsNode.add(effectNode);
                                 }
-                                effectNode.put(EFFECT_FROM, formatTime(bitemporality.effectFrom, true));
-                                effectNode.put(EFFECT_TO, formatTime(bitemporality.effectTo, true));
+                                effectNode.put(EFFECT_FROM, formatTime(bitemporality.effectFrom));
+                                effectNode.put(EFFECT_TO, formatTime(bitemporality.effectTo));
                                 HashMap<String, ArrayList<JsonNode>> records = this.bitemporalData.get(bitemporality);
                                 for (String key : records.keySet()) {
                                     List<JsonNode> nodes = records.get(key);

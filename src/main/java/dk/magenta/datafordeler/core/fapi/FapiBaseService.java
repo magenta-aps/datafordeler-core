@@ -580,8 +580,8 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
 
 
 
-    private static Map<String, Object> objectNodeToFlatMap(ObjectNode node, Set<String> omitKeys) {
-        Map<String, Object> output = new HashMap<>();
+    private static Map<String, String> objectNodeToFlatMap(ObjectNode node, Set<String> omitKeys) {
+        Map<String, String> output = new HashMap<>();
         for (Iterator<String> it = node.fieldNames(); it.hasNext(); ) {
             String key = it.next();
             if (omitKeys == null || !omitKeys.contains(key)) {
@@ -607,15 +607,19 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
                              HttpServletResponse response)
             throws IOException, HttpNotFoundException {
 
-        System.out.println("sendAsCSV");
         List<MediaType> acceptedTypes = MediaType.parseMediaTypes(request.getHeader("Accept"));
 
         Set<String> omitEntityKeys = Collections.singleton("domain");
         BaseQuery baseQuery = this.getEmptyQuery();
-        Iterator<Map<String, Object>> dataIter = entities.map(e -> {
-            List<Map<String, Object>> rows = new ArrayList<>();
+        Iterator<Map<String, String>> dataIter = entities.map(e -> {
+            List<Map<String, String>> rows = new ArrayList<>();
             Object wrapped = FapiBaseService.this.getOutputWrapper().wrapResult(e, baseQuery, OutputWrapper.Mode.RVD);
             ObjectNode entityNode = (ObjectNode) wrapped;
+            try {
+                System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entityNode));
+            } catch (JsonProcessingException e1) {
+                e1.printStackTrace();
+            }
             ArrayNode registrations = (ArrayNode) entityNode.get("registreringer");
             if (registrations != null) {
                 for (int i = 0; i < registrations.size(); i++) {
@@ -626,12 +630,12 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
                             for (int j=0; j<effects.size(); j++) {
                                 ObjectNode effectNode = (ObjectNode) effects.get(j);
                                 if (effectNode != null) {
-                                    Map<String, Object> output = new HashMap<>();
+                                    Map<String, String> output = new HashMap<>();
                                     output.putAll(objectNodeToFlatMap(effectNode, null));
                                     output.putAll(objectNodeToFlatMap(registrationNode, null));
                                     output.putAll(objectNodeToFlatMap(entityNode, omitEntityKeys));
+                                    System.out.println(output);
                                     rows.add(output);
-                                    //rows.add(replaceValues(output, null, ""));
                                 }
                             }
                         }
@@ -639,12 +643,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
                 }
             }
             return rows;
-        }).flatMap((Function<List<Map<String, Object>>, Stream<Map<String, Object>>>) Collection::stream).iterator();
-
-
-
-
-
+        }).flatMap((Function<List<Map<String, String>>, Stream<Map<String, String>>>) Collection::stream).iterator();
 
 /*
         Iterator<Map<String, Object>> dataIter =
@@ -679,12 +678,10 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             return;
         }
 
-        CsvSchema.Builder builder =
-                new CsvSchema.Builder();
+        CsvSchema.Builder builder = new CsvSchema.Builder();
 
-        Map<String, Object> first = dataIter.next();
-        ArrayList<String> keys =
-                new ArrayList<>(first.keySet());
+        Map<String, String> first = dataIter.next();
+        ArrayList<String> keys = new ArrayList<>(first.keySet());
         Collections.sort(keys);
 
         for (int i = 0; i < keys.size(); i++) {
@@ -694,8 +691,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             ));
         }
 
-        CsvSchema schema =
-                builder.build().withHeader();
+        CsvSchema schema = builder.build().withHeader();
 
         if (acceptedTypes.contains(new MediaType("text", "tsv"))) {
             schema = schema.withColumnSeparator('\t');
@@ -704,13 +700,14 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             response.setContentType("text/csv");
         }
 
-        SequenceWriter writer =
-                csvMapper.writer(schema).writeValues(response.getOutputStream());
+        SequenceWriter writer = csvMapper.writer(schema).writeValues(response.getOutputStream());
 
         writer.write(first);
 
         while (dataIter.hasNext()) {
-            writer.write(dataIter.next());
+            Map<String, String> data = dataIter.next();
+            System.out.println("data: "+data);
+            writer.write(data);
         }
     }
 }
