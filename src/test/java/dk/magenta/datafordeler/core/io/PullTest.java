@@ -13,6 +13,7 @@ import dk.magenta.datafordeler.core.testutil.ExpectorCallback;
 import dk.magenta.datafordeler.core.testutil.Order;
 import dk.magenta.datafordeler.core.testutil.OrderedRunner;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,11 +52,10 @@ public class PullTest extends GapiTestBase {
     @Test
     @Order(order=1)
     public void pull() throws DataFordelerException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Plugin plugin = pluginManager.getPluginForSchema("Postnummer");
+        Plugin plugin = pluginManager.getPluginForSchema(DemoEntityRecord.schema);
         DemoRegisterManager.setPortOnAll(this.port);
 
         String checksum = this.hash(UUID.randomUUID().toString());
-        System.out.println("checksum: "+checksum);
         String reference = "http://localhost:"+this.port+"/test/get/" + checksum;
         String uuid = UUID.randomUUID().toString();
         String full = this.getPayload("/referencelookuptest.json")
@@ -68,7 +68,6 @@ public class PullTest extends GapiTestBase {
 
         String event1 = this.envelopReference("Postnummer", reference);
         String body = this.jsonList(Collections.singletonList(event1), "events");
-        System.out.println("body: "+body);
         ExpectorCallback eventCallback = new ExpectorCallback();
         this.callbackController.addCallbackResponse("/test/getNewEvents", body, eventCallback);
 

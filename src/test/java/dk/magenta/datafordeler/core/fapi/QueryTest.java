@@ -125,12 +125,16 @@ public class QueryTest {
     public void testRegistrationFrom() throws Exception {
         Query query = new QueryImpl();
         OffsetDateTime time = OffsetDateTime.now();
-        query.setRegistrationFrom(time);
-        Assert.assertEquals(time, query.getRegistrationFrom());
+        query.setRegistrationFromBefore(time);
+        Assert.assertEquals(time, query.getRegistrationFromBefore());
+        query.setRegistrationFromAfter(time);
+        Assert.assertEquals(time, query.getRegistrationFromAfter());
 
         for (String testDateTime : this.dateTimeTests.keySet()) {
-            query.setRegistrationFrom(testDateTime);
-            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getRegistrationFrom());
+            query.setRegistrationFromBefore(testDateTime);
+            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getRegistrationFromBefore());
+            query.setRegistrationFromAfter(testDateTime);
+            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getRegistrationFromAfter());
         }
     }
 
@@ -138,12 +142,12 @@ public class QueryTest {
     public void testRegistrationTo() throws Exception {
         Query query = new QueryImpl();
         OffsetDateTime time = OffsetDateTime.now();
-        query.setRegistrationTo(time);
-        Assert.assertEquals(time, query.getRegistrationTo());
+        query.setRegistrationToBefore(time);
+        Assert.assertEquals(time, query.getRegistrationToBefore());
 
         for (String testDateTime : this.dateTimeTests.keySet()) {
-            query.setRegistrationTo(testDateTime);
-            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getRegistrationTo());
+            query.setRegistrationToBefore(testDateTime);
+            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getRegistrationToBefore());
         }
     }
 
@@ -151,12 +155,16 @@ public class QueryTest {
     public void testEffectFrom() throws Exception {
         Query query = new QueryImpl();
         OffsetDateTime time = OffsetDateTime.now();
-        query.setEffectFrom(time);
-        Assert.assertEquals(time, query.getEffectFrom());
+        query.setEffectFromBefore(time);
+        Assert.assertEquals(time, query.getEffectFromBefore());
+        query.setEffectFromAfter(time);
+        Assert.assertEquals(time, query.getEffectFromAfter());
 
         for (String testDateTime : this.dateTimeTests.keySet()) {
-            query.setEffectFrom(testDateTime);
-            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getEffectFrom());
+            query.setEffectFromBefore(testDateTime);
+            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getEffectFromBefore());
+            query.setEffectFromAfter(testDateTime);
+            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getEffectFromAfter());
         }
     }
 
@@ -164,12 +172,16 @@ public class QueryTest {
     public void testEffectTo() throws Exception {
         Query query = new QueryImpl();
         OffsetDateTime time = OffsetDateTime.now();
-        query.setEffectTo(time);
-        Assert.assertEquals(time, query.getEffectTo());
+        query.setEffectToBefore(time);
+        Assert.assertEquals(time, query.getEffectToBefore());
+        query.setEffectToAfter(time);
+        Assert.assertEquals(time, query.getEffectToAfter());
 
         for (String testDateTime : this.dateTimeTests.keySet()) {
-            query.setEffectTo(testDateTime);
-            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getEffectTo());
+            query.setEffectToBefore(testDateTime);
+            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getEffectToBefore());
+            query.setEffectToAfter(testDateTime);
+            Assert.assertEquals(OffsetDateTime.parse(this.dateTimeTests.get(testDateTime)), query.getEffectToAfter());
         }
     }
 

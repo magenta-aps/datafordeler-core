@@ -3,8 +3,11 @@ package dk.magenta.datafordeler.core.fapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import dk.magenta.datafordeler.core.database.DataItem;
 import dk.magenta.datafordeler.core.database.IdentifiedEntity;
 import dk.magenta.datafordeler.core.database.QueryManager;
@@ -13,11 +16,13 @@ import dk.magenta.datafordeler.core.exception.*;
 import dk.magenta.datafordeler.core.plugin.Plugin;
 import dk.magenta.datafordeler.core.user.DafoUserDetails;
 import dk.magenta.datafordeler.core.user.DafoUserManager;
+import dk.magenta.datafordeler.core.util.Equality;
 import dk.magenta.datafordeler.core.util.LoggerHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,10 +39,10 @@ import javax.xml.ws.WebServiceContext;
 import javax.xml.ws.handler.MessageContext;
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Service container to be subclassed for each Entity class, serving REST and SOAP
@@ -392,7 +397,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             }
             envelope.close();
             loggerHelper.logResult(envelope, requestParams.toString());
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
             this.log.warn("Error in REST search ("+request.getRequestURI()+")", e);
             throw e;
         } catch (DataFordelerException e) {
@@ -474,7 +479,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             }
             envelope.close();
             loggerHelper.logResult(envelope, query.toString());
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidTokenException e) {
             this.log.warn("Error in SOAP search", e);
             throw e;
         } catch (DataFordelerException e) {
@@ -506,7 +511,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
         return query;
     }
 
-    protected void applyAreaRestrictionsToQuery(Q query, DafoUserDetails user) throws InvalidClientInputException {
+    protected void applyAreaRestrictionsToQuery(Q query, DafoUserDetails user) {
         return;
     }
 
@@ -519,7 +524,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
     //@WebMethod(exclude = true)
     //protected abstract Set<E> searchByQuery(Q query);
     @WebMethod(exclude = true) // Non-soap methods must have this
-    protected List<E> searchByQuery(Q query, Session session) throws DataFordelerException {
+    protected List<E> searchByQuery(Q query, Session session) {
         query.applyFilters(session);
         return QueryManager.getAllEntities(
                 session, query,
@@ -535,8 +540,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
     //@WebMethod(exclude = true)
     //protected abstract Set<E> searchByQuery(Q query);
     @WebMethod(exclude = true) // Non-soap methods must have this
-    protected Stream<E> searchByQueryAsStream(Q query, Session session) throws
-        DataFordelerException {
+    protected Stream<E> searchByQueryAsStream(Q query, Session session) {
         query.applyFilters(session);
         return QueryManager.getAllEntitiesAsStream(
                 session, query,
@@ -572,5 +576,141 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
         return entity;
     }
 
-    protected abstract void sendAsCSV(Stream<E> entities, HttpServletRequest request, HttpServletResponse response) throws IOException, HttpNotFoundException;
+    //protected abstract void sendAsCSV(Stream<E> entities, HttpServletRequest request, HttpServletResponse response) throws IOException, HttpNotFoundException;
+
+
+
+    private static Map<String, Object> objectNodeToFlatMap(ObjectNode node, Set<String> omitKeys) {
+        Map<String, Object> output = new HashMap<>();
+        for (Iterator<String> it = node.fieldNames(); it.hasNext(); ) {
+            String key = it.next();
+            if (omitKeys == null || !omitKeys.contains(key)) {
+                JsonNode value = node.get(key);
+                if (value.isValueNode()) {
+                    output.put(key, value.isNull() ? null : value.asText());
+                }
+            }
+        }
+        return output;
+    }
+
+    private static Map<String, Object> replaceValues(Map<String, Object> input, Object subject, Object replace) {
+        Map<String, Object> output = new HashMap<>();
+        for (String key : input.keySet()) {
+            Object value = input.get(key);
+            output.put(key, Objects.equals(value, subject) ? replace : value);
+        }
+        return output;
+    }
+
+    protected void sendAsCSV(Stream<E> entities, HttpServletRequest request,
+                             HttpServletResponse response)
+            throws IOException, HttpNotFoundException {
+
+        System.out.println("sendAsCSV");
+        List<MediaType> acceptedTypes = MediaType.parseMediaTypes(request.getHeader("Accept"));
+
+        Set<String> omitEntityKeys = Collections.singleton("domain");
+        BaseQuery baseQuery = this.getEmptyQuery();
+        Iterator<Map<String, Object>> dataIter = entities.map(e -> {
+            List<Map<String, Object>> rows = new ArrayList<>();
+            Object wrapped = FapiBaseService.this.getOutputWrapper().wrapResult(e, baseQuery, OutputWrapper.Mode.RVD);
+            ObjectNode entityNode = (ObjectNode) wrapped;
+            ArrayNode registrations = (ArrayNode) entityNode.get("registreringer");
+            if (registrations != null) {
+                for (int i = 0; i < registrations.size(); i++) {
+                    ObjectNode registrationNode = (ObjectNode) registrations.get(i);
+                    if (registrationNode != null) {
+                        ArrayNode effects = (ArrayNode) registrationNode.get("virkninger");
+                        if (effects != null) {
+                            for (int j=0; j<effects.size(); j++) {
+                                ObjectNode effectNode = (ObjectNode) effects.get(j);
+                                if (effectNode != null) {
+                                    Map<String, Object> output = new HashMap<>();
+                                    output.putAll(objectNodeToFlatMap(effectNode, null));
+                                    output.putAll(objectNodeToFlatMap(registrationNode, null));
+                                    output.putAll(objectNodeToFlatMap(entityNode, omitEntityKeys));
+                                    rows.add(output);
+                                    //rows.add(replaceValues(output, null, ""));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return rows;
+        }).flatMap((Function<List<Map<String, Object>>, Stream<Map<String, Object>>>) Collection::stream).iterator();
+
+
+
+
+
+
+/*
+        Iterator<Map<String, Object>> dataIter =
+                entities.map(Entity::getRegistrations).flatMap(
+                        List::stream
+                ).flatMap(
+                        r -> ((Registration) r).getEffects().stream()
+                ).map(
+                        obj -> {
+                            Effect e = (Effect) obj;
+                            Registration r = e.getRegistration();
+                            Map<String, Object> data = e.getData();
+
+                            data.put("effectFrom",
+                                    e.getEffectFrom());
+                            data.put("effectTo",
+                                    e.getEffectTo());
+                            data.put("registrationFrom",
+                                    r.getRegistrationFrom());
+                            data.put("registrationTo",
+                                    r.getRegistrationFrom());
+                            data.put("sequenceNumber",
+                                    r.getSequenceNumber());
+                            data.put("uuid", r.getEntity().getUUID());
+
+                            return data;
+                        }
+                ).iterator();
+*/
+        if (!dataIter.hasNext()) {
+            response.sendError(HttpStatus.NO_CONTENT.value());
+            return;
+        }
+
+        CsvSchema.Builder builder =
+                new CsvSchema.Builder();
+
+        Map<String, Object> first = dataIter.next();
+        ArrayList<String> keys =
+                new ArrayList<>(first.keySet());
+        Collections.sort(keys);
+
+        for (int i = 0; i < keys.size(); i++) {
+            builder.addColumn(new CsvSchema.Column(
+                    i, keys.get(i),
+                    CsvSchema.ColumnType.NUMBER_OR_STRING
+            ));
+        }
+
+        CsvSchema schema =
+                builder.build().withHeader();
+
+        if (acceptedTypes.contains(new MediaType("text", "tsv"))) {
+            schema = schema.withColumnSeparator('\t');
+            response.setContentType("text/tsv");
+        } else {
+            response.setContentType("text/csv");
+        }
+
+        SequenceWriter writer =
+                csvMapper.writer(schema).writeValues(response.getOutputStream());
+
+        writer.write(first);
+
+        while (dataIter.hasNext()) {
+            writer.write(dataIter.next());
+        }
+    }
 }
