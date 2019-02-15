@@ -87,7 +87,7 @@ public abstract class RegisterManager {
         return null;
     }
 
-    public EntityManager getEntityManager(Class<? extends Entity> entityClass) {
+    public EntityManager getEntityManager(Class<?> entityClass) {
         for (EntityManager entityManager : this.entityManagers) {
             if (entityManager.getManagedEntityClass() == entityClass) {
                 return entityManager;

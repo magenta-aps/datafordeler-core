@@ -98,8 +98,9 @@ public final class Command extends DatabaseEntry implements Configuration {
         return command;
     }
 
-    @JsonProperty
-    public Long getId() {
+    @JsonProperty(value = "id")
+    public Long getIdentification() {
+        // If this method was named "getId", Jackson would ignore this in favor of superclass getId
         return super.getId();
     }
 

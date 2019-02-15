@@ -3,17 +3,12 @@ package dk.magenta.datafordeler.core.fapi;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.*;
-import dk.magenta.datafordeler.core.database.Identification;
-import dk.magenta.datafordeler.core.database.IdentifiedEntity;
-import dk.magenta.datafordeler.core.database.Monotemporal;
-import dk.magenta.datafordeler.core.database.Nontemporal;
+import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.util.Bitemporality;
 import dk.magenta.datafordeler.core.util.BitemporalityComparator;
 import dk.magenta.datafordeler.core.util.DoubleListHashMap;
 import dk.magenta.datafordeler.core.util.ListHashMap;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -34,7 +29,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
     public abstract ObjectMapper getObjectMapper();
 
     // RVD
-    private final Set<String> rvdNodeRemoveFields = new HashSet<>(Arrays.asList(new String[]{
+    private final Set<String> rvdNodeRemoveFields = new HashSet<>(Arrays.asList(
             "registreringFra",
             "registreringTil",
             "registrationFrom",
@@ -43,7 +38,7 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
             "virkningTil",
             "sidstOpdateret",
             "lastUpdated"
-    }));
+    ));
     private final Set<String> rdvNodeRemoveFields = rvdNodeRemoveFields;
 
     public Set<String> getRemoveFieldNames(Mode mode) {
@@ -63,6 +58,10 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
     protected class OutputContainer {
 
         protected DoubleListHashMap<Bitemporality, String, JsonNode> bitemporalData = new DoubleListHashMap<>();
+
+        public DoubleListHashMap<Bitemporality, String, JsonNode> getBitemporalData() {
+            return this.bitemporalData;
+        }
 
         protected ListHashMap<String, JsonNode> nontemporalData = new ListHashMap<>();
 
@@ -88,20 +87,20 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
             this.addTemporal(key, records, converter, unwrapSingle, forceArray, t -> t.getMonotemporality().asBitemporality());
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records) {
             this.addBitemporal(key, records, null, false, false);
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records, boolean unwrapSingle) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records, boolean unwrapSingle) {
             this.addBitemporal(key, records, null, unwrapSingle, false);
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter) {
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter) {
             this.addBitemporal(key, records, converter, false, false);
         }
 
-        public <T extends Monotemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter, boolean unwrapSingle, boolean forceArray) {
-            this.addTemporal(key, records, converter, unwrapSingle, forceArray, t -> t.getMonotemporality().asBitemporality());
+        public <T extends Bitemporal> void addBitemporal(String key, Set<T> records, Function<T, JsonNode> converter, boolean unwrapSingle, boolean forceArray) {
+            this.addTemporal(key, records, converter, unwrapSingle, forceArray, Bitemporal::getBitemporality);
         }
 
 
@@ -182,7 +181,6 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
 
 
         public ObjectNode getRVD(Bitemporality mustOverlap) {
-
             ObjectMapper objectMapper = RecordOutputWrapper.this.getObjectMapper();
             ArrayNode registrationsNode = objectMapper.createArrayNode();
             ArrayList<Bitemporality> bitemporalities = new ArrayList<>(this.bitemporalData.keySet());
@@ -336,6 +334,9 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                                         }
                                         oNode.put(EFFECT_FROM, formatTime(bitemporality.effectFrom));
                                         oNode.put(EFFECT_TO, formatTime(bitemporality.effectTo));
+                                        if (dataConversion != null) {
+                                            oNode = dataConversion.apply(Pair.of(key, oNode));
+                                        }
                                         dataNode.add(oNode);
                                     }
 
@@ -406,7 +407,12 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
 
     @Override
     public Object wrapResult(E record, BaseQuery query, Mode mode) {
-        Bitemporality mustContain = new Bitemporality(query.getRegistrationFrom(), query.getRegistrationTo(), query.getEffectFrom(), query.getEffectTo());
+        Bitemporality mustContain = new Bitemporality(
+                query.getRegistrationToAfter(),
+                query.getRegistrationFromBefore(),
+                query.getEffectToAfter(),
+                query.getEffectFromBefore()
+        );
         return this.getNode(record, mustContain, mode);
     }
 

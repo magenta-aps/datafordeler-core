@@ -37,7 +37,16 @@ public interface Bitemporal extends Monotemporal {
     String IO_FIELD_EFFECT_TO = "virkningTil";
     OffsetDateTime getEffectTo();
     void setEffectTo(OffsetDateTime effectTo);
-    
+
+    default Bitemporal setBitemporality(String registrationFrom, String registrationTo, String effectFrom, String effectTo) {
+        return this.setBitemporality(
+                registrationFrom != null ? OffsetDateTime.parse(registrationFrom) : null,
+                registrationTo != null ? OffsetDateTime.parse(registrationTo) : null,
+                effectFrom != null ? OffsetDateTime.parse(effectFrom) : null,
+                effectTo != null ? OffsetDateTime.parse(effectTo) : null
+        );
+    }
+
     default Bitemporal setBitemporality(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, OffsetDateTime effectFrom, OffsetDateTime effectTo) {
         this.setRegistrationFrom(registrationFrom);
         this.setRegistrationTo(registrationTo);

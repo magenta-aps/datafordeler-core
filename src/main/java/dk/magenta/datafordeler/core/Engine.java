@@ -472,10 +472,12 @@ public class Engine {
 
                     for (P registrationReference : missingRegistrationReferences) {
                         List<? extends Registration> registrations = entityManager.fetchRegistration(registrationReference, importMetadata);
-                        for (Registration registration : registrations) {
-                            registration.setLastImportTime(importMetadata.getImportTime());
-                            QueryManager.saveRegistration(session, entity, (R) registration);
-                            newRegistrations.add((R) registration);
+                        if (!entityManager.handlesOwnSaves()) {
+                            for (Registration registration : registrations) {
+                                registration.setLastImportTime(importMetadata.getImportTime());
+                                QueryManager.saveRegistration(session, entity, (R) registration);
+                                newRegistrations.add((R) registration);
+                            }
                         }
                     }
                 }

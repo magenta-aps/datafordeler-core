@@ -35,13 +35,13 @@ import java.util.Map;
  */
 public abstract class EntityManager {
     private RegisterManager registerManager;
-    protected Class<? extends Entity> managedEntityClass;
+    protected Class<? extends IdentifiedEntity> managedEntityClass;
     protected Class<? extends EntityReference> managedEntityReferenceClass;
     protected Class<? extends RegistrationReference> managedRegistrationReferenceClass;
     protected Class<? extends Registration> managedRegistrationClass;
 
 
-    public Class<? extends Entity> getManagedEntityClass() {
+    public Class<? extends IdentifiedEntity> getManagedEntityClass() {
         return this.managedEntityClass;
     }
 

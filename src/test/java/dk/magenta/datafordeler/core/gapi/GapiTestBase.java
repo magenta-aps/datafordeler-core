@@ -3,7 +3,7 @@ package dk.magenta.datafordeler.core.gapi;
 import dk.magenta.datafordeler.core.database.QueryManager;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.testutil.CallbackController;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -80,7 +80,7 @@ public abstract class GapiTestBase {
         Session session = this.sessionManager.getSessionFactory().openSession();
         try {
             Transaction transaction = session.beginTransaction();
-            DemoEntity entity = QueryManager.getEntity(session, UUID.fromString(uuid), DemoEntity.class);
+            DemoEntityRecord entity = QueryManager.getEntity(session, UUID.fromString(uuid), DemoEntityRecord.class);
             if (entity != null) {
                 session.delete(entity);
             }
