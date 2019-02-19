@@ -234,11 +234,11 @@ public abstract class BaseQuery {
     }
 
     public void setRegistrationFrom(OffsetDateTime registrationFrom) {
-        this.setRegistrationFromAfter(registrationFromAfter);
+        this.setRegistrationFromAfter(registrationFrom);
     }
 
     public void setRegistrationFrom(OffsetDateTime registrationFrom, OffsetDateTime fallback) {
-        this.setRegistrationFromAfter(registrationFromAfter, fallback);
+        this.setRegistrationFromAfter(registrationFrom, fallback);
     }
 
     public void setRegistrationFrom(String registrationFromAfter) {
@@ -332,8 +332,8 @@ public abstract class BaseQuery {
 
 
 
-    public OffsetDateTime getEffectFromBefore () {
-        return this.effectFromBefore ;
+    public OffsetDateTime getEffectFromBefore() {
+        return this.effectFromBefore;
     }
 
     public void setEffectFromBefore(OffsetDateTime effectFromBefore) {
@@ -429,6 +429,55 @@ public abstract class BaseQuery {
     public void setEffectToAfter(String effectToAfter, OffsetDateTime fallback) {
         this.setEffectToAfter(parseDateTime(effectToAfter), fallback);
     }
+
+
+
+
+
+
+
+
+    public void setEffectFrom(OffsetDateTime EffectFrom) {
+        this.setEffectFromAfter(EffectFrom);
+    }
+
+    public void setEffectFrom(OffsetDateTime EffectFrom, OffsetDateTime fallback) {
+        this.setEffectFromAfter(EffectFrom, fallback);
+    }
+
+    public void setEffectFrom(String EffectFromAfter) {
+        this.setEffectFromAfter(EffectFromAfter);
+    }
+
+    public void setEffectFrom(String EffectFromAfter, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setEffectFromAfter(EffectFromAfter, fallback);
+    }
+
+    public OffsetDateTime getEffectTo() {
+        return this.getEffectToBefore();
+    }
+
+    public void setEffectTo(OffsetDateTime EffectTo) {
+        this.setEffectToBefore(EffectTo);
+    }
+
+    public void setEffectTo(OffsetDateTime EffectTo, OffsetDateTime fallback) {
+        this.setEffectToBefore(EffectTo, fallback);
+    }
+
+    public void setEffectTo(String EffectTo) {
+        this.setEffectToBefore(EffectTo);
+    }
+
+    public void setEffectTo(String EffectTo, OffsetDateTime fallback) throws DateTimeParseException {
+        this.setEffectToBefore(EffectTo, fallback);
+    }
+
+
+
+
+
+
 
 
 
