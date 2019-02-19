@@ -208,7 +208,9 @@ public abstract class BaseQuery {
 
 
 
-
+    public OffsetDateTime getRegistrationFrom() {
+        return this.registrationFromBefore;
+    }
 
     public OffsetDateTime getRegistrationFromAfter() {
         return this.registrationFromAfter;
@@ -330,7 +332,9 @@ public abstract class BaseQuery {
 
 
 
-
+    public OffsetDateTime getEffectFrom() {
+        return this.effectFromBefore;
+    }
 
     public OffsetDateTime getEffectFromBefore() {
         return this.effectFromBefore;
