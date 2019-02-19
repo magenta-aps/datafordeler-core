@@ -511,7 +511,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
         return query;
     }
 
-    protected void applyAreaRestrictionsToQuery(Q query, DafoUserDetails user) {
+    protected void applyAreaRestrictionsToQuery(Q query, DafoUserDetails user) throws InvalidClientInputException {
         return;
     }
 
