@@ -3,7 +3,7 @@ package dk.magenta.datafordeler.core.plugin;
 import dk.magenta.datafordeler.core.Application;
 import dk.magenta.datafordeler.plugindemo.DemoRegisterManager;
 import dk.magenta.datafordeler.plugindemo.DemoRolesDefinition;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,14 +47,14 @@ public class SinglePluginTest extends PluginTestBase {
         URI uri = new URI("http://localhost:" + this.port);
         Assert.assertTrue(this.plugin.getRegisterManager() instanceof RegisterManager);
         Assert.assertTrue(this.plugin.getRegisterManager() instanceof DemoRegisterManager);
-        Assert.assertEquals(this.plugin.getEntityManager(DemoEntity.schema), this.plugin.getRegisterManager().getEntityManager(DemoEntity.class));
-        Assert.assertEquals(this.plugin.getEntityManager(uri), this.plugin.getEntityManager(DemoEntity.schema));
+        Assert.assertEquals(this.plugin.getEntityManager(DemoEntityRecord.schema), this.plugin.getRegisterManager().getEntityManager(DemoEntityRecord.class));
+        Assert.assertEquals(this.plugin.getEntityManager(uri), this.plugin.getEntityManager(DemoEntityRecord.schema));
     }
 
 
     @Test
     public void testHandlesSchema() throws URISyntaxException {
-        Assert.assertTrue(this.plugin.handlesSchema(DemoEntity.schema));
+        Assert.assertTrue(this.plugin.handlesSchema(DemoEntityRecord.schema));
         Assert.assertFalse(this.plugin.handlesSchema("foobar"));
     }
 

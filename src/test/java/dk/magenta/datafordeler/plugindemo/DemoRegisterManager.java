@@ -58,7 +58,6 @@ public class DemoRegisterManager extends RegisterManager {
 
     public DemoRegisterManager() {
         this.id = UUID.randomUUID();
-        System.out.println("create new DemoRegisterManager "+id);
         this.commonFetcher = new HttpCommunicator();
         this.port = Application.servicePort;
         instances.add(this);
@@ -80,6 +79,8 @@ public class DemoRegisterManager extends RegisterManager {
     public SessionManager getSessionManager() {
         return this.sessionManager;
     }
+
+
 
     public static void setPortOnAll(int port) {
         for (DemoRegisterManager instance : instances) {
@@ -140,7 +141,7 @@ public class DemoRegisterManager extends RegisterManager {
 
     @Override
     public boolean pullsEventsCommonly() {
-        return true;
+        return false;
     }
 
     public ItemInputStream<? extends PluginSourceData> pullEvents(ImportMetadata importMetadata) throws DataFordelerException {

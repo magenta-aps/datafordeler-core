@@ -1,7 +1,7 @@
 package dk.magenta.datafordeler.core.exception;
 
 import dk.magenta.datafordeler.core.Application;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,8 +16,8 @@ public class EntityManagerNotFoundExceptionTest {
 
     @Test
     public void testEntityManagerNotFoundException() throws Exception {
-        EntityManagerNotFoundException exception1 = new EntityManagerNotFoundException(DemoEntity.schema);
-        Assert.assertEquals("EntityManager that handles schema " + DemoEntity.schema + " was not found", exception1.getMessage());
+        EntityManagerNotFoundException exception1 = new EntityManagerNotFoundException(DemoEntityRecord.schema);
+        Assert.assertEquals("EntityManager that handles schema " + DemoEntityRecord.schema + " was not found", exception1.getMessage());
 
         URI uri = new URI("https://data.gl");
         EntityManagerNotFoundException exception2 = new EntityManagerNotFoundException(uri);

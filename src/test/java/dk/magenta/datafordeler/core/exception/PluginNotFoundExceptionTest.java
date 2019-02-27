@@ -1,7 +1,7 @@
 package dk.magenta.datafordeler.core.exception;
 
 import dk.magenta.datafordeler.core.Application;
-import dk.magenta.datafordeler.plugindemo.model.DemoEntity;
+import dk.magenta.datafordeler.plugindemo.model.DemoEntityRecord;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,7 +16,7 @@ public class PluginNotFoundExceptionTest {
 
     @Test
     public void testPluginNotFoundException() throws Exception {
-        String schema = DemoEntity.schema;
+        String schema = DemoEntityRecord.schema;
         PluginNotFoundException exception1 = new PluginNotFoundException(schema, true);
         Assert.assertEquals("Plugin that handles schema " + schema + " was not found", exception1.getMessage());
         Assert.assertEquals("datafordeler.plugin.plugin_not_found", exception1.getCode());

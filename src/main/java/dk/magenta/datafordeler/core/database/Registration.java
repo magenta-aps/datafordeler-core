@@ -37,7 +37,7 @@ import dk.magenta.datafordeler.core.database.Entity;
         @FilterDef(name = Registration.FILTER_REGISTRATION_TO, parameters = @ParamDef(name = Registration.FILTERPARAM_REGISTRATION_TO, type = "java.time.OffsetDateTime"))
 })
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
-@JsonPropertyOrder({"sequenceNumber", "registrationFrom", "registrationTo", "checksum", "effects"})
+@JsonPropertyOrder({"sequenceNumber", "registrationFromBefore", "registrationToBefore", "checksum", "effects"})
 public abstract class Registration<E extends Entity, R extends Registration, V extends Effect> extends DatabaseEntry implements Comparable<Registration> {
 
     public static final String FILTER_REGISTRATION_FROM = "registrationFromFilter";
@@ -49,9 +49,9 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
         this.effects = new ArrayList<V>();
     }
 
-    public Registration(OffsetDateTime registreringFra, OffsetDateTime registrationTo, int sequenceNumber) {
+    public Registration(OffsetDateTime registrationFrom, OffsetDateTime registrationTo, int sequenceNumber) {
         this();
-        this.registrationFrom = registreringFra;
+        this.registrationFrom = registrationFrom;
         this.registrationTo = registrationTo;
         this.sequenceNumber = sequenceNumber;
         this.setLastImportTime();
@@ -74,13 +74,13 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
     /**
-     * @param registreringFra A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
+     * @param registrationFrom A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * @param registrationTo A date string, parseable by DateTimeFormatter.ISO_OFFSET_DATE_TIME (in the format 2007-12-03T10:15:30+01:00)
      * If you want other date formats, consider using java.time.OffsetDateTime.parse() to generate an OffsetDateTime object and pass it
      */
-    public Registration(String registreringFra, String registrationTo, int sequenceNumber) {
+    public Registration(String registrationFrom, String registrationTo, int sequenceNumber) {
         this(
-                registreringFra != null ? OffsetDateTime.parse(registreringFra) : null,
+                registrationFrom != null ? OffsetDateTime.parse(registrationFrom) : null,
                 registrationTo != null ? OffsetDateTime.parse(registrationTo) : null,
                 sequenceNumber
         );
@@ -353,7 +353,7 @@ public abstract class Registration<E extends Entity, R extends Registration, V e
     }
 
     /**
-     * Comparison method for the Comparable interface; results in Registrations being sorted by registrationFrom date, nulls first?
+     * Comparison method for the Comparable interface; results in Registrations being sorted by registrationFromBefore date, nulls first?
      */
     @Override
     public int compareTo(Registration o) {

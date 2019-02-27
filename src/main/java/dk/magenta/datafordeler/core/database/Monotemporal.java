@@ -69,7 +69,7 @@ public interface Monotemporal extends Nontemporal {
 
     /**
      * For sorting purposes; we implement the Comparable interface, so we should
-     * provide a comparison method. Here, we sort CvrRecord objects by registrationFrom, with nulls first
+     * provide a comparison method. Here, we sort CvrRecord objects by registrationFromBefore, with nulls first
      */
     default int compareTo(Monotemporal o) {
         OffsetDateTime oUpdated = o == null ? null : o.getRegistrationFrom();
