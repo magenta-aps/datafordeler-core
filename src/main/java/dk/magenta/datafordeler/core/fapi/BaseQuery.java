@@ -458,23 +458,23 @@ public abstract class BaseQuery {
     }
 
     public OffsetDateTime getEffectTo() {
-        return this.getEffectToBefore();
+        return this.getEffectToAfter();
     }
 
     public void setEffectTo(OffsetDateTime EffectTo) {
-        this.setEffectToBefore(EffectTo);
+        this.setEffectToAfter(EffectTo);
     }
 
     public void setEffectTo(OffsetDateTime EffectTo, OffsetDateTime fallback) {
-        this.setEffectToBefore(EffectTo, fallback);
+        this.setEffectToAfter(EffectTo, fallback);
     }
 
     public void setEffectTo(String EffectTo) {
-        this.setEffectToBefore(EffectTo);
+        this.setEffectToAfter(EffectTo);
     }
 
     public void setEffectTo(String EffectTo, OffsetDateTime fallback) throws DateTimeParseException {
-        this.setEffectToBefore(EffectTo, fallback);
+        this.setEffectToAfter(EffectTo, fallback);
     }
 
 
