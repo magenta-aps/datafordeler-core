@@ -29,7 +29,6 @@ public class DemoDataRecord extends DemoBitemporalRecord {
         return bynavn;
     }
 
-    @Override
     public boolean equalData(Object o) {
         return false;
     }

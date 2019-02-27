@@ -236,8 +236,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
             this.log.warn("Error in REST getById ("+request.getRequestURI()+")", e);
             throw e;
-        } catch (DataFordelerException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
             this.log.error("Error in REST getById", e);
             throw e;
         } finally {
@@ -279,7 +278,6 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             this.log.warn("Error in REST getRestCsv ("+request.getRequestURI()+")", e);
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
             this.log.error("Error in REST getRestCsv ("+request.getRequestURI()+")", e);
             throw e;
         } finally {
@@ -336,8 +334,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
             this.log.warn("Error in SOAP getById (id: "+id+", registeringFra: "+registeringFra+", registeringTil: "+registeringTil+")", e);
             throw e;
-        } catch (DataFordelerException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
             this.log.error("Error in SOAP getById (id: "+id+", registeringFra: "+registeringFra+", registeringTil: "+registeringTil+")", e);
             throw e;
         } finally {
@@ -400,8 +397,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
             this.log.warn("Error in REST search ("+request.getRequestURI()+")", e);
             throw e;
-        } catch (DataFordelerException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
             this.log.error("Error in REST search ("+request.getRequestURI()+")", e);
             throw e;
         } finally {
@@ -440,8 +436,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
             this.log.warn("Error in REST CSV search ("+request.getRequestURI()+")", e);
             throw e;
-        } catch (DataFordelerException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
             this.log.error("Error in REST CSV search ("+request.getRequestURI()+")", e);
             throw e;
         } finally {
@@ -482,8 +477,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
         } catch (AccessDeniedException|AccessRequiredException|InvalidTokenException e) {
             this.log.warn("Error in SOAP search", e);
             throw e;
-        } catch (DataFordelerException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
             this.log.error("Error in SOAP search", e);
             throw e;
         } finally {
