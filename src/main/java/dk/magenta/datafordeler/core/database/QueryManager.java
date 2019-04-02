@@ -184,12 +184,12 @@ public abstract class QueryManager {
         log.debug("Query time: "+(Instant.now().toEpochMilli() - start)+" ms");
         return results;
     }
-
     private static <E extends IdentifiedEntity> org.hibernate.query.Query<E> getQuery(Session session, BaseQuery query, Class<E> eClass) {
         BaseLookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = lookupDefinition.usingRVDModel() ? "d" : ENTITY;
 
         String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
+        // String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY, "");
         String extraJoin = "";
         if (!lookupDefinition.usingRVDModel()) {
             extraJoin = lookupDefinition.getHqlJoinString(root, ENTITY);
@@ -198,7 +198,11 @@ public abstract class QueryManager {
         String queryString = "SELECT DISTINCT "+ENTITY+" from " + eClass.getCanonicalName() + " " + ENTITY +
                 " " + extraJoin +
                 " WHERE " + ENTITY + ".identification.uuid IS NOT null "+ extraWhere;
+                //" WHERE "+ extraWhere;
 
+		StringJoiner stringJoiner = null;
+        
+		
         // Build query
         org.hibernate.query.Query<E> databaseQuery = session.createQuery(queryString, eClass);
 
@@ -207,7 +211,7 @@ public abstract class QueryManager {
 
         for (String key : extraParameters.keySet()) {
             Object value = extraParameters.get(key);
-            if (value instanceof Collection) {
+			if (value instanceof Collection) {
                 databaseQuery.setParameterList(key, (Collection) value);
             } else {
                 databaseQuery.setParameter(key, value);

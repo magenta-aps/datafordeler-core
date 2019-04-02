@@ -302,5 +302,8 @@ public abstract class RegisterManager {
             importMetadata.setTransactionInProgress(false);
         }
     }
+	
+	public void beforePull(EntityManager entityManager, ImportMetadata importMetadata) {
+    }
 
 }

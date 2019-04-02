@@ -394,6 +394,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             loggerHelper.logResult(envelope, requestParams.toString());
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
             this.log.warn("Error in REST search ("+request.getRequestURI()+")", e);
+            e.printStackTrace();
             throw e;
         } catch (DataFordelerException e) {
             e.printStackTrace();
