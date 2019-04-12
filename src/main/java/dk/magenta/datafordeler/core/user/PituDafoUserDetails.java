@@ -7,10 +7,10 @@ import java.util.*;
 
 public class PituDafoUserDetails extends DafoUserDetails {
 
-    public static String HEADER_SSL_CLIENT_SUBJECT_DN = "ssl_client_s_dn";
-    public static String HEADER_SSL_CLIENT_ISSUER_DN = "sl_client_i_dn";
-    public static String HEADER_SSL_SERVER_SUBJECT_DN_OU = "ssl_server_s_dn_ou";
-    public static String HEADER_SSL_CLIENT_VERIFY = "ssl_client_verify";
+    public static String HEADER_SSL_CLIENT_SUBJECT_DN = "ssl-client-s-dn";
+    public static String HEADER_SSL_CLIENT_ISSUER_DN = "sl-client-i-dn";
+    public static String HEADER_SSL_SERVER_SUBJECT_DN_OU = "ssl-server-s-dn-ou";
+    public static String HEADER_SSL_CLIENT_VERIFY = "ssl-client-verify";
 
 
     public static String PARAMETER_XROAD_INSTANCE = "xRoadInstance";
