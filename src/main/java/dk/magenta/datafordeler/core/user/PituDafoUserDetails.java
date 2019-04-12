@@ -8,7 +8,7 @@ import java.util.*;
 public class PituDafoUserDetails extends DafoUserDetails {
 
     public static String HEADER_SSL_CLIENT_SUBJECT_DN = "ssl-client-s-dn";
-    public static String HEADER_SSL_CLIENT_ISSUER_DN = "sl-client-i-dn";
+    public static String HEADER_SSL_CLIENT_ISSUER_DN = "ssl-client-i-dn";
     public static String HEADER_SSL_SERVER_SUBJECT_DN_OU = "ssl-server-s-dn-ou";
     public static String HEADER_SSL_CLIENT_VERIFY = "ssl-client-verify";
 
@@ -111,12 +111,12 @@ public class PituDafoUserDetails extends DafoUserDetails {
 
     @Override
     public boolean hasSystemRole(String role) {
-        return systemRoles.containsKey(role);
+        return true;
     }
 
     @Override
     public boolean hasUserProfile(String userProfileName) {
-        return userProfiles.containsKey(userProfileName);
+        return true;
     }
 
     @Override
