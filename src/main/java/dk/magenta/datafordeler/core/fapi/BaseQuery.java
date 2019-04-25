@@ -688,7 +688,7 @@ public abstract class BaseQuery {
                 try {
                     return OffsetDateTime.parse(dateTime, formatter);
                 } catch (DateTimeParseException e) {
-                    log.error("DATEPARSEERROR", e);
+                    //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             for (DateTimeFormatter formatter : zonedDateFormatters) {
@@ -696,7 +696,7 @@ public abstract class BaseQuery {
                     TemporalAccessor accessor = formatter.parse(dateTime);
                     return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.from(accessor));
                 } catch (DateTimeParseException e) {
-                    log.error("DATEPARSEERROR", e);
+                    //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             for (DateTimeFormatter formatter : unzonedDateTimeFormatters) {
@@ -704,7 +704,7 @@ public abstract class BaseQuery {
                     TemporalAccessor accessor = formatter.parse(dateTime);
                     return OffsetDateTime.of(LocalDateTime.from(accessor), ZoneOffset.UTC);
                 } catch (DateTimeParseException e) {
-                    log.error("DATEPARSEERROR", e);
+                    //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             for (DateTimeFormatter formatter : unzonedDateFormatters) {
@@ -712,7 +712,7 @@ public abstract class BaseQuery {
                     TemporalAccessor accessor = formatter.parse(dateTime);
                     return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.UTC);
                 } catch (DateTimeParseException e) {
-                    log.error("DATEPARSEERROR", e);
+                    //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             throw new DateTimeParseException("Unable to parse date string \""+dateTime+"\", tried "+ formatterCount + " parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
