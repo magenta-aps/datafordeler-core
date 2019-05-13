@@ -12,7 +12,6 @@ public class PituDafoUserDetails extends DafoUserDetails {
     public static String HEADER_SSL_SERVER_SUBJECT_DN_OU = "ssl-server-s-dn-ou";
     public static String HEADER_SSL_CLIENT_VERIFY = "ssl-client-verify";
 
-
     public static String PARAMETER_XROAD_INSTANCE = "xRoadInstance";
     public static String PARAMETER_MEMBERCLASS = "memberClass";
     public static String PARAMETER_MEMBERCODE = "memberCode";
