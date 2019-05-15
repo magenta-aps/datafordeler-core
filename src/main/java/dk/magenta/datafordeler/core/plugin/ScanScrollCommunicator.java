@@ -39,6 +39,10 @@ public class ScanScrollCommunicator extends HttpCommunicator {
         this.recompilePattern();
     }
 
+    public ScanScrollCommunicator(File keystoreFile, String keystorePassword) {
+        super(keystoreFile, keystorePassword);
+    }
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private String scrollIdJsonKey = "scroll_id";
