@@ -2,8 +2,9 @@ package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
-
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -37,6 +38,8 @@ public abstract class BaseQuery {
         PARAM_OUTPUT_WRAPPING_VALUEMAP.put("drv", OutputWrapper.Mode.DRV);
         PARAM_OUTPUT_WRAPPING_VALUEMAP.put("legacy", OutputWrapper.Mode.LEGACY);
     }
+
+    private static Logger log = LogManager.getLogger(BaseQuery.class.getCanonicalName());
 
     @QueryField(queryNames = {"side", "page"}, type = QueryField.FieldType.INT)
     protected int page = 1;
@@ -276,13 +279,6 @@ public abstract class BaseQuery {
     public void setRegistrationToAfter(String registrationToAfter, OffsetDateTime fallback) throws DateTimeParseException {
         this.setRegistrationToAfter(parseDateTime(registrationToAfter), fallback);
     }
-
-
-
-
-
-
-
 
 
     public OffsetDateTime getRegistrationToBefore() {
@@ -692,6 +688,7 @@ public abstract class BaseQuery {
                 try {
                     return OffsetDateTime.parse(dateTime, formatter);
                 } catch (DateTimeParseException e) {
+                    //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             for (DateTimeFormatter formatter : zonedDateFormatters) {
@@ -699,6 +696,7 @@ public abstract class BaseQuery {
                     TemporalAccessor accessor = formatter.parse(dateTime);
                     return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.from(accessor));
                 } catch (DateTimeParseException e) {
+                    //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             for (DateTimeFormatter formatter : unzonedDateTimeFormatters) {
@@ -706,6 +704,7 @@ public abstract class BaseQuery {
                     TemporalAccessor accessor = formatter.parse(dateTime);
                     return OffsetDateTime.of(LocalDateTime.from(accessor), ZoneOffset.UTC);
                 } catch (DateTimeParseException e) {
+                    //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             for (DateTimeFormatter formatter : unzonedDateFormatters) {
@@ -713,6 +712,7 @@ public abstract class BaseQuery {
                     TemporalAccessor accessor = formatter.parse(dateTime);
                     return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.UTC);
                 } catch (DateTimeParseException e) {
+                    //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             throw new DateTimeParseException("Unable to parse date string \""+dateTime+"\", tried "+ formatterCount + " parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
@@ -734,38 +734,38 @@ public abstract class BaseQuery {
         }*/
         if (this.getRegistrationFromAfter() != null) {
             //this.applyFilter(session, Registration.FILTER_REGISTRATION_FROM, Registration.FILTERPARAM_REGISTRATION_FROM, this.getRegistrationFromBefore());
-            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONFROM_AFTER+"  "+this.getRegistrationFromAfter());
+            log.debug("Activating filter "+Monotemporal.FILTER_REGISTRATIONFROM_AFTER+"  "+this.getRegistrationFromAfter());
             this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONFROM_AFTER, Monotemporal.FILTERPARAM_REGISTRATIONFROM_AFTER, this.getRegistrationFromAfter());
         }
         if (this.getRegistrationToBefore() != null) {
             //this.applyFilter(session, Registration.FILTER_REGISTRATION_TO, Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationToBefore());
-            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONTO_BEFORE+"  "+this.getRegistrationToBefore());
+            log.debug("Activating filter "+Monotemporal.FILTER_REGISTRATIONTO_BEFORE+"  "+this.getRegistrationToBefore());
             this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONTO_BEFORE, Monotemporal.FILTERPARAM_REGISTRATIONTO_BEFORE, this.getRegistrationToBefore());
         }
         if (this.getRegistrationToAfter() != null) {
             //this.applyFilter(session, Registration.FILTER_REGISTRATION_TO, Registration.FILTERPARAM_REGISTRATION_TO, this.getRegistrationToBefore());
-            System.out.println("Activating filter "+Monotemporal.FILTER_REGISTRATIONTO_AFTER+"  "+this.getRegistrationToAfter());
+            log.debug("Activating filter "+Monotemporal.FILTER_REGISTRATIONTO_AFTER+"  "+this.getRegistrationToAfter());
             this.applyFilter(session, Monotemporal.FILTER_REGISTRATIONTO_AFTER, Monotemporal.FILTERPARAM_REGISTRATIONTO_AFTER, this.getRegistrationToAfter());
         }
 
         if (this.getEffectFromBefore() != null) {
             //this.applyFilter(session, Effect.FILTER_EFFECT_FROM, Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
-            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTFROM_BEFORE+"  "+this.getEffectFromBefore());
+            log.debug("Activating filter "+Bitemporal.FILTER_EFFECTFROM_BEFORE+"  "+this.getEffectFromBefore());
             this.applyFilter(session, Bitemporal.FILTER_EFFECTFROM_BEFORE, Bitemporal.FILTERPARAM_EFFECTFROM_BEFORE, this.getEffectFromBefore());
         }
         if (this.getEffectFromAfter() != null) {
             //this.applyFilter(session, Effect.FILTER_EFFECT_FROM, Effect.FILTERPARAM_EFFECT_FROM, this.getEffectFrom());
-            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTFROM_AFTER+"  "+this.getEffectFromAfter());
+            log.debug("Activating filter "+Bitemporal.FILTER_EFFECTFROM_AFTER+"  "+this.getEffectFromAfter());
             this.applyFilter(session, Bitemporal.FILTER_EFFECTFROM_AFTER, Bitemporal.FILTERPARAM_EFFECTFROM_AFTER, this.getEffectFromAfter());
         }
         if (this.getEffectToBefore() != null) {
             //this.applyFilter(session, Effect.FILTER_EFFECT_TO, Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
-            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTTO_BEFORE+"  "+this.getEffectToBefore());
+            log.debug("Activating filter "+Bitemporal.FILTER_EFFECTTO_BEFORE+"  "+this.getEffectToBefore());
             this.applyFilter(session, Bitemporal.FILTER_EFFECTTO_BEFORE, Bitemporal.FILTERPARAM_EFFECTTO_BEFORE, this.getEffectToBefore());
         }
         if (this.getEffectToAfter() != null) {
             //this.applyFilter(session, Effect.FILTER_EFFECT_TO, Effect.FILTERPARAM_EFFECT_TO, this.getEffectTo());
-            System.out.println("Activating filter "+Bitemporal.FILTER_EFFECTTO_AFTER+"  "+this.getEffectToAfter());
+            log.debug("Activating filter "+Bitemporal.FILTER_EFFECTTO_AFTER+"  "+this.getEffectToAfter());
             this.applyFilter(session, Bitemporal.FILTER_EFFECTTO_AFTER, Bitemporal.FILTERPARAM_EFFECTTO_AFTER, this.getEffectToAfter());
         }
 
@@ -778,19 +778,17 @@ public abstract class BaseQuery {
 
     private void applyFilter(Session session, String filterName, String parameterName, Object parameterValue) {
         if (session.getSessionFactory().getDefinedFilterNames().contains(filterName)) {
-            System.out.println("enable filter");
+            log.debug("enable filter");
             session.enableFilter(filterName).setParameter(
                     parameterName,
                     this.castFilterParam(parameterValue, filterName)
             );
         } else {
-
-            System.out.println("do not enable filter");
+            log.debug("do not enable filter");
         }
     }
 
     protected Object castFilterParam(Object input, String filter) {
         return input;
     }
-
 }
