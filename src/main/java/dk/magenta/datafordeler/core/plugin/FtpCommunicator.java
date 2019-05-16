@@ -12,6 +12,7 @@ import org.apache.http.StatusLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
@@ -219,7 +220,7 @@ public class FtpCommunicator implements Communicator {
 
     @Override
     public StatusLine send(URI endpoint, String payload) throws IOException {
-        throw new UnsupportedOperationException();
+        throw new NotImplementedException();
     }
 
     public void send(URI endpoint, File payload) throws IOException, DataStreamException {

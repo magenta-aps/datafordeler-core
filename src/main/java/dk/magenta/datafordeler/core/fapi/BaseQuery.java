@@ -771,7 +771,6 @@ public abstract class BaseQuery {
 
         if (this.getRecordAfter() != null) {
             //this.applyFilter(session, DataItem.FILTER_RECORD_AFTER, DataItem.FILTERPARAM_RECORD_AFTER, this.getRecordAfter());
-            System.out.println("Activating filter "+Nontemporal.FILTER_LASTUPDATED_AFTER+"  "+this.getRecordAfter());
             this.applyFilter(session, Nontemporal.FILTER_LASTUPDATED_AFTER, Nontemporal.FILTERPARAM_LASTUPDATED_AFTER, this.getRecordAfter());
         }
     }

@@ -9,7 +9,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.TemporalAccessor;
 import java.util.Objects;
 
-public class Bitemporality {
+public class Bitemporality implements Comparable<Bitemporality> {
     public OffsetDateTime registrationFrom;
     public OffsetDateTime registrationTo;
     public OffsetDateTime effectFrom;
@@ -135,8 +135,8 @@ public class Bitemporality {
         return time != null ? OffsetDateTime.from(time) : null;
     }
 
+    @Override
     public int compareTo(Bitemporality o) {
         return BitemporalityComparator.all(this.getClass()).compare(this, o);
     }
-
 }

@@ -233,7 +233,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
                 e.printStackTrace();
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|InvalidCertificateException e) {
             this.log.warn("Error in REST getById ("+request.getRequestURI()+")", e);
             throw e;
         } catch (Exception e) {
