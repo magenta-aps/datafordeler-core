@@ -55,7 +55,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
     private Pattern scrollIdPattern;
 
     private void recompilePattern() {
-        this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([a-zA-Z0-9=]+)\"");
+        this.scrollIdPattern = Pattern.compile("\""+this.scrollIdJsonKey+"\":\\s*\"([^\"]+)\"");
     }
 
     public static char delimiter = '\n';
@@ -81,13 +81,13 @@ public class ScanScrollCommunicator extends HttpCommunicator {
     private HashMap<InputStream, Thread> fetches = new HashMap();
 
     /**
-     * Fetch data from the external source; sends a POST to the initialUri, 
+     * Fetch data from the external source; sends a POST to the initialUri,
      * with the body, and waits for a response.
-     * If all goes well, this response contains a scrollId somewhere in the 
+     * If all goes well, this response contains a scrollId somewhere in the
      * JSON, which is the handle we use on subsequent requests.
      * For the purposes of this project, we assume the response is JSON-encoded.
-     * We then send further requests using the handle, expecting a handle in 
-     * each response until we are done. The full payload of all GET responses 
+     * We then send further requests using the handle, expecting a handle in
+     * each response until we are done. The full payload of all GET responses
      * is sent into the InputStream that we return.
      * This all happens in a thread, so you should get an InputStream returned immediately.
      */
