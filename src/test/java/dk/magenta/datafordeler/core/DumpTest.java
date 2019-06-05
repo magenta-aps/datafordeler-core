@@ -304,7 +304,6 @@ public class DumpTest extends GapiTestBase {
                     + "  \"results\" : [ ]\n"
                     + "}"),
                 "",
-                "",
             },
             dumps.stream().map(DumpInfo::getStringData).map(DumpTest::unifyNewlines).toArray());
 
