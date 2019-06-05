@@ -44,7 +44,6 @@ public class MonitorTest {
     }
 
     @Test
-    @Ignore
     public void testPullMonitoring() {
         HttpEntity<String> httpEntity = new HttpEntity<String>("", new HttpHeaders());
         ResponseEntity<String> response = this.restTemplate.exchange("/monitor/pull", HttpMethod.GET, httpEntity, String.class);
