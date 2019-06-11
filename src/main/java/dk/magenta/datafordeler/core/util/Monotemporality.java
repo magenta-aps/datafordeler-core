@@ -24,6 +24,7 @@ public class Monotemporality {
     public static final char COMPARE_REGISTRATION_TO = 0x02;
     public static final char COMPARE_REGISTRATION = COMPARE_REGISTRATION_FROM | COMPARE_REGISTRATION_TO;
     public static final char COMPARE_ALL = COMPARE_REGISTRATION;
+
     public static final char EXCLUDE_REGISTRATION_FROM = COMPARE_ALL ^ COMPARE_REGISTRATION_FROM;
     public static final char EXCLUDE_REGISTRATION_TO = COMPARE_ALL ^ COMPARE_REGISTRATION_TO;
 

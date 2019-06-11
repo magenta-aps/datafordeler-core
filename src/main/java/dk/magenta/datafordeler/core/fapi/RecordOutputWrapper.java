@@ -421,10 +421,11 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
     }
 
     public ObjectNode getNode(E record, Bitemporality overlap, Mode mode) {
-        System.out.println(this.getObjectMapper());
         ObjectNode root = this.getObjectMapper().createObjectNode();
-        root.put(Identification.IO_FIELD_UUID, record.getIdentification().getUuid().toString());
-        root.put(Identification.IO_FIELD_DOMAIN, record.getIdentification().getDomain());
+        if (record.getIdentification() != null) {
+            root.put(Identification.IO_FIELD_UUID, record.getIdentification().getUuid().toString());
+            root.put(Identification.IO_FIELD_DOMAIN, record.getIdentification().getDomain());
+        }
         OutputContainer recordOutput = this.createOutputContainer();
         this.fillContainer(recordOutput, record);
         root.setAll(recordOutput.getBase());
