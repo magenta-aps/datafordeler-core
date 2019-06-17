@@ -23,6 +23,7 @@ import org.apache.commons.io.IOUtils;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -415,6 +416,7 @@ public class FapiTest {
 
     @Test
     @Order(order = 10)
+    @Ignore
     public void restLookupJSONByParametersTest() throws IOException, DataFordelerException {
         this.setupUser();
         UUID uuid1 = this.addTestObject();
