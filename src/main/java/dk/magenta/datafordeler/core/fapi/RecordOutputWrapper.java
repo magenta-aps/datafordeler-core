@@ -231,8 +231,8 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
                                     effectNode = objectMapper.createObjectNode();
                                     effectsNode.add(effectNode);
                                 }
-                                effectNode.put(EFFECT_FROM, formatTime(bitemporality.effectFrom, true));
-                                effectNode.put(EFFECT_TO, formatTime(bitemporality.effectTo, true));
+                                effectNode.put(EFFECT_FROM, formatTime(bitemporality.effectFrom));
+                                effectNode.put(EFFECT_TO, formatTime(bitemporality.effectTo));
                                 HashMap<String, ArrayList<JsonNode>> records = this.bitemporalData.get(bitemporality);
                                 for (String key : records.keySet()) {
                                     List<JsonNode> nodes = records.get(key);
@@ -421,10 +421,11 @@ public abstract class RecordOutputWrapper<E extends IdentifiedEntity> extends Ou
     }
 
     public ObjectNode getNode(E record, Bitemporality overlap, Mode mode) {
-        System.out.println(this.getObjectMapper());
         ObjectNode root = this.getObjectMapper().createObjectNode();
-        root.put(Identification.IO_FIELD_UUID, record.getIdentification().getUuid().toString());
-        root.put(Identification.IO_FIELD_DOMAIN, record.getIdentification().getDomain());
+        if (record.getIdentification() != null) {
+            root.put(Identification.IO_FIELD_UUID, record.getIdentification().getUuid().toString());
+            root.put(Identification.IO_FIELD_DOMAIN, record.getIdentification().getDomain());
+        }
         OutputContainer recordOutput = this.createOutputContainer();
         this.fillContainer(recordOutput, record);
         root.setAll(recordOutput.getBase());

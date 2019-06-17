@@ -1,6 +1,8 @@
 package dk.magenta.datafordeler.core.fapi;
 
 import dk.magenta.datafordeler.core.util.ListHashMap;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,4 +69,13 @@ public class ParameterMap extends ListHashMap<String, String> {
         }
         return values;
     }
+
+    public MultiValueMap<String, String> asMultiValuedMap() {
+        LinkedMultiValueMap map = new LinkedMultiValueMap<String, String>();
+        for (String key : this.keySet()) {
+            map.put(key, this.get(key));
+        }
+        return map;
+    }
+
 }

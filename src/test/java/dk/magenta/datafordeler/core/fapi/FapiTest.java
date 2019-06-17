@@ -48,9 +48,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -322,22 +320,21 @@ public class FapiTest {
             headers.set("Accept", "text/csv");
             HttpEntity<String> httpEntity = new HttpEntity<String>("", headers);
             ResponseEntity<String> resp = this.restTemplate
-                    .exchange("/demo/postnummer/1/rest/" + uuid.toString() +
-                                    "?registreringFra="+veryEarly+"&registreringTil="+veryLate+"&virkningFra="+veryEarly+"&virkningTil="+veryLate,
+                    .exchange("/demo/postnummer/1/rest/" + uuid.toString(),
                             HttpMethod.GET, httpEntity, String.class);
             Assert.assertEquals(200, resp.getStatusCode().value());
             Assert.assertEquals(new MediaType("text", "csv"),
                     resp.getHeaders().getContentType());
-            Assert.assertEquals(
-                    unifyNewlines(
-                            updateTimestamps(
-                                    getResourceAsString("/rest-get-1.csv")
-                            )
-                    ),
-                    unifyNewlines(
-                            resp.getBody().replaceAll(uuid.toString(), "UUID")
+            String expected = unifyNewlines(
+                    updateTimestamps(
+                            getResourceAsString("/rest-get-1.csv")
                     )
             );
+            String actual = unifyNewlines(
+                    resp.getBody().replaceAll(uuid.toString(), "UUID")
+            );
+            actual = sortCsvColumns(actual, getCsvHeaders(expected, ","), ",");
+            Assert.assertEquals(expected, actual);
 
         } finally {
             this.removeTestObject(uuid);
@@ -355,21 +352,20 @@ public class FapiTest {
             headers.set("Accept", "text/tsv");
             HttpEntity<String> httpEntity = new HttpEntity<>("", headers);
             ResponseEntity<String> resp = this.restTemplate.exchange(
-                    "/demo/postnummer/1/rest/" + uuid.toString() +
-                            "?registreringFra="+veryEarly+"&registreringTil="+veryLate+"&virkningFra="+veryEarly+"&virkningTil="+veryLate,
+                    "/demo/postnummer/1/rest/" + uuid.toString(),
                     HttpMethod.GET, httpEntity, String.class
             );
             Assert.assertEquals(200, resp.getStatusCode().value());
-            Assert.assertEquals(
-                    unifyNewlines(
-                            updateTimestamps(
-                                    getResourceAsString("/rest-get-1.csv")
-                            ).replaceAll(",", "\t")
-                    ),
-                    unifyNewlines(
-                            resp.getBody().replaceAll(uuid.toString(), "UUID")
-                    )
+            String expected = unifyNewlines(
+                    updateTimestamps(
+                            getResourceAsString("/rest-get-1.csv")
+                    ).replaceAll(",", "\t")
             );
+            String actual = unifyNewlines(
+                    resp.getBody().replaceAll(uuid.toString(), "UUID")
+            );
+            actual = sortCsvColumns(actual, getCsvHeaders(expected, "\t"), "\t");
+            Assert.assertEquals(expected, actual);
 
         } finally {
             this.removeTestObject(uuid);
@@ -698,26 +694,32 @@ public class FapiTest {
         }
     }
 
-    private ResponseEntity<String> getRegistrationFilterRequest(String urlBase,
-                                                                String registerFromAfter, String registerFromBefore, String registerToAfter, String registerToBefore,
-                                                                String effectFromAfter, String effectFromBefore, String effectToAfter, String effectToBefore,
-                                                                String mediaType) {
+    private ResponseEntity<String> getRegistrationFilterRequest(
+            String urlBase,
+            String registerFromAfter, String registerFromBefore, String registerToAfter, String registerToBefore,
+            String effectFromAfter, String effectFromBefore, String effectToAfter, String effectToBefore,
+            String mediaType
+    ) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", mediaType);
         HttpEntity<String> httpEntity = new HttpEntity<>("", headers);
+        String now = OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
         StringBuilder sb = new StringBuilder();
         sb.append(urlBase);
-        if (registerFromBefore != null || registerFromAfter != null || registerToBefore != null || registerToAfter != null || effectFromAfter != null || effectFromBefore != null || effectToAfter != null || effectToBefore != null) {
             ParameterMap parameters = new ParameterMap();
             if (registerFromAfter != null) {
                 parameters.add(Query.PARAM_REGISTRATION_FROM_AFTER[0], registerFromAfter);
             }
             if (registerFromBefore != null) {
                 parameters.add(Query.PARAM_REGISTRATION_FROM_BEFORE[0], registerFromBefore);
+            } else {
+                parameters.add(Query.PARAM_REGISTRATION_FROM_BEFORE[0], now);
             }
             if (registerToAfter != null) {
                 parameters.add(Query.PARAM_REGISTRATION_TO_AFTER[0], registerToAfter);
+            } else {
+                parameters.add(Query.PARAM_REGISTRATION_TO_AFTER[0], now);
             }
             if (registerToBefore != null) {
                 parameters.add(Query.PARAM_REGISTRATION_TO_BEFORE[0], registerToBefore);
@@ -727,16 +729,21 @@ public class FapiTest {
             }
             if (effectFromBefore != null) {
                 parameters.add(Query.PARAM_EFFECT_FROM_BEFORE[0], effectFromBefore);
+            } else {
+                parameters.add(Query.PARAM_EFFECT_FROM_BEFORE[0], now);
             }
             if (effectToAfter != null) {
                 parameters.add(Query.PARAM_EFFECT_TO_AFTER[0], effectToAfter);
+            } else {
+                parameters.add(Query.PARAM_EFFECT_TO_AFTER[0], now);
             }
             if (effectToBefore != null) {
                 parameters.add(Query.PARAM_EFFECT_TO_BEFORE[0], effectToBefore);
             }
-            sb.append(urlBase.contains("?") ? "&" : "?");
-            sb.append(parameters.asUrlParams());
-        }
+            if (parameters.size() > 0) {
+                sb.append(urlBase.contains("?") ? "&" : "?");
+                sb.append(parameters.asUrlParams());
+            }
         System.out.println("\n------------------------\n" + sb.toString());
         ResponseEntity<String> resp = this.restTemplate.exchange(sb.toString(), HttpMethod.GET, httpEntity, String.class);
         Assert.assertEquals(200, resp.getStatusCode().value());
@@ -841,7 +848,7 @@ public class FapiTest {
     private static Pattern newlinePattern = Pattern.compile("\\R");
 
     private static String unifyNewlines(String input) {
-        return newlinePattern.matcher(input).replaceAll("\r\n");
+        return newlinePattern.matcher(input).replaceAll(System.getProperty("line.separator"));
     }
 
     private static boolean UTCisWithoutQuotes = true;
@@ -849,6 +856,35 @@ public class FapiTest {
 
     private static String updateTimestamps(String input) {
         return updateTimestamps(input, systemZone);
+    }
+
+    private static List<String> getCsvHeaders(String data, String separator) {
+        String headerLine = data.split("\n", 2)[0];
+        return Arrays.asList(headerLine.split(separator));
+    }
+
+    private static String sortCsvColumns(String data, List<String> sortKey, String separator) {
+        List<String> currentHeaders = getCsvHeaders(data, separator);
+        StringJoiner output = new StringJoiner("\n");
+        String[] rows = data.split("\n");
+        for (int i=1; i<rows.length; i++) {
+            HashMap<String, String> rowData = new HashMap<>();
+            String[] cells = rows[i].split(separator);
+            for (int j=0; j<cells.length; j++) {
+                rowData.put(currentHeaders.get(j), cells[j]);
+            }
+            StringJoiner outputRow = new StringJoiner(separator);
+            for (String header : sortKey) {
+                String cellData = rowData.get(header);
+                outputRow.add(cellData != null ? cellData : "");
+            }
+            output.add(outputRow.toString());
+        }
+        StringJoiner headerJoiner = new StringJoiner(separator);
+        for (String headerValue : sortKey) {
+            headerJoiner.add(headerValue);
+        }
+        return headerJoiner.toString() + "\n" + output.toString();
     }
 
     private static String updateTimestamps(String input, ZoneId zone) {
