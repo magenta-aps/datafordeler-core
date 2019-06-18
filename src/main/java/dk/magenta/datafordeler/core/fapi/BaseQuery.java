@@ -5,6 +5,7 @@ import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
+import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -684,16 +685,17 @@ public abstract class BaseQuery {
      */
     public static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
         if (dateTime != null) {
+            String decodedDateTime = java.net.URLDecoder.decode(dateTime, StandardCharsets.UTF_8);
             for (DateTimeFormatter formatter : zonedDateTimeFormatters) {
                 try {
-                    return OffsetDateTime.parse(dateTime, formatter);
+                    return OffsetDateTime.parse(decodedDateTime, formatter);
                 } catch (DateTimeParseException e) {
                     //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             for (DateTimeFormatter formatter : zonedDateFormatters) {
                 try {
-                    TemporalAccessor accessor = formatter.parse(dateTime);
+                    TemporalAccessor accessor = formatter.parse(decodedDateTime);
                     return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.from(accessor));
                 } catch (DateTimeParseException e) {
                     //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
@@ -701,7 +703,7 @@ public abstract class BaseQuery {
             }
             for (DateTimeFormatter formatter : unzonedDateTimeFormatters) {
                 try {
-                    TemporalAccessor accessor = formatter.parse(dateTime);
+                    TemporalAccessor accessor = formatter.parse(decodedDateTime);
                     return OffsetDateTime.of(LocalDateTime.from(accessor), ZoneOffset.UTC);
                 } catch (DateTimeParseException e) {
                     //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
@@ -709,13 +711,13 @@ public abstract class BaseQuery {
             }
             for (DateTimeFormatter formatter : unzonedDateFormatters) {
                 try {
-                    TemporalAccessor accessor = formatter.parse(dateTime);
+                    TemporalAccessor accessor = formatter.parse(decodedDateTime);
                     return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.UTC);
                 } catch (DateTimeParseException e) {
                     //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
-            throw new DateTimeParseException("Unable to parse date string \""+dateTime+"\", tried "+ formatterCount + " parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
+            throw new DateTimeParseException("Unable to parse date string \""+decodedDateTime+"\", tried "+ formatterCount + " parsers of "+DateTimeFormatter.class.getCanonicalName(), decodedDateTime, 0);
         }
         return null;
     }

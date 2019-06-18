@@ -416,7 +416,6 @@ public class FapiTest {
 
     @Test
     @Order(order = 10)
-    @Ignore
     public void restLookupJSONByParametersTest() throws IOException, DataFordelerException {
         this.setupUser();
         UUID uuid1 = this.addTestObject();
