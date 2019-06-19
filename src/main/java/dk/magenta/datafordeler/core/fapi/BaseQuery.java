@@ -666,26 +666,36 @@ public abstract class BaseQuery {
 
     private static int formatterCount = zonedDateTimeFormatters.length + zonedDateFormatters.length + unzonedDateTimeFormatters.length + unzonedDateFormatters.length;
 
-    /**
-     * Convenience method for parsing a String as an OffsetDateTime
-     * A series of parsers will attempt to parse the input string, returning on the first success.
-     * The Parsers, in order, are:
-     *   DateTimeFormatter.ISO_OFFSET_DATE_TIME
-     *   DateTimeFormatter.ISO_ZONED_DATE_TIME
-     *   DateTimeFormatter.ISO_INSTANT
-     *   DateTimeFormatter.RFC_1123_DATE_TIME
-     *   DateTimeFormatter.ISO_OFFSET_DATE
-     *   DateTimeFormatter.ISO_DATE_TIME
-     *   DateTimeFormatter.ISO_LOCAL_DATE_TIME
-     *   DateTimeFormatter.ISO_DATE
-     *   DateTimeFormatter.BASIC_ISO_DATE
-     * @param dateTime
-     * @return Parsed OffsetDateTime, or null if input was null
-     * @throws DateTimeParseException if no parser succeeded on a non-null input string
-     */
     public static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
+        return parseDateTime(dateTime, true);
+    }
+
+
+                                               /**
+                                                * Convenience method for parsing a String as an OffsetDateTime
+                                                * A series of parsers will attempt to parse the input string, returning on the first success.
+                                                * The Parsers, in order, are:
+                                                *   DateTimeFormatter.ISO_OFFSET_DATE_TIME
+                                                *   DateTimeFormatter.ISO_ZONED_DATE_TIME
+                                                *   DateTimeFormatter.ISO_INSTANT
+                                                *   DateTimeFormatter.RFC_1123_DATE_TIME
+                                                *   DateTimeFormatter.ISO_OFFSET_DATE
+                                                *   DateTimeFormatter.ISO_DATE_TIME
+                                                *   DateTimeFormatter.ISO_LOCAL_DATE_TIME
+                                                *   DateTimeFormatter.ISO_DATE
+                                                *   DateTimeFormatter.BASIC_ISO_DATE
+                                                * @param dateTime
+                                                * @return Parsed OffsetDateTime, or null if input was null
+                                                * @throws DateTimeParseException if no parser succeeded on a non-null input string
+                                                */
+    public static OffsetDateTime parseDateTime(String dateTime, boolean urlDecode) throws DateTimeParseException {
         if (dateTime != null) {
-            String decodedDateTime = java.net.URLDecoder.decode(dateTime, StandardCharsets.UTF_8);
+            String decodedDateTime;
+            if(urlDecode) {
+                decodedDateTime = java.net.URLDecoder.decode(dateTime, StandardCharsets.UTF_8);
+            } else {
+                decodedDateTime = dateTime;
+            }
             for (DateTimeFormatter formatter : zonedDateTimeFormatters) {
                 try {
                     return OffsetDateTime.parse(decodedDateTime, formatter);
