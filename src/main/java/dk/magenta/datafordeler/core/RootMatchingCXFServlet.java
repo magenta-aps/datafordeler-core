@@ -13,8 +13,8 @@ public class RootMatchingCXFServlet extends CXFServlet{
   protected DestinationRegistry destinationRegistry;
 
   @Override
-  protected DestinationRegistry getDestinationRegistryFromBus() {
-    this.destinationRegistry = super.getDestinationRegistryFromBus();
+  protected DestinationRegistry getDestinationRegistryFromBusOrDefault(String transportId) {
+    this.destinationRegistry = super.getDestinationRegistryFromBusOrDefault(transportId);
     return this.destinationRegistry;
   }
 

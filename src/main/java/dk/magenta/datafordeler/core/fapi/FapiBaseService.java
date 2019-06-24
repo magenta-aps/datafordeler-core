@@ -274,7 +274,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             E entity = this.searchById(id, query, session);
 
             sendAsCSV(Stream.of(entity), request, response);
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|InvalidCertificateException|HttpNotFoundException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
             this.log.warn("Error in REST getRestCsv ("+request.getRequestURI()+")", e);
             throw e;
         } catch (Exception e) {
@@ -331,7 +331,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             } catch (IllegalArgumentException e) {
                 throw new InvalidClientInputException(e.getMessage());
             }
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|InvalidCertificateException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
             this.log.warn("Error in SOAP getById (id: "+id+", registeringFra: "+registeringFra+", registeringTil: "+registeringTil+")", e);
             throw e;
         } catch (Exception e) {
@@ -433,7 +433,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
 
             sendAsCSV(this.searchByQueryAsStream(query, session),
                 request, response);
-        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException|InvalidCertificateException e) {
+        } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
             this.log.warn("Error in REST CSV search ("+request.getRequestURI()+")", e);
             throw e;
         } catch (Exception e) {
@@ -449,7 +449,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
      * @param query Query object specifying search parameters
      * @return Found Entities
      */
-    // TODO: How to use DafoUserDetails with SOAP requests?, |InvalidCertificateException
+    // TODO: How to use DafoUserDetails with SOAP requests?
     @WebMethod(operationName = "search")
     public Envelope searchSoap(@WebParam(name="query") @XmlElement(required = true) Q query) throws DataFordelerException {
         Session session = this.getSessionManager().getSessionFactory().openSession();
