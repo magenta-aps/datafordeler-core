@@ -37,6 +37,36 @@ pushd %DIR%..\plugin\gladdrreg
     call mvnw.cmd -DskipTests clean install
 popd
 
+echo "Build geo"
+pushd %DIR%..\plugin\geo
+    call mvnw.cmd -DskipTests clean install
+popd
+
+echo "Build ger"
+pushd %DIR%..\plugin\ger
+    call mvnw.cmd -DskipTests clean install
+popd
+
+echo "Build adresseservice"
+pushd %DIR%..\plugin\adresseservice
+    call mvnw.cmd -DskipTests clean install
+popd
+
+echo "Build eboks"
+pushd %DIR%..\plugin\eboks
+    call mvnw.cmd -DskipTests clean install
+popd
+
+echo "Build prisme"
+pushd %DIR%..\plugin\prisme
+    call mvnw.cmd -DskipTests clean install
+popd
+
+echo "Build statistik"
+pushd %DIR%..\plugin\statistik
+    call mvnw.cmd -DskipTests clean install
+popd
+
 rem Copy compiled WAR so running will not hold a lock on the compiled file destination
 copy "%DIR%\target\%COREJAR%" "%RUN_JAR%"
 
