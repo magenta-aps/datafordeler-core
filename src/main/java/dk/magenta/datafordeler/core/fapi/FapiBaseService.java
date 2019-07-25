@@ -275,7 +275,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
 
             sendAsCSV(Stream.of(entity), request, response);
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException|HttpNotFoundException e) {
-            this.log.warn("Error in REST getRestCsv ("+request.getRequestURI()+")", e);
+            this.log.warn("Error in REST getRestCsv ("+request.getRequestURI()+"): " + e.getMessage());
             throw e;
         } catch (Exception e) {
             this.log.error("Error in REST getRestCsv ("+request.getRequestURI()+")", e);
@@ -395,7 +395,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             envelope.close();
             loggerHelper.logResult(envelope, requestParams.toString());
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
-            this.log.warn("Error in REST search ("+request.getRequestURI()+")", e);
+            this.log.warn("Error in REST search ("+request.getRequestURI()+"): " + e.getMessage());
             throw e;
         } catch (Exception e) {
             this.log.error("Error in REST search ("+request.getRequestURI()+")", e);
@@ -434,7 +434,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             sendAsCSV(this.searchByQueryAsStream(query, session),
                 request, response);
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|HttpNotFoundException|InvalidTokenException e) {
-            this.log.warn("Error in REST CSV search ("+request.getRequestURI()+")", e);
+            this.log.warn("Error in REST CSV search ("+request.getRequestURI()+"): " + e.getMessage());
             throw e;
         } catch (Exception e) {
             this.log.error("Error in REST CSV search ("+request.getRequestURI()+")", e);
