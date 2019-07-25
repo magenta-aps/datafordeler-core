@@ -132,7 +132,6 @@ public class DafoUserManager {
             }
         }
 
-        System.out.println("FALLBACK USER");
         // Fall back to an anonymous user
         return this.getFallbackUser();
     }
