@@ -205,7 +205,7 @@ public class Pull extends Worker implements Runnable {
 
                         try {
                             entityManager.parseData(stream, importMetadata);
-                            if (importMetadata.getImportConfiguration() == null || importMetadata.getImportConfiguration().size() == 0) {
+                            if (!entityManager.shouldSkipLastUpdate(importMetadata)) {
                                 this.registerManager.setLastUpdated(entityManager, importMetadata);
                             }
                         } catch (Exception e) {

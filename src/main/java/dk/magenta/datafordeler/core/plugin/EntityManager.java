@@ -1,6 +1,7 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dk.magenta.datafordeler.core.database.*;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
 import dk.magenta.datafordeler.core.exception.FailedReferenceException;
@@ -326,6 +327,17 @@ public abstract class EntityManager {
         }
         lastUpdated.setTimestamp(time);
         session.saveOrUpdate(lastUpdated);
+    }
+
+    // Override as needed in subclasses
+    public boolean shouldSkipLastUpdate(ImportMetadata importMetadata) {
+        ObjectNode importConfiguration = importMetadata.getImportConfiguration();
+        if (importConfiguration == null || importConfiguration.size() == 0) {
+            return false;
+        } else if (importConfiguration.has("skipLastUpdate")) {
+            return true;
+        }
+        return false;
     }
 
     /**
