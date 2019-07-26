@@ -191,7 +191,7 @@ public abstract class QueryManager {
         BaseLookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = lookupDefinition.usingRVDModel() ? "d" : ENTITY;
 
-        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
+        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY, "");
         String extraJoin = "";
         if (!lookupDefinition.usingRVDModel()) {
             extraJoin = lookupDefinition.getHqlJoinString(root, ENTITY);
@@ -251,6 +251,10 @@ public abstract class QueryManager {
         System.out.println("Get all Entities of class " + eClass.getCanonicalName() + " matching parameters " + query.getSearchParameters() + " [offset: " + query.getOffset() + ", limit: " + query.getCount() + "]");
         org.hibernate.query.Query<E> databaseQuery = QueryManager.getQuery(session, query, eClass);
         System.out.println(databaseQuery.getQueryString());
+        for (Parameter<?> p : databaseQuery.getParameters()) {
+            System.out.println(p.getName());
+            databaseQuery.getParameter(p.getPosition());
+        }
         databaseQuery.setFlushMode(FlushModeType.COMMIT);
         long start = Instant.now().toEpochMilli();
         List<E> results = databaseQuery.getResultList();

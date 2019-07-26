@@ -31,7 +31,6 @@ import dk.magenta.datafordeler.core.database.Entity;
  * associated. Generally, there should not be stored other data in the object.
  */
 @MappedSuperclass
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @FilterDefs({
         @FilterDef(name = Registration.FILTER_REGISTRATION_FROM, parameters = @ParamDef(name = Registration.FILTERPARAM_REGISTRATION_FROM, type = "java.time.OffsetDateTime")),
         @FilterDef(name = Registration.FILTER_REGISTRATION_TO, parameters = @ParamDef(name = Registration.FILTERPARAM_REGISTRATION_TO, type = "java.time.OffsetDateTime"))

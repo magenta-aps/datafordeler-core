@@ -789,13 +789,10 @@ public abstract class BaseQuery {
 
     private void applyFilter(Session session, String filterName, String parameterName, Object parameterValue) {
         if (session.getSessionFactory().getDefinedFilterNames().contains(filterName)) {
-            log.debug("enable filter");
             session.enableFilter(filterName).setParameter(
                     parameterName,
                     this.castFilterParam(parameterValue, filterName)
             );
-        } else {
-            log.debug("do not enable filter");
         }
     }
 
