@@ -191,7 +191,7 @@ public abstract class QueryManager {
         BaseLookupDefinition lookupDefinition = query.getLookupDefinition();
         String root = lookupDefinition.usingRVDModel() ? "d" : ENTITY;
 
-        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY, "");
+        String extraWhere = lookupDefinition.getHqlWhereString(root, ENTITY);
         String extraJoin = "";
         if (!lookupDefinition.usingRVDModel()) {
             extraJoin = lookupDefinition.getHqlJoinString(root, ENTITY);
