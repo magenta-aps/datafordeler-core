@@ -398,6 +398,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
             this.log.warn("Error in REST search ("+request.getRequestURI()+"): " + e.getMessage());
             throw e;
         } catch (Exception e) {
+            e.printStackTrace();
             this.log.error("Error in REST search ("+request.getRequestURI()+")", e);
             throw e;
         } finally {
