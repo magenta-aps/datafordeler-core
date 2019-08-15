@@ -132,8 +132,7 @@ public class FtpCommunicator implements Communicator {
 
             return ftpClient;
         } catch (FTPIllegalReplyException | FTPException e) {
-            e.printStackTrace();
-            return null;
+            throw new DataStreamException(e);
         }
     }
 
