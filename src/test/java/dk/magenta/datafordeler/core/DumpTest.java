@@ -34,7 +34,7 @@ import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.KeyMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.LocalServerPort;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpEntity;
@@ -303,7 +303,6 @@ public class DumpTest extends GapiTestBase {
                     + "  \"pageSize\" : 10,\n"
                     + "  \"results\" : [ ]\n"
                     + "}"),
-                "",
                 "",
             },
             dumps.stream().map(DumpInfo::getStringData).map(DumpTest::unifyNewlines).toArray());

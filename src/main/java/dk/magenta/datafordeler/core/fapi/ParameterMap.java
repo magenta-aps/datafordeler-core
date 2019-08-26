@@ -4,6 +4,8 @@ import dk.magenta.datafordeler.core.util.ListHashMap;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +31,7 @@ public class ParameterMap extends ListHashMap<String, String> {
         StringJoiner sj = new StringJoiner("&");
         for (String key : this.keySet()) {
             for (String value : this.get(key)) {
-                sj.add(key + "=" + value);
+                sj.add(key + "=" + java.net.URLEncoder.encode(value, StandardCharsets.UTF_8));
             }
         }
         return sj.toString();

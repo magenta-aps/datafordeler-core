@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -93,12 +91,6 @@ public class Application {
                 e = e.getCause();
             }
         }
-    }
-
-    /* For testing the servlet in a throwaway Tomcat container */
-    @Bean
-    public EmbeddedServletContainerFactory servletContainer() {
-        return new TomcatEmbeddedServletContainerFactory(servicePort);
     }
 
     // Seriously unholy reflection magic, to force our URLs into the existing classloader
