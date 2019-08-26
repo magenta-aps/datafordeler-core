@@ -46,4 +46,10 @@ public abstract class Equality {
         return a.isEqual(b);
     }
 
+    public static boolean equalDate(OffsetDateTime a, OffsetDateTime b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return equal(a.toLocalDate(), b.toLocalDate());
+    }
+
 }
