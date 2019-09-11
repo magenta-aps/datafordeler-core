@@ -332,7 +332,7 @@ public abstract class FapiBaseService<E extends IdentifiedEntity, Q extends Base
                 throw new InvalidClientInputException(e.getMessage());
             }
         } catch (AccessDeniedException|AccessRequiredException|InvalidClientInputException|InvalidTokenException e) {
-            this.log.warn("Error in SOAP getById (id: "+id+", registeringFra: "+registeringFra+", registeringTil: "+registeringTil+")", e);
+            this.log.info("Trying to access with invalid rights (id: "+id+", registeringFra: "+registeringFra+", registeringTil: "+registeringTil+")");
             throw e;
         } catch (Exception e) {
             this.log.error("Error in SOAP getById (id: "+id+", registeringFra: "+registeringFra+", registeringTil: "+registeringTil+")", e);
