@@ -71,12 +71,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-spatial</artifactId>
-            <version>5.4.3.Final</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.vividsolutions</groupId>
             <artifactId>jts</artifactId>
             <version>1.13</version>
@@ -240,6 +234,13 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-web</artifactId>
             <version>2.12.0</version>
+        </dependency>
+
+        <!-- needed for logging on windows -->
+        <dependency>
+            <groupId>org.dblock.log4jna</groupId>
+            <artifactId>log4jna-api</artifactId>
+            <version>2.0</version>
         </dependency>
 
         <!-- Apache CXF (fapi) -->
