@@ -32,7 +32,6 @@ import java.util.*;
  * associated.
  */
 @MappedSuperclass
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @FilterDefs({
         @FilterDef(name = Effect.FILTER_EFFECT_FROM, parameters = @ParamDef(name = Effect.FILTERPARAM_EFFECT_FROM, type = "java.time.OffsetDateTime")),
         @FilterDef(name = Effect.FILTER_EFFECT_TO, parameters = @ParamDef(name = Effect.FILTERPARAM_EFFECT_TO, type = "java.time.OffsetDateTime")),

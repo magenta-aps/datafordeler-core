@@ -27,8 +27,7 @@ public class DumpConfiguration extends DatabaseEntry implements Configuration {
     public static enum Format {
         xml(MediaType.APPLICATION_XML),
         json(MediaType.APPLICATION_JSON),
-        csv(TEXT_CSV),
-        tsv(TEXT_TSV);
+        csv(TEXT_CSV);
 
         private final MediaType mediaType;
 

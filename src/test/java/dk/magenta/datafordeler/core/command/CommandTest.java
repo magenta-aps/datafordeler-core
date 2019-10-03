@@ -19,8 +19,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
-import org.springframework.boot.context.embedded.LocalServerPort;
+
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.*;
@@ -44,9 +44,6 @@ public class CommandTest extends GapiTestBase {
     private DafoUserManager dafoUserManager;
 
     @Autowired
-    private EmbeddedWebApplicationContext server;
-
-    @Autowired
     private DemoPlugin demoPlugin;
 
     @LocalServerPort
@@ -61,8 +58,6 @@ public class CommandTest extends GapiTestBase {
 
     @After
     public void after() {
-        //DemoRegisterManager registerManager = (DemoRegisterManager) this.demoPlugin.getRegisterManager();
-        //registerManager.setPort(Application.servicePort);
         DemoRegisterManager.setPortOnAll(Application.servicePort);
     }
 

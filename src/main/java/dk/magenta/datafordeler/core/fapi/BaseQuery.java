@@ -5,6 +5,7 @@ import dk.magenta.datafordeler.core.exception.InvalidClientInputException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
+import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -665,35 +666,46 @@ public abstract class BaseQuery {
 
     private static int formatterCount = zonedDateTimeFormatters.length + zonedDateFormatters.length + unzonedDateTimeFormatters.length + unzonedDateFormatters.length;
 
-    /**
-     * Convenience method for parsing a String as an OffsetDateTime
-     * A series of parsers will attempt to parse the input string, returning on the first success.
-     * The Parsers, in order, are:
-     *   DateTimeFormatter.ISO_OFFSET_DATE_TIME
-     *   DateTimeFormatter.ISO_ZONED_DATE_TIME
-     *   DateTimeFormatter.ISO_INSTANT
-     *   DateTimeFormatter.RFC_1123_DATE_TIME
-     *   DateTimeFormatter.ISO_OFFSET_DATE
-     *   DateTimeFormatter.ISO_DATE_TIME
-     *   DateTimeFormatter.ISO_LOCAL_DATE_TIME
-     *   DateTimeFormatter.ISO_DATE
-     *   DateTimeFormatter.BASIC_ISO_DATE
-     * @param dateTime
-     * @return Parsed OffsetDateTime, or null if input was null
-     * @throws DateTimeParseException if no parser succeeded on a non-null input string
-     */
     public static OffsetDateTime parseDateTime(String dateTime) throws DateTimeParseException {
+        return parseDateTime(dateTime, true);
+    }
+
+
+                                               /**
+                                                * Convenience method for parsing a String as an OffsetDateTime
+                                                * A series of parsers will attempt to parse the input string, returning on the first success.
+                                                * The Parsers, in order, are:
+                                                *   DateTimeFormatter.ISO_OFFSET_DATE_TIME
+                                                *   DateTimeFormatter.ISO_ZONED_DATE_TIME
+                                                *   DateTimeFormatter.ISO_INSTANT
+                                                *   DateTimeFormatter.RFC_1123_DATE_TIME
+                                                *   DateTimeFormatter.ISO_OFFSET_DATE
+                                                *   DateTimeFormatter.ISO_DATE_TIME
+                                                *   DateTimeFormatter.ISO_LOCAL_DATE_TIME
+                                                *   DateTimeFormatter.ISO_DATE
+                                                *   DateTimeFormatter.BASIC_ISO_DATE
+                                                * @param dateTime
+                                                * @return Parsed OffsetDateTime, or null if input was null
+                                                * @throws DateTimeParseException if no parser succeeded on a non-null input string
+                                                */
+    public static OffsetDateTime parseDateTime(String dateTime, boolean urlDecode) throws DateTimeParseException {
         if (dateTime != null) {
+            String decodedDateTime;
+            if(urlDecode) {
+                decodedDateTime = java.net.URLDecoder.decode(dateTime, StandardCharsets.UTF_8);
+            } else {
+                decodedDateTime = dateTime;
+            }
             for (DateTimeFormatter formatter : zonedDateTimeFormatters) {
                 try {
-                    return OffsetDateTime.parse(dateTime, formatter);
+                    return OffsetDateTime.parse(decodedDateTime, formatter);
                 } catch (DateTimeParseException e) {
                     //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
             for (DateTimeFormatter formatter : zonedDateFormatters) {
                 try {
-                    TemporalAccessor accessor = formatter.parse(dateTime);
+                    TemporalAccessor accessor = formatter.parse(decodedDateTime);
                     return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.from(accessor));
                 } catch (DateTimeParseException e) {
                     //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
@@ -701,7 +713,7 @@ public abstract class BaseQuery {
             }
             for (DateTimeFormatter formatter : unzonedDateTimeFormatters) {
                 try {
-                    TemporalAccessor accessor = formatter.parse(dateTime);
+                    TemporalAccessor accessor = formatter.parse(decodedDateTime);
                     return OffsetDateTime.of(LocalDateTime.from(accessor), ZoneOffset.UTC);
                 } catch (DateTimeParseException e) {
                     //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
@@ -709,13 +721,13 @@ public abstract class BaseQuery {
             }
             for (DateTimeFormatter formatter : unzonedDateFormatters) {
                 try {
-                    TemporalAccessor accessor = formatter.parse(dateTime);
+                    TemporalAccessor accessor = formatter.parse(decodedDateTime);
                     return OffsetDateTime.of(LocalDate.from(accessor), LocalTime.MIDNIGHT, ZoneOffset.UTC);
                 } catch (DateTimeParseException e) {
                     //I added logging of exceptions here as I expected exceptions to be an error, it seems like it is this way by design, and I disable the loggings again
                 }
             }
-            throw new DateTimeParseException("Unable to parse date string \""+dateTime+"\", tried "+ formatterCount + " parsers of "+DateTimeFormatter.class.getCanonicalName(), dateTime, 0);
+            throw new DateTimeParseException("Unable to parse date string \""+decodedDateTime+"\", tried "+ formatterCount + " parsers of "+DateTimeFormatter.class.getCanonicalName(), decodedDateTime, 0);
         }
         return null;
     }
@@ -777,13 +789,10 @@ public abstract class BaseQuery {
 
     private void applyFilter(Session session, String filterName, String parameterName, Object parameterValue) {
         if (session.getSessionFactory().getDefinedFilterNames().contains(filterName)) {
-            log.debug("enable filter");
             session.enableFilter(filterName).setParameter(
                     parameterName,
                     this.castFilterParam(parameterValue, filterName)
             );
-        } else {
-            log.debug("do not enable filter");
         }
     }
 

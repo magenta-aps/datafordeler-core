@@ -26,7 +26,6 @@ import java.util.*;
  */
 @MappedSuperclass
 @Embeddable
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class Entity<E extends Entity, R extends Registration> extends DatabaseEntry implements IdentifiedEntity {
 
     @Transient

@@ -1,7 +1,6 @@
 package dk.magenta.datafordeler.core.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dk.magenta.datafordeler.core.database.Entity;
 import dk.magenta.datafordeler.core.database.EntityReference;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.DataFordelerException;
@@ -10,6 +9,7 @@ import dk.magenta.datafordeler.core.io.ImportMetadata;
 import dk.magenta.datafordeler.core.io.PluginSourceData;
 import dk.magenta.datafordeler.core.util.ItemInputStream;
 import dk.magenta.datafordeler.core.util.ListHashMap;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.springframework.web.util.UriUtils;
@@ -17,6 +17,7 @@ import org.springframework.web.util.UriUtils;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,6 +37,8 @@ public abstract class RegisterManager {
     protected Map<String, EntityManager> entityManagerByURISubstring;
 
     protected HashSet<String> handledSchemas;
+
+    private static Logger log = LogManager.getLogger(RegisterManager.class.getCanonicalName());
 
     public RegisterManager() {
         this.handledSchemas = new HashSet<>();
@@ -267,7 +270,7 @@ public abstract class RegisterManager {
         try {
             return new URI(base.getScheme(), base.getUserInfo(), base.getHost(), base.getPort(),base.getPath() + path, query, fragment);
         } catch (URISyntaxException e) {
-            e.printStackTrace();
+            log.error("URLEXPANDFAIL", e);
             return null;
         }
     }
@@ -278,11 +281,7 @@ public abstract class RegisterManager {
             ArrayList<String> values = params.get(key);
             if (values != null && !values.isEmpty()) {
                 for (String value : values) {
-                    try {
-                        sj.add(key+"="+ UriUtils.encodeQueryParam(value, "utf-8"));
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
+                    sj.add(key+"="+ UriUtils.encodeQueryParam(value, StandardCharsets.UTF_8));
                 }
             }
         }

@@ -14,7 +14,7 @@
       "registreringFra" : XXX,
       "registreringTil" : null,
       "virkninger" : [ {
-        "virkningFra" : "2001-01-01",
+        "virkningFra" : XXX,
         "virkningTil" : null,
         "bynavn" : "Nuuk"
       } ]
@@ -27,7 +27,7 @@
       "registreringFra" : XXX,
       "registreringTil" : null,
       "virkninger" : [ {
-        "virkningFra" : "2001-01-01",
+        "virkningFra" : XXX,
         "virkningTil" : null,
         "bynavn" : "Siriuspatruljen"
       } ]
