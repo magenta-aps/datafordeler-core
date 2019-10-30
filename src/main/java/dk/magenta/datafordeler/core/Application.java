@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import dk.magenta.datafordeler.core.database.SessionManager;
 import dk.magenta.datafordeler.core.exception.ConfigurationException;
+import dk.magenta.datafordeler.core.plugin.Plugin;
+import dk.magenta.datafordeler.core.util.Encryption;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.util.Properties;
 import java.util.regex.Matcher;
 
@@ -51,6 +54,15 @@ public class Application {
     public static final int servicePort = 8445;
 
     public static void main(final String[] args) throws Exception {
+
+        //Used for finding the password for direct lookup in cpr
+        if(args.length==3 && args[0].equals("DECRYPT")) {
+            File encryptionFile = new File(args[1]);
+            byte[] lastBytes = Files.readAllBytes(new File(args[2]).toPath());
+            String pass = Encryption.decrypt(encryptionFile, lastBytes);
+            System.out.println(pass);
+            return;
+        }
 
         // We need the jarFolderPath before starting Spring, so load it from properties the old-fashioned way
         Properties defaultProperties = new Properties();
