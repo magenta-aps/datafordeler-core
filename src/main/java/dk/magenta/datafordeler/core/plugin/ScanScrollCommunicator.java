@@ -132,6 +132,9 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                     writer.flush();
 
                     String scrollId = responseNode.get(ScanScrollCommunicator.this.scrollIdJsonKey).asText();
+                    if(scrollId != null) {
+                        writer.append(delimiter);
+                    }
                     while (scrollId != null) {
 
                         URI fetchUri = new URI(scrollUri.getScheme(), scrollUri.getUserInfo(), scrollUri.getHost(), scrollUri.getPort(), scrollUri.getPath(), "scroll=10m", null);
