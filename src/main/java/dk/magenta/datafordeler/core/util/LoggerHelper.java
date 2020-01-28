@@ -76,7 +76,7 @@ public class LoggerHelper {
     logger.trace(prefix + msg, args);
   }
 
-  public void urlInvokePersistablelogs(String msg, Object... args) {
+  public void urlInvokePersistablelogs(String msg) {
     logger.log(URLINVOKE, prefix + urlInvokePrefix + "["+msg+"]");
   }
 
