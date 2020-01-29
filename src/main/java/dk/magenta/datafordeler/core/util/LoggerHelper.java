@@ -84,6 +84,10 @@ public class LoggerHelper {
     logger.log(URLRESPONSE, prefix + urlInvokePrefix + "["+statusCode+"]" + "["+msg+"]");
   }
 
+  public void urlIResponsePersistablelogs(String msg) {
+    logger.log(URLRESPONSE, prefix + urlInvokePrefix + "[]" + "["+msg+"]");
+  }
+
   public void debug(String msg, Object... args) {
     logger.debug(prefix + msg, args);
   }
