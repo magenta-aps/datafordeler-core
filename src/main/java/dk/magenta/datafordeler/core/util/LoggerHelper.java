@@ -80,11 +80,11 @@ public class LoggerHelper {
     logger.log(URLINVOKE, prefix + urlInvokePrefix + "["+msg+"]");
   }
 
-  public void urlIResponsePersistablelogs(int statusCode,String msg) {
+  public void urlResponsePersistablelogs(int statusCode,String msg) {
     logger.log(URLRESPONSE, prefix + urlInvokePrefix + "["+statusCode+"]" + "["+msg+"]");
   }
 
-  public void urlIResponsePersistablelogs(String msg) {
+  public void urlResponsePersistablelogs(String msg) {
     logger.log(URLRESPONSE, prefix + urlInvokePrefix + "[]" + "["+msg+"]");
   }
 

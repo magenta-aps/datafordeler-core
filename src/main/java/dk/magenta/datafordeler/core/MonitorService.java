@@ -130,7 +130,7 @@ public class MonitorService {
                 }
             }
         }
-        loggerHelper.urlIResponsePersistablelogs(response.getStatus(), "Done checkPulls");
+        loggerHelper.urlResponsePersistablelogs(response.getStatus(), "Done checkPulls");
     }
 
     @Value("${dafo.error_file:cache/log/${PID}.err}")
@@ -167,7 +167,7 @@ public class MonitorService {
             response.setStatus(200);
         }
         output.close();
-        loggerHelper.urlIResponsePersistablelogs(response.getStatus(), "Done checkErrors");
+        loggerHelper.urlResponsePersistablelogs(response.getStatus(), "Done checkErrors");
     }
 
     @Autowired
@@ -242,7 +242,7 @@ public class MonitorService {
             response.setStatus(200);
             response.getWriter().append(successes.toString());
         }
-        loggerHelper.urlIResponsePersistablelogs(response.getStatus(), "Done checkAccess");
+        loggerHelper.urlResponsePersistablelogs(response.getStatus(), "Done checkAccess");
     }
 
     // Because org.quartz.CronExpression does not have getTimeBefore implemented
