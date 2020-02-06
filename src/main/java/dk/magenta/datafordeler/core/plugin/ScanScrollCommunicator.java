@@ -191,8 +191,8 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             // Reached the end
                             break;
                         }
+                        writer.flush();
                     }
-                    writer.flush();
                 } catch (DataStreamException | IOException | URISyntaxException | HttpStatusException e) {
                     ScanScrollCommunicator.this.log.error(e);
                     throw new RuntimeException(e);
