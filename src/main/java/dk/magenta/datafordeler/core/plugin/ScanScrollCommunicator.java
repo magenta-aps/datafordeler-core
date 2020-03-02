@@ -178,6 +178,7 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                         if (scrollId != null) {
                             // There is more data
                             writer.append(delimiter);
+                            writer.flush();
                             if (throttle > 0) {
                                 try {
                                     log.info("Waiting "+throttle+" milliseconds before next request");
@@ -190,14 +191,15 @@ public class ScanScrollCommunicator extends HttpCommunicator {
                             // Reached the end
                             break;
                         }
+                        writer.flush();
                     }
-                    writer.flush();
                 } catch (DataStreamException | IOException | URISyntaxException | HttpStatusException e) {
                     ScanScrollCommunicator.this.log.error(e);
                     throw new RuntimeException(e);
                 } finally {
                     try {
                         log.info("Closing outputstream");
+                        writer.flush();
                         writer.close();
                     } catch (IOException e1) {
                     }
